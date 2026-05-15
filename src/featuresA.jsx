@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import {
   COLORS, CITIES,
   Panel, Btn, Field, Pill, Kicker,
-  usePersisted, usePasteImage, copyText,
+  useSyncedData, usePasteImage, copyText, useLang,
 } from './lib.jsx';
 
 // ═════════════════════════════════════════════════════════════
@@ -57,9 +57,22 @@ const AI_PRESETS = [
 ];
 
 export function AIPlayground() {
-  const [presetId, setPresetId] = usePersisted('se77n.ai.preset', 'chat');
-  const preset = AI_PRESETS.find((p) => p.id === presetId) || AI_PRESETS[0];
-  const [history, setHistory] = usePersisted('se77n.ai.history.v2', {});
+  const { t } = useLang();
+  const [presetId, setPresetId] = useSyncedData(
+    { localKey: 'se77n.ai.preset', serverKey: 'aiPreset' },
+    'chat',
+  );
+  const rawPreset = AI_PRESETS.find((p) => p.id === presetId) || AI_PRESETS[0];
+  const preset = {
+    ...rawPreset,
+    label:       t('ai.preset.' + rawPreset.id + '.label'),
+    placeholder: t('ai.preset.' + rawPreset.id + '.placeholder'),
+    seed:        t('ai.preset.' + rawPreset.id + '.seed'),
+  };
+  const [history, setHistory] = useSyncedData(
+    { localKey: 'se77n.ai.history.v2', serverKey: 'aiHistory' },
+    {},
+  );
   const messages = history[presetId] || [];
   const [input, setInput] = useState('');
   const [imgRef, setImgRef] = useState(null); // { dataUrl, name }
@@ -170,10 +183,11 @@ export function AIPlayground() {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: 18, height: '100%' }}>
       <Panel padding={16} style={{ display: 'flex', flexDirection: 'column' }}>
-        <Kicker style={{ marginBottom: 14 }}>PRESETS · {String(AI_PRESETS.length).padStart(2, '0')}</Kicker>
+        <Kicker style={{ marginBottom: 14 }}>{t('ai.presets')} · {String(AI_PRESETS.length).padStart(2, '0')}</Kicker>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {AI_PRESETS.map((p) => {
             const active = p.id === presetId;
+            const label = t('ai.preset.' + p.id + '.label');
             return (
               <button
                 key={p.id}
@@ -197,7 +211,7 @@ export function AIPlayground() {
                   border: `1px solid ${active ? COLORS.red : COLORS.line}`, borderRadius: 8,
                   color: active ? COLORS.red : COLORS.muted, fontSize: 13, fontWeight: 700,
                 }}>{p.icon}</span>
-                {p.label}
+                {label}
               </button>
             );
           })}
@@ -224,7 +238,7 @@ export function AIPlayground() {
             <Kicker>SESSION · {presetId.toUpperCase()}</Kicker>
             <div className="mono" style={{ fontSize: 16, fontWeight: 700, marginTop: 4 }}>{preset.label}</div>
           </div>
-          <Btn onClick={clearChat} variant="ghost">Clear</Btn>
+          <Btn onClick={clearChat} variant="ghost">{t('ai.clear')}</Btn>
         </div>
         <div ref={scrollRef} style={{ flex: 1, overflow: 'auto', padding: '20px 24px' }}>
           {messages.length === 0 && (
@@ -268,7 +282,7 @@ export function AIPlayground() {
             autoFocus
             style={{ background: COLORS.bg }}
           />
-          <Btn variant="solid" onClick={send} disabled={busy || (!input.trim() && !imgRef)}>↗ Send</Btn>
+          <Btn variant="solid" onClick={send} disabled={busy || (!input.trim() && !imgRef)}>↗ {t('ai.send')}</Btn>
         </div>
       </Panel>
     </div>

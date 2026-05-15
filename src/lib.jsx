@@ -1,4 +1,431 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback, createContext, useContext } from 'react';
+
+// ── i18n ───────────────────────────────────────────────────────
+// Tiny translation system. Flat keys, EN fallback, persisted in localStorage.
+// Use `useLang()` inside React; for module-scope helpers, call `currentLang()`.
+const I18N = {
+  en: {
+    'topbar.experiment': 'Experiment',
+    'topbar.desktop': 'Desktop',
+    'topbar.day': 'DAY',
+    'topbar.night': 'NIGHT',
+    'topbar.toggleLang': 'Switch to Vietnamese',
+    'topbar.langShort': 'EN',
+
+    'nav.home':   'Home',
+    'nav.ai':     'AI Playground',
+    'nav.tools':  'Toolbox',
+    'nav.travel': 'Travel Archive',
+    'nav.game':   'Game',
+    'nav.tech':   'Tech Stack Monitor',
+    'nav.crypto': 'Crypto Watch',
+    'nav.vault':  'Digital Vault',
+    'nav.todo':   'To-Do List',
+
+    'feature.ai.desc':     'Chat · image · video',
+    'feature.tools.desc':  'Public + private utilities',
+    'feature.travel.desc': 'World map · 16 cities',
+    'feature.game.desc':   'Coming soon',
+    'feature.tech.desc':   '11 services · monthly burn',
+    'feature.crypto.desc': 'BTC · GOLD · TWD ⇄ VND',
+    'feature.vault.desc':  'Credentials manager',
+    'feature.todo.desc':   'Priorities · localStorage',
+
+    'breadcrumb.home':    'HOME',
+    'breadcrumb.escHome': '← ESC · HOME',
+
+    'footer.build':      'BUILD',
+    'footer.daylight':   '◐ DAYLIGHT',
+    'footer.nightshift': '◑ NIGHTSHIFT',
+
+    'home.online':     '● ONLINE · EXP',
+    'home.allOnline':  '● ALL ONLINE',
+    'home.modules':    'MODULES · 08',
+    'home.dashboard':  'The dashboard',
+    'home.subtitle':   'A personal control surface — eight modules wired to one prompt. AI, finance, travel, vault, and tools, woven into a single command center.',
+    'home.openAi':     '↗ Open AI Playground',
+    'home.markets':    '$ Markets',
+    'home.todo':       '✓ To-Do',
+
+    'route.loading':   '◇ loading module…',
+    'fab.ask':         'Ask anything…',
+    'fab.openChat':    'Open chat with se77n',
+    'fab.openFull':    'Open full chat',
+    'fab.close':       'Close (Esc)',
+    'fab.placeholder': 'ask se77n…',
+    'fab.needHelp':    'Need help?',
+    'fab.thinking':    'thinking',
+    'fab.analyzing':   'analyzing image',
+
+    'ai.presets':            'PRESETS',
+    'ai.send':               'Send',
+    'ai.clear':              'Clear',
+    'ai.attach':             'Attach image',
+    'ai.preset.chat.label':       'Free chat',
+    'ai.preset.chat.placeholder': 'Ask me anything…',
+    'ai.preset.chat.seed':        'Hi! I\'m running on Gemini 3.1 via yunwu. Ask me anything.',
+    'ai.preset.tr.label':         'Translator',
+    'ai.preset.tr.placeholder':   'Paste text (EN ⇄ VN auto-detect)…',
+    'ai.preset.tr.seed':          'Paste English or Vietnamese — I\'ll auto-detect and translate to the other.',
+    'ai.preset.tldr.label':       'TL;DR',
+    'ai.preset.tldr.placeholder': 'Paste an article, paper, or long message…',
+    'ai.preset.tldr.seed':        'Drop any long text and I\'ll give you a 3-bullet TL;DR + one-line takeaway.',
+    'ai.preset.code.label':       'Code helper',
+    'ai.preset.code.placeholder': 'Paste a snippet, error, or describe a bug…',
+    'ai.preset.code.seed':        'Paste code, an error, or describe the bug. I\'ll diagnose + give you the minimal fix.',
+    'ai.preset.name.label':       'Naming',
+    'ai.preset.name.placeholder': 'Describe the product or vibe…',
+    'ai.preset.name.seed':        'Tell me what you\'re naming and the vibe. I\'ll give 6 candidates with domain guesses.',
+    'ai.preset.image.label':      'Image gen',
+    'ai.preset.image.placeholder':'Describe the image, or upload one + describe the edit…',
+    'ai.preset.image.seed':       'Drop a prompt (and optionally an image to edit). I\'ll render via fal.ai gpt-image-2.',
+    'ai.preset.video.label':      'Video gen',
+    'ai.preset.video.placeholder':'Describe the video clip…',
+    'ai.preset.video.seed':       'Prompt → 5s clip via fal.ai seedance-2.0. With image input I switch to image-to-video.',
+    'ai.preset.bg.label':         'BG Remove',
+    'ai.preset.bg.placeholder':   'Attach an image (paperclip or paste) — no prompt needed.',
+    'ai.preset.bg.seed':          'Drop an image and I\'ll erase the background via fal.ai ideogram/remove-background.',
+
+    'auth.signIn':       'Sign in',
+    'auth.signInTitle':  'Sign in to sync data',
+    'auth.signInDesc':   'Sync your todos, AI history, and vault across devices.',
+    'auth.discord':      'Continue with Discord',
+    'auth.google':       'Continue with Google',
+    'auth.signedInAs':   'Signed in',
+    'auth.logout':       'Sign out',
+    'auth.guest':        'Guest · local only',
+    'auth.syncing':      'Syncing…',
+    'auth.error':        'Sign-in failed',
+    'auth.errorDismiss': 'Dismiss',
+  },
+  vi: {
+    'topbar.experiment': 'Thí nghiệm',
+    'topbar.desktop': 'Máy tính',
+    'topbar.day': 'NGÀY',
+    'topbar.night': 'ĐÊM',
+    'topbar.toggleLang': 'Chuyển sang tiếng Anh',
+    'topbar.langShort': 'VI',
+
+    'nav.home':   'Trang chủ',
+    'nav.ai':     'Sân chơi AI',
+    'nav.tools':  'Hộp công cụ',
+    'nav.travel': 'Sổ du ký',
+    'nav.game':   'Trò chơi',
+    'nav.tech':   'Giám sát Tech Stack',
+    'nav.crypto': 'Theo dõi Crypto',
+    'nav.vault':  'Két số',
+    'nav.todo':   'Việc cần làm',
+
+    'feature.ai.desc':     'Chat · ảnh · video',
+    'feature.tools.desc':  'Tiện ích công khai + riêng tư',
+    'feature.travel.desc': 'Bản đồ thế giới · 16 thành phố',
+    'feature.game.desc':   'Sắp ra mắt',
+    'feature.tech.desc':   '11 dịch vụ · chi phí hàng tháng',
+    'feature.crypto.desc': 'BTC · VÀNG · TWD ⇄ VND',
+    'feature.vault.desc':  'Quản lý mật khẩu',
+    'feature.todo.desc':   'Ưu tiên · localStorage',
+
+    'breadcrumb.home':    'TRANG CHỦ',
+    'breadcrumb.escHome': '← ESC · TRANG CHỦ',
+
+    'footer.build':      'BẢN DỰNG',
+    'footer.daylight':   '◐ BAN NGÀY',
+    'footer.nightshift': '◑ BAN ĐÊM',
+
+    'home.online':     '● ĐANG HOẠT ĐỘNG · EXP',
+    'home.allOnline':  '● TẤT CẢ ONLINE',
+    'home.modules':    'MÔ-ĐUN · 08',
+    'home.dashboard':  'Bảng điều khiển',
+    'home.subtitle':   'Một trung tâm điều khiển cá nhân — tám mô-đun gắn vào một prompt. AI, tài chính, du lịch, két số và công cụ, gói gọn trong một command center.',
+    'home.openAi':     '↗ Mở Sân chơi AI',
+    'home.markets':    '$ Thị trường',
+    'home.todo':       '✓ Việc cần làm',
+
+    'route.loading':   '◇ đang tải mô-đun…',
+    'fab.ask':         'Hỏi bất cứ điều gì…',
+    'fab.openChat':    'Mở chat với se77n',
+    'fab.openFull':    'Mở chat toàn màn hình',
+    'fab.close':       'Đóng (Esc)',
+    'fab.placeholder': 'hỏi se77n…',
+    'fab.needHelp':    'Cần giúp gì không?',
+    'fab.thinking':    'đang nghĩ',
+    'fab.analyzing':   'đang phân tích ảnh',
+
+    'ai.presets':            'CHẾ ĐỘ',
+    'ai.send':               'Gửi',
+    'ai.clear':              'Xoá',
+    'ai.attach':             'Đính kèm ảnh',
+    'ai.preset.chat.label':       'Trò chuyện tự do',
+    'ai.preset.chat.placeholder': 'Hỏi mình bất cứ điều gì…',
+    'ai.preset.chat.seed':        'Chào! Mình đang chạy Gemini 3.1 qua yunwu. Hỏi mình đi.',
+    'ai.preset.tr.label':         'Dịch thuật',
+    'ai.preset.tr.placeholder':   'Dán văn bản (tự động phát hiện EN ⇄ VN)…',
+    'ai.preset.tr.seed':          'Dán tiếng Anh hoặc tiếng Việt — mình tự phát hiện và dịch sang ngôn ngữ còn lại.',
+    'ai.preset.tldr.label':       'Tóm tắt',
+    'ai.preset.tldr.placeholder': 'Dán bài báo, paper hoặc tin nhắn dài…',
+    'ai.preset.tldr.seed':        'Đưa văn bản dài bất kỳ, mình trả lại TL;DR 3 gạch đầu dòng + 1 câu chốt.',
+    'ai.preset.code.label':       'Trợ lý code',
+    'ai.preset.code.placeholder': 'Dán snippet, lỗi, hoặc mô tả bug…',
+    'ai.preset.code.seed':        'Dán code, lỗi hoặc tả bug. Mình chẩn đoán + đưa fix tối thiểu.',
+    'ai.preset.name.label':       'Đặt tên',
+    'ai.preset.name.placeholder': 'Mô tả sản phẩm hoặc concept…',
+    'ai.preset.name.seed':        'Tả sản phẩm và concept. Mình cho 6 cái tên kèm gợi ý domain.',
+    'ai.preset.image.label':      'Tạo ảnh',
+    'ai.preset.image.placeholder':'Mô tả ảnh, hoặc upload ảnh + mô tả chỉnh sửa…',
+    'ai.preset.image.seed':       'Thả prompt (kèm ảnh để edit nếu muốn). Mình render qua fal.ai gpt-image-2.',
+    'ai.preset.video.label':      'Tạo video',
+    'ai.preset.video.placeholder':'Mô tả clip video…',
+    'ai.preset.video.seed':       'Prompt → clip 5s qua fal.ai seedance-2.0. Có ảnh input mình chuyển sang image-to-video.',
+    'ai.preset.bg.label':         'Xoá nền',
+    'ai.preset.bg.placeholder':   'Đính kèm ảnh (kẹp giấy hoặc paste) — không cần prompt.',
+    'ai.preset.bg.seed':          'Thả ảnh, mình xoá nền qua fal.ai ideogram/remove-background.',
+
+    'auth.signIn':       'Đăng nhập',
+    'auth.signInTitle':  'Đăng nhập để sync dữ liệu',
+    'auth.signInDesc':   'Đồng bộ to-do, lịch sử AI, và vault giữa các thiết bị.',
+    'auth.discord':      'Đăng nhập bằng Discord',
+    'auth.google':       'Đăng nhập bằng Google',
+    'auth.signedInAs':   'Đã đăng nhập',
+    'auth.logout':       'Đăng xuất',
+    'auth.guest':        'Khách · chỉ lưu cục bộ',
+    'auth.syncing':      'Đang đồng bộ…',
+    'auth.error':        'Đăng nhập thất bại',
+    'auth.errorDismiss': 'Đóng',
+  },
+};
+
+let _currentLang = 'en';
+try {
+  const saved = JSON.parse(localStorage.getItem('se77n.lang') || '"en"');
+  if (saved === 'en' || saved === 'vi') _currentLang = saved;
+} catch { /* default en */ }
+
+export function currentLang() { return _currentLang; }
+
+export function tStatic(key, lang) {
+  const L = lang || _currentLang;
+  return I18N[L]?.[key] ?? I18N.en[key] ?? key;
+}
+
+const LangContext = createContext({
+  lang: 'en',
+  setLang: () => {},
+  toggle: () => {},
+  t: (k) => k,
+});
+
+export function LangProvider({ children }) {
+  const [lang, setLangState] = useState(_currentLang);
+  const setLang = useCallback((next) => {
+    if (next !== 'en' && next !== 'vi') return;
+    _currentLang = next;
+    setLangState(next);
+    try { localStorage.setItem('se77n.lang', JSON.stringify(next)); } catch {}
+    try { document.documentElement.setAttribute('lang', next); } catch {}
+  }, []);
+  const toggle = useCallback(() => setLang(_currentLang === 'en' ? 'vi' : 'en'), [setLang]);
+  const t = useCallback((key) => I18N[lang]?.[key] ?? I18N.en[key] ?? key, [lang]);
+  useEffect(() => { try { document.documentElement.setAttribute('lang', lang); } catch {} }, [lang]);
+  const value = useMemo(() => ({ lang, setLang, toggle, t }), [lang, setLang, toggle, t]);
+  return <LangContext.Provider value={value}>{children}</LangContext.Provider>;
+}
+
+export function useLang() { return useContext(LangContext); }
+
+// ── Auth + synced data ─────────────────────────────────────────
+// Calls /api/auth/me on mount. If reachable + has session → 'authed' with user.
+// Otherwise (no session, or API unreachable in vite-only dev) → 'guest'.
+//
+// useSyncedData(spec, default) keeps a value in a module-scoped store synced
+// across all components, persisted to localStorage, and (when authed) mirrored
+// to the server via /api/data with a 500ms debounce.
+const AuthContext = createContext({
+  status: 'loading',
+  user: null,
+  login: () => {},
+  logout: async () => {},
+});
+
+let _authStatus = 'loading';
+const _stores = new Map();              // serverKey → store
+const _saveTimers = new Map();          // serverKey → setTimeout id
+
+function _readLocal(localKey, fallback) {
+  try {
+    const raw = localStorage.getItem(localKey);
+    return raw == null ? fallback : JSON.parse(raw);
+  } catch { return fallback; }
+}
+
+function _writeLocal(localKey, value) {
+  try { localStorage.setItem(localKey, JSON.stringify(value)); } catch {}
+}
+
+function _getStore(serverKey, localKey, defaultValue) {
+  let s = _stores.get(serverKey);
+  if (!s) {
+    s = {
+      serverKey,
+      localKey,
+      value: _readLocal(localKey, defaultValue),
+      listeners: new Set(),
+      hydrated: false,
+      dirty: false,
+    };
+    _stores.set(serverKey, s);
+  }
+  return s;
+}
+
+function _setStore(serverKey, value, opts = {}) {
+  const s = _stores.get(serverKey);
+  if (!s) return;
+  s.value = value;
+  _writeLocal(s.localKey, value);
+  s.listeners.forEach((fn) => fn(value));
+  if (opts.skipSave) return;
+  s.dirty = true;
+  _scheduleSave(serverKey);
+}
+
+function _scheduleSave(serverKey) {
+  if (_authStatus !== 'authed') return;
+  const s = _stores.get(serverKey);
+  if (!s || !s.hydrated) return;
+  clearTimeout(_saveTimers.get(serverKey));
+  const id = setTimeout(() => {
+    fetch('/api/data', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key: serverKey, value: s.value }),
+    }).catch(() => {});
+  }, 500);
+  _saveTimers.set(serverKey, id);
+}
+
+// Pull all server data once we know we're authed. Local-dirty keys win,
+// otherwise server wins. Empty server keys get a one-time push of the local value.
+async function _hydrateAllFromServer() {
+  let serverData = {};
+  try {
+    const r = await fetch('/api/data');
+    if (r.ok) {
+      const j = await r.json();
+      serverData = j?.data || {};
+    }
+  } catch { /* network unreachable — leave local */ }
+
+  for (const [, store] of _stores) {
+    const sk = store.serverKey;
+    const sv = serverData[sk];
+    if (store.dirty) {
+      // local wins → push up
+      fetch('/api/data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: sk, value: store.value }),
+      }).catch(() => {});
+    } else if (sv !== undefined && sv !== null) {
+      // server wins
+      _setStore(sk, sv, { skipSave: true });
+    } else {
+      // server empty — push current local up so it persists
+      fetch('/api/data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: sk, value: store.value }),
+      }).catch(() => {});
+    }
+    store.hydrated = true;
+  }
+}
+
+// On logout: forget hydration so next login re-pulls. Don't wipe localStorage —
+// user might log back in to the same account.
+function _onLogout() {
+  for (const [, store] of _stores) {
+    store.hydrated = false;
+    store.dirty = false;
+  }
+}
+
+export function AuthProvider({ children }) {
+  const [state, setState] = useState({ status: 'loading', user: null });
+
+  useEffect(() => {
+    let cancel = false;
+    fetch('/api/auth/me')
+      .then((r) => (r.ok ? r.json() : { user: null }))
+      .then(async (d) => {
+        if (cancel) return;
+        if (d?.user) {
+          _authStatus = 'authed';
+          setState({ status: 'authed', user: d.user });
+          await _hydrateAllFromServer();
+        } else {
+          _authStatus = 'guest';
+          for (const [, s] of _stores) s.hydrated = true;
+          setState({ status: 'guest', user: null });
+        }
+      })
+      .catch(() => {
+        if (cancel) return;
+        // /api/auth/me unreachable (e.g. `npm run dev` without serverless) → guest mode
+        _authStatus = 'guest';
+        for (const [, s] of _stores) s.hydrated = true;
+        setState({ status: 'guest', user: null });
+      });
+    return () => { cancel = true; };
+  }, []);
+
+  const login = useCallback((provider) => {
+    if (provider !== 'discord' && provider !== 'google') return;
+    window.location.href = '/api/auth/' + provider + '/start';
+  }, []);
+
+  const logout = useCallback(async () => {
+    try { await fetch('/api/auth/logout', { method: 'POST' }); } catch {}
+    _authStatus = 'guest';
+    _onLogout();
+    setState({ status: 'guest', user: null });
+  }, []);
+
+  const value = useMemo(() => ({ ...state, login, logout }), [state, login, logout]);
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+export function useAuth() { return useContext(AuthContext); }
+
+// useSyncedData({ localKey, serverKey }, defaultValue) → [value, setValue]
+//
+// Drop-in replacement for usePersisted that also syncs to /api/data when authed.
+// All components using the same serverKey share the same in-memory store, so
+// updates from one component appear instantly in others within the same tab.
+export function useSyncedData(spec, defaultValue) {
+  const { localKey, serverKey } = spec;
+  const store = useMemo(
+    () => _getStore(serverKey, localKey, defaultValue),
+    [serverKey, localKey],
+  );
+  const [value, setLocal] = useState(store.value);
+
+  useEffect(() => {
+    const listener = (v) => setLocal(v);
+    store.listeners.add(listener);
+    // sync up if store changed before we subscribed
+    if (store.value !== value) setLocal(store.value);
+    return () => store.listeners.delete(listener);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [store]);
+
+  const setValue = useCallback((next) => {
+    const cur = _stores.get(serverKey);
+    const resolved = typeof next === 'function' ? next(cur ? cur.value : defaultValue) : next;
+    _setStore(serverKey, resolved);
+  }, [serverKey, defaultValue]);
+
+  return [value, setValue];
+}
 
 // ── Colors ─────────────────────────────────────────────────────
 export const COLORS = {
@@ -699,4 +1126,4 @@ export function usePasteImage(onImage, enabled = true) {
 }
 
 // Re-export hooks used widely so feature files only import from lib
-export { useState, useEffect, useMemo };
+export { useState, useEffect, useMemo, useCallback };

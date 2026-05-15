@@ -5,8 +5,8 @@ import {
   Btn, Kicker,
   GlyphSun, GlyphMoon, GlobeIcon, ControllerIcon,
   PaperclipIcon, ChatBubbleIcon,
-  useClock, useGeoDayNight, useAmbient, useLanyard,
-  usePersisted, usePasteImage, resolveAssetUrl,
+  useClock, useGeoDayNight, useAmbient, useLanyard, useLang, useAuth,
+  usePersisted, useSyncedData, usePasteImage, resolveAssetUrl,
 } from './lib.jsx';
 
 const AIPlayground       = lazy(() => import('./featuresA.jsx').then((m) => ({ default: m.AIPlayground })));
@@ -47,6 +47,7 @@ export default function App() {
   const ambient = useAmbient(ambientOn, lanyard.data);
   const geo = useGeoDayNight();
   const now = useClock();
+  const { t } = useLang();
 
   const phase = geo.phase;
 
@@ -129,9 +130,9 @@ export default function App() {
           fontSize: 10, color: COLORS.muted, letterSpacing: '0.18em',
         }} className="mono">
           <span>SE77N · {now.getFullYear()} · EXP {EXPERIMENT_NUMBER}</span>
-          <span>BUILD · {now.toISOString().slice(0, 10).replaceAll('-', '.')}</span>
+          <span>{t('footer.build')} · {now.toISOString().slice(0, 10).replaceAll('-', '.')}</span>
           <span style={{ color: phase === 'day' ? COLORS.gold : '#9bb4ff' }}>
-            {phase === 'day' ? '◐ DAYLIGHT' : '◑ NIGHTSHIFT'}
+            {phase === 'day' ? t('footer.daylight') : t('footer.nightshift')}
           </span>
         </footer>
       </main>
@@ -140,14 +141,16 @@ export default function App() {
         onOpen={() => setChatOpen(true)}
         onClose={() => setChatOpen(false)}
         ambient={ambient} nav={nav} />
+      <AuthErrorToast />
     </div>
   );
 }
 
 function RouteFallback() {
+  const { t } = useLang();
   return (
     <div style={{ padding: 40, color: COLORS.muted, fontSize: 12 }} className="mono">
-      ◇ loading module…
+      {t('route.loading')}
     </div>
   );
 }
@@ -193,6 +196,7 @@ function AmbientBackground({ phase, enabled, track }) {
 // Top bar
 // ─────────────────────────────────────────────────────────────
 function TopBar({ phase, now, geo, nav, ambient, ambientOn }) {
+  const { lang, toggle, t } = useLang();
   const tStr = now.toLocaleTimeString('en-GB', {
     hour: '2-digit', minute: '2-digit', second: '2-digit',
   });
@@ -224,50 +228,302 @@ function TopBar({ phase, now, geo, nav, ambient, ambientOn }) {
           fontSize: 9, letterSpacing: '0.24em', color: COLORS.muted, lineHeight: 1,
           textTransform: 'uppercase',
         }}>
-          Experiment&nbsp;<span style={{
+          {t('topbar.experiment')}&nbsp;<span style={{
             color: COLORS.red, fontWeight: 700,
             textShadow: `0 0 4px ${COLORS.red}aa, 0 0 10px ${COLORS.red}55`,
-          }}>{EXPERIMENT_NUMBER}</span> / Desktop
+          }}>{EXPERIMENT_NUMBER}</span> / {t('topbar.desktop')}
         </div>
       </button>
 
       <NowPlaying ambient={ambient} on={ambientOn} />
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-        <DayNightChip phase={phase} city={geo.city} />
-        <div style={{ width: 1, height: 24, background: COLORS.line }} />
-        <div className="mono" style={{
-          fontSize: 13, fontWeight: 700, letterSpacing: '0.05em', color: COLORS.text,
-          minWidth: 76, textAlign: 'right',
-        }}>{tStr}</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <LangToggle lang={lang} toggle={toggle} title={t('topbar.toggleLang')} />
+        <AuthChip />
+        <TimeChip phase={phase} city={geo.city} timeStr={tStr} />
       </div>
     </header>
   );
 }
 
-function DayNightChip({ phase, city }) {
+// Compact pill: [day/night icon] [HH:MM:SS] [· City]
+function TimeChip({ phase, city, timeStr }) {
   const day = phase === 'day';
   const color = day ? COLORS.gold : '#9bb4ff';
   return (
     <div style={{
-      display: 'flex', alignItems: 'center', gap: 8,
-      padding: '6px 12px 6px 8px', borderRadius: 999,
-      background: color + '12', border: `1px solid ${color}40`,
+      display: 'flex', alignItems: 'center', gap: 10,
+      padding: '6px 14px 6px 8px', borderRadius: 999,
+      background: color + '10', border: `1px solid ${color}33`,
     }}>
       <span style={{
-        width: 22, height: 22, borderRadius: 999, display: 'grid', placeItems: 'center',
+        width: 24, height: 24, borderRadius: 999, display: 'grid', placeItems: 'center',
         background: color + '22',
-      }}>
+      }}
+        title={day ? 'DAY' : 'NIGHT'}
+        aria-label={day ? 'day' : 'night'}>
         {day ? <GlyphSun color={color} size={14} /> : <GlyphMoon color={color} size={14} />}
       </span>
-      <div style={{ textAlign: 'left' }}>
-        <div className="mono" style={{ fontSize: 9, letterSpacing: '0.16em', color, fontWeight: 700 }}>
-          {day ? 'DAY' : 'NIGHT'}
+      <span className="mono" style={{
+        fontSize: 13, fontWeight: 700, letterSpacing: '0.05em', color: COLORS.text,
+        lineHeight: 1, minWidth: 76, textAlign: 'left',
+      }}>{timeStr}</span>
+      {city && (
+        <span className="mono" style={{
+          fontSize: 9, color: COLORS.muted, letterSpacing: '0.06em',
+          paddingLeft: 8, borderLeft: `1px solid ${color}25`,
+        }}>{city}</span>
+      )}
+    </div>
+  );
+}
+
+function LangToggle({ lang, toggle, title }) {
+  const isEn = lang === 'en';
+  // Highlight the *current* language; the other half is the "click to switch" target.
+  const active = COLORS.text;
+  const inactive = COLORS.muted;
+  return (
+    <button
+      onClick={toggle}
+      title={title}
+      aria-label={title}
+      className="mono"
+      style={{
+        display: 'flex', alignItems: 'center', gap: 0,
+        padding: '5px 4px', borderRadius: 999,
+        background: 'transparent',
+        border: '1px solid ' + COLORS.line,
+        color: COLORS.text, cursor: 'pointer',
+        fontSize: 10, letterSpacing: '0.14em', fontWeight: 700,
+        height: 32,
+        transition: 'border-color 120ms, background 120ms',
+      }}
+      onMouseEnter={(e) => { e.currentTarget.style.borderColor = COLORS.text + '55'; }}
+      onMouseLeave={(e) => { e.currentTarget.style.borderColor = COLORS.line; }}
+    >
+      <span style={{
+        padding: '4px 8px', borderRadius: 999,
+        background: isEn ? COLORS.text + '12' : 'transparent',
+        color: isEn ? active : inactive,
+      }}>EN</span>
+      <span style={{ color: COLORS.muted, opacity: 0.4, fontSize: 9 }}>·</span>
+      <span style={{
+        padding: '4px 8px', borderRadius: 999,
+        background: !isEn ? COLORS.text + '12' : 'transparent',
+        color: !isEn ? active : inactive,
+      }}>VI</span>
+    </button>
+  );
+}
+
+// Login button (when guest) / user menu (when authed).
+function AuthChip() {
+  const { status, user, login, logout } = useAuth();
+  const { t } = useLang();
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    const onEsc = (e) => { if (e.key === 'Escape') setOpen(false); };
+    document.addEventListener('mousedown', onDoc);
+    document.addEventListener('keydown', onEsc);
+    return () => {
+      document.removeEventListener('mousedown', onDoc);
+      document.removeEventListener('keydown', onEsc);
+    };
+  }, [open]);
+
+  if (status === 'loading') {
+    return (
+      <div className="mono" style={{
+        height: 32, padding: '0 12px', borderRadius: 999,
+        border: '1px solid ' + COLORS.line, color: COLORS.muted,
+        fontSize: 10, letterSpacing: '0.14em', display: 'flex', alignItems: 'center',
+      }}>{t('auth.syncing')}</div>
+    );
+  }
+
+  return (
+    <div ref={ref} style={{ position: 'relative' }}>
+      {status === 'authed' ? (
+        <button onClick={() => setOpen((v) => !v)}
+          aria-label={user?.displayName || t('auth.signedInAs')}
+          className="mono"
+          style={{
+            display: 'flex', alignItems: 'center', gap: 8,
+            height: 32, padding: '2px 10px 2px 2px', borderRadius: 999,
+            background: 'transparent', border: '1px solid ' + COLORS.line,
+            color: COLORS.text, cursor: 'pointer',
+            fontSize: 11, letterSpacing: '0.04em',
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.borderColor = COLORS.text + '55'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.borderColor = COLORS.line; }}
+        >
+          {user?.avatarUrl ? (
+            <img src={user.avatarUrl} alt="" style={{
+              width: 26, height: 26, borderRadius: 999, objectFit: 'cover',
+              border: '1px solid ' + COLORS.line,
+            }} />
+          ) : (
+            <span style={{
+              width: 26, height: 26, borderRadius: 999,
+              background: COLORS.red + '22', color: COLORS.red,
+              display: 'grid', placeItems: 'center',
+              fontSize: 11, fontWeight: 800,
+            }}>{(user?.displayName || '?').slice(0, 1).toUpperCase()}</span>
+          )}
+          <span style={{
+            maxWidth: 96, overflow: 'hidden', textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}>{user?.displayName || user?.username || '—'}</span>
+          <span style={{ color: COLORS.muted, fontSize: 9 }}>▾</span>
+        </button>
+      ) : (
+        <button onClick={() => setOpen((v) => !v)}
+          className="mono"
+          style={{
+            height: 32, padding: '0 14px', borderRadius: 999,
+            background: COLORS.red + '14', border: `1px solid ${COLORS.red}55`,
+            color: COLORS.red, cursor: 'pointer',
+            fontSize: 11, letterSpacing: '0.14em', fontWeight: 700,
+            display: 'flex', alignItems: 'center', gap: 6,
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = COLORS.red + '22'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = COLORS.red + '14'; }}
+        >
+          ◐ {t('auth.signIn')}
+        </button>
+      )}
+
+      {open && (
+        <div role="menu" style={{
+          position: 'absolute', top: 'calc(100% + 8px)', right: 0, zIndex: 60,
+          minWidth: 240, padding: 12, borderRadius: 12,
+          background: COLORS.panel, border: '1px solid ' + COLORS.line,
+          boxShadow: '0 24px 60px -20px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.04)',
+          animation: 'fadeUp 180ms ease-out',
+        }}>
+          {status === 'authed' ? (
+            <>
+              <div className="mono" style={{
+                fontSize: 9, letterSpacing: '0.18em', color: COLORS.muted,
+                padding: '4px 8px', marginBottom: 8,
+              }}>{t('auth.signedInAs').toUpperCase()} · {user?.provider?.toUpperCase()}</div>
+              <div style={{ padding: '4px 8px 10px', borderBottom: '1px solid ' + COLORS.line }}>
+                <div className="mono" style={{ fontSize: 13, fontWeight: 700, color: COLORS.text }}>
+                  {user?.displayName || '—'}
+                </div>
+                {user?.email && (
+                  <div className="mono" style={{ fontSize: 10, color: COLORS.muted, marginTop: 3 }}>
+                    {user.email}
+                  </div>
+                )}
+              </div>
+              <button onClick={() => { setOpen(false); logout(); }}
+                className="mono"
+                style={{
+                  marginTop: 8, width: '100%', textAlign: 'left',
+                  padding: '10px 12px', borderRadius: 8,
+                  background: 'transparent', border: '1px solid ' + COLORS.line,
+                  color: COLORS.text, cursor: 'pointer',
+                  fontSize: 11, letterSpacing: '0.08em',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = COLORS.red + '12'; e.currentTarget.style.borderColor = COLORS.red + '55'; e.currentTarget.style.color = COLORS.red; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = COLORS.line; e.currentTarget.style.color = COLORS.text; }}
+              >↩ {t('auth.logout')}</button>
+            </>
+          ) : (
+            <>
+              <div className="mono" style={{
+                fontSize: 9, letterSpacing: '0.18em', color: COLORS.muted,
+                padding: '4px 8px', marginBottom: 6,
+              }}>{t('auth.signInTitle').toUpperCase()}</div>
+              <div style={{ padding: '0 8px 10px', fontSize: 11, color: COLORS.muted, lineHeight: 1.5 }}>
+                {t('auth.signInDesc')}
+              </div>
+              <ProviderBtn provider="discord" color="#5865F2" label={t('auth.discord')} onClick={() => login('discord')} />
+              <div style={{ height: 6 }} />
+              <ProviderBtn provider="google" color="#EA4335" label={t('auth.google')} onClick={() => login('google')} />
+            </>
+          )}
         </div>
-        <div className="mono" style={{ fontSize: 9, color: COLORS.muted, letterSpacing: '0.06em', marginTop: 2 }}>
-          {city || '—'}
-        </div>
+      )}
+    </div>
+  );
+}
+
+function ProviderBtn({ provider, color, label, onClick }) {
+  return (
+    <button onClick={onClick} className="mono"
+      style={{
+        width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+        padding: '10px 12px', borderRadius: 8,
+        background: color + '14', border: `1px solid ${color}50`,
+        color: COLORS.text, cursor: 'pointer',
+        fontSize: 12, letterSpacing: '0.04em', fontWeight: 600,
+        transition: 'background 120ms',
+      }}
+      onMouseEnter={(e) => { e.currentTarget.style.background = color + '24'; }}
+      onMouseLeave={(e) => { e.currentTarget.style.background = color + '14'; }}
+    >
+      {provider === 'discord' && (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill={color}>
+          <path d="M20.317 4.37a19.79 19.79 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.865-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.74 19.74 0 003.677 4.37a.07.07 0 00-.032.028C.533 9.046-.32 13.58.099 18.058a.082.082 0 00.031.056 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.873-1.295 1.226-1.994a.076.076 0 00-.041-.106 13.1 13.1 0 01-1.872-.892.077.077 0 01-.008-.128c.126-.094.252-.192.372-.291a.074.074 0 01.078-.01c3.928 1.793 8.18 1.793 12.061 0a.074.074 0 01.079.01c.12.099.246.197.373.291a.077.077 0 01-.006.128 12.3 12.3 0 01-1.873.891.076.076 0 00-.04.107c.36.698.772 1.363 1.225 1.993a.076.076 0 00.084.028 19.84 19.84 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.029zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" />
+        </svg>
+      )}
+      {provider === 'google' && (
+        <svg width="16" height="16" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M21.6 12.227c0-.709-.064-1.39-.182-2.045H12v3.868h5.382a4.6 4.6 0 01-1.995 3.018v2.51h3.232c1.891-1.741 2.981-4.305 2.981-7.351z" />
+          <path fill="#34A853" d="M12 22c2.7 0 4.964-.895 6.619-2.422l-3.232-2.51c-.895.6-2.04.955-3.387.955-2.605 0-4.81-1.76-5.595-4.124H3.064v2.59A9.996 9.996 0 0012 22z" />
+          <path fill="#FBBC05" d="M6.405 13.9a6.012 6.012 0 010-3.8V7.51H3.064a10.001 10.001 0 000 8.98l3.341-2.59z" />
+          <path fill="#EA4335" d="M12 5.977c1.468 0 2.786.504 3.823 1.495l2.868-2.868C16.96 2.99 14.696 2 12 2 8.092 2 4.71 4.244 3.064 7.51l3.341 2.59C7.19 7.736 9.395 5.977 12 5.977z" />
+        </svg>
+      )}
+      <span style={{ flex: 1, textAlign: 'left' }}>{label}</span>
+      <span style={{ color: COLORS.muted, fontSize: 10 }}>↗</span>
+    </button>
+  );
+}
+
+// Reads ?auth_error=... from URL on mount, shows a small toast, clears the param.
+function AuthErrorToast() {
+  const { t } = useLang();
+  const [err, setErr] = useState(null);
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const e = url.searchParams.get('auth_error');
+    if (e) {
+      setErr(e);
+      url.searchParams.delete('auth_error');
+      window.history.replaceState(null, '', url.pathname + url.search + url.hash);
+    }
+  }, []);
+  if (!err) return null;
+  return (
+    <div role="alert" style={{
+      position: 'fixed', top: 76, right: 24, zIndex: 70,
+      padding: '12px 16px', borderRadius: 10,
+      background: COLORS.panel, border: '1px solid ' + COLORS.red + '66',
+      boxShadow: '0 16px 40px -16px ' + COLORS.red + '99',
+      color: COLORS.text, fontSize: 12, lineHeight: 1.5,
+      maxWidth: 320, display: 'flex', alignItems: 'flex-start', gap: 10,
+      animation: 'fadeUp 200ms ease-out',
+    }}>
+      <span style={{ color: COLORS.red, fontSize: 14 }}>⚠</span>
+      <div style={{ flex: 1 }}>
+        <div className="mono" style={{
+          fontSize: 10, letterSpacing: '0.18em', color: COLORS.red, fontWeight: 700,
+        }}>{t('auth.error').toUpperCase()}</div>
+        <div className="mono" style={{ fontSize: 11, color: COLORS.muted, marginTop: 4 }}>{err}</div>
       </div>
+      <button onClick={() => setErr(null)} aria-label={t('auth.errorDismiss')}
+        style={{
+          background: 'transparent', border: 'none', cursor: 'pointer',
+          color: COLORS.muted, fontSize: 14, padding: 0,
+        }}>✕</button>
     </div>
   );
 }
@@ -387,6 +643,7 @@ function PlayerBtn({ children, onClick, primary }) {
 // Nav rail
 // ─────────────────────────────────────────────────────────────
 function NavRail({ route, nav }) {
+  const { t } = useLang();
   return (
     <aside style={{
       position: 'fixed', top: 64, left: 0, bottom: 0,
@@ -399,8 +656,9 @@ function NavRail({ route, nav }) {
     }}>
       {FEATURES.map((f) => {
         const active = f.id === route;
+        const label = t('nav.' + f.id);
         return (
-          <button key={f.id} onClick={() => nav(f.id)} title={f.label}
+          <button key={f.id} onClick={() => nav(f.id)} title={label}
             style={{
               width: 56, height: 56, borderRadius: 12,
               background: active ? f.accent + '1a' : 'transparent',
@@ -472,6 +730,8 @@ function NavRail({ route, nav }) {
 // Breadcrumbs
 // ─────────────────────────────────────────────────────────────
 function Breadcrumbs({ route, nav, feature }) {
+  const { t } = useLang();
+  const featureLabel = feature ? t('nav.' + feature.id) : '';
   return (
     <div style={{
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -481,12 +741,12 @@ function Breadcrumbs({ route, nav, feature }) {
         <button onClick={() => nav('home')} className="mono" style={{
           background: 'transparent', border: 'none', color: COLORS.muted, cursor: 'pointer',
           fontSize: 11, letterSpacing: '0.2em',
-        }}>HOME</button>
+        }}>{t('breadcrumb.home')}</button>
         {route !== 'home' && (
           <>
             <span className="mono" style={{ color: COLORS.muted, opacity: 0.4 }}>/</span>
             <span className="mono" style={{ fontSize: 11, letterSpacing: '0.2em', color: COLORS.text }}>
-              {feature?.label.toUpperCase()}
+              {featureLabel.toUpperCase()}
             </span>
             <span className="mono" style={{
               padding: '3px 8px', borderRadius: 999,
@@ -503,7 +763,7 @@ function Breadcrumbs({ route, nav, feature }) {
           background: 'transparent', border: '1px solid ' + COLORS.line,
           color: COLORS.muted, fontSize: 10, letterSpacing: '0.14em',
           cursor: 'pointer',
-        }}>← ESC · HOME</button>
+        }}>{t('breadcrumb.escHome')}</button>
       )}
     </div>
   );
@@ -515,6 +775,7 @@ function Breadcrumbs({ route, nav, feature }) {
 const VERBS = ['ask', 'think', 'ship', 'archive'];
 
 function HomeView({ nav, ambient, ambientOn }) {
+  const { t } = useLang();
   const [verb, setVerb] = useState(0);
   useEffect(() => {
     const id = setInterval(() => setVerb((v) => (v + 1) % VERBS.length), 1800);
@@ -524,7 +785,7 @@ function HomeView({ nav, ambient, ambientOn }) {
   return (
     <div>
       <section style={{ marginBottom: 36 }}>
-        <Kicker style={{ marginBottom: 14, color: COLORS.red }}>● ONLINE · EXP {EXPERIMENT_NUMBER}</Kicker>
+        <Kicker style={{ marginBottom: 14, color: COLORS.red }}>{t('home.online')} {EXPERIMENT_NUMBER}</Kicker>
         <h1 style={{
           margin: 0,
           fontFamily: 'JetBrains Mono, monospace',
@@ -556,13 +817,12 @@ function HomeView({ nav, ambient, ambientOn }) {
           margin: '20px 0 0', maxWidth: 720,
           fontSize: 16, color: COLORS.muted, lineHeight: 1.6,
         }}>
-          A personal control surface — eight modules wired to one prompt.
-          AI, finance, travel, vault, and tools, woven into a single command center.
+          {t('home.subtitle')}
         </p>
         <div style={{ marginTop: 26, display: 'flex', gap: 10 }}>
-          <Btn variant="solid" color={COLORS.red} onClick={() => nav('ai')}>↗ Open AI Playground</Btn>
-          <Btn variant="ghost" onClick={() => nav('crypto')}>$ Markets</Btn>
-          <Btn variant="ghost" onClick={() => nav('todo')}>✓ To-Do</Btn>
+          <Btn variant="solid" color={COLORS.red} onClick={() => nav('ai')}>{t('home.openAi')}</Btn>
+          <Btn variant="ghost" onClick={() => nav('crypto')}>{t('home.markets')}</Btn>
+          <Btn variant="ghost" onClick={() => nav('todo')}>{t('home.todo')}</Btn>
         </div>
       </section>
 
@@ -572,12 +832,12 @@ function HomeView({ nav, ambient, ambientOn }) {
           marginBottom: 18,
         }}>
           <div>
-            <Kicker>MODULES · 08</Kicker>
+            <Kicker>{t('home.modules')}</Kicker>
             <div className="mono" style={{ fontSize: 20, fontWeight: 700, marginTop: 6, letterSpacing: '-0.01em' }}>
-              The dashboard
+              {t('home.dashboard')}
             </div>
           </div>
-          <Kicker style={{ color: COLORS.green }}>● ALL ONLINE</Kicker>
+          <Kicker style={{ color: COLORS.green }}>{t('home.allOnline')}</Kicker>
         </div>
 
         <div style={{
@@ -600,13 +860,17 @@ function HomeView({ nav, ambient, ambientOn }) {
 // video gen / bg-remove based on the user's prompt.
 // ─────────────────────────────────────────────────────────────
 function ChatFab({ open, onOpen, onClose, ambient, nav }) {
-  const [history, setHistory] = usePersisted('se77n.ai.history.v2', {});
+  const { t } = useLang();
+  const [history, setHistory] = useSyncedData(
+    { localKey: 'se77n.ai.history.v2', serverKey: 'aiHistory' },
+    {},
+  );
   const messages = history.chat || [];
   const recent = messages.slice(-6);
   const [input, setInput] = useState('');
   const [imgRef, setImgRef] = useState(null);
   const [busy, setBusy] = useState(false);
-  const [busyHint, setBusyHint] = useState('thinking');
+  const [busyHint, setBusyHint] = useState(t('fab.thinking'));
   const scrollRef = useRef(null);
   const inputRef = useRef(null);
   const accent = ambient?.isLive ? '#1DB954' : COLORS.red;
@@ -633,7 +897,7 @@ function ChatFab({ open, onOpen, onClose, ambient, nav }) {
       chat: [...(h.chat || []), { role: 'user', content: q || '(image)', image: used?.dataUrl }],
     }));
     setBusy(true);
-    setBusyHint(used ? 'analyzing image' : 'thinking');
+    setBusyHint(used ? t('fab.analyzing') : t('fab.thinking'));
     try {
       const res = await fetch('/api/agent', {
         method: 'POST',
@@ -679,7 +943,7 @@ function ChatFab({ open, onOpen, onClose, ambient, nav }) {
 
   if (!open) {
     return (
-      <button onClick={onOpen} aria-label="Open chat with se77n"
+      <button onClick={onOpen} aria-label={t('fab.openChat')}
         style={{
           position: 'fixed', right: 24, bottom: 24, zIndex: 60,
           padding: '13px 20px 13px 16px', borderRadius: 999,
@@ -701,13 +965,13 @@ function ChatFab({ open, onOpen, onClose, ambient, nav }) {
         }}
       >
         <ChatBubbleIcon size={16} color="#0d0a08" />
-        Ask anything…
+        {t('fab.ask')}
       </button>
     );
   }
 
   return (
-    <div role="dialog" aria-label="Chat with se77n"
+    <div role="dialog" aria-label={t('fab.openChat')}
       style={{
         position: 'fixed', right: 24, bottom: 24, zIndex: 60,
         width: 400, maxWidth: 'calc(100vw - 32px)',
@@ -729,12 +993,12 @@ function ChatFab({ open, onOpen, onClose, ambient, nav }) {
             boxShadow: `0 0 6px ${accent}`,
           }} />
           <div className="mono" style={{ fontSize: 13, fontWeight: 700, color: COLORS.text }}>
-            Ask anything…
+            {t('fab.ask')}
           </div>
         </div>
         <div style={{ display: 'flex', gap: 6 }}>
-          <FabHeaderBtn title="Open full chat" onClick={() => { onClose(); nav('ai'); }}>↗</FabHeaderBtn>
-          <FabHeaderBtn title="Close (Esc)" onClick={onClose}>✕</FabHeaderBtn>
+          <FabHeaderBtn title={t('fab.openFull')} onClick={() => { onClose(); nav('ai'); }}>↗</FabHeaderBtn>
+          <FabHeaderBtn title={t('fab.close')} onClick={onClose}>✕</FabHeaderBtn>
         </div>
       </div>
 
@@ -751,7 +1015,7 @@ function ChatFab({ open, onOpen, onClose, ambient, nav }) {
             <div className="mono" style={{
               fontSize: 9, letterSpacing: '0.2em', color: accent, fontWeight: 700, marginBottom: 6,
             }}>se77n ::</div>
-            Need help?
+            {t('fab.needHelp')}
           </div>
         ) : (
           recent.map((m, i) => <ChatBubble key={i} msg={m} accent={accent} />)
@@ -799,7 +1063,7 @@ function ChatFab({ open, onOpen, onClose, ambient, nav }) {
           ref={inputRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="ask se77n…"
+          placeholder={t('fab.placeholder')}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
           }}
@@ -927,6 +1191,9 @@ function ChatBubble({ msg, accent, typing }) {
 }
 
 function FeatureCard({ feature, onClick, idx }) {
+  const { t } = useLang();
+  const label = t('nav.' + feature.id);
+  const desc = t('feature.' + feature.id + '.desc');
   const iconNode = typeof feature.icon === 'function' ? feature.icon(feature.accent) : feature.icon;
   return (
     <button onClick={onClick} style={{
@@ -970,9 +1237,9 @@ function FeatureCard({ feature, onClick, idx }) {
       <div>
         <div className="mono" style={{
           fontSize: 14, fontWeight: 700, letterSpacing: '-0.005em', color: COLORS.text,
-        }}>{feature.label}</div>
+        }}>{label}</div>
         <div style={{ fontSize: 12, color: COLORS.muted, marginTop: 6, lineHeight: 1.5 }}>
-          {feature.desc}
+          {desc}
         </div>
       </div>
     </button>

@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import {
   COLORS, TECH, VAULT_SEED,
   Panel, Btn, Field, Pill, Kicker, Sparkline,
-  usePersisted, copyText, genSeries,
+  useSyncedData, copyText, genSeries,
 } from './lib.jsx';
 
 // ═════════════════════════════════════════════════════════════
@@ -524,12 +524,15 @@ const PRI = {
 };
 
 export function TodoList() {
-  const [items, setItems] = usePersisted('se77n.todo.v2', [
+  const [items, setItems] = useSyncedData(
+    { localKey: 'se77n.todo.v2', serverKey: 'todo' },
+    [
     { id: 't1', text: 'Ship desktop redesign (red/green/gold)', priority: 'P1', done: false, created: Date.now() - 86400000 },
     { id: 't2', text: 'Wire Spotify ambient palette (OAuth)',    priority: 'P2', done: false, created: Date.now() - 172800000 },
     { id: 't3', text: 'Replace mock VAULT with KV store',        priority: 'P2', done: false, created: Date.now() - 259200000 },
     { id: 't4', text: 'Drop the mobile demo into archives',      priority: 'P3', done: true,  created: Date.now() - 604800000 },
-  ]);
+    ],
+  );
   const [draft, setDraft] = useState('');
   const [pri, setPri] = useState('P2');
   const [filter, setFilter] = useState('open');

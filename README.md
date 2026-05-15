@@ -52,8 +52,50 @@ vercel dev
 | `FAL_IMAGE_MODEL`      | no       | defaults to `fal-ai/openai/gpt-image-2/edit`|
 | `FAL_VIDEO_T2V_MODEL`  | no       | defaults to `fal-ai/bytedance/seedance-2.0/text-to-video`  |
 | `FAL_VIDEO_I2V_MODEL`  | no       | defaults to `fal-ai/bytedance/seedance-2.0/image-to-video` |
+| `MONGODB_URI`          | login    | MongoDB Atlas connection string             |
+| `AUTH_SECRET`          | login    | ≥24 random chars, signs session JWT         |
+| `AUTH_BASE_URL`        | login    | e.g. `https://se77n.com` (for OAuth redirects) |
+| `DISCORD_CLIENT_ID`    | login    | Discord OAuth app                           |
+| `DISCORD_CLIENT_SECRET`| login    | Discord OAuth app                           |
+| `GOOGLE_CLIENT_ID`     | login    | Google OAuth client                         |
+| `GOOGLE_CLIENT_SECRET` | login    | Google OAuth client                         |
 
 `.env.local` is gitignored. **Never commit secrets.**
+
+## Login + cross-device sync (optional)
+
+Logging in via Discord or Google enables per-user sync of todos, AI chat
+history, and (later) vault entries via MongoDB. Without these env vars,
+the site still works — falls back to localStorage as before.
+
+### Setting it up
+
+1. **MongoDB Atlas** — create a free M0 cluster
+   ([atlas](https://www.mongodb.com/cloud/atlas/register)). Add a database
+   user, allow `0.0.0.0/0` in Network Access (Vercel uses dynamic IPs).
+   Grab the connection string → `MONGODB_URI`.
+2. **AUTH_SECRET** — generate with
+   `node -e "console.log(crypto.randomBytes(48).toString('base64'))"`.
+3. **Discord OAuth** — at
+   [discord.com/developers](https://discord.com/developers/applications),
+   create an application → OAuth2 → add redirect:
+   `https://YOUR_DOMAIN/api/auth/discord/callback`. Copy Client ID + Secret.
+4. **Google OAuth** — at
+   [console.cloud.google.com](https://console.cloud.google.com/apis/credentials),
+   create OAuth client (Web). Add redirect:
+   `https://YOUR_DOMAIN/api/auth/google/callback`. Copy Client ID + Secret.
+5. **AUTH_BASE_URL** — your public origin (no trailing slash).
+6. Add all of the above in Vercel → Settings → Environment Variables, redeploy.
+
+### Local dev caveat
+
+`npm run dev` (vite) only serves the frontend — `/api/*` routes don't run.
+Login flow is therefore disabled on `localhost:5173`; the UI silently falls
+back to guest mode (localStorage only).
+
+To test login locally, use `vercel dev` instead (port 3000 by default), and
+register `http://localhost:3000/api/auth/{discord,google}/callback` as an
+additional redirect URI in each provider's console.
 
 ## Deploy to Vercel
 
