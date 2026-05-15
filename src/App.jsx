@@ -43,11 +43,16 @@ export default function App() {
   const [transitioning, setTransitioning] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
 
-  const lanyard = useLanyard();
+  const { user: authUser } = useAuth();
+  // Subscribe to Lanyard for the logged-in Discord user when available;
+  // otherwise fall back to the owner's preset ID inside the lib hook.
+  const lanyardUserId = authUser?.provider === 'discord' && authUser?.providerUserId
+    ? authUser.providerUserId
+    : undefined;
+  const lanyard = useLanyard(lanyardUserId);
   const ambient = useAmbient(ambientOn, lanyard.data);
   const geo = useGeoDayNight();
   const now = useClock();
-  const { t } = useLang();
 
   const phase = geo.phase;
 
@@ -126,13 +131,13 @@ export default function App() {
         <footer style={{
           marginTop: 40, paddingTop: 20,
           borderTop: '1px solid ' + COLORS.line,
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', alignItems: 'center',
           fontSize: 10, color: COLORS.muted, letterSpacing: '0.18em',
         }} className="mono">
-          <span>SE77N · {now.getFullYear()} · EXP {EXPERIMENT_NUMBER}</span>
-          <span>{t('footer.build')} · {now.toISOString().slice(0, 10).replaceAll('-', '.')}</span>
-          <span style={{ color: phase === 'day' ? COLORS.gold : '#9bb4ff' }}>
-            {phase === 'day' ? t('footer.daylight') : t('footer.nightshift')}
+          <span style={{ textAlign: 'left' }}>SE77N · {now.getFullYear()} · EXP {EXPERIMENT_NUMBER}</span>
+          <span style={{ textAlign: 'center' }}>BUILD · {now.toISOString().slice(0, 10).replaceAll('-', '.')}</span>
+          <span style={{ textAlign: 'right', color: phase === 'day' ? COLORS.gold : '#9bb4ff' }}>
+            {phase === 'day' ? '◐ DAYLIGHT' : '◑ NIGHTSHIFT'}
           </span>
         </footer>
       </main>
@@ -147,10 +152,9 @@ export default function App() {
 }
 
 function RouteFallback() {
-  const { t } = useLang();
   return (
     <div style={{ padding: 40, color: COLORS.muted, fontSize: 12 }} className="mono">
-      {t('route.loading')}
+      ◇ loading module…
     </div>
   );
 }
@@ -228,19 +232,19 @@ function TopBar({ phase, now, geo, nav, ambient, ambientOn }) {
           fontSize: 9, letterSpacing: '0.24em', color: COLORS.muted, lineHeight: 1,
           textTransform: 'uppercase',
         }}>
-          {t('topbar.experiment')}&nbsp;<span style={{
+          {'Experiment'}&nbsp;<span style={{
             color: COLORS.red, fontWeight: 700,
             textShadow: `0 0 4px ${COLORS.red}aa, 0 0 10px ${COLORS.red}55`,
-          }}>{EXPERIMENT_NUMBER}</span> / {t('topbar.desktop')}
+          }}>{EXPERIMENT_NUMBER}</span> / Desktop
         </div>
       </button>
 
-      <NowPlaying ambient={ambient} on={ambientOn} />
+      {ambient.isLive && <NowPlaying ambient={ambient} on={ambientOn} />}
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <LangToggle lang={lang} toggle={toggle} title={t('topbar.toggleLang')} />
-        <AuthChip />
         <TimeChip phase={phase} city={geo.city} timeStr={tStr} />
+        <AuthChip />
       </div>
     </header>
   );
@@ -389,6 +393,7 @@ function AuthChip() {
             background: COLORS.red + '14', border: `1px solid ${COLORS.red}55`,
             color: COLORS.red, cursor: 'pointer',
             fontSize: 11, letterSpacing: '0.14em', fontWeight: 700,
+            textTransform: 'uppercase',
             display: 'flex', alignItems: 'center', gap: 6,
           }}
           onMouseEnter={(e) => { e.currentTarget.style.background = COLORS.red + '22'; }}
@@ -643,7 +648,6 @@ function PlayerBtn({ children, onClick, primary }) {
 // Nav rail
 // ─────────────────────────────────────────────────────────────
 function NavRail({ route, nav }) {
-  const { t } = useLang();
   return (
     <aside style={{
       position: 'fixed', top: 64, left: 0, bottom: 0,
@@ -656,9 +660,8 @@ function NavRail({ route, nav }) {
     }}>
       {FEATURES.map((f) => {
         const active = f.id === route;
-        const label = t('nav.' + f.id);
         return (
-          <button key={f.id} onClick={() => nav(f.id)} title={label}
+          <button key={f.id} onClick={() => nav(f.id)} title={f.label}
             style={{
               width: 56, height: 56, borderRadius: 12,
               background: active ? f.accent + '1a' : 'transparent',
@@ -731,7 +734,7 @@ function NavRail({ route, nav }) {
 // ─────────────────────────────────────────────────────────────
 function Breadcrumbs({ route, nav, feature }) {
   const { t } = useLang();
-  const featureLabel = feature ? t('nav.' + feature.id) : '';
+  const featureLabel = feature ? feature.label : '';
   return (
     <div style={{
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -741,7 +744,7 @@ function Breadcrumbs({ route, nav, feature }) {
         <button onClick={() => nav('home')} className="mono" style={{
           background: 'transparent', border: 'none', color: COLORS.muted, cursor: 'pointer',
           fontSize: 11, letterSpacing: '0.2em',
-        }}>{t('breadcrumb.home')}</button>
+        }}>HOME</button>
         {route !== 'home' && (
           <>
             <span className="mono" style={{ color: COLORS.muted, opacity: 0.4 }}>/</span>
@@ -785,7 +788,7 @@ function HomeView({ nav, ambient, ambientOn }) {
   return (
     <div>
       <section style={{ marginBottom: 36 }}>
-        <Kicker style={{ marginBottom: 14, color: COLORS.red }}>{t('home.online')} {EXPERIMENT_NUMBER}</Kicker>
+        <Kicker style={{ marginBottom: 14, color: COLORS.red }}>● ONLINE · EXP {EXPERIMENT_NUMBER}</Kicker>
         <h1 style={{
           margin: 0,
           fontFamily: 'JetBrains Mono, monospace',
@@ -817,7 +820,8 @@ function HomeView({ nav, ambient, ambientOn }) {
           margin: '20px 0 0', maxWidth: 720,
           fontSize: 16, color: COLORS.muted, lineHeight: 1.6,
         }}>
-          {t('home.subtitle')}
+          A personal control surface — eight modules wired to one prompt.
+          AI, finance, travel, vault, and tools, woven into a single command center.
         </p>
         <div style={{ marginTop: 26, display: 'flex', gap: 10 }}>
           <Btn variant="solid" color={COLORS.red} onClick={() => nav('ai')}>{t('home.openAi')}</Btn>
@@ -832,12 +836,12 @@ function HomeView({ nav, ambient, ambientOn }) {
           marginBottom: 18,
         }}>
           <div>
-            <Kicker>{t('home.modules')}</Kicker>
+            <Kicker>MODULES · 08</Kicker>
             <div className="mono" style={{ fontSize: 20, fontWeight: 700, marginTop: 6, letterSpacing: '-0.01em' }}>
-              {t('home.dashboard')}
+              The dashboard
             </div>
           </div>
-          <Kicker style={{ color: COLORS.green }}>{t('home.allOnline')}</Kicker>
+          <Kicker style={{ color: COLORS.green }}>● ALL ONLINE</Kicker>
         </div>
 
         <div style={{
@@ -1015,7 +1019,7 @@ function ChatFab({ open, onOpen, onClose, ambient, nav }) {
             <div className="mono" style={{
               fontSize: 9, letterSpacing: '0.2em', color: accent, fontWeight: 700, marginBottom: 6,
             }}>se77n ::</div>
-            {t('fab.needHelp')}
+            Need help?
           </div>
         ) : (
           recent.map((m, i) => <ChatBubble key={i} msg={m} accent={accent} />)
@@ -1191,9 +1195,8 @@ function ChatBubble({ msg, accent, typing }) {
 }
 
 function FeatureCard({ feature, onClick, idx }) {
-  const { t } = useLang();
-  const label = t('nav.' + feature.id);
-  const desc = t('feature.' + feature.id + '.desc');
+  const label = feature.label;
+  const desc = feature.desc;
   const iconNode = typeof feature.icon === 'function' ? feature.icon(feature.accent) : feature.icon;
   return (
     <button onClick={onClick} style={{

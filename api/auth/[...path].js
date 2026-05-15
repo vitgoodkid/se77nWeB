@@ -57,6 +57,7 @@ async function handleMe(req, res) {
       user: {
         id: u._id.toString(),
         provider: u.provider,
+        providerUserId: u.providerUserId,
         displayName: u.displayName,
         username: u.username,
         email: u.email,

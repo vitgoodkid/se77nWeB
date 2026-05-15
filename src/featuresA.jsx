@@ -183,7 +183,7 @@ export function AIPlayground() {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: 18, height: '100%' }}>
       <Panel padding={16} style={{ display: 'flex', flexDirection: 'column' }}>
-        <Kicker style={{ marginBottom: 14 }}>{t('ai.presets')} · {String(AI_PRESETS.length).padStart(2, '0')}</Kicker>
+        <Kicker style={{ marginBottom: 14 }}>PRESETS · {String(AI_PRESETS.length).padStart(2, '0')}</Kicker>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {AI_PRESETS.map((p) => {
             const active = p.id === presetId;

@@ -656,7 +656,8 @@ export function useAmbient(enabled = true, lanyard = null) {
     return AMBIENT_TRACKS[trackIdx];
   }, [isLive, spotify?.track_id, spotify?.song, spotify?.artist, spotify?.album, spotify?.album_art_url, trackIdx]);
 
-  // Progress driver — Spotify timestamps when live, fake time when not
+  // Progress driver — Spotify timestamps when live, palette-rotation timer when not.
+  // Not-live: rotate palette every 40s; no fake progress tracking (widget hidden anyway).
   useEffect(() => {
     if (isLive) {
       const start = spotify.timestamps?.start;
@@ -673,17 +674,11 @@ export function useAmbient(enabled = true, lanyard = null) {
       const id = setInterval(tick, 500);
       return () => clearInterval(id);
     }
+    setT(0);
     if (!playing) return;
     const id = setInterval(() => {
-      setT((prev) => {
-        const next = prev + 0.003;
-        if (next >= 1) {
-          setTrackIdx((i) => (i + 1) % AMBIENT_TRACKS.length);
-          return 0;
-        }
-        return next;
-      });
-    }, 200);
+      setTrackIdx((i) => (i + 1) % AMBIENT_TRACKS.length);
+    }, 40_000);
     return () => clearInterval(id);
   }, [playing, isLive, spotify?.timestamps?.start, spotify?.timestamps?.end]);
 
