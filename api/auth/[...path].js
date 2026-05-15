@@ -189,10 +189,10 @@ export default async function handler(req, res) {
 
   if (path === 'me') return handleMe(req, res);
   if (path === 'logout') return handleLogout(req, res);
-  if (path === 'google/start') return handleOAuthStart(req, res, 'google');
-  if (path === 'discord/start') return handleOAuthStart(req, res, 'discord');
-  if (path === 'google/callback') return handleOAuthCallback(req, res, 'google');
-  if (path === 'discord/callback') return handleOAuthCallback(req, res, 'discord');
+  if (path === 'google-start' || path === 'google/start') return handleOAuthStart(req, res, 'google');
+  if (path === 'discord-start' || path === 'discord/start') return handleOAuthStart(req, res, 'discord');
+  if (path === 'google-callback' || path === 'google/callback') return handleOAuthCallback(req, res, 'google');
+  if (path === 'discord-callback' || path === 'discord/callback') return handleOAuthCallback(req, res, 'discord');
 
   return res.status(404).json({ error: 'not_found' });
 }

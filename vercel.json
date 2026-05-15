@@ -8,6 +8,12 @@
       "maxDuration": 60
     }
   },
+  "rewrites": [
+    { "source": "/api/auth/google/start", "destination": "/api/auth/google-start" },
+    { "source": "/api/auth/google/callback", "destination": "/api/auth/google-callback" },
+    { "source": "/api/auth/discord/start", "destination": "/api/auth/discord-start" },
+    { "source": "/api/auth/discord/callback", "destination": "/api/auth/discord-callback" }
+  ],
   "headers": [
     {
       "source": "/assets/(.*)",
