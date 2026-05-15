@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import {
   COLORS, CITIES,
   Panel, Btn, Field, Pill, Kicker,
-  usePersisted, copyText,
+  usePersisted, usePasteImage, copyText,
 } from './lib.jsx';
 
 // ═════════════════════════════════════════════════════════════
@@ -49,6 +49,11 @@ const AI_PRESETS = [
     placeholder: 'Describe the video clip…',
     seed: 'Prompt → 5s clip via fal.ai seedance-2.0. With image input I switch to image-to-video.',
   },
+  {
+    id: 'bg', kind: 'bg-remove', label: 'BG Remove', icon: '⊘',
+    placeholder: 'Attach an image (paperclip or paste) — no prompt needed.',
+    seed: 'Drop an image and I\'ll erase the background via fal.ai ideogram/remove-background.',
+  },
 ];
 
 export function AIPlayground() {
@@ -60,6 +65,10 @@ export function AIPlayground() {
   const [imgRef, setImgRef] = useState(null); // { dataUrl, name }
   const [busy, setBusy] = useState(false);
   const scrollRef = useRef(null);
+
+  // Clipboard paste
+  const handlePaste = useCallback((img) => setImgRef(img), []);
+  usePasteImage(handlePaste, true);
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -86,7 +95,7 @@ export function AIPlayground() {
         const res = await fetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ system: preset.system, prompt: q }),
+          body: JSON.stringify({ system: preset.system, prompt: q, image: usedImage?.dataUrl }),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || `chat ${res.status}`);
@@ -109,6 +118,16 @@ export function AIPlayground() {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || `video ${res.status}`);
         assistantMsg = { role: 'assistant', content: '', video: data.video };
+      } else if (preset.kind === 'bg-remove') {
+        if (!usedImage) throw new Error('attach an image first');
+        const res = await fetch('/api/bg-remove', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image: usedImage.dataUrl }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || `bg-remove ${res.status}`);
+        assistantMsg = { role: 'assistant', content: '', image: data.image };
       }
       setMessages((m) => [...m, assistantMsg]);
     } catch (e) {
@@ -130,7 +149,7 @@ export function AIPlayground() {
     reader.readAsDataURL(f);
   }
 
-  const acceptImage = preset.kind === 'image' || preset.kind === 'video';
+  const acceptImage = true; // every preset can take an image (chat = vision, others = source)
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: 18, height: '100%' }}>
@@ -175,6 +194,8 @@ export function AIPlayground() {
           <div>chat · gemini-3.1-flash-lite</div>
           <div>image · fal · gpt-image-2</div>
           <div>video · fal · seedance-2.0</div>
+          <div>bg · fal · ideogram</div>
+          <div style={{ marginTop: 6, opacity: 0.6 }}>⌘V to paste images</div>
         </div>
       </Panel>
 

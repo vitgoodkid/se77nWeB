@@ -1,10 +1,12 @@
-import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import { useCallback } from 'react';
 import {
   COLORS, SOCIALS,
   Btn, Kicker,
-  GlyphSun, GlyphMoon,
+  GlyphSun, GlyphMoon, GlobeIcon, ControllerIcon,
+  PaperclipIcon, ChatBubbleIcon,
   useClock, useGeoDayNight, useAmbient, useLanyard,
-  resolveAssetUrl,
+  usePersisted, usePasteImage, resolveAssetUrl,
 } from './lib.jsx';
 
 const AIPlayground       = lazy(() => import('./featuresA.jsx').then((m) => ({ default: m.AIPlayground })));
@@ -20,15 +22,15 @@ const FEATURES = [
   { id: 'home',   label: 'Home',                icon: '⌂',   accent: COLORS.text,  short: '00' },
   { id: 'ai',     label: 'AI Playground',       icon: '✦',   accent: COLORS.red,   short: '01', desc: 'Chat · image · video' },
   { id: 'tools',  label: 'Toolbox',             icon: '⚒',   accent: COLORS.green, short: '02', desc: 'Public + private utilities' },
-  { id: 'travel', label: 'Travel Archive',      icon: '◉',   accent: COLORS.gold,  short: '03', desc: 'World map · 16 cities' },
-  { id: 'game',   label: 'Game',                icon: '◐',   accent: COLORS.red,   short: '04', desc: 'Coming soon' },
+  { id: 'travel', label: 'Travel Archive',      icon: (c) => <GlobeIcon color={c} size={20} />, accent: COLORS.gold,  short: '03', desc: 'World map · 16 cities' },
+  { id: 'game',   label: 'Game',                icon: (c) => <ControllerIcon color={c} size={22} />, accent: COLORS.red,   short: '04', desc: 'Coming soon' },
   { id: 'tech',   label: 'Tech Stack Monitor',  icon: '⌬',   accent: COLORS.green, short: '05', desc: '11 services · monthly burn' },
   { id: 'crypto', label: 'Crypto Watch',        icon: '$',   accent: COLORS.gold,  short: '06', desc: 'BTC · GOLD · TWD ⇄ VND' },
   { id: 'vault',  label: 'Digital Vault',       icon: '⌘',   accent: COLORS.red,   short: '07', desc: 'Credentials manager' },
   { id: 'todo',   label: 'To-Do List',          icon: '✓',   accent: COLORS.green, short: '08', desc: 'Priorities · localStorage' },
 ];
 
-const EXPERIMENT_NUMBER = '005';
+const EXPERIMENT_NUMBER = '007';
 
 export default function App() {
   const ambientOn = true;
@@ -39,6 +41,7 @@ export default function App() {
     return FEATURES.find((f) => f.id === h) ? h : 'home';
   });
   const [transitioning, setTransitioning] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
 
   const lanyard = useLanyard();
   const ambient = useAmbient(ambientOn, lanyard.data);
@@ -59,11 +62,13 @@ export default function App() {
 
   useEffect(() => {
     const h = (e) => {
-      if (e.key === 'Escape' && route !== 'home') nav('home');
+      if (e.key !== 'Escape') return;
+      if (chatOpen) { setChatOpen(false); return; }
+      if (route !== 'home') nav('home');
     };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
-  }, [route]);
+  }, [route, chatOpen]);
 
   useEffect(() => {
     const onHash = () => {
@@ -130,6 +135,11 @@ export default function App() {
           </span>
         </footer>
       </main>
+
+      <ChatFab open={chatOpen}
+        onOpen={() => setChatOpen(true)}
+        onClose={() => setChatOpen(false)}
+        ambient={ambient} nav={nav} />
     </div>
   );
 }
@@ -196,25 +206,28 @@ function TopBar({ phase, now, geo, nav, ambient, ambientOn }) {
       backdropFilter: 'blur(14px)',
       borderBottom: '1px solid ' + COLORS.line,
     }}>
-      <button onClick={() => nav('home')} style={{
-        background: 'transparent', border: 'none', cursor: 'pointer',
-        display: 'flex', alignItems: 'center', gap: 14, padding: 0,
-        color: COLORS.text,
-      }}>
-        <span style={{
-          width: 36, height: 36, borderRadius: 10,
-          background: COLORS.red, color: '#0d0a08',
-          display: 'grid', placeItems: 'center',
-          fontFamily: 'JetBrains Mono, monospace', fontSize: 16, fontWeight: 800,
-          boxShadow: `0 0 24px ${COLORS.red}55`,
-        }}>S</span>
-        <div style={{ textAlign: 'left' }}>
-          <div className="mono" style={{ fontSize: 16, fontWeight: 800, letterSpacing: '-0.01em', lineHeight: 1 }}>
-            se<span style={{ color: COLORS.red, textShadow: `0 0 12px ${COLORS.red}80` }}>77</span>n
-          </div>
-          <div className="mono" style={{ fontSize: 8, letterSpacing: '0.22em', color: COLORS.muted, marginTop: 3 }}>
-            EXP·{EXPERIMENT_NUMBER} / DESKTOP
-          </div>
+      <button onClick={() => nav('home')} aria-label="se77n · home"
+        style={{
+          background: 'transparent', border: 'none', cursor: 'pointer',
+          display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
+          padding: 0, gap: 4, color: COLORS.text,
+        }}>
+        <div className="mono" style={{
+          fontSize: 30, fontWeight: 800, letterSpacing: '-0.025em', lineHeight: 0.95,
+        }}>
+          se<span style={{
+            color: COLORS.red,
+            textShadow: `0 0 6px ${COLORS.red}cc, 0 0 18px ${COLORS.red}66, 0 0 36px ${COLORS.red}33`,
+          }}>77</span>n
+        </div>
+        <div className="mono" style={{
+          fontSize: 9, letterSpacing: '0.24em', color: COLORS.muted, lineHeight: 1,
+          textTransform: 'uppercase',
+        }}>
+          Experiment&nbsp;<span style={{
+            color: COLORS.red, fontWeight: 700,
+            textShadow: `0 0 4px ${COLORS.red}aa, 0 0 10px ${COLORS.red}55`,
+          }}>{EXPERIMENT_NUMBER}</span> / Desktop
         </div>
       </button>
 
@@ -411,8 +424,11 @@ function NavRail({ route, nav }) {
               }
             }}
           >
-            <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 18, fontWeight: 700, lineHeight: 1 }}>
-              {f.icon}
+            <span style={{
+              fontFamily: 'JetBrains Mono, monospace', fontSize: 18, fontWeight: 700, lineHeight: 1,
+              display: 'grid', placeItems: 'center', height: 20,
+            }}>
+              {typeof f.icon === 'function' ? f.icon(active ? f.accent : COLORS.muted) : f.icon}
             </span>
             <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, letterSpacing: '0.16em' }}>
               {f.short}
@@ -507,53 +523,47 @@ function HomeView({ nav, ambient, ambientOn }) {
 
   return (
     <div>
-      <section style={{
-        display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 28, marginBottom: 28,
-      }}>
-        <div>
-          <Kicker style={{ marginBottom: 14, color: COLORS.red }}>● ONLINE · EXP {EXPERIMENT_NUMBER}</Kicker>
-          <h1 style={{
-            margin: 0,
-            fontFamily: 'JetBrains Mono, monospace',
-            fontSize: 78, lineHeight: 1.02, fontWeight: 800, letterSpacing: '-0.03em',
-          }}>
-            <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 26, flexWrap: 'wrap' }}>
-              {VERBS.map((v, i) => (
-                <span key={v} style={{
-                  opacity: verb === i ? 1 : 0.18,
-                  color: verb === i ? COLORS.text : COLORS.muted,
-                  transition: 'opacity 300ms, color 300ms',
-                  position: 'relative',
-                }}>
-                  {v}
-                  {verb === i && (
-                    <span style={{
-                      display: 'inline-block', width: 14, height: 56,
-                      marginLeft: 8, verticalAlign: '-4px',
-                      background: COLORS.red,
-                      boxShadow: `0 0 18px ${COLORS.red}66`,
-                      animation: 'blink 1s steps(1) infinite',
-                    }} />
-                  )}
-                </span>
-              ))}
-            </span>
-          </h1>
-          <p style={{
-            margin: '20px 0 0', maxWidth: 620,
-            fontSize: 16, color: COLORS.muted, lineHeight: 1.6,
-          }}>
-            A personal control surface — eight modules wired to one prompt.
-            AI, finance, travel, vault, and tools, woven into a single command center.
-          </p>
-          <div style={{ marginTop: 26, display: 'flex', gap: 10 }}>
-            <Btn variant="solid" color={COLORS.red} onClick={() => nav('ai')}>↗ Open AI Playground</Btn>
-            <Btn variant="ghost" onClick={() => nav('crypto')}>$ Markets</Btn>
-            <Btn variant="ghost" onClick={() => nav('todo')}>✓ To-Do</Btn>
-          </div>
+      <section style={{ marginBottom: 36 }}>
+        <Kicker style={{ marginBottom: 14, color: COLORS.red }}>● ONLINE · EXP {EXPERIMENT_NUMBER}</Kicker>
+        <h1 style={{
+          margin: 0,
+          fontFamily: 'JetBrains Mono, monospace',
+          fontSize: 78, lineHeight: 1.02, fontWeight: 800, letterSpacing: '-0.03em',
+        }}>
+          <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 26, flexWrap: 'wrap' }}>
+            {VERBS.map((v, i) => (
+              <span key={v} style={{
+                opacity: verb === i ? 1 : 0.18,
+                color: verb === i ? COLORS.text : COLORS.muted,
+                transition: 'opacity 300ms, color 300ms',
+                position: 'relative',
+              }}>
+                {v}
+                {verb === i && (
+                  <span style={{
+                    display: 'inline-block', width: 14, height: 56,
+                    marginLeft: 8, verticalAlign: '-4px',
+                    background: COLORS.red,
+                    boxShadow: `0 0 18px ${COLORS.red}66`,
+                    animation: 'blink 1s steps(1) infinite',
+                  }} />
+                )}
+              </span>
+            ))}
+          </span>
+        </h1>
+        <p style={{
+          margin: '20px 0 0', maxWidth: 720,
+          fontSize: 16, color: COLORS.muted, lineHeight: 1.6,
+        }}>
+          A personal control surface — eight modules wired to one prompt.
+          AI, finance, travel, vault, and tools, woven into a single command center.
+        </p>
+        <div style={{ marginTop: 26, display: 'flex', gap: 10 }}>
+          <Btn variant="solid" color={COLORS.red} onClick={() => nav('ai')}>↗ Open AI Playground</Btn>
+          <Btn variant="ghost" onClick={() => nav('crypto')}>$ Markets</Btn>
+          <Btn variant="ghost" onClick={() => nav('todo')}>✓ To-Do</Btn>
         </div>
-
-        <HeroSideCard ambient={ambient} on={ambientOn} />
       </section>
 
       <section style={{ marginBottom: 28 }}>
@@ -580,170 +590,351 @@ function HomeView({ nav, ambient, ambientOn }) {
           ))}
         </div>
       </section>
-
-      <section style={{ marginTop: 30 }}>
-        <Kicker style={{ marginBottom: 14 }}>CHANNELS</Kicker>
-        <div style={{
-          display: 'flex', gap: 12, alignItems: 'center',
-          padding: 18, background: COLORS.panel,
-          border: '1px solid ' + COLORS.line, borderRadius: 14,
-        }}>
-          {SOCIALS.map((s) => (
-            <a key={s.id} href={s.href} aria-label={s.label} title={s.label}
-              style={{
-                width: 48, height: 48, display: 'grid', placeItems: 'center',
-                background: COLORS.bg, borderRadius: 10,
-                border: '1px solid ' + COLORS.line,
-                color: COLORS.muted, transition: 'all 150ms',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = COLORS.red;
-                e.currentTarget.style.borderColor = COLORS.red + '60';
-                e.currentTarget.style.transform = 'translateY(-2px)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = COLORS.muted;
-                e.currentTarget.style.borderColor = COLORS.line;
-                e.currentTarget.style.transform = 'translateY(0)';
-              }}
-            >{s.icon}</a>
-          ))}
-          <div style={{ flex: 1 }} />
-          <Kicker style={{ color: COLORS.muted }}>5 SURFACES · @se77n</Kicker>
-        </div>
-      </section>
     </div>
   );
 }
 
-function HeroSideCard({ ambient, on }) {
-  const { track, t: progress, isLive, game, status, elapsed, total } = ambient;
-  const accent = track.palette[0];
-  const statusColor = {
-    online:  COLORS.green,
-    idle:    COLORS.gold,
-    dnd:     COLORS.red,
-    offline: COLORS.muted,
-  }[status] || COLORS.muted;
-  const gameArt = game ? resolveAssetUrl(game, 'large_image') : null;
+// ─────────────────────────────────────────────────────────────
+// Floating chat — global FAB, expand on click, ESC to close
+// Routes to /api/agent which auto-picks chat / image gen / image edit /
+// video gen / bg-remove based on the user's prompt.
+// ─────────────────────────────────────────────────────────────
+function ChatFab({ open, onOpen, onClose, ambient, nav }) {
+  const [history, setHistory] = usePersisted('se77n.ai.history.v2', {});
+  const messages = history.chat || [];
+  const recent = messages.slice(-6);
+  const [input, setInput] = useState('');
+  const [imgRef, setImgRef] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [busyHint, setBusyHint] = useState('thinking');
+  const scrollRef = useRef(null);
+  const inputRef = useRef(null);
+  const accent = ambient?.isLive ? '#1DB954' : COLORS.red;
+
+  // Clipboard paste — only while expanded
+  const handlePaste = useCallback((img) => setImgRef(img), []);
+  usePasteImage(handlePaste, open);
+
+  useEffect(() => {
+    if (open) {
+      if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      setTimeout(() => inputRef.current?.focus(), 80);
+    }
+  }, [open, messages.length, busy]);
+
+  async function send() {
+    const q = input.trim();
+    if ((!q && !imgRef) || busy) return;
+    const used = imgRef;
+    setInput('');
+    setImgRef(null);
+    setHistory((h) => ({
+      ...h,
+      chat: [...(h.chat || []), { role: 'user', content: q || '(image)', image: used?.dataUrl }],
+    }));
+    setBusy(true);
+    setBusyHint(used ? 'analyzing image' : 'thinking');
+    try {
+      const res = await fetch('/api/agent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: q, image: used?.dataUrl }),
+      });
+      const data = await res.json();
+      if (!res.ok && res.status !== 202) throw new Error(data.error || `agent ${res.status}`);
+
+      let assistantMsg;
+      if (data.kind === 'image') {
+        assistantMsg = { role: 'assistant', content: '', image: data.image, intent: data.intent };
+      } else if (data.kind === 'video') {
+        assistantMsg = { role: 'assistant', content: '', video: data.video, intent: data.intent };
+      } else if (data.kind === 'pending') {
+        assistantMsg = {
+          role: 'assistant',
+          content: '◇ Still rendering — ' + (data.intent || 'job') + ' often exceeds 60s. Try again or shorten the prompt.',
+          intent: data.intent,
+        };
+      } else {
+        assistantMsg = { role: 'assistant', content: data.text || '', intent: data.intent || 'chat' };
+      }
+      setHistory((h) => ({ ...h, chat: [...(h.chat || []), assistantMsg] }));
+    } catch (e) {
+      setHistory((h) => ({
+        ...h,
+        chat: [...(h.chat || []), { role: 'assistant', content: '⚠ ' + (e.message || 'error') }],
+      }));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function onImage(e) {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => setImgRef({ name: f.name, dataUrl: ev.target.result });
+    reader.readAsDataURL(f);
+    e.target.value = '';
+  }
+
+  if (!open) {
+    return (
+      <button onClick={onOpen} aria-label="Open chat with se77n"
+        style={{
+          position: 'fixed', right: 24, bottom: 24, zIndex: 60,
+          padding: '13px 20px 13px 16px', borderRadius: 999,
+          background: accent, color: '#0d0a08',
+          border: 'none', fontFamily: 'inherit',
+          fontWeight: 700, fontSize: 13, letterSpacing: '0.01em',
+          cursor: 'pointer',
+          boxShadow: `0 14px 40px -10px ${accent}aa, 0 0 0 1px ${accent}66`,
+          display: 'flex', alignItems: 'center', gap: 10,
+          transition: 'transform 150ms, box-shadow 150ms',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translateY(-2px)';
+          e.currentTarget.style.boxShadow = `0 18px 48px -10px ${accent}cc, 0 0 0 1px ${accent}99`;
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.boxShadow = `0 14px 40px -10px ${accent}aa, 0 0 0 1px ${accent}66`;
+        }}
+      >
+        <ChatBubbleIcon size={16} color="#0d0a08" />
+        Ask anything…
+      </button>
+    );
+  }
 
   return (
-    <div style={{
-      padding: 22, borderRadius: 18,
-      background: `linear-gradient(135deg, ${accent}22, ${track.palette[1] || COLORS.green}1a)`,
-      border: `1px solid ${accent}40`,
-      display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-      minHeight: 320,
-      transition: 'background 1.4s, border-color 1.4s',
-      position: 'relative', overflow: 'hidden',
-    }}>
+    <div role="dialog" aria-label="Chat with se77n"
+      style={{
+        position: 'fixed', right: 24, bottom: 24, zIndex: 60,
+        width: 400, maxWidth: 'calc(100vw - 32px)',
+        height: 'min(560px, calc(100vh - 96px))',
+        display: 'flex', flexDirection: 'column',
+        borderRadius: 18, overflow: 'hidden',
+        background: COLORS.panel,
+        border: '1px solid ' + accent + '55',
+        boxShadow: `0 28px 64px -20px rgba(0,0,0,0.6), 0 0 0 1px ${accent}22`,
+        animation: 'fadeUp 220ms cubic-bezier(0.22,1,0.36,1)',
+      }}>
       <div style={{
-        position: 'absolute', inset: 0,
-        background: `radial-gradient(80% 80% at 70% 30%, ${accent}33, transparent 60%)`,
-        pointerEvents: 'none',
-      }} />
-
-      <div style={{ position: 'relative', display: 'flex', gap: 16 }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <Kicker style={{ color: accent }}>
-              {isLive ? '● LIVE · SPOTIFY' : on ? '● AMBIENT · DEMO' : '○ AMBIENT · IDLE'}
-            </Kicker>
-            <span title={`Discord · ${status}`} style={{
-              width: 8, height: 8, borderRadius: 999,
-              background: statusColor,
-              boxShadow: status === 'online' ? `0 0 6px ${statusColor}` : 'none',
-            }} />
-          </div>
-          <div className="mono" style={{
-            fontSize: 11, color: COLORS.muted, marginTop: 16, letterSpacing: '0.16em',
-          }}>NOW PLAYING</div>
-          <div style={{
-            fontSize: 24, fontWeight: 700, marginTop: 6,
-            fontFamily: 'JetBrains Mono, monospace', lineHeight: 1.2,
-            wordBreak: 'break-word',
-          }}>{track.title}</div>
-          <div className="mono" style={{ fontSize: 12, color: COLORS.muted, marginTop: 6 }}>
-            {track.artist}{track.album ? ' · ' + track.album : ''}
+        padding: '12px 12px 12px 18px', borderBottom: '1px solid ' + COLORS.line,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{
+            width: 6, height: 6, borderRadius: 999, background: accent,
+            boxShadow: `0 0 6px ${accent}`,
+          }} />
+          <div className="mono" style={{ fontSize: 13, fontWeight: 700, color: COLORS.text }}>
+            Ask anything…
           </div>
         </div>
-        {track.coverUrl && (
-          <img src={track.coverUrl} alt="" style={{
-            width: 88, height: 88, borderRadius: 12,
-            objectFit: 'cover', flexShrink: 0,
-            boxShadow: `0 8px 24px -8px ${accent}66`,
-          }} />
-        )}
+        <div style={{ display: 'flex', gap: 6 }}>
+          <FabHeaderBtn title="Open full chat" onClick={() => { onClose(); nav('ai'); }}>↗</FabHeaderBtn>
+          <FabHeaderBtn title="Close (Esc)" onClick={onClose}>✕</FabHeaderBtn>
+        </div>
       </div>
 
-      {game && (
-        <div style={{
-          position: 'relative', marginTop: 18,
-          padding: '12px 14px', borderRadius: 12,
-          background: 'rgba(0,0,0,0.25)', border: `1px solid ${COLORS.red}40`,
-          display: 'flex', alignItems: 'center', gap: 12,
-        }}>
+      <div ref={scrollRef} style={{
+        flex: 1, padding: '14px 16px', overflowY: 'auto',
+        display: 'flex', flexDirection: 'column', gap: 10,
+      }}>
+        {recent.length === 0 ? (
           <div style={{
-            width: 44, height: 44, borderRadius: 8, flexShrink: 0,
-            background: gameArt ? `url(${gameArt}) center/cover no-repeat` : COLORS.red + '30',
-            display: 'grid', placeItems: 'center',
+            padding: '12px 14px', borderRadius: 10,
+            background: COLORS.bg, border: '1px solid ' + COLORS.line,
+            fontSize: 13, lineHeight: 1.5, color: COLORS.text,
           }}>
-            {!gameArt && <span className="mono" style={{ fontSize: 18, color: COLORS.red, fontWeight: 800 }}>◐</span>}
-          </div>
-          <div style={{ minWidth: 0, flex: 1 }}>
             <div className="mono" style={{
-              fontSize: 9, letterSpacing: '0.2em', color: COLORS.red, fontWeight: 700,
-            }}>● PLAYING NOW</div>
-            <div className="mono" style={{
-              fontSize: 14, color: COLORS.text, marginTop: 4, fontWeight: 700,
-              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-            }}>{game.name}</div>
-            {(game.details || game.state) && (
-              <div className="mono" style={{
-                fontSize: 10, color: COLORS.muted, marginTop: 2,
-                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-              }}>{[game.details, game.state].filter(Boolean).join(' · ')}</div>
-            )}
+              fontSize: 9, letterSpacing: '0.2em', color: accent, fontWeight: 700, marginBottom: 6,
+            }}>se77n ::</div>
+            Need help?
           </div>
+        ) : (
+          recent.map((m, i) => <ChatBubble key={i} msg={m} accent={accent} />)
+        )}
+        {busy && <ChatBubble msg={{ role: 'assistant', content: busyHint + '…' }} accent={accent} typing />}
+      </div>
+
+      {imgRef && (
+        <div style={{
+          padding: '8px 14px', borderTop: '1px solid ' + COLORS.line,
+          display: 'flex', alignItems: 'center', gap: 10,
+        }}>
+          <img src={imgRef.dataUrl} alt="" style={{
+            width: 40, height: 40, borderRadius: 6, objectFit: 'cover',
+            border: '1px solid ' + accent + '55',
+          }} />
+          <div className="mono" style={{
+            fontSize: 10, color: COLORS.muted, flex: 1,
+            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+          }}>{imgRef.name}</div>
+          <button onClick={() => setImgRef(null)} aria-label="Remove image"
+            style={{
+              background: 'transparent', border: 'none', cursor: 'pointer',
+              color: COLORS.muted, fontSize: 14, padding: 4,
+            }}>✕</button>
         </div>
       )}
 
-      <div style={{ position: 'relative', marginTop: game ? 14 : 0 }}>
-        <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
-          {[accent, track.palette[1] || COLORS.green, COLORS.gold].map((c, i) => (
-            <div key={i} style={{ flex: 1, height: 24, borderRadius: 4, background: c }} />
-          ))}
-        </div>
-        <div style={{ height: 4, background: 'rgba(255,255,255,0.06)', borderRadius: 2, overflow: 'hidden' }}>
-          <div style={{
-            height: '100%', width: progress * 100 + '%',
-            background: accent, transition: 'width 200ms',
-          }} />
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 10 }} className="mono">
-          <span style={{ fontSize: 10, color: COLORS.muted }}>{fmtSec(elapsed)}</span>
-          <span style={{ fontSize: 10, color: COLORS.muted }}>{fmtSec(total)}</span>
-        </div>
+      <div style={{
+        padding: '10px 12px', borderTop: '1px solid ' + COLORS.line,
+        background: COLORS.panel2,
+        display: 'flex', alignItems: 'center', gap: 8,
+      }}>
+        <label title="Attach image"
+          style={{
+            display: 'grid', placeItems: 'center', width: 34, height: 34, borderRadius: 8,
+            background: imgRef ? accent + '1a' : 'transparent',
+            border: `1px solid ${imgRef ? accent : COLORS.line}`,
+            color: imgRef ? accent : COLORS.muted, cursor: 'pointer', flexShrink: 0,
+          }}>
+          <input type="file" accept="image/*" onChange={onImage} style={{ display: 'none' }} />
+          <PaperclipIcon size={15} color="currentColor" />
+        </label>
+        <input
+          ref={inputRef}
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="ask se77n…"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+          }}
+          className="mono"
+          style={{
+            flex: 1, background: COLORS.bg,
+            border: '1px solid ' + COLORS.line, borderRadius: 8,
+            padding: '9px 12px', color: COLORS.text, fontSize: 12,
+            outline: 'none', transition: 'border-color 120ms, box-shadow 120ms',
+          }}
+          onFocus={(e) => {
+            e.currentTarget.style.borderColor = accent;
+            e.currentTarget.style.boxShadow = `0 0 0 3px ${accent}22`;
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.borderColor = COLORS.line;
+            e.currentTarget.style.boxShadow = 'none';
+          }}
+        />
+        <button onClick={send} disabled={busy || (!input.trim() && !imgRef)} className="mono"
+          aria-label="send"
+          style={{
+            padding: '9px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700,
+            background: (input.trim() || imgRef) && !busy ? accent : 'transparent',
+            border: '1px solid ' + ((input.trim() || imgRef) && !busy ? accent : COLORS.line),
+            color: (input.trim() || imgRef) && !busy ? '#0d0a08' : COLORS.muted,
+            cursor: busy ? 'not-allowed' : 'pointer',
+            opacity: busy ? 0.5 : 1,
+            transition: 'background 120ms',
+          }}>↗</button>
       </div>
     </div>
   );
 }
 
-function fmtSec(s) {
-  if (!s || !isFinite(s) || s < 0) s = 0;
-  const m = Math.floor(s / 60);
-  const ss = String(Math.floor(s % 60)).padStart(2, '0');
-  return `${m}:${ss}`;
+function FabHeaderBtn({ children, onClick, title }) {
+  return (
+    <button onClick={onClick} title={title}
+      style={{
+        width: 28, height: 28, borderRadius: 8,
+        background: 'transparent', border: '1px solid ' + COLORS.line,
+        color: COLORS.muted, cursor: 'pointer', fontSize: 12, fontFamily: 'inherit',
+        display: 'grid', placeItems: 'center',
+        transition: 'color 120ms, border-color 120ms',
+      }}
+      onMouseEnter={(e) => { e.currentTarget.style.color = COLORS.text; e.currentTarget.style.borderColor = COLORS.text + '55'; }}
+      onMouseLeave={(e) => { e.currentTarget.style.color = COLORS.muted; e.currentTarget.style.borderColor = COLORS.line; }}
+    >{children}</button>
+  );
+}
+
+const INTENT_BADGE = {
+  image_gen:  { label: '✨ Image · generated', color: '#C77BFF' },
+  image_edit: { label: '✏ Image · edited',    color: '#C77BFF' },
+  bg_remove:  { label: '⊘ Background · removed', color: '#7ABEFF' },
+  video_gen:  { label: '▶ Video · generated', color: '#D4A858' },
+};
+
+function ChatBubble({ msg, accent, typing }) {
+  const isUser = msg.role === 'user';
+  const badge = !isUser && msg.intent ? INTENT_BADGE[msg.intent] : null;
+  return (
+    <div style={{
+      maxWidth: '92%',
+      alignSelf: isUser ? 'flex-end' : 'flex-start',
+      padding: '10px 13px', borderRadius: 10,
+      background: isUser ? accent + '18' : COLORS.bg,
+      border: `1px solid ${isUser ? accent + '40' : COLORS.line}`,
+      fontSize: 12.5, lineHeight: 1.55,
+      whiteSpace: 'pre-wrap',
+      fontFamily: isUser ? "'JetBrains Mono', monospace" : "'Geist', system-ui, sans-serif",
+      color: COLORS.text,
+      animation: 'fadeUp 200ms ease-out',
+    }}>
+      {!isUser && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6,
+          flexWrap: 'wrap',
+        }}>
+          <span className="mono" style={{
+            fontSize: 8, letterSpacing: '0.2em', color: accent, fontWeight: 700,
+          }}>se77n ::</span>
+          {badge && (
+            <span className="mono" style={{
+              fontSize: 8, letterSpacing: '0.16em', fontWeight: 700,
+              padding: '2px 6px', borderRadius: 4,
+              background: badge.color + '1a', color: badge.color,
+              border: `1px solid ${badge.color}40`,
+            }}>{badge.label}</span>
+          )}
+        </div>
+      )}
+      {msg.image && (
+        <a href={msg.image} target="_blank" rel="noreferrer">
+          <img src={msg.image} alt="" style={{
+            display: 'block', maxWidth: '100%', borderRadius: 8,
+            marginBottom: msg.content ? 8 : 0,
+            border: '1px solid ' + COLORS.line,
+          }} />
+        </a>
+      )}
+      {msg.video && (
+        <video src={msg.video} controls style={{
+          display: 'block', maxWidth: '100%', borderRadius: 8,
+          marginBottom: msg.content ? 8 : 0,
+        }} />
+      )}
+      {typing ? (
+        <span style={{ display: 'inline-flex', gap: 4, alignItems: 'center' }}>
+          {[0, 1, 2].map((i) => (
+            <span key={i} style={{
+              width: 5, height: 5, borderRadius: 999, background: COLORS.text, opacity: 0.45,
+              animation: `pulse 1s ease-in-out ${i * 0.15}s infinite`,
+            }} />
+          ))}
+          {msg.content && (
+            <span className="mono" style={{ fontSize: 10, color: COLORS.muted, marginLeft: 6 }}>
+              {msg.content.replace(/…$/, '')}
+            </span>
+          )}
+        </span>
+      ) : msg.content}
+    </div>
+  );
 }
 
 function FeatureCard({ feature, onClick, idx }) {
+  const iconNode = typeof feature.icon === 'function' ? feature.icon(feature.accent) : feature.icon;
   return (
     <button onClick={onClick} style={{
       textAlign: 'left', padding: 22, borderRadius: 14,
       background: COLORS.panel, border: '1px solid ' + COLORS.line,
       cursor: 'pointer',
-      display: 'flex', flexDirection: 'column', gap: 18,
-      minHeight: 168, position: 'relative', overflow: 'hidden',
+      display: 'flex', flexDirection: 'column', gap: 16,
+      minHeight: 148, position: 'relative', overflow: 'hidden',
       color: COLORS.text,
       transition: 'all 180ms',
       animation: `fadeUp 500ms ease-out ${idx * 50}ms both`,
@@ -760,9 +951,9 @@ function FeatureCard({ feature, onClick, idx }) {
       }}
     >
       <span style={{
-        position: 'absolute', top: 16, right: 18,
-        fontFamily: 'JetBrains Mono, monospace', fontSize: 10,
-        letterSpacing: '0.16em', color: COLORS.muted,
+        position: 'absolute', top: 14, right: 16,
+        fontFamily: 'JetBrains Mono, monospace', fontSize: 14, fontWeight: 800,
+        letterSpacing: '0.06em', color: feature.accent, opacity: 0.7,
       }}>{feature.short}</span>
 
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
@@ -773,7 +964,7 @@ function FeatureCard({ feature, onClick, idx }) {
           color: feature.accent,
           display: 'grid', placeItems: 'center',
           fontFamily: 'JetBrains Mono, monospace', fontSize: 20, fontWeight: 800,
-        }}>{feature.icon}</span>
+        }}>{iconNode}</span>
       </div>
 
       <div>
@@ -783,20 +974,6 @@ function FeatureCard({ feature, onClick, idx }) {
         <div style={{ fontSize: 12, color: COLORS.muted, marginTop: 6, lineHeight: 1.5 }}>
           {feature.desc}
         </div>
-      </div>
-
-      <div style={{ flex: 1 }} />
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{
-            width: 6, height: 6, borderRadius: 999,
-            background: COLORS.green, boxShadow: `0 0 6px ${COLORS.green}`,
-          }} />
-          <span className="mono" style={{ fontSize: 9, letterSpacing: '0.18em', color: COLORS.green }}>READY</span>
-        </span>
-        <span className="mono" style={{ fontSize: 11, color: feature.accent, letterSpacing: '0.06em' }}>
-          OPEN →
-        </span>
       </div>
     </button>
   );

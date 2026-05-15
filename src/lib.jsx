@@ -365,6 +365,53 @@ export function GlyphSun({ size = 18, color = '#D4A858' }) {
   );
 }
 
+export function GlobeIcon({ size = 20, color, strokeWidth = 1.6 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+         stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="9.5" />
+      <ellipse cx="12" cy="12" rx="4" ry="9.5" />
+      <line x1="2.5" y1="12" x2="21.5" y2="12" />
+      <path d="M3.8 7.5 H20.2" />
+      <path d="M3.8 16.5 H20.2" />
+    </svg>
+  );
+}
+
+export function ControllerIcon({ size = 22, color, strokeWidth = 1.6 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+         stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+      {/* body */}
+      <path d="M7 8h10a4.5 4.5 0 0 1 4.5 4.5v.5a3 3 0 0 1-5.6 1.5L14 12.5h-4l-1.9 2A3 3 0 0 1 2.5 13v-.5A4.5 4.5 0 0 1 7 8z" />
+      {/* d-pad */}
+      <line x1="6" y1="11.5" x2="9" y2="11.5" />
+      <line x1="7.5" y1="10" x2="7.5" y2="13" />
+      {/* buttons */}
+      <circle cx="16.5" cy="10.8" r="0.9" fill={color} stroke="none" />
+      <circle cx="18.4" cy="12.4" r="0.9" fill={color} stroke="none" />
+    </svg>
+  );
+}
+
+export function PaperclipIcon({ size = 16, color = 'currentColor', strokeWidth = 1.6 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+         stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 11.5 11.7 19.8a5 5 0 0 1-7.07-7.07l9.19-9.19a3.5 3.5 0 1 1 4.95 4.95l-9.2 9.19a2 2 0 0 1-2.82-2.83l8.13-8.12" />
+    </svg>
+  );
+}
+
+export function ChatBubbleIcon({ size = 16, color = 'currentColor', strokeWidth = 1.7 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+         stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 12a7.5 7.5 0 0 1-10.7 6.8L5 20l1.2-3.6A7.5 7.5 0 1 1 20 12z" />
+    </svg>
+  );
+}
+
 export function GlyphMoon({ size = 18, color = '#9bb4ff' }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill={color} stroke="none">
@@ -620,6 +667,35 @@ export function copyText(t) {
   } catch {
     /* clipboard unavailable */
   }
+}
+
+// Listen for image paste (Ctrl+V) on the window. When `enabled` is true,
+// any image found in the clipboard is read as a data URL and handed back
+// via onImage({ name, dataUrl }).
+export function usePasteImage(onImage, enabled = true) {
+  useEffect(() => {
+    if (!enabled) return;
+    function onPaste(e) {
+      const items = e.clipboardData?.items;
+      if (!items || !items.length) return;
+      for (const item of items) {
+        if (item.type && item.type.startsWith('image/')) {
+          const f = item.getAsFile();
+          if (!f) continue;
+          const reader = new FileReader();
+          reader.onload = (ev) => onImage({
+            name: f.name || `pasted-${Date.now()}.png`,
+            dataUrl: ev.target.result,
+          });
+          reader.readAsDataURL(f);
+          e.preventDefault();
+          return;
+        }
+      }
+    }
+    window.addEventListener('paste', onPaste);
+    return () => window.removeEventListener('paste', onPaste);
+  }, [enabled, onImage]);
 }
 
 // Re-export hooks used widely so feature files only import from lib

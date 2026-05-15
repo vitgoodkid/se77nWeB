@@ -1,22 +1,32 @@
 // POST /api/chat
-// Body: { system: string, prompt: string }
+// Body: { system: string, prompt: string, image?: string (data URL or http URL) }
 // Returns: { text: string }
 //
 // Proxies to yunwu (OpenAI-compatible) using Gemini chat model.
-// Hides YUNWU_API_KEY server-side.
+// Hides YUNWU_API_KEY server-side. Supports multimodal input via OpenAI's
+// `image_url` content part — provider must accept it (Gemini family does).
+
+export const config = { maxDuration: 60 };
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
-  const { system = '', prompt = '' } = req.body || {};
-  if (!prompt || typeof prompt !== 'string') {
-    return res.status(400).json({ error: 'prompt required' });
+  const { system = '', prompt = '', image } = req.body || {};
+  if (!prompt && !image) {
+    return res.status(400).json({ error: 'prompt or image required' });
   }
   const apiKey = process.env.YUNWU_API_KEY;
   const baseUrl = process.env.YUNWU_BASE_URL || 'https://yunwu.ai/v1';
   const model = process.env.YUNWU_CHAT_MODEL || 'gemini-3.1-flash-lite';
   if (!apiKey) return res.status(500).json({ error: 'YUNWU_API_KEY not configured' });
+
+  const userContent = image
+    ? [
+        { type: 'text', text: prompt || 'Describe this image.' },
+        { type: 'image_url', image_url: { url: image } },
+      ]
+    : prompt;
 
   try {
     const upstream = await fetch(`${baseUrl}/chat/completions`, {
@@ -29,7 +39,7 @@ export default async function handler(req, res) {
         model,
         messages: [
           ...(system ? [{ role: 'system', content: system }] : []),
-          { role: 'user', content: prompt },
+          { role: 'user', content: userContent },
         ],
         max_tokens: 1024,
         temperature: 0.7,
