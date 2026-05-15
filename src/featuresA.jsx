@@ -78,6 +78,26 @@ export function AIPlayground() {
     setHistory((h) => ({ ...h, [presetId]: typeof next === 'function' ? next(h[presetId] || []) : next }));
   }
 
+  // Read a fetch Response safely: try JSON, fall back to text, never throw
+  // the cryptic "Unexpected end of JSON input" — give the caller something usable.
+  async function safeJson(res, label) {
+    const raw = await res.text();
+    let data = null;
+    if (raw) {
+      try { data = JSON.parse(raw); } catch { /* not JSON */ }
+    }
+    if (!res.ok) {
+      const msg =
+        data?.error ||
+        data?.message ||
+        (raw && raw.length < 200 ? raw : '') ||
+        (res.status === 504 ? 'timeout — try a shorter prompt' : `${label} ${res.status}`);
+      throw new Error(msg);
+    }
+    if (!data) throw new Error(`${label}: empty response from server`);
+    return data;
+  }
+
   async function send() {
     const q = input.trim();
     if ((!q && !imgRef) || busy) return;
@@ -97,8 +117,7 @@ export function AIPlayground() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ system: preset.system, prompt: q, image: usedImage?.dataUrl }),
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || `chat ${res.status}`);
+        const data = await safeJson(res, 'chat');
         assistantMsg = { role: 'assistant', content: data.text };
       } else if (preset.kind === 'image') {
         const res = await fetch('/api/image', {
@@ -106,8 +125,7 @@ export function AIPlayground() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ prompt: q, image: usedImage?.dataUrl }),
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || `image ${res.status}`);
+        const data = await safeJson(res, 'image');
         assistantMsg = { role: 'assistant', content: '', image: data.image };
       } else if (preset.kind === 'video') {
         const res = await fetch('/api/video', {
@@ -115,8 +133,7 @@ export function AIPlayground() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ prompt: q, image: usedImage?.dataUrl }),
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || `video ${res.status}`);
+        const data = await safeJson(res, 'video');
         assistantMsg = { role: 'assistant', content: '', video: data.video };
       } else if (preset.kind === 'bg-remove') {
         if (!usedImage) throw new Error('attach an image first');
@@ -125,8 +142,7 @@ export function AIPlayground() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ image: usedImage.dataUrl }),
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || `bg-remove ${res.status}`);
+        const data = await safeJson(res, 'bg-remove');
         assistantMsg = { role: 'assistant', content: '', image: data.image };
       }
       setMessages((m) => [...m, assistantMsg]);

@@ -45,12 +45,17 @@ export default async function handler(req, res) {
         temperature: 0.7,
       }),
     });
-    const data = await upstream.json();
+    const raw = await upstream.text();
+    let data = null;
+    if (raw) { try { data = JSON.parse(raw); } catch { /* not JSON */ } }
     if (!upstream.ok) {
       return res.status(upstream.status).json({
-        error: data?.error?.message || data?.message || 'upstream error',
+        error: data?.error?.message || data?.message || (raw && raw.slice(0, 300)) || 'upstream error',
         upstream: data,
       });
+    }
+    if (!data) {
+      return res.status(502).json({ error: 'upstream returned non-JSON response' });
     }
     const text =
       data?.choices?.[0]?.message?.content ||
