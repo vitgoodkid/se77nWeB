@@ -57,8 +57,10 @@ vercel dev
 | `AUTH_BASE_URL`        | login    | e.g. `https://se77n.com` (for OAuth redirects) |
 | `DISCORD_CLIENT_ID`    | login    | Discord OAuth app                           |
 | `DISCORD_CLIENT_SECRET`| login    | Discord OAuth app                           |
+| `DISCORD_REDIRECT_URI` | no       | exact Discord callback override             |
 | `GOOGLE_CLIENT_ID`     | login    | Google OAuth client                         |
 | `GOOGLE_CLIENT_SECRET` | login    | Google OAuth client                         |
+| `GOOGLE_REDIRECT_URI`  | no       | exact Google callback override              |
 
 `.env.local` is gitignored. **Never commit secrets.**
 
@@ -80,6 +82,8 @@ the site still works — falls back to localStorage as before.
    [discord.com/developers](https://discord.com/developers/applications),
    create an application → OAuth2 → add redirect:
    `https://YOUR_DOMAIN/api/auth/discord/callback`. Copy Client ID + Secret.
+   If the portal uses a different exact callback, set `DISCORD_REDIRECT_URI`
+   to that exact value in Vercel.
 4. **Google OAuth** — at
    [console.cloud.google.com](https://console.cloud.google.com/apis/credentials),
    create OAuth client (Web). Add redirect:

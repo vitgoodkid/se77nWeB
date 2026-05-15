@@ -80,7 +80,7 @@ function handleOAuthStart(req, res, provider) {
   if (!clientId) return res.status(500).json({ error: `${isGoogle ? 'GOOGLE' : 'DISCORD'}_CLIENT_ID not configured` });
 
   const state = signOAuthState(provider);
-  const redirectUri = `${getBaseUrl(req)}/api/auth/${provider}/callback`;
+  const redirectUri = getOAuthRedirectUri(req, provider);
   const url = new URL(isGoogle
     ? 'https://accounts.google.com/o/oauth2/v2/auth'
     : 'https://discord.com/api/oauth2/authorize');
@@ -114,7 +114,7 @@ async function handleOAuthCallback(req, res, provider) {
   if (!clientId || !clientSecret) return failAuth(req, res, `${provider}_not_configured`);
 
   try {
-    const redirectUri = `${baseUrl}/api/auth/${provider}/callback`;
+    const redirectUri = getOAuthRedirectUri(req, provider);
     const tokenRes = await fetch(isGoogle ? 'https://oauth2.googleapis.com/token' : 'https://discord.com/api/oauth2/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -184,6 +184,11 @@ async function handleOAuthCallback(req, res, provider) {
     console.error(`${provider} callback error`, e);
     return failAuth(req, res, 'server_error');
   }
+}
+
+function getOAuthRedirectUri(req, provider) {
+  const configured = env(provider === 'google' ? 'GOOGLE_REDIRECT_URI' : 'DISCORD_REDIRECT_URI');
+  return configured || `${getBaseUrl(req)}/api/auth/${provider}/callback`;
 }
 
 export default async function handler(req, res) {
