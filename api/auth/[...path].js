@@ -19,8 +19,12 @@ import { getUsers } from '../_lib/mongo.js';
 export const config = { maxDuration: 60 };
 
 function getPath(req) {
-  const raw = req.query?.path;
-  return Array.isArray(raw) ? raw.join('/') : String(raw || '');
+  const raw = req.query?.path ?? req.query?.slug ?? req.query?.['...path'];
+  const fromQuery = Array.isArray(raw) ? raw.join('/') : String(raw || '');
+  if (fromQuery) return fromQuery.replace(/^\/+|\/+$/g, '');
+
+  const pathname = new URL(req.url || '', 'https://se77n.local').pathname;
+  return pathname.replace(/^\/api\/auth\/?/, '').replace(/^\/+|\/+$/g, '');
 }
 
 function redirect(res, location, cookies) {
