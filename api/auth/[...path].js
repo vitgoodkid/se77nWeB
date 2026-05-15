@@ -83,7 +83,7 @@ function handleOAuthStart(req, res, provider) {
   const redirectUri = getOAuthRedirectUri(req, provider);
   const url = new URL(isGoogle
     ? 'https://accounts.google.com/o/oauth2/v2/auth'
-    : 'https://discord.com/api/oauth2/authorize');
+    : 'https://discord.com/oauth2/authorize');
 
   url.searchParams.set('client_id', clientId);
   url.searchParams.set('redirect_uri', redirectUri);
