@@ -18,6 +18,10 @@ import { getUsers } from '../_lib/mongo.js';
 
 export const config = { maxDuration: 60 };
 
+function env(name) {
+  return process.env[name]?.trim();
+}
+
 function getPath(req) {
   const raw = req.query?.path ?? req.query?.slug ?? req.query?.['...path'];
   const fromQuery = Array.isArray(raw) ? raw.join('/') : String(raw || '');
@@ -72,7 +76,7 @@ function handleLogout(req, res) {
 
 function handleOAuthStart(req, res, provider) {
   const isGoogle = provider === 'google';
-  const clientId = process.env[isGoogle ? 'GOOGLE_CLIENT_ID' : 'DISCORD_CLIENT_ID'];
+  const clientId = env(isGoogle ? 'GOOGLE_CLIENT_ID' : 'DISCORD_CLIENT_ID');
   if (!clientId) return res.status(500).json({ error: `${isGoogle ? 'GOOGLE' : 'DISCORD'}_CLIENT_ID not configured` });
 
   const state = signOAuthState(provider);
@@ -89,8 +93,6 @@ function handleOAuthStart(req, res, provider) {
   if (isGoogle) {
     url.searchParams.set('access_type', 'online');
     url.searchParams.set('prompt', 'select_account');
-  } else {
-    url.searchParams.set('prompt', 'none');
   }
 
   return redirect(res, url.toString(), buildStateCookie(state));
@@ -107,8 +109,8 @@ async function handleOAuthCallback(req, res, provider) {
 
   const isGoogle = provider === 'google';
   const baseUrl = getBaseUrl(req);
-  const clientId = process.env[isGoogle ? 'GOOGLE_CLIENT_ID' : 'DISCORD_CLIENT_ID'];
-  const clientSecret = process.env[isGoogle ? 'GOOGLE_CLIENT_SECRET' : 'DISCORD_CLIENT_SECRET'];
+  const clientId = env(isGoogle ? 'GOOGLE_CLIENT_ID' : 'DISCORD_CLIENT_ID');
+  const clientSecret = env(isGoogle ? 'GOOGLE_CLIENT_SECRET' : 'DISCORD_CLIENT_SECRET');
   if (!clientId || !clientSecret) return failAuth(req, res, `${provider}_not_configured`);
 
   try {

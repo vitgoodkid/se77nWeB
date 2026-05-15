@@ -121,7 +121,8 @@ export function readStateCookie(req) {
 // ── Base URL detection ────────────────────────────────────────
 // AUTH_BASE_URL takes precedence (e.g. https://se77n.com). Otherwise infer from host.
 export function getBaseUrl(req) {
-  if (process.env.AUTH_BASE_URL) return process.env.AUTH_BASE_URL.replace(/\/$/, '');
+  const configured = process.env.AUTH_BASE_URL?.trim();
+  if (configured) return configured.replace(/\/$/, '');
   const proto = req.headers['x-forwarded-proto'] || (isProd() ? 'https' : 'http');
   const host = req.headers['x-forwarded-host'] || req.headers.host;
   return `${proto}://${host}`;
