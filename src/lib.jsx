@@ -92,7 +92,112 @@ export function useGeoDayNight() {
   return state;
 }
 
+// ── Discord presence via Lanyard ───────────────────────────────
+// https://github.com/Phineas/lanyard
+export const LANYARD_USER_ID = '397342895327150080';
+
+export function useLanyard(userId = LANYARD_USER_ID) {
+  const [data, setData] = useState(null);
+  const [connected, setConnected] = useState(false);
+
+  useEffect(() => {
+    let ws;
+    let hb;
+    let retry;
+    let alive = true;
+    let backoff = 2000;
+
+    function pickInit(d) {
+      if (!d) return null;
+      if (d.discord_user) return d;             // single-id subscription
+      if (d[userId]?.discord_user) return d[userId];
+      return null;
+    }
+
+    function connect() {
+      try {
+        ws = new WebSocket('wss://api.lanyard.rest/socket');
+      } catch {
+        retry = setTimeout(connect, backoff);
+        return;
+      }
+
+      ws.onopen = () => { backoff = 2000; };
+      ws.onmessage = (ev) => {
+        let msg;
+        try { msg = JSON.parse(ev.data); } catch { return; }
+        if (msg.op === 1) {
+          // Hello → start heartbeat + initialize
+          const interval = msg.d?.heartbeat_interval ?? 30000;
+          hb = setInterval(() => {
+            try { ws.send(JSON.stringify({ op: 3 })); } catch {}
+          }, interval);
+          ws.send(JSON.stringify({ op: 2, d: { subscribe_to_id: userId } }));
+        } else if (msg.op === 0) {
+          if (msg.t === 'INIT_STATE' || msg.t === 'PRESENCE_UPDATE') {
+            const d = pickInit(msg.d);
+            if (d) {
+              setData(d);
+              setConnected(true);
+            }
+          }
+        }
+      };
+      ws.onclose = () => {
+        setConnected(false);
+        clearInterval(hb);
+        if (alive) {
+          retry = setTimeout(connect, backoff);
+          backoff = Math.min(backoff * 2, 30000);
+        }
+      };
+      ws.onerror = () => {
+        try { ws.close(); } catch {}
+      };
+    }
+
+    connect();
+    return () => {
+      alive = false;
+      clearInterval(hb);
+      clearTimeout(retry);
+      try { ws?.close(); } catch {}
+    };
+  }, [userId]);
+
+  return { data, connected };
+}
+
+// Pick the first non-Spotify, non-CustomStatus activity (= a real game/app)
+export function pickGame(lanyard) {
+  if (!lanyard?.activities) return null;
+  // type 0 = Playing, 1 = Streaming, 3 = Watching, 5 = Competing
+  const games = lanyard.activities.filter((a) => a.type === 0 || a.type === 1 || a.type === 3 || a.type === 5);
+  return games[0] || null;
+}
+
+// Resolve a Discord activity asset key into a real CDN URL.
+// Asset keys come in three flavors:
+//   1. "mp:external/<encoded>/<host>/path" — proxied external image
+//   2. "spotify:<id>"                       — Spotify cover (i.scdn.co)
+//   3. "<numeric_hash>"                     — Discord application asset
+export function resolveAssetUrl(activity, key = 'large_image') {
+  const v = activity?.assets?.[key];
+  if (!v) return null;
+  if (v.startsWith('mp:external/')) {
+    return 'https://media.discordapp.net/external/' + v.slice('mp:external/'.length);
+  }
+  if (v.startsWith('spotify:')) {
+    return 'https://i.scdn.co/image/' + v.slice('spotify:'.length);
+  }
+  if (activity.application_id) {
+    return `https://cdn.discordapp.com/app-assets/${activity.application_id}/${v}.png`;
+  }
+  return null;
+}
+
 // ── Ambient (audio-reactive) background ────────────────────────
+// Fallback rotation when Discord/Lanyard isn't broadcasting Spotify.
 export const AMBIENT_TRACKS = [
   { artist: 'SEKIMANE × shonci', title: 'TAKA LA DENTRO', album: '005', palette: ['#E04545', '#1a0a08'] },
   { artist: 'odetari', title: 'GMFU', album: 'CYBERNETIC', palette: ['#5BA868', '#0b1a12'] },
@@ -101,12 +206,46 @@ export const AMBIENT_TRACKS = [
   { artist: 'Tame Impala', title: 'Borderline', album: 'Slow Rush', palette: ['#D4A858', '#E04545'] },
 ];
 
-export function useAmbient(enabled = true) {
+export function useAmbient(enabled = true, lanyard = null) {
   const [trackIdx, setTrackIdx] = useState(0);
   const [t, setT] = useState(0);
   const [playing, setPlaying] = useState(true);
 
+  const spotify = lanyard?.spotify || null;
+  const isLive = !!(lanyard?.listening_to_spotify && spotify);
+
+  // Build the active track: real Spotify when live, fallback otherwise
+  const track = useMemo(() => {
+    if (isLive) {
+      return {
+        artist: spotify.artist?.split(';').join(', ') || '—',
+        title: spotify.song || '—',
+        album: spotify.album || '',
+        palette: ['#1DB954', '#0b1a12'], // Spotify brand green
+        coverUrl: spotify.album_art_url || null,
+        live: true,
+      };
+    }
+    return AMBIENT_TRACKS[trackIdx];
+  }, [isLive, spotify?.track_id, spotify?.song, spotify?.artist, spotify?.album, spotify?.album_art_url, trackIdx]);
+
+  // Progress driver — Spotify timestamps when live, fake time when not
   useEffect(() => {
+    if (isLive) {
+      const start = spotify.timestamps?.start;
+      const end = spotify.timestamps?.end;
+      if (!start || !end || end <= start) {
+        setT(0);
+        return;
+      }
+      const tick = () => {
+        const p = Math.min(1, Math.max(0, (Date.now() - start) / (end - start)));
+        setT(p);
+      };
+      tick();
+      const id = setInterval(tick, 500);
+      return () => clearInterval(id);
+    }
     if (!playing) return;
     const id = setInterval(() => {
       setT((prev) => {
@@ -119,9 +258,9 @@ export function useAmbient(enabled = true) {
       });
     }, 200);
     return () => clearInterval(id);
-  }, [playing]);
+  }, [playing, isLive, spotify?.timestamps?.start, spotify?.timestamps?.end]);
 
-  const track = AMBIENT_TRACKS[trackIdx];
+  // Push palette into CSS vars for the AmbientBackground
   useEffect(() => {
     if (!enabled) {
       document.documentElement.style.removeProperty('--ambient-r');
@@ -136,15 +275,26 @@ export function useAmbient(enabled = true) {
     document.documentElement.style.setProperty('--ambient-r', r);
     document.documentElement.style.setProperty('--ambient-g', g);
     document.documentElement.style.setProperty('--ambient-b', b);
-  }, [trackIdx, enabled, track.palette]);
+  }, [enabled, track.palette[0]]);
+
+  // Total/elapsed in seconds for display
+  const total = isLive && spotify.timestamps?.end && spotify.timestamps?.start
+    ? Math.round((spotify.timestamps.end - spotify.timestamps.start) / 1000)
+    : 180;
+  const elapsed = Math.round(t * total);
 
   return {
     track,
     t,
-    playing,
+    playing: isLive ? true : playing,
     setPlaying,
-    next: () => setTrackIdx((i) => (i + 1) % AMBIENT_TRACKS.length),
-    prev: () => setTrackIdx((i) => (i - 1 + AMBIENT_TRACKS.length) % AMBIENT_TRACKS.length),
+    next: () => !isLive && setTrackIdx((i) => (i + 1) % AMBIENT_TRACKS.length),
+    prev: () => !isLive && setTrackIdx((i) => (i - 1 + AMBIENT_TRACKS.length) % AMBIENT_TRACKS.length),
+    isLive,
+    game: pickGame(lanyard),
+    status: lanyard?.discord_status || 'offline',
+    elapsed,
+    total,
   };
 }
 

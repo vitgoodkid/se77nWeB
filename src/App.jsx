@@ -3,7 +3,8 @@ import {
   COLORS, SOCIALS,
   Btn, Kicker,
   GlyphSun, GlyphMoon,
-  useClock, useGeoDayNight, useAmbient,
+  useClock, useGeoDayNight, useAmbient, useLanyard,
+  resolveAssetUrl,
 } from './lib.jsx';
 
 const AIPlayground       = lazy(() => import('./featuresA.jsx').then((m) => ({ default: m.AIPlayground })));
@@ -39,7 +40,8 @@ export default function App() {
   });
   const [transitioning, setTransitioning] = useState(false);
 
-  const ambient = useAmbient(ambientOn);
+  const lanyard = useLanyard();
+  const ambient = useAmbient(ambientOn, lanyard.data);
   const geo = useGeoDayNight();
   const now = useClock();
 
@@ -258,22 +260,30 @@ function DayNightChip({ phase, city }) {
 }
 
 function NowPlaying({ ambient, on }) {
-  const { track, playing, setPlaying, next, prev } = ambient;
+  const { track, playing, setPlaying, next, prev, isLive, game } = ambient;
   return (
     <div style={{
       display: 'flex', alignItems: 'center', gap: 14,
       padding: '6px 16px 6px 8px', borderRadius: 999,
-      background: COLORS.panel, border: '1px solid ' + COLORS.line, maxWidth: 480,
+      background: COLORS.panel,
+      border: '1px solid ' + (isLive ? '#1DB95455' : COLORS.line),
+      maxWidth: 540,
+      boxShadow: isLive ? '0 0 0 1px #1DB95422, 0 8px 24px -12px #1DB95455' : 'none',
+      transition: 'border-color 600ms, box-shadow 600ms',
     }}>
       <div style={{
-        width: 38, height: 38, borderRadius: 8,
-        background: `linear-gradient(135deg, ${track.palette[0]}, ${track.palette[1] || COLORS.green})`,
-        display: 'grid', placeItems: 'center', flexShrink: 0,
+        width: 38, height: 38, borderRadius: 8, flexShrink: 0,
+        background: track.coverUrl
+          ? `url(${track.coverUrl}) center/cover no-repeat`
+          : `linear-gradient(135deg, ${track.palette[0]}, ${track.palette[1] || COLORS.green})`,
+        display: 'grid', placeItems: 'center',
         position: 'relative', overflow: 'hidden',
       }}>
-        <span className="mono" style={{ fontSize: 11, color: '#0d0a08', fontWeight: 800, letterSpacing: '0.05em' }}>
-          {track.album.slice(0, 3)}
-        </span>
+        {!track.coverUrl && (
+          <span className="mono" style={{
+            fontSize: 11, color: '#0d0a08', fontWeight: 800, letterSpacing: '0.05em',
+          }}>{track.album.slice(0, 3)}</span>
+        )}
       </div>
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: 2, height: 18 }}>
         {[0, 1, 2, 3, 4].map((i) => (
@@ -293,14 +303,55 @@ function NowPlaying({ ambient, on }) {
         <div className="mono" style={{
           fontSize: 9, color: COLORS.muted, letterSpacing: '0.08em', marginTop: 2,
           whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-        }}>{track.artist} · {track.album}</div>
+        }}>{track.artist}{track.album ? ' · ' + track.album : ''}</div>
       </div>
-      <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-        <PlayerBtn onClick={prev}>◀</PlayerBtn>
-        <PlayerBtn onClick={() => setPlaying((p) => !p)} primary>
-          {playing ? '❚❚' : '▶'}
-        </PlayerBtn>
-        <PlayerBtn onClick={next}>▶</PlayerBtn>
+      {game && <GameChip game={game} />}
+      {isLive ? (
+        <span className="mono" title="Live from Discord · Spotify"
+          style={{
+            fontSize: 8, letterSpacing: '0.18em', fontWeight: 700,
+            padding: '4px 8px', borderRadius: 999,
+            background: '#1DB95418', border: '1px solid #1DB95455', color: '#1DB954',
+          }}>● LIVE</span>
+      ) : (
+        <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+          <PlayerBtn onClick={prev}>◀</PlayerBtn>
+          <PlayerBtn onClick={() => setPlaying((p) => !p)} primary>
+            {playing ? '❚❚' : '▶'}
+          </PlayerBtn>
+          <PlayerBtn onClick={next}>▶</PlayerBtn>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function GameChip({ game }) {
+  const art = resolveAssetUrl(game, 'large_image');
+  return (
+    <div title={[game.name, game.details, game.state].filter(Boolean).join(' · ')}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 8,
+        padding: '4px 10px 4px 4px', borderRadius: 999,
+        background: COLORS.red + '12',
+        border: '1px solid ' + COLORS.red + '40',
+        maxWidth: 200, flexShrink: 0,
+      }}>
+      <span style={{
+        width: 22, height: 22, borderRadius: 6, flexShrink: 0,
+        background: art ? `url(${art}) center/cover no-repeat` : COLORS.red + '40',
+        display: 'grid', placeItems: 'center',
+      }}>
+        {!art && <span className="mono" style={{ fontSize: 10, color: COLORS.red, fontWeight: 800 }}>◐</span>}
+      </span>
+      <div style={{ minWidth: 0 }}>
+        <div className="mono" style={{
+          fontSize: 8, letterSpacing: '0.16em', color: COLORS.red, fontWeight: 700, lineHeight: 1,
+        }}>PLAYING</div>
+        <div className="mono" style={{
+          fontSize: 10, color: COLORS.text, marginTop: 2, lineHeight: 1.1,
+          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 140,
+        }}>{game.name}</div>
       </div>
     </div>
   );
@@ -566,12 +617,21 @@ function HomeView({ nav, ambient, ambientOn }) {
 }
 
 function HeroSideCard({ ambient, on }) {
-  const { track, t: progress } = ambient;
+  const { track, t: progress, isLive, game, status, elapsed, total } = ambient;
+  const accent = track.palette[0];
+  const statusColor = {
+    online:  COLORS.green,
+    idle:    COLORS.gold,
+    dnd:     COLORS.red,
+    offline: COLORS.muted,
+  }[status] || COLORS.muted;
+  const gameArt = game ? resolveAssetUrl(game, 'large_image') : null;
+
   return (
     <div style={{
       padding: 22, borderRadius: 18,
-      background: `linear-gradient(135deg, ${track.palette[0]}22, ${track.palette[1] || COLORS.green}1a)`,
-      border: `1px solid ${track.palette[0]}40`,
+      background: `linear-gradient(135deg, ${accent}22, ${track.palette[1] || COLORS.green}1a)`,
+      border: `1px solid ${accent}40`,
       display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
       minHeight: 320,
       transition: 'background 1.4s, border-color 1.4s',
@@ -579,42 +639,101 @@ function HeroSideCard({ ambient, on }) {
     }}>
       <div style={{
         position: 'absolute', inset: 0,
-        background: `radial-gradient(80% 80% at 70% 30%, ${track.palette[0]}33, transparent 60%)`,
+        background: `radial-gradient(80% 80% at 70% 30%, ${accent}33, transparent 60%)`,
         pointerEvents: 'none',
       }} />
-      <div style={{ position: 'relative' }}>
-        <Kicker style={{ color: track.palette[0] }}>{on ? '● AMBIENT · REACTIVE' : '○ AMBIENT · IDLE'}</Kicker>
-        <div className="mono" style={{
-          fontSize: 11, color: COLORS.muted, marginTop: 16, letterSpacing: '0.16em',
-        }}>NOW PLAYING</div>
-        <div style={{
-          fontSize: 24, fontWeight: 700, marginTop: 6,
-          fontFamily: 'JetBrains Mono, monospace', lineHeight: 1.2,
-        }}>{track.title}</div>
-        <div className="mono" style={{ fontSize: 12, color: COLORS.muted, marginTop: 6 }}>
-          {track.artist} · {track.album}
+
+      <div style={{ position: 'relative', display: 'flex', gap: 16 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <Kicker style={{ color: accent }}>
+              {isLive ? '● LIVE · SPOTIFY' : on ? '● AMBIENT · DEMO' : '○ AMBIENT · IDLE'}
+            </Kicker>
+            <span title={`Discord · ${status}`} style={{
+              width: 8, height: 8, borderRadius: 999,
+              background: statusColor,
+              boxShadow: status === 'online' ? `0 0 6px ${statusColor}` : 'none',
+            }} />
+          </div>
+          <div className="mono" style={{
+            fontSize: 11, color: COLORS.muted, marginTop: 16, letterSpacing: '0.16em',
+          }}>NOW PLAYING</div>
+          <div style={{
+            fontSize: 24, fontWeight: 700, marginTop: 6,
+            fontFamily: 'JetBrains Mono, monospace', lineHeight: 1.2,
+            wordBreak: 'break-word',
+          }}>{track.title}</div>
+          <div className="mono" style={{ fontSize: 12, color: COLORS.muted, marginTop: 6 }}>
+            {track.artist}{track.album ? ' · ' + track.album : ''}
+          </div>
         </div>
+        {track.coverUrl && (
+          <img src={track.coverUrl} alt="" style={{
+            width: 88, height: 88, borderRadius: 12,
+            objectFit: 'cover', flexShrink: 0,
+            boxShadow: `0 8px 24px -8px ${accent}66`,
+          }} />
+        )}
       </div>
 
-      <div style={{ position: 'relative' }}>
+      {game && (
+        <div style={{
+          position: 'relative', marginTop: 18,
+          padding: '12px 14px', borderRadius: 12,
+          background: 'rgba(0,0,0,0.25)', border: `1px solid ${COLORS.red}40`,
+          display: 'flex', alignItems: 'center', gap: 12,
+        }}>
+          <div style={{
+            width: 44, height: 44, borderRadius: 8, flexShrink: 0,
+            background: gameArt ? `url(${gameArt}) center/cover no-repeat` : COLORS.red + '30',
+            display: 'grid', placeItems: 'center',
+          }}>
+            {!gameArt && <span className="mono" style={{ fontSize: 18, color: COLORS.red, fontWeight: 800 }}>◐</span>}
+          </div>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div className="mono" style={{
+              fontSize: 9, letterSpacing: '0.2em', color: COLORS.red, fontWeight: 700,
+            }}>● PLAYING NOW</div>
+            <div className="mono" style={{
+              fontSize: 14, color: COLORS.text, marginTop: 4, fontWeight: 700,
+              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+            }}>{game.name}</div>
+            {(game.details || game.state) && (
+              <div className="mono" style={{
+                fontSize: 10, color: COLORS.muted, marginTop: 2,
+                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+              }}>{[game.details, game.state].filter(Boolean).join(' · ')}</div>
+            )}
+          </div>
+        </div>
+      )}
+
+      <div style={{ position: 'relative', marginTop: game ? 14 : 0 }}>
         <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
-          {[track.palette[0], track.palette[1] || COLORS.green, COLORS.gold].map((c, i) => (
+          {[accent, track.palette[1] || COLORS.green, COLORS.gold].map((c, i) => (
             <div key={i} style={{ flex: 1, height: 24, borderRadius: 4, background: c }} />
           ))}
         </div>
         <div style={{ height: 4, background: 'rgba(255,255,255,0.06)', borderRadius: 2, overflow: 'hidden' }}>
           <div style={{
             height: '100%', width: progress * 100 + '%',
-            background: track.palette[0], transition: 'width 200ms',
+            background: accent, transition: 'width 200ms',
           }} />
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 10 }} className="mono">
-          <span style={{ fontSize: 10, color: COLORS.muted }}>{(progress * 3).toFixed(2)}</span>
-          <span style={{ fontSize: 10, color: COLORS.muted }}>3:00</span>
+          <span style={{ fontSize: 10, color: COLORS.muted }}>{fmtSec(elapsed)}</span>
+          <span style={{ fontSize: 10, color: COLORS.muted }}>{fmtSec(total)}</span>
         </div>
       </div>
     </div>
   );
+}
+
+function fmtSec(s) {
+  if (!s || !isFinite(s) || s < 0) s = 0;
+  const m = Math.floor(s / 60);
+  const ss = String(Math.floor(s % 60)).padStart(2, '0');
+  return `${m}:${ss}`;
 }
 
 function FeatureCard({ feature, onClick, idx }) {
