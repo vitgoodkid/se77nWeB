@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import {
   COLORS, CITIES,
   Panel, Btn, Field, Pill, Kicker,
-  useSyncedData, usePasteImage, copyText, useLang,
+  useSyncedData, usePasteImage, copyText, useLang, useMediaQuery,
 } from './lib.jsx';
 
 // ═════════════════════════════════════════════════════════════
@@ -58,6 +58,7 @@ const AI_PRESETS = [
 
 export function AIPlayground() {
   const { t } = useLang();
+  const isMobile = useMediaQuery('(max-width: 768px)');
   const [presetId, setPresetId] = useSyncedData(
     { localKey: 'se77n.ai.preset', serverKey: 'aiPreset' },
     'chat',
@@ -181,7 +182,49 @@ export function AIPlayground() {
   const acceptImage = true; // every preset can take an image (chat = vision, others = source)
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: 18, height: '100%' }}>
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: isMobile ? '1fr' : '260px 1fr',
+      gridTemplateRows: isMobile ? 'auto 1fr' : 'auto',
+      gap: isMobile ? 12 : 18,
+      height: '100%',
+    }}>
+      {isMobile ? (
+        // Compact horizontal preset chip rail on mobile.
+        <Panel padding={10} style={{ overflow: 'hidden' }}>
+          <div style={{
+            display: 'flex', gap: 6, overflowX: 'auto', WebkitOverflowScrolling: 'touch',
+            scrollbarWidth: 'none', msOverflowStyle: 'none',
+          }}>
+            {AI_PRESETS.map((p) => {
+              const active = p.id === presetId;
+              const label = t('ai.preset.' + p.id + '.label');
+              return (
+                <button
+                  key={p.id}
+                  onClick={() => setPresetId(p.id)}
+                  className="mono"
+                  style={{
+                    flexShrink: 0,
+                    display: 'inline-flex', alignItems: 'center', gap: 8,
+                    padding: '8px 12px', borderRadius: 999,
+                    border: '1px solid ' + (active ? COLORS.red + '55' : COLORS.line),
+                    background: active ? COLORS.red + '14' : 'transparent',
+                    color: active ? COLORS.text : COLORS.muted,
+                    cursor: 'pointer', fontSize: 11, letterSpacing: '0.04em',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  <span style={{
+                    color: active ? COLORS.red : COLORS.muted, fontSize: 12, fontWeight: 700,
+                  }}>{p.icon}</span>
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        </Panel>
+      ) : (
       <Panel padding={16} style={{ display: 'flex', flexDirection: 'column' }}>
         <Kicker style={{ marginBottom: 14 }}>PRESETS · {String(AI_PRESETS.length).padStart(2, '0')}</Kicker>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -228,6 +271,7 @@ export function AIPlayground() {
           <div style={{ marginTop: 6, opacity: 0.6 }}>⌘V to paste images</div>
         </div>
       </Panel>
+      )}
 
       <Panel padding={0} style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <div style={{

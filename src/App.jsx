@@ -6,7 +6,7 @@ import {
   GlyphSun, GlyphMoon, GlobeIcon, ControllerIcon,
   PaperclipIcon, ChatBubbleIcon,
   useClock, useGeoDayNight, useAmbient, useLanyard, useLang, useAuth,
-  usePersisted, useSyncedData, usePasteImage, resolveAssetUrl,
+  usePersisted, useSyncedData, usePasteImage, resolveAssetUrl, useMediaQuery,
 } from './lib.jsx';
 
 const AIPlayground       = lazy(() => import('./featuresA.jsx').then((m) => ({ default: m.AIPlayground })));
@@ -35,10 +35,15 @@ const EXPERIMENT_NUMBER = '007';
 export default function App() {
   const ambientOn = true;
   const showBg = true;
+  const isMobile = useMediaQuery('(max-width: 768px)');
 
   const [route, setRoute] = useState(() => {
     const h = window.location.hash.replace(/^#\//, '');
-    return FEATURES.find((f) => f.id === h) ? h : 'home';
+    if (FEATURES.find((f) => f.id === h)) return h;
+    // On mobile, default landing → AI chat instead of the desktop landing page.
+    const mobileNow = typeof window !== 'undefined' && window.matchMedia
+      ? window.matchMedia('(max-width: 768px)').matches : false;
+    return mobileNow ? 'ai' : 'home';
   });
   const [transitioning, setTransitioning] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
@@ -65,6 +70,14 @@ export default function App() {
       setTimeout(() => setTransitioning(false), 360);
     }, 220);
   }
+
+  // On mobile, the desktop landing page is hidden — bounce 'home' → 'ai' (chat box default).
+  useEffect(() => {
+    if (isMobile && route === 'home') {
+      setRoute('ai');
+      window.history.replaceState(null, '', '#/ai');
+    }
+  }, [isMobile, route]);
 
   useEffect(() => {
     const h = (e) => {
@@ -201,6 +214,7 @@ function AmbientBackground({ phase, enabled, track }) {
 // ─────────────────────────────────────────────────────────────
 function TopBar({ phase, now, geo, nav, ambient, ambientOn }) {
   const { lang, toggle, t } = useLang();
+  const isMobile = useMediaQuery('(max-width: 768px)');
   const tStr = now.toLocaleTimeString('en-GB', {
     hour: '2-digit', minute: '2-digit', second: '2-digit',
   });
@@ -243,7 +257,7 @@ function TopBar({ phase, now, geo, nav, ambient, ambientOn }) {
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <LangToggle lang={lang} toggle={toggle} title={t('topbar.toggleLang')} />
-        <TimeChip phase={phase} city={geo.city} timeStr={tStr} />
+        {!isMobile && <TimeChip phase={phase} city={geo.city} timeStr={tStr} />}
         <AuthChip />
       </div>
     </header>
@@ -704,6 +718,31 @@ function NavRail({ route, nav }) {
         );
       })}
       <div style={{ flex: 1 }} />
+      <NavSocials />
+    </aside>
+  );
+}
+
+// 5 social links. On desktop they sit stacked at the bottom of the nav rail.
+// On mobile, collapse to a single toggle icon — tap expands the 5 icons upward.
+function NavSocials() {
+  const isMobile = useMediaQuery('(max-width: 768px)');
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', onDoc);
+    document.addEventListener('touchstart', onDoc);
+    return () => {
+      document.removeEventListener('mousedown', onDoc);
+      document.removeEventListener('touchstart', onDoc);
+    };
+  }, [open]);
+
+  if (!isMobile) {
+    return (
       <div style={{
         borderTop: '1px solid ' + COLORS.line, paddingTop: 14,
         display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'center',
@@ -725,7 +764,58 @@ function NavRail({ route, nav }) {
           >{s.icon}</a>
         ))}
       </div>
-    </aside>
+    );
+  }
+
+  return (
+    <div ref={ref} style={{
+      borderTop: '1px solid ' + COLORS.line, paddingTop: 14,
+      width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center',
+      position: 'relative',
+    }}>
+      {open && (
+        <div style={{
+          position: 'absolute', bottom: '100%', left: '50%', transform: 'translateX(-50%)',
+          marginBottom: 8,
+          padding: '8px 6px', borderRadius: 12,
+          background: COLORS.panel, border: '1px solid ' + COLORS.line,
+          boxShadow: '0 16px 40px -16px rgba(0,0,0,0.6)',
+          display: 'flex', flexDirection: 'column', gap: 4,
+          animation: 'fadeUp 160ms ease-out',
+        }}>
+          {SOCIALS.map((s) => (
+            <a key={s.id} href={s.href} aria-label={s.label} title={s.label}
+              onClick={() => setOpen(false)}
+              style={{
+                width: 32, height: 32, borderRadius: 8,
+                display: 'grid', placeItems: 'center',
+                color: COLORS.muted, transition: 'color 120ms, background 120ms',
+              }}
+              onTouchStart={(e) => { e.currentTarget.style.color = COLORS.red; }}
+            >{s.icon}</a>
+          ))}
+        </div>
+      )}
+      <button onClick={() => setOpen((v) => !v)} aria-label={open ? 'Collapse' : 'Expand socials'}
+        style={{
+          width: 32, height: 32, borderRadius: 8,
+          background: open ? COLORS.red + '14' : 'transparent',
+          border: '1px solid ' + (open ? COLORS.red + '55' : COLORS.line),
+          color: open ? COLORS.red : COLORS.muted,
+          cursor: 'pointer', display: 'grid', placeItems: 'center',
+          transition: 'background 120ms, color 120ms, border-color 120ms',
+        }}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          {/* simple "share / link" glyph */}
+          <circle cx="6" cy="12" r="2" />
+          <circle cx="18" cy="6" r="2" />
+          <circle cx="18" cy="18" r="2" />
+          <line x1="8" y1="11" x2="16" y2="7" />
+          <line x1="8" y1="13" x2="16" y2="17" />
+        </svg>
+      </button>
+    </div>
   );
 }
 
