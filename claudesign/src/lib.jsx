@@ -97,13 +97,6 @@ const I18N = {
     'auth.syncing':      'Syncing…',
     'auth.error':        'Sign-in failed',
     'auth.errorDismiss': 'Dismiss',
-
-    'mobile.heroHelp':      'one prompt, eight modules. type',
-    'mobile.heroHelpTail':  'to switch intents.',
-    'mobile.try.translate': 'translate text',
-    'mobile.try.image':     'render an image',
-    'mobile.try.tldr':      'summarize an article',
-    'mobile.try.code':      'debug a snippet',
   },
   vi: {
     'topbar.experiment': 'Thí nghiệm',
@@ -198,13 +191,6 @@ const I18N = {
     'auth.syncing':      'Đang đồng bộ…',
     'auth.error':        'Đăng nhập thất bại',
     'auth.errorDismiss': 'Đóng',
-
-    'mobile.heroHelp':      'một prompt, tám mô-đun. gõ',
-    'mobile.heroHelpTail':  'để đổi chế độ.',
-    'mobile.try.translate': 'dịch văn bản',
-    'mobile.try.image':     'tạo ảnh',
-    'mobile.try.tldr':      'tóm tắt bài dài',
-    'mobile.try.code':      'debug code',
   },
 };
 

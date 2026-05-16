@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <filter id="g" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="1.4" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="#0d0a08"/>
+  <text x="32" y="48" font-family="JetBrains Mono, ui-monospace, monospace"
+        font-size="48" font-weight="800" fill="#5BA868"
+        text-anchor="middle" filter="url(#g)">7</text>
+</svg>

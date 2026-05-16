@@ -8,7 +8,6 @@ import {
   useClock, useGeoDayNight, useAmbient, useLanyard, useLang, useAuth,
   usePersisted, useSyncedData, usePasteImage, resolveAssetUrl, useMediaQuery,
 } from './lib.jsx';
-import MobileShell from './MobileShell.jsx';
 
 const AIPlayground       = lazy(() => import('./featuresA.jsx').then((m) => ({ default: m.AIPlayground })));
 const Toolbox            = lazy(() => import('./featuresA.jsx').then((m) => ({ default: m.Toolbox })));
@@ -33,17 +32,7 @@ const FEATURES = [
 
 const EXPERIMENT_NUMBER = '007';
 
-// Top-level router: hand off to MobileShell on phone-class viewports;
-// otherwise render the full desktop control surface. Splitting like this
-// keeps the desktop hooks (useLanyard, useAmbient, etc.) from running on
-// mobile where their data is never displayed.
 export default function App() {
-  const isMobile = useMediaQuery('(max-width: 768px)');
-  if (isMobile) return <MobileShell />;
-  return <AppDesktop />;
-}
-
-function AppDesktop() {
   const ambientOn = true;
   const showBg = true;
   const isMobile = useMediaQuery('(max-width: 768px)');

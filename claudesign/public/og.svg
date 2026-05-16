@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <defs>
+    <radialGradient id="g1" cx="20%" cy="20%" r="60%">
+      <stop offset="0%" stop-color="#E04545" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#E04545" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="g2" cx="85%" cy="80%" r="55%">
+      <stop offset="0%" stop-color="#5BA868" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#5BA868" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="g3" cx="60%" cy="50%" r="40%">
+      <stop offset="0%" stop-color="#D4A858" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#D4A858" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="neon" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="6" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <rect width="1200" height="630" fill="#0d0a08"/>
+  <rect width="1200" height="630" fill="url(#g1)"/>
+  <rect width="1200" height="630" fill="url(#g2)"/>
+  <rect width="1200" height="630" fill="url(#g3)"/>
+  <text x="80" y="320" font-family="JetBrains Mono, monospace"
+        font-size="22" font-weight="700" fill="rgba(245,237,224,0.5)"
+        letter-spacing="6">EXPERIMENT
+    <tspan fill="#E04545" filter="url(#neon)">&#160;007</tspan>
+    <tspan fill="rgba(245,237,224,0.5)">&#160;/ DESKTOP</tspan>
+  </text>
+  <text x="80" y="450" font-family="JetBrains Mono, monospace"
+        font-size="160" font-weight="800" fill="#f5ede0" letter-spacing="-8">se<tspan fill="#E04545" filter="url(#neon)">77</tspan>n</text>
+  <text x="80" y="510" font-family="Geist, system-ui, sans-serif"
+        font-size="32" fill="rgba(245,237,224,0.7)">
+    ask. think. ship. archive.
+  </text>
+  <text x="80" y="575" font-family="JetBrains Mono, monospace"
+        font-size="20" fill="rgba(245,237,224,0.45)" letter-spacing="3">
+    01 AI · 02 TOOLBOX · 03 TRAVEL · 04 GAME · 05 STACK · 06 CRYPTO · 07 VAULT · 08 TODO
+  </text>
+</svg>

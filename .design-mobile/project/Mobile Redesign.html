@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>se77n · mobile redesign</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0; min-height: 100%;
+      background: #0d0a08;
+      font-family: 'Geist', system-ui, sans-serif;
+      color: #f5ede0;
+      -webkit-font-smoothing: antialiased;
+    }
+    .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+
+    @keyframes blink { 50% { opacity: 0; } }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%      { opacity: 0.55; transform: scale(0.82); }
+    }
+
+    .phone-scroll::-webkit-scrollbar { display: none; }
+    .phone-scroll { scrollbar-width: none; }
+
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+
+    button { font-family: inherit; }
+    input, textarea { font-family: inherit; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <script type="text/babel" src="mobile/design-canvas.jsx"></script>
+  <script type="text/babel" src="mobile/ios-frame.jsx"></script>
+  <script type="text/babel" src="mobile/mobile-screen.jsx"></script>
+
+  <script type="text/babel">
+    function PhoneFrame({ children }) {
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+          <IOSDevice width={402} height={874} dark={true}>
+            <div style={{ width: '100%', height: '100%' }}>{children}</div>
+          </IOSDevice>
+        </div>
+      );
+    }
+
+    function Stage({ children, tint = 'rgba(224,69,69,0.06)' }) {
+      return (
+        <div style={{
+          width: '100%', height: '100%',
+          display: 'grid', placeItems: 'center',
+          background: `radial-gradient(60% 50% at 50% 35%, ${tint}, transparent 70%)`,
+          padding: 20,
+        }}>
+          <PhoneFrame>{children}</PhoneFrame>
+        </div>
+      );
+    }
+
+    function CanvasApp() {
+      return (
+        <DesignCanvas
+          title="se77n · mobile redesign"
+          subtitle="Chat-first · hero = time-aware greeting. Same DNA — terminal · cream · red 77 · Experiment 007."
+        >
+          <DCSection
+            id="states"
+            title="Primary states"
+            subtitle="Default flow — opens to chat, drawer for everything else. Tap ☰ to open the drawer, type / to see slash commands."
+            gap={64}
+          >
+            <DCArtboard id="empty" label="Empty · time-aware greeting" width={442} height={920}>
+              <Stage tint="rgba(155,180,255,0.06)">
+                <MobileScreen variant="chat-only" initialMessages={[]} hero="greeting" />
+              </Stage>
+            </DCArtboard>
+
+            <DCArtboard id="default" label="With messages" width={442} height={920}>
+              <Stage tint="rgba(224,69,69,0.06)">
+                <MobileScreen variant="chat-only" />
+              </Stage>
+            </DCArtboard>
+
+            <DCArtboard id="typing" label="Typing · assistant rendering" width={442} height={920}>
+              <Stage tint="rgba(212,168,88,0.06)">
+                <MobileScreen
+                  variant="chat-only"
+                  typing={true}
+                  initialMessages={[
+                    { role: 'user', content: 'what should i make for dinner if i only have eggs, rice, kimchi?' },
+                    { role: 'assistant', content: 'easy — make kimchi fried rice (김치볶음밥). cook the rice cold, fry the kimchi in sesame oil until caramelized, fold rice in, top with a runny fried egg. ~8 min.' },
+                    { role: 'user', mono: true, content: '/image plate from above, top-down, moody lighting' },
+                  ]}
+                />
+              </Stage>
+            </DCArtboard>
+
+            <DCArtboard id="drawer" label="Drawer open · 8 modules" width={442} height={920}>
+              <Stage tint="rgba(91,168,104,0.05)">
+                <MobileScreen variant="chat-only" initialDrawer={true} />
+              </Stage>
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection
+            id="notes"
+            title="Decisions baked in"
+            subtitle="Same colors and type as the desktop build. Different proportions, density, and surface count."
+          >
+            <DCArtboard id="N1" label="Tokens & system" width={780} height={540}>
+              <div style={{
+                width: '100%', height: '100%',
+                background: '#0d0a08', color: '#f5ede0',
+                padding: 36, overflow: 'auto',
+                fontFamily: "'Geist', system-ui, sans-serif",
+              }}>
+                <div className="mono" style={{
+                  fontSize: 10, letterSpacing: '0.24em', color: '#e04545', fontWeight: 700, marginBottom: 8,
+                }}>● MOBILE · CHAT-FIRST</div>
+                <h2 className="mono" style={{
+                  margin: 0, fontSize: 28, fontWeight: 800, letterSpacing: '-0.025em',
+                }}>What stays, what goes</h2>
+
+                <div style={{
+                  marginTop: 22, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18,
+                }}>
+                  <div style={{
+                    padding: 16, borderRadius: 12, background: '#15110d', border: '1px solid rgba(255,255,255,0.08)',
+                  }}>
+                    <div className="mono" style={{ fontSize: 9, letterSpacing: '0.2em', color: '#5ba868', fontWeight: 700, marginBottom: 8 }}>● KEEP</div>
+                    <ul style={{ margin: 0, paddingLeft: 16, fontSize: 13, lineHeight: 1.7, color: 'rgba(245,237,224,0.78)' }}>
+                      <li>Palette: <span className="mono">#0d0a08 · #f5ede0 · #e04545</span></li>
+                      <li>Type: Geist body · JetBrains Mono chrome</li>
+                      <li>Logo with red 77 glow + Experiment 007 stamp</li>
+                      <li>Module accent system (01–08, gold / green / red)</li>
+                      <li>Terminal voice — <span className="mono">se77n ::</span> prefix</li>
+                      <li>Slash-command preset shortcuts</li>
+                    </ul>
+                  </div>
+                  <div style={{
+                    padding: 16, borderRadius: 12, background: '#15110d', border: '1px solid rgba(255,255,255,0.08)',
+                  }}>
+                    <div className="mono" style={{ fontSize: 9, letterSpacing: '0.2em', color: '#e04545', fontWeight: 700, marginBottom: 8 }}>◯ STRIP</div>
+                    <ul style={{ margin: 0, paddingLeft: 16, fontSize: 13, lineHeight: 1.7, color: 'rgba(245,237,224,0.78)' }}>
+                      <li>NowPlaying pill (Spotify / game chip)</li>
+                      <li>Ambient gradient background</li>
+                      <li>Day/night TimeChip + city geolocation</li>
+                      <li>Lang toggle (moved into drawer)</li>
+                      <li>Auth chip (moved into drawer)</li>
+                      <li>Floating ChatFab (chat IS the page now)</li>
+                      <li>NavRail 84px (replaced by drawer)</li>
+                      <li>Footer build-stamp (moved into drawer)</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div style={{
+                  marginTop: 18, padding: 16, borderRadius: 12,
+                  background: '#15110d', border: '1px solid rgba(224,69,69,0.4)',
+                }}>
+                  <div className="mono" style={{ fontSize: 9, letterSpacing: '0.2em', color: '#d4a858', fontWeight: 700, marginBottom: 8 }}>◐ NEW</div>
+                  <ul style={{ margin: 0, paddingLeft: 16, fontSize: 13, lineHeight: 1.7, color: 'rgba(245,237,224,0.85)' }}>
+                    <li><b>Drawer</b> — left-slide, 286px, vertical module list with full descriptions + accent bar on active</li>
+                    <li><b>Slash menu</b> — popover above input, filters in real time, 8 commands</li>
+                    <li><b>Empty-state hero</b> — time-aware greeting (<span className="mono">good morning / afternoon / evening / late, zzzzz</span>) with day/night chip; live clock</li>
+                    <li><b>Typing bubble</b> — pulsing dots + intent badge while assistant renders</li>
+                    <li><b>Day divider</b> — terminal-style timestamp between chat sessions</li>
+                  </ul>
+                </div>
+              </div>
+            </DCArtboard>
+          </DCSection>
+        </DesignCanvas>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<CanvasApp />);
+  </script>
+</body>
+</html>
