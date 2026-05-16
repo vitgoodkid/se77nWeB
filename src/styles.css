@@ -74,6 +74,19 @@ body {
   25%      { transform: translateX(-6px); }
   75%      { transform: translateX(6px); }
 }
+@keyframes rimSweep {
+  from { transform: translateX(0); opacity: 0; }
+  30%  { opacity: 1; }
+  to   { transform: translateX(350%); opacity: 0; }
+}
+@keyframes breath {
+  0%, 100% { transform: scale(1); opacity: 0.65; }
+  50%      { transform: scale(1.025); opacity: 0.85; }
+}
+@keyframes consoleLine {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }

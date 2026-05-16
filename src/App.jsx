@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import { useState, useEffect, useRef, useMemo, lazy, Suspense } from 'react';
 import { useCallback } from 'react';
 import {
   COLORS, SOCIALS,
@@ -878,6 +878,144 @@ function Breadcrumbs({ route, nav, feature }) {
 // ─────────────────────────────────────────────────────────────
 const VERBS = ['ask', 'think', 'ship', 'archive'];
 
+// Drifting module-color dots connected with thin lines, sitting behind the hero.
+function Constellation({ height = 360, dotCount = 18 }) {
+  const wrapRef = useRef(null);
+  const [size, setSize] = useState({ w: 800, h: height });
+  const [t, setT] = useState(0);
+  const modules = FEATURES.filter((f) => f.id !== 'home');
+
+  useEffect(() => {
+    if (!wrapRef.current) return;
+    const ro = new ResizeObserver(() => {
+      const r = wrapRef.current.getBoundingClientRect();
+      setSize({ w: r.width, h: r.height });
+    });
+    ro.observe(wrapRef.current);
+    return () => ro.disconnect();
+  }, []);
+
+  useEffect(() => {
+    let raf;
+    const start = performance.now();
+    const loop = (now) => {
+      setT((now - start) / 1000);
+      raf = requestAnimationFrame(loop);
+    };
+    raf = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  const dots = useMemo(() => {
+    const out = [];
+    for (let i = 0; i < dotCount; i++) {
+      const m = modules[i % modules.length];
+      const seed = i * 17.31;
+      out.push({
+        i, color: m.accent,
+        cx: 0.1 + ((seed * 0.13) % 0.8),
+        cy: 0.1 + ((seed * 0.21) % 0.8),
+        amp: 0.02 + ((seed * 0.07) % 0.04),
+        freq: 0.25 + ((seed * 0.05) % 0.3),
+        phase: (seed * 1.7) % (Math.PI * 2),
+        r: 1.6 + ((seed * 0.11) % 1.2),
+      });
+    }
+    return out;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dotCount]);
+
+  const pts = dots.map((d) => ({
+    ...d,
+    x: (d.cx + Math.cos(t * d.freq + d.phase) * d.amp) * size.w,
+    y: (d.cy + Math.sin(t * d.freq * 0.8 + d.phase) * d.amp) * size.h,
+  }));
+
+  const edges = [];
+  const MAX = Math.min(size.w, size.h) * 0.28;
+  for (let i = 0; i < pts.length; i++) {
+    for (let j = i + 1; j < pts.length; j++) {
+      const dx = pts[i].x - pts[j].x;
+      const dy = pts[i].y - pts[j].y;
+      const d = Math.hypot(dx, dy);
+      if (d < MAX) edges.push({ a: pts[i], b: pts[j], d });
+    }
+  }
+
+  return (
+    <div ref={wrapRef} aria-hidden style={{
+      position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
+      overflow: 'hidden',
+    }}>
+      <svg width={size.w} height={size.h} style={{ display: 'block' }}>
+        {edges.map((e, i) => {
+          const alpha = 1 - e.d / MAX;
+          return (
+            <line key={i} x1={e.a.x} y1={e.a.y} x2={e.b.x} y2={e.b.y}
+              stroke={COLORS.text} strokeWidth="0.6" opacity={alpha * 0.18} />
+          );
+        })}
+        {pts.map((p, i) => (
+          <g key={i}>
+            <circle cx={p.x} cy={p.y} r={p.r * 3} fill={p.color} opacity="0.10" />
+            <circle cx={p.x} cy={p.y} r={p.r} fill={p.color} opacity="0.6" />
+          </g>
+        ))}
+      </svg>
+    </div>
+  );
+}
+
+function ExperimentWatermark({ number = EXPERIMENT_NUMBER }) {
+  return (
+    <div aria-hidden style={{
+      position: 'absolute', top: -40, right: -20, pointerEvents: 'none', zIndex: 0,
+      fontFamily: 'JetBrains Mono, monospace',
+      fontSize: 340, fontWeight: 800, letterSpacing: '-0.04em', lineHeight: 1,
+      color: 'transparent',
+      WebkitTextStroke: `1px ${COLORS.red}26`,
+      opacity: 0.65,
+      userSelect: 'none',
+      animation: 'breath 6s ease-in-out infinite',
+    }}>
+      {number}
+    </div>
+  );
+}
+
+function MarqueeTicker({ speed = 60, items }) {
+  const doubled = [...items, ...items];
+  return (
+    <div style={{
+      width: '100%', overflow: 'hidden', position: 'relative',
+      padding: '10px 0', borderTop: `1px solid ${COLORS.line}`,
+      borderBottom: `1px solid ${COLORS.line}`,
+      background: 'rgba(13,10,8,0.5)',
+      maskImage: 'linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent)',
+      WebkitMaskImage: 'linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent)',
+    }}>
+      <div style={{
+        display: 'inline-flex', gap: 28, whiteSpace: 'nowrap',
+        animation: `ticker ${speed}s linear infinite`,
+        paddingLeft: 28,
+      }}>
+        {doubled.map((it, i) => (
+          <span key={i} className="mono" style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8,
+            fontSize: 11, letterSpacing: '0.18em', color: it.c, fontWeight: 700,
+          }}>
+            <span style={{
+              width: 6, height: 6, borderRadius: 999, background: it.c,
+              boxShadow: `0 0 6px ${it.c}aa`,
+            }} />
+            {it.t}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function HomeView({ nav, ambient, ambientOn }) {
   const { t } = useLang();
   const [verb, setVerb] = useState(0);
@@ -886,50 +1024,71 @@ function HomeView({ nav, ambient, ambientOn }) {
     return () => clearInterval(id);
   }, []);
 
+  const tickerItems = useMemo(() => [
+    { c: COLORS.green, t: 'TECH · 11 SERVICES MONITORED' },
+    { c: COLORS.gold,  t: 'BURN · $147.83 / MO' },
+    { c: COLORS.gold,  t: 'BTC · 94,200 ↗ +0.8%' },
+    { c: COLORS.gold,  t: 'GOLD/OZ · 2,648.40' },
+    { c: COLORS.red,   t: 'AI · 1,204 PROMPTS LIFETIME' },
+    { c: COLORS.green, t: 'TRAVEL · 16 CITIES · 12 VISITED' },
+    { c: COLORS.green, t: 'TODO · 13 OPEN · 47 SHIPPED' },
+    { c: COLORS.red,   t: 'VAULT · 47 SECRETS · ROTATED 6d AGO' },
+    { c: COLORS.text,  t: 'BUILD · ' + new Date().toISOString().slice(0, 10).replaceAll('-', '.') },
+  ], []);
+
   return (
     <div>
-      <section style={{ marginBottom: 36 }}>
-        <Kicker style={{ marginBottom: 14, color: COLORS.red }}>● ONLINE · EXP {EXPERIMENT_NUMBER}</Kicker>
-        <h1 style={{
-          margin: 0,
-          fontFamily: 'JetBrains Mono, monospace',
-          fontSize: 78, lineHeight: 1.02, fontWeight: 800, letterSpacing: '-0.03em',
-        }}>
-          <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 26, flexWrap: 'wrap' }}>
-            {VERBS.map((v, i) => (
-              <span key={v} style={{
-                opacity: verb === i ? 1 : 0.18,
-                color: verb === i ? COLORS.text : COLORS.muted,
-                transition: 'opacity 300ms, color 300ms',
-                position: 'relative',
-              }}>
-                {v}
-                {verb === i && (
-                  <span style={{
-                    display: 'inline-block', width: 14, height: 56,
-                    marginLeft: 8, verticalAlign: '-4px',
-                    background: COLORS.red,
-                    boxShadow: `0 0 18px ${COLORS.red}66`,
-                    animation: 'blink 1s steps(1) infinite',
-                  }} />
-                )}
-              </span>
-            ))}
-          </span>
-        </h1>
-        <p style={{
-          margin: '20px 0 0', maxWidth: 720,
-          fontSize: 16, color: COLORS.muted, lineHeight: 1.6,
-        }}>
-          A personal control surface — eight modules wired to one prompt.
-          AI, finance, travel, vault, and tools, woven into a single command center.
-        </p>
-        <div style={{ marginTop: 26, display: 'flex', gap: 10 }}>
-          <Btn variant="solid" color={COLORS.red} onClick={() => nav('ai')}>{t('home.openAi')}</Btn>
-          <Btn variant="ghost" onClick={() => nav('crypto')}>{t('home.markets')}</Btn>
-          <Btn variant="ghost" onClick={() => nav('todo')}>{t('home.todo')}</Btn>
+      <section style={{ position: 'relative', marginBottom: 36, padding: '4px 0' }}>
+        <Constellation />
+        <ExperimentWatermark />
+
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <Kicker style={{ marginBottom: 14, color: COLORS.red }}>● ONLINE · EXP {EXPERIMENT_NUMBER}</Kicker>
+          <h1 style={{
+            margin: 0,
+            fontFamily: 'JetBrains Mono, monospace',
+            fontSize: 78, lineHeight: 1.02, fontWeight: 800, letterSpacing: '-0.03em',
+          }}>
+            <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 26, flexWrap: 'wrap' }}>
+              {VERBS.map((v, i) => (
+                <span key={v} style={{
+                  opacity: verb === i ? 1 : 0.18,
+                  color: verb === i ? COLORS.text : COLORS.muted,
+                  transition: 'opacity 300ms, color 300ms',
+                  position: 'relative',
+                }}>
+                  {v}
+                  {verb === i && (
+                    <span style={{
+                      display: 'inline-block', width: 14, height: 56,
+                      marginLeft: 8, verticalAlign: '-4px',
+                      background: COLORS.red,
+                      boxShadow: `0 0 18px ${COLORS.red}66`,
+                      animation: 'blink 1s steps(1) infinite',
+                    }} />
+                  )}
+                </span>
+              ))}
+            </span>
+          </h1>
+          <p style={{
+            margin: '20px 0 0', maxWidth: 720,
+            fontSize: 16, color: COLORS.muted, lineHeight: 1.6,
+          }}>
+            A personal control surface — eight modules wired to one prompt.
+            AI, finance, travel, vault, and tools, woven into a single command center.
+          </p>
+          <div style={{ marginTop: 26, display: 'flex', gap: 10 }}>
+            <Btn variant="solid" color={COLORS.red} onClick={() => nav('ai')}>{t('home.openAi')}</Btn>
+            <Btn variant="ghost" onClick={() => nav('crypto')}>{t('home.markets')}</Btn>
+            <Btn variant="ghost" onClick={() => nav('todo')}>{t('home.todo')}</Btn>
+          </div>
         </div>
       </section>
+
+      <div style={{ margin: '36px -32px 36px -84px' }}>
+        <MarqueeTicker speed={60} items={tickerItems} />
+      </div>
 
       <section style={{ marginBottom: 28 }}>
         <div style={{
@@ -1296,31 +1455,37 @@ function ChatBubble({ msg, accent, typing }) {
 }
 
 function FeatureCard({ feature, onClick, idx }) {
+  const [hover, setHover] = useState(false);
   const label = feature.label;
   const desc = feature.desc;
   const iconNode = typeof feature.icon === 'function' ? feature.icon(feature.accent) : feature.icon;
   return (
-    <button onClick={onClick} style={{
-      textAlign: 'left', padding: 22, borderRadius: 14,
-      background: COLORS.panel, border: '1px solid ' + COLORS.line,
-      cursor: 'pointer',
-      display: 'flex', flexDirection: 'column', gap: 16,
-      minHeight: 148, position: 'relative', overflow: 'hidden',
-      color: COLORS.text,
-      transition: 'all 180ms',
-      animation: `fadeUp 500ms ease-out ${idx * 50}ms both`,
-    }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.transform = 'translateY(-4px)';
-        e.currentTarget.style.borderColor = feature.accent + '70';
-        e.currentTarget.style.boxShadow = `0 16px 36px -16px ${feature.accent}55, 0 0 0 1px ${feature.accent}33`;
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = 'translateY(0)';
-        e.currentTarget.style.borderColor = COLORS.line;
-        e.currentTarget.style.boxShadow = 'none';
+    <button onClick={onClick}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        textAlign: 'left', padding: 22, borderRadius: 14,
+        background: COLORS.panel,
+        border: '1px solid ' + (hover ? feature.accent + '70' : COLORS.line),
+        cursor: 'pointer',
+        display: 'flex', flexDirection: 'column', gap: 16,
+        minHeight: 148, position: 'relative', overflow: 'hidden',
+        color: COLORS.text,
+        transform: hover ? 'translateY(-4px)' : 'translateY(0)',
+        boxShadow: hover ? `0 16px 36px -16px ${feature.accent}55, 0 0 0 1px ${feature.accent}33` : 'none',
+        transition: 'transform 180ms, border-color 180ms, box-shadow 180ms',
+        animation: `fadeUp 500ms ease-out ${idx * 50}ms both`,
       }}
     >
+      {hover && (
+        <span aria-hidden style={{
+          position: 'absolute', top: 0, left: '-30%', width: '40%', height: '100%',
+          background: `linear-gradient(115deg, transparent 0%, ${feature.accent}28 50%, transparent 100%)`,
+          animation: 'rimSweep 900ms ease-out',
+          pointerEvents: 'none',
+        }} />
+      )}
+
       <span style={{
         position: 'absolute', top: 14, right: 16,
         fontFamily: 'JetBrains Mono, monospace', fontSize: 14, fontWeight: 800,
@@ -1345,6 +1510,19 @@ function FeatureCard({ feature, onClick, idx }) {
         <div style={{ fontSize: 12, color: COLORS.muted, marginTop: 6, lineHeight: 1.5 }}>
           {desc}
         </div>
+      </div>
+
+      <div style={{
+        position: 'absolute', bottom: 14, right: 16, display: 'flex', alignItems: 'center', gap: 6,
+        fontFamily: 'JetBrains Mono, monospace', fontSize: 8.5, letterSpacing: '0.18em',
+        color: COLORS.muted,
+      }}>
+        <span style={{
+          width: 5, height: 5, borderRadius: 999, background: COLORS.green,
+          boxShadow: `0 0 5px ${COLORS.green}aa`,
+          animation: 'pulse 1.6s ease-in-out infinite',
+        }} />
+        OK
       </div>
     </button>
   );
