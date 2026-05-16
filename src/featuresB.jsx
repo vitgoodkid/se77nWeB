@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import {
   COLORS, TECH, VAULT_SEED,
   Panel, Btn, Field, Pill, Kicker, Sparkline,
-  useSyncedData, copyText, genSeries,
+  useSyncedData, copyText,
 } from './lib.jsx';
 
 // ═════════════════════════════════════════════════════════════
@@ -160,31 +160,47 @@ export function TechStackMonitor() {
 // 6. CRYPTO WATCH — real BTC + GOLD + TWD/VND, sparklines, converter
 // ═════════════════════════════════════════════════════════════
 export function CryptoWatch() {
-  const [ticks, setTicks] = useState(() => ({
-    btc:  { price: 96234.5, series: genSeries(40, 96234, 600) },
-    gold: { price: 2418.3,  series: genSeries(40, 2418, 10) },
-    twd:  { price: 30.21,   series: genSeries(40, 30.2, 0.1) },
-    vnd:  { price: 25240,   series: genSeries(40, 25240, 40) },
-  }));
-  const [status, setStatus] = useState({ live: false, t: 0 });
+  const [ticks, setTicks] = useState({
+    btc:  { price: null, series: [] },
+    gold: { price: null, series: [] },
+    twd:  { price: null, series: [] },
+    vnd:  { price: null, series: [] },
+  });
+  const [status, setStatus] = useState({ live: false, loaded: false, t: 0, error: null });
 
   useEffect(() => {
     let alive = true;
     async function poll() {
       try {
         const r = await fetch('/api/crypto');
-        if (!r.ok) return;
+        if (!r.ok) throw new Error('crypto ' + r.status);
         const d = await r.json();
         if (!alive) return;
-        setTicks((cur) => ({
-          btc:  d.btc  ? { price: d.btc,  series: [...cur.btc.series.slice(-39),  d.btc]  } : cur.btc,
-          gold: d.gold ? { price: d.gold, series: [...cur.gold.series.slice(-39), d.gold] } : cur.gold,
-          twd:  d.twd  ? { price: d.twd,  series: [...cur.twd.series.slice(-39),  d.twd]  } : cur.twd,
-          vnd:  d.vnd  ? { price: d.vnd,  series: [...cur.vnd.series.slice(-39),  d.vnd]  } : cur.vnd,
-        }));
-        setStatus({ live: true, t: Date.now() });
-      } catch {
-        setStatus((s) => ({ ...s, live: false }));
+        setTicks((cur) => {
+          const merge = (key) => {
+            const liveSeries = Array.isArray(d.series?.[key]) ? d.series[key] : null;
+            if (liveSeries && liveSeries.length) {
+              return { price: d[key] ?? liveSeries[liveSeries.length - 1], series: liveSeries };
+            }
+            // No historical data from API yet — append the latest tick onto whatever
+            // we already have, so the sparkline grows over time instead of showing fakes.
+            if (Number.isFinite(d[key])) {
+              const next = [...cur[key].series, d[key]].slice(-40);
+              return { price: d[key], series: next };
+            }
+            return cur[key];
+          };
+          return {
+            btc:  merge('btc'),
+            gold: merge('gold'),
+            twd:  merge('twd'),
+            vnd:  merge('vnd'),
+          };
+        });
+        setStatus({ live: true, loaded: true, t: Date.now(), error: null });
+      } catch (e) {
+        if (!alive) return;
+        setStatus((s) => ({ ...s, live: false, loaded: true, error: e.message || 'fetch failed' }));
       }
     }
     poll();
@@ -192,8 +208,9 @@ export function CryptoWatch() {
     return () => { alive = false; clearInterval(id); };
   }, []);
 
-  const twdPerVnd = ticks.twd.price / ticks.vnd.price;
-  const vndPerTwd = ticks.vnd.price / ticks.twd.price;
+  const havePrices = Number.isFinite(ticks.twd.price) && Number.isFinite(ticks.vnd.price);
+  const twdPerVnd = havePrices ? ticks.twd.price / ticks.vnd.price : 0;
+  const vndPerTwd = havePrices ? ticks.vnd.price / ticks.twd.price : 0;
 
   const [direction, setDirection] = useState('twd-vnd');
   const [amount, setAmount] = useState('1000');
@@ -201,11 +218,18 @@ export function CryptoWatch() {
   const converted = direction === 'twd-vnd' ? num * vndPerTwd : num * twdPerVnd;
 
   const tickers = [
-    { key: 'btc',  label: 'BTC / USDT', price: ticks.btc.price,  fmt: (v) => '$' + v.toFixed(2), color: COLORS.gold },
-    { key: 'gold', label: 'GOLD / oz',  price: ticks.gold.price, fmt: (v) => '$' + v.toFixed(2), color: COLORS.gold },
+    { key: 'btc',  label: 'BTC / USDT', price: ticks.btc.price,  fmt: (v) => '$' + v.toLocaleString(undefined, { maximumFractionDigits: 2 }), color: COLORS.gold },
+    { key: 'gold', label: 'GOLD / oz',  price: ticks.gold.price, fmt: (v) => '$' + v.toLocaleString(undefined, { maximumFractionDigits: 2 }), color: COLORS.gold },
     { key: 'twd',  label: 'TWD / USD',  price: ticks.twd.price,  fmt: (v) => v.toFixed(3),       color: COLORS.green },
-    { key: 'vnd',  label: 'VND / USD',  price: ticks.vnd.price,  fmt: (v) => v.toFixed(0),       color: COLORS.red },
+    { key: 'vnd',  label: 'VND / USD',  price: ticks.vnd.price,  fmt: (v) => v.toLocaleString(undefined, { maximumFractionDigits: 0 }), color: COLORS.red },
   ];
+
+  const statusLabel = !status.loaded ? 'CONNECTING'
+                    : status.live    ? 'LIVE · 60s'
+                    :                  'OFFLINE';
+  const statusColor = !status.loaded ? COLORS.muted
+                    : status.live    ? COLORS.green
+                    :                  COLORS.red;
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 18, height: '100%' }}>
@@ -215,28 +239,30 @@ export function CryptoWatch() {
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         }}>
           <div>
-            <Kicker>MARKETS · {status.live ? 'LIVE' : 'CACHE'}</Kicker>
+            <Kicker>MARKETS · {statusLabel}</Kicker>
             <div className="mono" style={{ fontSize: 18, fontWeight: 700, marginTop: 4 }}>Crypto watch</div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{
               width: 8, height: 8, borderRadius: 999,
-              background: status.live ? COLORS.green : COLORS.muted,
+              background: statusColor,
               boxShadow: status.live ? `0 0 8px ${COLORS.green}` : 'none',
               animation: status.live ? 'pulse 1.4s ease-in-out infinite' : 'none',
             }} />
             <span className="mono" style={{
               fontSize: 10, letterSpacing: '0.16em',
-              color: status.live ? COLORS.green : COLORS.muted,
-            }}>{status.live ? 'LIVE · 60s' : 'OFFLINE'}</span>
+              color: statusColor,
+            }}>{statusLabel}</span>
           </div>
         </div>
 
         <div style={{ padding: 20, display: 'grid', gap: 14 }}>
           {tickers.map((t) => {
             const series = ticks[t.key].series;
-            const first = series[0];
-            const last = series[series.length - 1];
+            const havePrice = Number.isFinite(t.price);
+            const haveSeries = series.length >= 2;
+            const first = haveSeries ? series[0] : 0;
+            const last = haveSeries ? series[series.length - 1] : 0;
             const delta = last - first;
             const pct = first ? (delta / first) * 100 : 0;
             const up = delta >= 0;
@@ -248,18 +274,34 @@ export function CryptoWatch() {
               }}>
                 <div>
                   <Kicker style={{ color: t.color, marginBottom: 4 }}>{t.label}</Kicker>
-                  <div className="mono" style={{ fontSize: 22, fontWeight: 700 }}>{t.fmt(t.price)}</div>
+                  <div className="mono" style={{ fontSize: 22, fontWeight: 700 }}>
+                    {havePrice ? t.fmt(t.price) : (
+                      <span style={{ color: COLORS.muted, fontSize: 14, fontWeight: 500 }}>—</span>
+                    )}
+                  </div>
                 </div>
-                <div style={{ overflow: 'hidden' }}>
-                  <Sparkline data={series} color={t.color} w={400} h={56} fill />
+                <div style={{ overflow: 'hidden', minHeight: 56, display: 'flex', alignItems: 'center' }}>
+                  {haveSeries ? (
+                    <Sparkline data={series} color={t.color} w={400} h={56} fill />
+                  ) : (
+                    <span className="mono" style={{ fontSize: 10, color: COLORS.muted, letterSpacing: '0.16em' }}>
+                      {status.error ? '○ no data' : '○ loading history…'}
+                    </span>
+                  )}
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <div className="mono" style={{ fontSize: 13, fontWeight: 700, color: up ? COLORS.green : COLORS.red }}>
-                    {up ? '▲' : '▼'} {Math.abs(pct).toFixed(2)}%
-                  </div>
-                  <div className="mono" style={{ fontSize: 10, color: COLORS.muted, marginTop: 4 }}>
-                    {up ? '+' : ''}{delta.toFixed(2)} · 40t
-                  </div>
+                  {haveSeries ? (
+                    <>
+                      <div className="mono" style={{ fontSize: 13, fontWeight: 700, color: up ? COLORS.green : COLORS.red }}>
+                        {up ? '▲' : '▼'} {Math.abs(pct).toFixed(2)}%
+                      </div>
+                      <div className="mono" style={{ fontSize: 10, color: COLORS.muted, marginTop: 4 }}>
+                        {up ? '+' : ''}{delta.toFixed(2)} · {series.length}t
+                      </div>
+                    </>
+                  ) : (
+                    <div className="mono" style={{ fontSize: 10, color: COLORS.muted, letterSpacing: '0.14em' }}>—</div>
+                  )}
                 </div>
               </div>
             );
@@ -323,7 +365,7 @@ export function CryptoWatch() {
                 letterSpacing: '0.12em',
               }}>{direction === 'twd-vnd' ? 'VND' : 'TWD'}</span>
               <span className="mono" style={{ flex: 1, fontSize: 22, fontWeight: 700, color: COLORS.gold }}>
-                {converted.toLocaleString(undefined, { maximumFractionDigits: direction === 'twd-vnd' ? 0 : 2 })}
+                {havePrices ? converted.toLocaleString(undefined, { maximumFractionDigits: direction === 'twd-vnd' ? 0 : 2 }) : '—'}
               </span>
             </div>
           </div>
@@ -337,11 +379,15 @@ export function CryptoWatch() {
             }}>CROSS RATES · VIA USD</div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }} className="mono">
               <span>1 TWD =</span>
-              <span style={{ color: COLORS.gold, fontWeight: 700 }}>{vndPerTwd.toFixed(1)} VND</span>
+              <span style={{ color: COLORS.gold, fontWeight: 700 }}>
+                {havePrices ? vndPerTwd.toFixed(1) + ' VND' : '—'}
+              </span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginTop: 4 }} className="mono">
               <span>1000 VND =</span>
-              <span style={{ color: COLORS.gold, fontWeight: 700 }}>{(twdPerVnd * 1000).toFixed(3)} TWD</span>
+              <span style={{ color: COLORS.gold, fontWeight: 700 }}>
+                {havePrices ? (twdPerVnd * 1000).toFixed(3) + ' TWD' : '—'}
+              </span>
             </div>
           </div>
         </div>

@@ -1,0 +1,1039 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Travel — redesign wireframe</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  :root {
+    --bg:      #0d0a08;
+    --panel:   #15110d;
+    --panel2:  #1c1813;
+    --line:    rgba(255,255,255,0.08);
+    --text:    #f5ede0;
+    --muted:   rgba(245,237,224,0.5);
+    --dim:     rgba(245,237,224,0.28);
+    --gold:    #D4A858;
+    --green:   #5BA868;
+    --red:     #E04545;
+    --grey-1:  rgba(245,237,224,0.06);
+    --grey-2:  rgba(245,237,224,0.10);
+  }
+  * { box-sizing: border-box; }
+  html, body { background: var(--bg); color: var(--text); margin: 0; padding: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+  .mono { font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; }
+
+  .shell { max-width: 1480px; margin: 0 auto; padding: 32px 28px 80px; }
+  .doc-head { display: flex; align-items: flex-end; justify-content: space-between;
+    gap: 24px; margin-bottom: 32px; padding-bottom: 18px; border-bottom: 1px dashed var(--line); }
+  .doc-head h1 { margin: 0; font-size: 28px; letter-spacing: -0.01em; font-weight: 700; }
+  .doc-head .meta { color: var(--muted); font-size: 11px; letter-spacing: 0.18em; }
+  .kicker { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 10px;
+    letter-spacing: 0.22em; color: var(--muted); text-transform: uppercase; }
+
+  .view { margin-bottom: 56px; }
+  .view-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 14px; }
+  .view-head .num { font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 11px; letter-spacing: 0.22em; color: var(--gold);
+    border: 1px solid color-mix(in oklab, var(--gold) 40%, transparent);
+    padding: 4px 10px; border-radius: 999px; }
+  .view-head h2 { margin: 0; font-size: 20px; font-weight: 700; }
+  .view-head .sub { color: var(--muted); font-size: 12px; margin-left: auto; }
+
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+  .blk { background: var(--grey-1); border: 1px dashed var(--line); border-radius: 8px;
+    display: flex; align-items: center; justify-content: center; color: var(--dim);
+    font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 10px;
+    letter-spacing: 0.18em; text-transform: uppercase; }
+  .blk.dot { background:
+    radial-gradient(circle at center, rgba(245,237,224,0.18) 1px, transparent 1px) 0 0 / 12px 12px,
+    var(--grey-1); }
+  .pill { display: inline-flex; align-items: center; gap: 6px;
+    border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px; letter-spacing: 0.16em; color: var(--muted); text-transform: uppercase; }
+  .pill.gold   { color: var(--gold);  border-color: color-mix(in oklab, var(--gold) 60%, transparent); }
+  .pill.green  { color: var(--green); border-color: color-mix(in oklab, var(--green) 60%, transparent); }
+  .pill.red    { color: var(--red);   border-color: color-mix(in oklab, var(--red) 60%, transparent); }
+  .dot-pin { width: 8px; height: 8px; border-radius: 999px; display: inline-block; }
+  .label { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 10px;
+    letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+
+  /* LIST */
+  .list-grid { display: grid; grid-template-columns: 220px 1fr; gap: 18px; }
+  .filter-rail { padding: 18px; }
+  .filter-group + .filter-group { margin-top: 22px; }
+  .filter-group .head { display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 10px; color: var(--muted); }
+  .filter-list { display: flex; flex-direction: column; gap: 6px; }
+  .filter-row { display: flex; justify-content: space-between; align-items: center;
+    padding: 7px 10px; border: 1px solid transparent; border-radius: 8px; font-size: 12px; color: var(--muted); }
+  .filter-row.on { border-color: var(--line); color: var(--text); background: rgba(245,237,224,0.03); }
+  .filter-row .count { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 10px; color: var(--dim); }
+  .list-main { display: flex; flex-direction: column; gap: 18px; }
+  .stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .stat { padding: 14px; border-radius: 10px; background: var(--panel); border: 1px solid var(--line); }
+  .stat .label { color: var(--muted); }
+  .stat .num { font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 26px; font-weight: 700; margin-top: 6px; letter-spacing: -0.01em; }
+  .stat.gold  .num { color: var(--gold); }
+  .stat.green .num { color: var(--green); }
+  .stat.red   .num { color: var(--red); }
+  .trip-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .trip-card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    overflow: hidden; display: flex; flex-direction: column; }
+  .trip-meta { padding: 14px 16px 16px; }
+  .trip-title { font-weight: 700; font-size: 15px; }
+  .trip-sub { color: var(--muted); font-size: 12px; margin-top: 4px; }
+  .trip-foot { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .trip-card.add { border-style: dashed; border-color: color-mix(in oklab, var(--gold) 40%, var(--line));
+    color: var(--gold); align-items: center; justify-content: center; min-height: 240px; cursor: pointer; }
+  .trip-card.add .plus { font-size: 32px; line-height: 1; }
+  .trip-card.add .label { color: color-mix(in oklab, var(--gold) 80%, transparent); margin-top: 10px; }
+
+  /* MAP */
+  .map-grid { display: grid; grid-template-columns: 1fr 380px; gap: 18px; }
+  .map-canvas { position: relative; min-height: 560px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+  .map-canvas .dots { position: absolute; inset: 0;
+    background: radial-gradient(circle at center, rgba(245,237,224,0.10) 1px, transparent 1px) 0 0 / 14px 14px;
+    mask-image: radial-gradient(ellipse at center, #000 50%, transparent 100%); }
+  .map-overlay { position: absolute; inset: 0; padding: 16px;
+    display: flex; flex-direction: column; justify-content: space-between; pointer-events: none; }
+  .map-overlay > * { pointer-events: auto; }
+  .map-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; }
+  .layer-toggle { display: inline-flex; gap: 4px; padding: 4px;
+    background: rgba(13,10,8,0.78); border: 1px solid var(--line); border-radius: 10px; backdrop-filter: blur(8px); }
+  .layer-toggle button { all: unset; cursor: pointer; padding: 6px 10px; border-radius: 7px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 10px;
+    letter-spacing: 0.16em; color: var(--muted); }
+  .layer-toggle button.on { background: rgba(245,237,224,0.08); color: var(--text); }
+  .map-search { width: 320px; padding: 10px 14px; border-radius: 10px;
+    background: rgba(13,10,8,0.78); border: 1px solid var(--line); backdrop-filter: blur(8px);
+    display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 12px; }
+  .map-search .icon { width: 14px; height: 14px; border: 1.5px solid var(--muted); border-radius: 999px; position: relative; }
+  .map-search .icon::after { content: ''; position: absolute; right: -4px; bottom: -4px;
+    width: 6px; height: 1.5px; background: var(--muted); transform: rotate(45deg); }
+  .map-bot { display: flex; justify-content: space-between; align-items: flex-end; gap: 14px; }
+  .zoom-stack { display: flex; flex-direction: column; gap: 1px;
+    background: rgba(13,10,8,0.78); border: 1px solid var(--line); border-radius: 10px;
+    overflow: hidden; backdrop-filter: blur(8px); }
+  .zoom-stack button { all: unset; cursor: pointer; width: 36px; height: 36px;
+    display: grid; place-items: center; color: var(--muted);
+    font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 14px; }
+  .zoom-stack button + button { border-top: 1px solid var(--line); }
+  .scale { padding: 6px 10px; border-radius: 8px;
+    background: rgba(13,10,8,0.78); border: 1px solid var(--line);
+    font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 10px;
+    letter-spacing: 0.18em; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+  .scale .bar { width: 64px; height: 2px; background: var(--text); }
+  .marker { position: absolute; transform: translate(-50%, -50%); display: grid; place-items: center; cursor: pointer; }
+  .marker .ring  { position: absolute; inset: -10px; border-radius: 999px; }
+  .marker .core  { width: 10px; height: 10px; border-radius: 999px; }
+  .marker.gold  .ring { background: color-mix(in oklab, var(--gold)  20%, transparent); }
+  .marker.gold  .core { background: var(--gold); }
+  .marker.green .ring { background: color-mix(in oklab, var(--green) 20%, transparent); }
+  .marker.green .core { background: var(--green); }
+  .marker.red   .ring { background: color-mix(in oklab, var(--red)   20%, transparent); }
+  .marker.red   .core { background: var(--red); }
+  .cluster { position: absolute; transform: translate(-50%, -50%);
+    width: 44px; height: 44px; border-radius: 999px;
+    background: rgba(13,10,8,0.86); border: 1.5px solid var(--gold);
+    display: grid; place-items: center; color: var(--gold);
+    font-family: 'JetBrains Mono', ui-monospace, monospace; font-weight: 700; font-size: 13px; }
+  .info-col { background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+    display: flex; flex-direction: column; }
+  .info-hero { aspect-ratio: 5 / 4; border-radius: 14px 14px 0 0; }
+  .info-body { padding: 18px; flex: 1; display: flex; flex-direction: column; gap: 18px; }
+  .info-titlebar { display: flex; justify-content: space-between; align-items: flex-start; }
+  .info-titlebar h3 { margin: 0; font-size: 22px; line-height: 1.15; font-weight: 700; }
+  .info-titlebar .coord { color: var(--muted); margin-top: 4px; }
+  .stat-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .stat-grid .cell { text-align: center; padding: 10px 4px; border: 1px solid var(--line); border-radius: 10px; }
+  .stat-grid .cell .num { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 16px; font-weight: 700; }
+  .stat-grid .cell .lab { font-size: 9px; letter-spacing: 0.18em; color: var(--muted); margin-top: 4px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace; text-transform: uppercase; }
+  .photo-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .photo-strip .blk { aspect-ratio: 1; min-height: 0; }
+  .timeline { display: flex; flex-direction: column; gap: 10px; }
+  .tl-item { display: grid; grid-template-columns: 64px 1fr; gap: 12px; align-items: flex-start; }
+  .tl-item .when { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 10px;
+    letter-spacing: 0.16em; color: var(--muted); padding-top: 2px; }
+  .tl-item .what { font-size: 13px; color: var(--text); }
+  .tl-item .what .sub { color: var(--muted); font-size: 11px; margin-top: 2px; }
+  .note-box { padding: 14px; background: var(--bg); border: 1px solid var(--line);
+    border-radius: 10px; color: var(--muted); font-size: 12px; line-height: 1.55; font-style: italic; min-height: 64px; }
+  .cta-row { display: flex; gap: 8px; }
+  .btn { all: unset; cursor: pointer; padding: 10px 14px; border-radius: 10px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px;
+    letter-spacing: 0.16em; text-align: center; flex: 1; }
+  .btn.primary { background: var(--gold); color: var(--bg); font-weight: 700; }
+  .btn.ghost   { border: 1px solid var(--line); color: var(--text); }
+
+  /* DETAIL */
+  .detail-grid { display: grid; grid-template-columns: 1fr 320px; gap: 18px; }
+  .detail-hero { aspect-ratio: 16 / 5.4; border-radius: 14px;
+    border: 1.5px dashed color-mix(in oklab, var(--gold) 50%, transparent);
+    background: var(--grey-1); display: grid; place-items: center;
+    color: color-mix(in oklab, var(--gold) 80%, transparent);
+    font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px;
+    letter-spacing: 0.18em; text-transform: uppercase; text-align: center; padding: 24px; line-height: 1.6; }
+  .detail-hero strong { display: block; font-size: 18px; color: var(--gold); margin-bottom: 8px; }
+  .tabs { display: flex; gap: 4px; padding: 4px; background: var(--panel);
+    border: 1px solid var(--line); border-radius: 12px; width: fit-content; }
+  .tabs button { all: unset; cursor: pointer; padding: 8px 14px; border-radius: 8px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px;
+    letter-spacing: 0.16em; color: var(--muted); }
+  .tabs button.on { background: rgba(245,237,224,0.08); color: var(--text); }
+  .masonry { display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 110px; gap: 8px; }
+  .masonry .blk { min-height: 0; }
+  .masonry .span-2-col { grid-column: span 2; }
+  .masonry .span-2-row { grid-row: span 2; }
+  .masonry .add { border-style: dashed; color: var(--gold);
+    border-color: color-mix(in oklab, var(--gold) 40%, var(--line)); cursor: pointer; }
+  .masonry .add .plus { font-size: 26px; }
+  .journal-list { display: flex; flex-direction: column; gap: 14px; }
+  .journal { padding: 16px; background: var(--panel); border: 1px solid var(--line);
+    border-radius: 12px; display: grid; grid-template-columns: 90px 1fr; gap: 16px; }
+  .journal .when { color: var(--muted); }
+  .journal .when .day  { font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 26px; color: var(--text); font-weight: 700; }
+  .journal .when .mo   { font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px; letter-spacing: 0.18em; }
+  .journal .body p { margin: 0; color: var(--muted); line-height: 1.6; font-size: 13px; }
+  .journal .body p + p { margin-top: 8px; }
+  .journal .body .title { color: var(--text); font-weight: 700; font-size: 14px; margin-bottom: 6px; }
+  .right-rail { display: flex; flex-direction: column; gap: 14px; }
+  .mini-map { aspect-ratio: 4 / 3; border-radius: 12px; }
+  .facts { padding: 16px; }
+  .facts .row { display: flex; justify-content: space-between; padding: 8px 0;
+    border-bottom: 1px dashed var(--line); font-size: 12px; }
+  .facts .row:last-child { border-bottom: 0; }
+  .facts .row .k { color: var(--muted); }
+  .facts .row .v { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+  .expense-bar { height: 14px; border-radius: 999px; overflow: hidden;
+    display: grid; grid-template-columns: 38fr 24fr 18fr 12fr 8fr; }
+  .expense-bar > div:nth-child(1) { background: var(--gold); }
+  .expense-bar > div:nth-child(2) { background: var(--green); }
+  .expense-bar > div:nth-child(3) { background: var(--red); }
+  .expense-bar > div:nth-child(4) { background: rgba(245,237,224,0.30); }
+  .expense-bar > div:nth-child(5) { background: rgba(245,237,224,0.18); }
+  .legend { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px 14px; margin-top: 12px; font-size: 11px; }
+  .legend .row { display: flex; justify-content: space-between; align-items: center; gap: 8px; color: var(--muted); }
+  .legend .row .l { display: flex; align-items: center; gap: 8px; }
+
+  /* PLAN */
+  .plan-grid { display: grid; grid-template-columns: 1fr 320px; gap: 18px; }
+  .kanban { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .day-col { background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    display: flex; flex-direction: column; min-height: 340px; }
+  .day-head { padding: 12px 14px; border-bottom: 1px solid var(--line);
+    display: flex; justify-content: space-between; align-items: center; }
+  .day-head .d { font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 11px; letter-spacing: 0.18em; color: var(--gold); }
+  .day-head .date { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 10px; color: var(--muted); }
+  .day-list { padding: 10px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+  .plan-item { padding: 10px 12px; background: var(--bg); border: 1px solid var(--line); border-radius: 9px; }
+  .plan-item .top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .plan-item .time { font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px; letter-spacing: 0.16em; color: var(--muted); }
+  .plan-item .name { font-size: 13px; margin-top: 4px; }
+  .plan-item .tag { font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 9px; padding: 2px 6px; border-radius: 4px; letter-spacing: 0.14em; }
+  .plan-item.eat   .tag { background: color-mix(in oklab, var(--gold) 20%, transparent); color: var(--gold); }
+  .plan-item.see   .tag { background: color-mix(in oklab, var(--green) 20%, transparent); color: var(--green); }
+  .plan-item.move  .tag { background: color-mix(in oklab, var(--red) 20%, transparent); color: var(--red); }
+  .add-stop { all: unset; cursor: pointer; padding: 9px 12px; border: 1px dashed var(--line);
+    border-radius: 9px; color: var(--dim);
+    font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: 0.16em; text-align: center; }
+  .checklist { padding: 16px; }
+  .check-row { display: flex; align-items: center; gap: 10px; padding: 8px 0;
+    border-bottom: 1px dashed var(--line); font-size: 12px; }
+  .check-row:last-child { border-bottom: 0; }
+  .check-row .box { width: 14px; height: 14px; border-radius: 4px; border: 1.5px solid var(--muted); }
+  .check-row.done .box { background: var(--green); border-color: var(--green); }
+  .check-row.done .lab { color: var(--muted); text-decoration: line-through; }
+  .budget-bar { height: 10px; border-radius: 999px; background: var(--grey-2); overflow: hidden; margin-top: 8px; }
+  .budget-bar > div { height: 100%; width: 64%; background: var(--gold); }
+
+  /* 05 EXPENSES */
+  .ex-grid { display: grid; grid-template-columns: 1fr 320px; gap: 18px; }
+  .ex-hero { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .ex-tile { padding: 16px; border-radius: 12px; background: var(--panel); border: 1px solid var(--line); }
+  .ex-tile .lab { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 10px;
+    letter-spacing: 0.18em; color: var(--muted); text-transform: uppercase; }
+  .ex-tile .num { font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 28px; font-weight: 700; margin-top: 8px; letter-spacing: -0.01em; }
+  .ex-tile .delta { font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 11px; margin-top: 4px; color: var(--muted); }
+  .ex-tile.gold  .num { color: var(--gold); }
+  .ex-tile.green .num { color: var(--green); }
+  .ex-tile.red   .num { color: var(--red); }
+  .ex-board { display: grid; grid-template-columns: 1.4fr 1fr; gap: 14px; }
+  .ex-card { padding: 18px; }
+  .ex-card .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .ex-card .head .pick { display: flex; gap: 4px; padding: 3px;
+    background: var(--bg); border: 1px solid var(--line); border-radius: 8px; }
+  .ex-card .head .pick button { all: unset; cursor: pointer; padding: 5px 9px; border-radius: 6px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 9px;
+    letter-spacing: 0.16em; color: var(--muted); }
+  .ex-card .head .pick button.on { background: rgba(245,237,224,0.08); color: var(--text); }
+  .donut-row { display: grid; grid-template-columns: 160px 1fr; gap: 22px; align-items: center; }
+  .donut { width: 160px; height: 160px; border-radius: 50%;
+    background: conic-gradient(var(--gold) 0 38%, var(--green) 38% 62%, var(--red) 62% 80%, rgba(245,237,224,0.30) 80% 92%, rgba(245,237,224,0.18) 92% 100%);
+    position: relative; }
+  .donut::after { content: ''; position: absolute; inset: 26px; background: var(--panel); border-radius: 50%; }
+  .donut .core { position: absolute; inset: 0; display: grid; place-items: center; z-index: 1; text-align: center; }
+  .donut .core .total { font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 18px; font-weight: 700; color: var(--text); }
+  .donut .core .totlab { font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 9px; letter-spacing: 0.18em; color: var(--muted); margin-top: 2px; text-transform: uppercase; }
+  .cat-list { display: flex; flex-direction: column; gap: 8px; }
+  .cat-row { display: grid; grid-template-columns: 16px 1fr auto auto; gap: 12px; align-items: center;
+    padding: 8px 0; border-bottom: 1px dashed var(--line); font-size: 12px; }
+  .cat-row:last-child { border-bottom: 0; }
+  .cat-row .sw { width: 10px; height: 10px; border-radius: 3px; }
+  .cat-row .pct { font-family: 'JetBrains Mono', ui-monospace, monospace; color: var(--muted); font-size: 10px; }
+  .cat-row .amt { font-family: 'JetBrains Mono', ui-monospace, monospace; font-weight: 700; }
+  .bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 160px; padding: 0 4px; border-bottom: 1px dashed var(--line); }
+  .bar-chart .bar { flex: 1; display: flex; flex-direction: column-reverse; gap: 2px; min-width: 0; }
+  .bar-chart .bar > span { display: block; border-radius: 2px 2px 0 0; }
+  .bar-chart .bar .b-eat   { background: var(--gold); }
+  .bar-chart .bar .b-stay  { background: var(--green); }
+  .bar-chart .bar .b-move  { background: var(--red); }
+  .bar-chart .bar .b-shop  { background: rgba(245,237,224,0.30); }
+  .bar-chart .bar .b-other { background: rgba(245,237,224,0.18); }
+  .bar-axis { display: flex; gap: 6px; padding: 6px 4px 0; }
+  .bar-axis span { flex: 1; text-align: center;
+    font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 9px; color: var(--muted);
+    letter-spacing: 0.16em; }
+  .ex-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .ex-table thead th { text-align: left; padding: 10px 12px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 9px;
+    letter-spacing: 0.18em; color: var(--muted); text-transform: uppercase;
+    border-bottom: 1px solid var(--line); }
+  .ex-table tbody td { padding: 11px 12px; border-bottom: 1px dashed var(--line); vertical-align: middle; }
+  .ex-table tbody tr:last-child td { border-bottom: 0; }
+  .ex-table .tag-cell { display: inline-flex; align-items: center; gap: 8px; }
+  .ex-table .swatch { width: 8px; height: 8px; border-radius: 999px; }
+  .ex-table .num-cell { font-family: 'JetBrains Mono', ui-monospace, monospace; font-weight: 700; text-align: right; }
+  .ex-table .day-cell { font-family: 'JetBrains Mono', ui-monospace, monospace; color: var(--muted); }
+  .ex-table .note-cell { color: var(--muted); }
+  .ex-table tfoot td { padding: 12px; font-family: 'JetBrains Mono', ui-monospace, monospace;
+    border-top: 1px solid var(--line); }
+  .ex-table tfoot .total-lab { letter-spacing: 0.18em; color: var(--muted); font-size: 10px; }
+  .ex-table tfoot .total-num { text-align: right; font-weight: 700; font-size: 14px; color: var(--gold); }
+  .add-tx { padding: 14px; border: 1.5px dashed color-mix(in oklab, var(--gold) 40%, var(--line));
+    border-radius: 10px; color: var(--gold);
+    font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px;
+    letter-spacing: 0.18em; text-align: center; margin-top: 10px; cursor: pointer; }
+  .ex-side { display: flex; flex-direction: column; gap: 14px; }
+  .day-spend { padding: 16px; }
+  .day-row { display: grid; grid-template-columns: 70px 1fr 60px; gap: 10px; align-items: center;
+    padding: 8px 0; border-bottom: 1px dashed var(--line); font-size: 12px; }
+  .day-row:last-child { border-bottom: 0; }
+  .day-row .lab { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 10px;
+    letter-spacing: 0.16em; color: var(--muted); }
+  .day-row .track { height: 6px; border-radius: 999px; background: var(--grey-2); overflow: hidden; }
+  .day-row .track > div { height: 100%; background: var(--gold); }
+  .day-row .amt { font-family: 'JetBrains Mono', ui-monospace, monospace; text-align: right; font-weight: 700; }
+  .ex-fx { padding: 16px; }
+  .fx-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 12px; }
+  .fx-row .k { color: var(--muted); }
+  .fx-row .v { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+
+  .open-q { background: var(--panel2); border: 1px solid color-mix(in oklab, var(--gold) 40%, var(--line));
+    border-radius: 12px; padding: 18px 20px; margin-top: 28px; }
+  .open-q h3 { margin: 0 0 10px; font-size: 13px; color: var(--gold);
+    font-family: 'JetBrains Mono', ui-monospace, monospace; letter-spacing: 0.18em; text-transform: uppercase; }
+  .open-q ul { margin: 0; padding-left: 18px; color: var(--muted); font-size: 12px; line-height: 1.7; }
+  .open-q ul li::marker { color: var(--gold); }
+  .open-q ul b { color: var(--text); font-weight: 600; }
+
+  @media (max-width: 1100px) {
+    .map-grid, .detail-grid, .plan-grid, .ex-grid, .ex-board { grid-template-columns: 1fr; }
+    .list-grid { grid-template-columns: 1fr; }
+    .stat-row, .ex-hero { grid-template-columns: repeat(2, 1fr); }
+    .trip-grid { grid-template-columns: repeat(2, 1fr); }
+    .kanban { grid-template-columns: repeat(2, 1fr); }
+    .donut-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <header class="doc-head">
+    <div>
+      <div class="kicker">SE77N · TRAVEL · WIREFRAME v0.3</div>
+      <h1 style="margin-top:8px;">Travel — full flow redesign</h1>
+      <div style="color:var(--muted); font-size:13px; margin-top:6px;">
+        5 views stacked: Map → List → Detail → Plan → Expenses. Greys are placeholders, colors are the real palette
+        (<span class="mono">--gold</span> · <span class="mono">--green</span> · <span class="mono">--red</span>) so layout reads at the right weight.
+      </div>
+    </div>
+    <div class="meta mono">2026-05-16 · review me before I build it</div>
+  </header>
+
+  <!-- ════════════════════════════════════════════════ 1. MAP -->
+  <section class="view">
+    <div class="view-head">
+      <span class="num">01</span>
+      <h2>Map — explore</h2>
+      <span class="sub">entry view · cluster · layer toggle · info column 380px (denser than current)</span>
+    </div>
+
+    <div class="map-grid">
+      <div class="map-canvas">
+        <div class="dots"></div>
+
+        <!-- markers (positions = % of canvas) -->
+        <div class="marker gold"  style="left:78%; top:42%;"><span class="ring"></span><span class="core"></span></div>
+        <div class="marker green" style="left:74%; top:62%;"><span class="ring"></span><span class="core"></span></div>
+        <div class="marker green" style="left:71%; top:64%;"><span class="ring"></span><span class="core"></span></div>
+        <div class="marker green" style="left:82%; top:32%;"><span class="ring"></span><span class="core"></span></div>
+        <div class="marker green" style="left:70%; top:50%;"><span class="ring"></span><span class="core"></span></div>
+        <div class="marker red"   style="left:48%; top:32%;"><span class="ring"></span><span class="core"></span></div>
+        <div class="marker red"   style="left:51%; top:36%;"><span class="ring"></span><span class="core"></span></div>
+        <div class="marker red"   style="left:18%; top:36%;"><span class="ring"></span><span class="core"></span></div>
+        <div class="marker red"   style="left:24%; top:40%;"><span class="ring"></span><span class="core"></span></div>
+        <div class="cluster" style="left:84%; top:36%;">5</div>
+        <div class="cluster" style="left:72%; top:60%;">4</div>
+
+        <div class="map-overlay">
+          <div class="map-top">
+            <div class="map-search">
+              <span class="icon"></span>
+              <span>Search a city, a trip, a tag…</span>
+            </div>
+            <div class="layer-toggle">
+              <button class="on">STREET</button>
+              <button>SAT</button>
+              <button>TERRAIN</button>
+              <button>DARK</button>
+            </div>
+          </div>
+
+          <div class="map-bot">
+            <div class="scale"><span class="bar"></span> 500&nbsp;KM</div>
+            <div class="zoom-stack">
+              <button>+</button>
+              <button>−</button>
+              <button>⌖</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="info-col">
+        <div class="info-hero blk dot"></div>
+        <div class="info-body">
+
+          <div class="info-titlebar">
+            <div>
+              <div class="kicker" style="color:var(--green)">● VISITED · JP</div>
+              <h3 style="margin-top:6px;">Tokyo</h3>
+              <div class="coord mono">35.68° N · 139.69° E</div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-end;">
+              <span class="pill green">2025-11</span>
+              <span class="pill">6 days</span>
+            </div>
+          </div>
+
+          <div class="stat-grid">
+            <div class="cell"><div class="num">12</div><div class="lab">PINS</div></div>
+            <div class="cell"><div class="num">42</div><div class="lab">PHOTOS</div></div>
+            <div class="cell"><div class="num">31</div><div class="lab">KM</div></div>
+            <div class="cell"><div class="num">¥86k</div><div class="lab">SPEND</div></div>
+            <div class="cell"><div class="num">8</div><div class="lab">JOURNAL</div></div>
+          </div>
+
+          <div>
+            <div class="kicker" style="margin-bottom:8px;">PHOTOS · 42</div>
+            <div class="photo-strip">
+              <div class="blk dot"></div>
+              <div class="blk dot"></div>
+              <div class="blk dot"></div>
+              <div class="blk" style="border-style:dashed; color:var(--gold); border-color:color-mix(in oklab,var(--gold) 40%,var(--line));">+ DROP</div>
+            </div>
+            <div class="kicker" style="color:var(--gold); margin-top:8px;">PASTE · UPLOAD · LIBRARY</div>
+          </div>
+
+          <div>
+            <div class="kicker" style="margin-bottom:10px;">TIMELINE</div>
+            <div class="timeline">
+              <div class="tl-item">
+                <div class="when">DAY 01</div>
+                <div class="what">Shibuya scramble · ramen at Ichiran<div class="sub mono">↳ pin · photo · 3.2 km</div></div>
+              </div>
+              <div class="tl-item">
+                <div class="when">DAY 02</div>
+                <div class="what">Akiba — record stores + Super Potato<div class="sub mono">↳ pin · photo · 4.1 km</div></div>
+              </div>
+              <div class="tl-item">
+                <div class="when">DAY 03</div>
+                <div class="what">teamLab Borderless<div class="sub mono">↳ pin · 18 photos · 6.4 km</div></div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="kicker" style="margin-bottom:8px;">NOTE</div>
+            <div class="note-box">"Akiba felt smaller than I remembered. Best ramen of the trip was a 6-seat counter near the station — no English menu, no problem."</div>
+          </div>
+
+          <div class="cta-row">
+            <button class="btn primary">OPEN TRIP →</button>
+            <button class="btn ghost">EDIT PINS</button>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════ 2. LIST -->
+  <section class="view">
+    <div class="view-head">
+      <span class="num">02</span>
+      <h2>List — all trips</h2>
+      <span class="sub">filter rail + stats + trip cards</span>
+    </div>
+
+    <div class="list-grid">
+
+      <aside class="panel filter-rail">
+        <div class="filter-group">
+          <div class="head"><span class="kicker">TYPE</span><span class="kicker">3</span></div>
+          <div class="filter-list">
+            <div class="filter-row on"><span><span class="dot-pin" style="background:var(--text)"></span> &nbsp;ALL</span><span class="count">16</span></div>
+            <div class="filter-row"><span><span class="dot-pin" style="background:var(--gold)"></span> &nbsp;HOME</span><span class="count">1</span></div>
+            <div class="filter-row"><span><span class="dot-pin" style="background:var(--green)"></span> &nbsp;VISITED</span><span class="count">8</span></div>
+            <div class="filter-row"><span><span class="dot-pin" style="background:var(--red)"></span> &nbsp;PLANNED</span><span class="count">7</span></div>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <div class="head"><span class="kicker">REGION</span><span class="kicker">5</span></div>
+          <div class="filter-list">
+            <div class="filter-row"><span>SEA</span><span class="count">4</span></div>
+            <div class="filter-row"><span>NEA</span><span class="count">3</span></div>
+            <div class="filter-row"><span>EU</span><span class="count">3</span></div>
+            <div class="filter-row"><span>NA</span><span class="count">2</span></div>
+            <div class="filter-row"><span>OCEANIA</span><span class="count">1</span></div>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <div class="head"><span class="kicker">YEAR</span><span class="kicker">5</span></div>
+          <div class="filter-list">
+            <div class="filter-row"><span>2026</span><span class="count">3</span></div>
+            <div class="filter-row"><span>2025</span><span class="count">5</span></div>
+            <div class="filter-row"><span>2024</span><span class="count">4</span></div>
+            <div class="filter-row"><span>← older</span><span class="count">4</span></div>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <div class="head"><span class="kicker">TAG</span><span class="kicker">8</span></div>
+          <div style="display:flex; flex-wrap:wrap; gap:6px;">
+            <span class="pill">food</span><span class="pill">solo</span><span class="pill">work</span>
+            <span class="pill">family</span><span class="pill">winter</span><span class="pill">photo</span>
+            <span class="pill">+ 2</span>
+          </div>
+        </div>
+      </aside>
+
+      <div class="list-main">
+        <div class="stat-row">
+          <div class="stat gold"><div class="label">HOME</div><div class="num">1</div></div>
+          <div class="stat green"><div class="label">VISITED</div><div class="num">8</div></div>
+          <div class="stat red"><div class="label">PLANNED</div><div class="num">7</div></div>
+          <div class="stat"><div class="label">PHOTOS</div><div class="num">432</div></div>
+        </div>
+
+        <div class="trip-grid">
+          <article class="trip-card">
+            <div class="blk dot" style="aspect-ratio:16/9;"></div>
+            <div class="trip-meta">
+              <div class="trip-title">Tokyo · Akiba nights</div>
+              <div class="trip-sub mono">2025-11 · 6 days · 12 pins</div>
+              <div class="trip-foot">
+                <span class="pill green">visited</span>
+                <span class="pill">42 photos</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="trip-card">
+            <div class="blk dot" style="aspect-ratio:16/9;"></div>
+            <div class="trip-meta">
+              <div class="trip-title">Saigon · family</div>
+              <div class="trip-sub mono">2026-01 · 9 days · 7 pins</div>
+              <div class="trip-foot">
+                <span class="pill green">visited</span>
+                <span class="pill">88 photos</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="trip-card">
+            <div class="blk dot" style="aspect-ratio:16/9;"></div>
+            <div class="trip-meta">
+              <div class="trip-title">Seoul · Hongdae records</div>
+              <div class="trip-sub mono">2025-09 · 4 days · 8 pins</div>
+              <div class="trip-foot">
+                <span class="pill green">visited</span>
+                <span class="pill">31 photos</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="trip-card">
+            <div class="blk" style="aspect-ratio:16/9;"></div>
+            <div class="trip-meta">
+              <div class="trip-title">London — TBD</div>
+              <div class="trip-sub mono">2026-08 · drafting · 3 pins</div>
+              <div class="trip-foot">
+                <span class="pill red">planned</span>
+                <span class="pill">0 photos</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="trip-card">
+            <div class="blk" style="aspect-ratio:16/9;"></div>
+            <div class="trip-meta">
+              <div class="trip-title">Sydney — coastal walk</div>
+              <div class="trip-sub mono">2026-11 · drafting · 5 pins</div>
+              <div class="trip-foot">
+                <span class="pill red">planned</span>
+                <span class="pill">0 photos</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="trip-card add">
+            <div class="plus mono">+</div>
+            <div class="label">NEW TRIP</div>
+          </article>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════ 3. DETAIL -->
+  <section class="view">
+    <div class="view-head">
+      <span class="num">03</span>
+      <h2>Trip detail — Tokyo · Akiba nights</h2>
+      <span class="sub">hero drop zone · 4 tabs · masonry photos · journal</span>
+    </div>
+
+    <div style="margin-bottom:14px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+      <span class="pill green">visited</span>
+      <span class="pill">2025-11-04 → 2025-11-10</span>
+      <span class="pill">6 days</span>
+      <span class="pill">JP · Tokyo</span>
+      <span class="pill">food · solo · photo</span>
+    </div>
+
+    <div class="detail-hero">
+      <div>
+        <strong>+ Drop cover photo here</strong>
+        Paste (⌘V), drag from desktop, or pick from library<br>
+        <span style="color:var(--muted)">3 import points across this view: hero · masonry tile · map sidebar strip</span>
+      </div>
+    </div>
+
+    <div style="margin:18px 0;">
+      <div class="tabs">
+        <button class="on">PHOTOS · 42</button>
+        <button>JOURNAL · 8</button>
+        <button>MAP · 12</button>
+        <button>EXPENSES</button>
+      </div>
+    </div>
+
+    <div class="detail-grid">
+      <div>
+        <div class="masonry">
+          <div class="blk dot span-2-col span-2-row"></div>
+          <div class="blk dot"></div>
+          <div class="blk dot"></div>
+          <div class="blk dot"></div>
+          <div class="blk dot span-2-row"></div>
+          <div class="blk dot"></div>
+          <div class="blk dot"></div>
+          <div class="blk dot"></div>
+          <div class="blk dot"></div>
+          <div class="blk dot"></div>
+          <div class="blk dot span-2-col"></div>
+          <div class="blk add">
+            <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
+              <span class="plus">+</span><span style="font-size:9px;">DROP</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="journal-list" style="margin-top:24px;">
+          <article class="journal">
+            <div class="when"><div class="day">04</div><div class="mo">NOV · DAY 1</div></div>
+            <div class="body">
+              <div class="title">Landing late, Shibuya at midnight</div>
+              <p>Narita Express, then JR to Shibuya. Drop bags, immediate ramen at Ichiran — solo booth, that thing where the wall lifts up.</p>
+              <p>Walked the scramble at 12:40am. It still goes off, just thinner.</p>
+            </div>
+          </article>
+          <article class="journal">
+            <div class="when"><div class="day">05</div><div class="mo">NOV · DAY 2</div></div>
+            <div class="body">
+              <div class="title">Akihabara record run</div>
+              <p>Super Potato top to bottom. Bought a Saturn copy of Panzer Dragoon Saga. The price hurt; I knew it would.</p>
+            </div>
+          </article>
+        </div>
+      </div>
+
+      <aside class="right-rail">
+        <div class="panel"><div class="mini-map blk dot"></div></div>
+
+        <div class="panel facts">
+          <div class="kicker" style="margin-bottom:10px;">KEY FACTS</div>
+          <div class="row"><span class="k">Dates</span><span class="v">04 → 10 NOV</span></div>
+          <div class="row"><span class="k">Days</span><span class="v">6</span></div>
+          <div class="row"><span class="k">Pins</span><span class="v">12</span></div>
+          <div class="row"><span class="k">Photos</span><span class="v">42</span></div>
+          <div class="row"><span class="k">Distance</span><span class="v">31 KM</span></div>
+          <div class="row"><span class="k">Spend</span><span class="v">¥86,400</span></div>
+          <div class="row"><span class="k">Currency</span><span class="v">JPY</span></div>
+          <div class="row"><span class="k">Weather avg</span><span class="v">14° / 8°</span></div>
+        </div>
+
+        <div class="panel" style="padding:16px;">
+          <div class="kicker" style="margin-bottom:10px;">EXPENSES</div>
+          <div class="expense-bar">
+            <div></div><div></div><div></div><div></div><div></div>
+          </div>
+          <div class="legend">
+            <div class="row"><span class="l"><span class="dot-pin" style="background:var(--gold)"></span> Food</span><span class="mono">¥32k</span></div>
+            <div class="row"><span class="l"><span class="dot-pin" style="background:var(--green)"></span> Stay</span><span class="mono">¥21k</span></div>
+            <div class="row"><span class="l"><span class="dot-pin" style="background:var(--red)"></span> Transport</span><span class="mono">¥15k</span></div>
+            <div class="row"><span class="l"><span class="dot-pin" style="background:rgba(245,237,224,0.3)"></span> Shopping</span><span class="mono">¥11k</span></div>
+            <div class="row"><span class="l"><span class="dot-pin" style="background:rgba(245,237,224,0.18)"></span> Other</span><span class="mono">¥7k</span></div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════ 4. PLAN -->
+  <section class="view">
+    <div class="view-head">
+      <span class="num">04</span>
+      <h2>Plan — London (drafting)</h2>
+      <span class="sub">kanban day-by-day · checklist · budget · export</span>
+    </div>
+
+    <div style="margin-bottom:14px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+      <span class="pill red">planned</span>
+      <span class="pill">2026-08-12 → 2026-08-19</span>
+      <span class="pill">7 days</span>
+      <span class="pill">UK · London</span>
+      <span class="pill">draft v3</span>
+    </div>
+
+    <div class="plan-grid">
+      <div class="kanban">
+        <div class="day-col">
+          <div class="day-head"><span class="d">DAY 1 · TUE</span><span class="date">12 AUG</span></div>
+          <div class="day-list">
+            <div class="plan-item move"><div class="top"><span class="time">14:30</span><span class="tag">MOVE</span></div><div class="name">LHR → Shoreditch</div></div>
+            <div class="plan-item see"><div class="top"><span class="time">17:00</span><span class="tag">SEE</span></div><div class="name">Brick Lane walk</div></div>
+            <div class="plan-item eat"><div class="top"><span class="time">19:30</span><span class="tag">EAT</span></div><div class="name">Dishoom Shoreditch</div></div>
+            <button class="add-stop">+ ADD STOP</button>
+          </div>
+        </div>
+        <div class="day-col">
+          <div class="day-head"><span class="d">DAY 2 · WED</span><span class="date">13 AUG</span></div>
+          <div class="day-list">
+            <div class="plan-item see"><div class="top"><span class="time">10:00</span><span class="tag">SEE</span></div><div class="name">Tate Modern</div></div>
+            <div class="plan-item eat"><div class="top"><span class="time">13:00</span><span class="tag">EAT</span></div><div class="name">Borough Market</div></div>
+            <div class="plan-item see"><div class="top"><span class="time">16:00</span><span class="tag">SEE</span></div><div class="name">South Bank → London Bridge</div></div>
+            <button class="add-stop">+ ADD STOP</button>
+          </div>
+        </div>
+        <div class="day-col">
+          <div class="day-head"><span class="d">DAY 3 · THU</span><span class="date">14 AUG</span></div>
+          <div class="day-list">
+            <div class="plan-item move"><div class="top"><span class="time">09:30</span><span class="tag">MOVE</span></div><div class="name">Tube → Hampstead</div></div>
+            <div class="plan-item see"><div class="top"><span class="time">10:30</span><span class="tag">SEE</span></div><div class="name">Hampstead Heath walk</div></div>
+            <button class="add-stop">+ ADD STOP</button>
+          </div>
+        </div>
+        <div class="day-col">
+          <div class="day-head"><span class="d">DAY 4 · FRI</span><span class="date">15 AUG</span></div>
+          <div class="day-list">
+            <button class="add-stop">+ START PLANNING DAY 4</button>
+            <div class="blk" style="min-height:120px; flex:1;">EMPTY DAY · DRAG STOPS HERE</div>
+          </div>
+        </div>
+      </div>
+      <aside style="display:flex; flex-direction:column; gap:14px;">
+        <div class="panel checklist">
+          <div class="kicker" style="margin-bottom:10px;">PRE-TRIP · 6/9</div>
+          <div class="check-row done"><span class="box"></span><span class="lab">Passport ≥ 6mo validity</span></div>
+          <div class="check-row done"><span class="box"></span><span class="lab">Visa not required</span></div>
+          <div class="check-row done"><span class="box"></span><span class="lab">Flights booked (BA 0286)</span></div>
+          <div class="check-row done"><span class="box"></span><span class="lab">Hotel — Shoreditch 5 nights</span></div>
+          <div class="check-row done"><span class="box"></span><span class="lab">Travel insurance</span></div>
+          <div class="check-row done"><span class="box"></span><span class="lab">eSIM — 10GB UK</span></div>
+          <div class="check-row"><span class="box"></span><span class="lab">Oyster card top-up</span></div>
+          <div class="check-row"><span class="box"></span><span class="lab">Convert £200 cash</span></div>
+          <div class="check-row"><span class="box"></span><span class="lab">Print boarding pass backup</span></div>
+        </div>
+        <div class="panel" style="padding:16px;">
+          <div class="kicker" style="margin-bottom:6px;">BUDGET · £1,920 / £3,000</div>
+          <div class="budget-bar"><div></div></div>
+          <div style="display:flex; justify-content:space-between; margin-top:8px; font-size:11px; color:var(--muted);">
+            <span class="mono">64% USED</span><span class="mono">£1,080 LEFT</span>
+          </div>
+        </div>
+        <div class="panel" style="padding:16px;">
+          <div class="kicker" style="margin-bottom:10px;">EXPORT</div>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <button class="btn ghost">↓ ICAL · day-by-day</button>
+            <button class="btn ghost">↓ PDF · printable</button>
+            <button class="btn ghost">↗ SHARE LINK · read-only</button>
+            <button class="btn primary">PROMOTE → VISITED</button>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="view">
+    <div class="view-head">
+      <span class="num">05</span>
+      <h2>Expenses — Tokyo · Akiba nights</h2>
+      <span class="sub">trip P&amp;L · KPI tiles · donut + breakdown · per-day bars · transaction log</span>
+    </div>
+    <div style="margin-bottom:14px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+      <span class="pill green">visited</span>
+      <span class="pill">2025-11-04 → 2025-11-10</span>
+      <span class="pill">6 days</span>
+      <span class="pill">JPY · base USD</span>
+      <span class="pill gold">28 transactions</span>
+    </div>
+
+    <div class="ex-hero" style="margin-bottom:14px;">
+      <div class="ex-tile gold">
+        <div class="lab">TOTAL SPEND</div>
+        <div class="num">¥86,400</div>
+        <div class="delta">≈ $581 USD · -8% vs budget</div>
+      </div>
+      <div class="ex-tile">
+        <div class="lab">PER DAY AVG</div>
+        <div class="num">¥14,400</div>
+        <div class="delta">≈ $97 USD · 6 days</div>
+      </div>
+      <div class="ex-tile green">
+        <div class="lab">BUDGET LEFT</div>
+        <div class="num">¥7,600</div>
+        <div class="delta">budget ¥94,000 · 92% used</div>
+      </div>
+      <div class="ex-tile red">
+        <div class="lab">BIGGEST DAY</div>
+        <div class="num">¥21,200</div>
+        <div class="delta">DAY 03 · teamLab + dinner</div>
+      </div>
+    </div>
+
+    <div class="ex-board" style="margin-bottom:14px;">
+      <div class="panel ex-card">
+        <div class="head">
+          <div class="kicker">BREAKDOWN BY CATEGORY</div>
+          <div class="pick"><button class="on">CATEGORY</button><button>DAY</button><button>TYPE</button></div>
+        </div>
+        <div class="donut-row">
+          <div class="donut">
+            <div class="core"><div><div class="total">¥86.4k</div><div class="totlab">TOTAL</div></div></div>
+          </div>
+          <div class="cat-list">
+            <div class="cat-row"><span class="sw" style="background:var(--gold)"></span><span>Food &amp; drink</span><span class="pct">38%</span><span class="amt">¥32,800</span></div>
+            <div class="cat-row"><span class="sw" style="background:var(--green)"></span><span>Stay</span><span class="pct">24%</span><span class="amt">¥21,000</span></div>
+            <div class="cat-row"><span class="sw" style="background:var(--red)"></span><span>Transport</span><span class="pct">18%</span><span class="amt">¥15,400</span></div>
+            <div class="cat-row"><span class="sw" style="background:rgba(245,237,224,0.30)"></span><span>Shopping</span><span class="pct">12%</span><span class="amt">¥10,800</span></div>
+            <div class="cat-row"><span class="sw" style="background:rgba(245,237,224,0.18)"></span><span>Other / fees</span><span class="pct">8%</span><span class="amt">¥6,400</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="panel ex-card">
+        <div class="head">
+          <div class="kicker">SPEND PER DAY</div>
+          <div class="pick"><button class="on">STACKED</button><button>LINE</button></div>
+        </div>
+        <div class="bar-chart">
+          <div class="bar" title="Day 1"><span class="b-eat" style="height:34px"></span><span class="b-stay" style="height:48px"></span><span class="b-move" style="height:22px"></span></div>
+          <div class="bar" title="Day 2"><span class="b-eat" style="height:24px"></span><span class="b-stay" style="height:48px"></span><span class="b-move" style="height:14px"></span><span class="b-shop" style="height:30px"></span></div>
+          <div class="bar" title="Day 3"><span class="b-eat" style="height:46px"></span><span class="b-stay" style="height:48px"></span><span class="b-move" style="height:18px"></span><span class="b-shop" style="height:14px"></span><span class="b-other" style="height:8px"></span></div>
+          <div class="bar" title="Day 4"><span class="b-eat" style="height:30px"></span><span class="b-stay" style="height:48px"></span><span class="b-move" style="height:24px"></span></div>
+          <div class="bar" title="Day 5"><span class="b-eat" style="height:38px"></span><span class="b-stay" style="height:48px"></span><span class="b-move" style="height:8px"></span><span class="b-shop" style="height:22px"></span></div>
+          <div class="bar" title="Day 6"><span class="b-eat" style="height:18px"></span><span class="b-move" style="height:42px"></span><span class="b-other" style="height:10px"></span></div>
+        </div>
+        <div class="bar-axis">
+          <span>D1</span><span>D2</span><span>D3</span><span>D4</span><span>D5</span><span>D6</span>
+        </div>
+        <div style="display:flex; flex-wrap:wrap; gap:10px 16px; margin-top:14px; font-size:11px; color:var(--muted);">
+          <span><span class="dot-pin" style="background:var(--gold)"></span> Food</span>
+          <span><span class="dot-pin" style="background:var(--green)"></span> Stay</span>
+          <span><span class="dot-pin" style="background:var(--red)"></span> Transport</span>
+          <span><span class="dot-pin" style="background:rgba(245,237,224,0.30)"></span> Shopping</span>
+          <span><span class="dot-pin" style="background:rgba(245,237,224,0.18)"></span> Other</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="ex-grid">
+      <div class="panel ex-card">
+        <div class="head">
+          <div class="kicker">TRANSACTION LOG · 28 ITEMS</div>
+          <div class="pick"><button class="on">ALL</button><button>FOOD</button><button>STAY</button><button>MOVE</button><button>SHOP</button></div>
+        </div>
+        <table class="ex-table">
+          <thead>
+            <tr>
+              <th>DAY</th>
+              <th>CATEGORY</th>
+              <th>NAME</th>
+              <th>METHOD</th>
+              <th style="text-align:right;">JPY</th>
+              <th style="text-align:right;">USD</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="day-cell">D1 · 04</td>
+              <td><span class="tag-cell"><span class="swatch" style="background:var(--red)"></span> Transport</span></td>
+              <td>Narita Express → Shibuya</td>
+              <td class="note-cell">IC card</td>
+              <td class="num-cell">¥3,070</td>
+              <td class="num-cell" style="color:var(--muted)">$20.65</td>
+            </tr>
+            <tr>
+              <td class="day-cell">D1 · 04</td>
+              <td><span class="tag-cell"><span class="swatch" style="background:var(--gold)"></span> Food</span></td>
+              <td>Ichiran Shibuya — solo booth</td>
+              <td class="note-cell">cash</td>
+              <td class="num-cell">¥1,280</td>
+              <td class="num-cell" style="color:var(--muted)">$8.61</td>
+            </tr>
+            <tr>
+              <td class="day-cell">D1 · 04</td>
+              <td><span class="tag-cell"><span class="swatch" style="background:var(--green)"></span> Stay</span></td>
+              <td>Hotel Granbell · night 1</td>
+              <td class="note-cell">card</td>
+              <td class="num-cell">¥14,200</td>
+              <td class="num-cell" style="color:var(--muted)">$95.51</td>
+            </tr>
+            <tr>
+              <td class="day-cell">D2 · 05</td>
+              <td><span class="tag-cell"><span class="swatch" style="background:rgba(245,237,224,0.5)"></span> Shopping</span></td>
+              <td>Super Potato — Panzer Dragoon Saga</td>
+              <td class="note-cell">card</td>
+              <td class="num-cell">¥9,800</td>
+              <td class="num-cell" style="color:var(--muted)">$65.91</td>
+            </tr>
+            <tr>
+              <td class="day-cell">D3 · 06</td>
+              <td><span class="tag-cell"><span class="swatch" style="background:var(--green)"></span> Stay</span></td>
+              <td>teamLab Borderless ticket</td>
+              <td class="note-cell">card</td>
+              <td class="num-cell">¥3,800</td>
+              <td class="num-cell" style="color:var(--muted)">$25.55</td>
+            </tr>
+            <tr>
+              <td class="day-cell">D3 · 06</td>
+              <td><span class="tag-cell"><span class="swatch" style="background:var(--gold)"></span> Food</span></td>
+              <td>Tsukiji omakase dinner</td>
+              <td class="note-cell">card</td>
+              <td class="num-cell">¥6,400</td>
+              <td class="num-cell" style="color:var(--muted)">$43.04</td>
+            </tr>
+            <tr>
+              <td class="day-cell">D6 · 09</td>
+              <td><span class="tag-cell"><span class="swatch" style="background:var(--red)"></span> Transport</span></td>
+              <td>Skyliner → NRT</td>
+              <td class="note-cell">IC card</td>
+              <td class="num-cell">¥2,580</td>
+              <td class="num-cell" style="color:var(--muted)">$17.35</td>
+            </tr>
+            <tr>
+              <td colspan="6" style="text-align:center; color:var(--muted); padding-top:8px;">… 21 more transactions</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="4" class="total-lab">TOTAL · 28 ITEMS · 6 DAYS</td>
+              <td class="total-num">¥86,400</td>
+              <td class="total-num" style="color:var(--muted);">$581.21</td>
+            </tr>
+          </tfoot>
+        </table>
+        <div class="add-tx">+ ADD TRANSACTION (paste receipt · scan · manual)</div>
+      </div>
+
+      <aside class="ex-side">
+        <div class="panel day-spend">
+          <div class="kicker" style="margin-bottom:10px;">DAILY VS BUDGET</div>
+          <div class="day-row"><span class="lab">D1 · 04</span><div class="track"><div style="width:62%"></div></div><span class="amt">¥9,720</span></div>
+          <div class="day-row"><span class="lab">D2 · 05</span><div class="track"><div style="width:78%"></div></div><span class="amt">¥12,180</span></div>
+          <div class="day-row"><span class="lab">D3 · 06</span><div class="track"><div style="width:135%; background:var(--red)"></div></div><span class="amt" style="color:var(--red)">¥21,200</span></div>
+          <div class="day-row"><span class="lab">D4 · 07</span><div class="track"><div style="width:54%"></div></div><span class="amt">¥8,400</span></div>
+          <div class="day-row"><span class="lab">D5 · 08</span><div class="track"><div style="width:96%"></div></div><span class="amt">¥15,000</span></div>
+          <div class="day-row"><span class="lab">D6 · 09</span><div class="track"><div style="width:64%"></div></div><span class="amt">¥9,900</span></div>
+          <div style="margin-top:10px; font-size:11px; color:var(--muted); display:flex; justify-content:space-between;">
+            <span class="mono">DAILY BUDGET</span><span class="mono">¥15,667</span>
+          </div>
+        </div>
+
+        <div class="panel ex-fx">
+          <div class="kicker" style="margin-bottom:10px;">FX RATES (locked at trip)</div>
+          <div class="fx-row"><span class="k">JPY → USD</span><span class="v">¥1 = $0.00673</span></div>
+          <div class="fx-row"><span class="k">JPY → VND</span><span class="v">¥1 = ₫168</span></div>
+          <div class="fx-row"><span class="k">JPY → EUR</span><span class="v">¥1 = €0.00622</span></div>
+          <div style="margin-top:8px; font-size:11px; color:var(--muted);">snapshot 2025-11-04 · sync via /api/data</div>
+        </div>
+
+        <div class="panel" style="padding:16px;">
+          <div class="kicker" style="margin-bottom:10px;">EXPORT</div>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <button class="btn ghost">↓ CSV · transactions</button>
+            <button class="btn ghost">↓ PDF · expense report</button>
+            <button class="btn ghost">↗ SHARE · split with travel-mate</button>
+            <button class="btn primary">SETTLE WITH TRIPMATE</button>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="open-q">
+    <h3>OPEN — chốt trước khi tôi build high-fi</h3>
+    <ul>
+      <li><b>Tab set ở Detail (03)</b> giữ 4 tab: <span class="mono">Photos · Journal · Map · Expenses</span> — hay bỏ Expenses vào sidebar mãi mãi để main chỉ còn Photos/Journal/Map?</li>
+      <li><b>Info column ở Map (01) đang 380px</b> — chiếm khá nhiều canvas. OK? Hay thu lại 320px (giống hiện tại) và đẩy timeline xuống dưới drawer?</li>
+      <li><b>Lưu ảnh ở đâu?</b> 3 chỗ import (hero · masonry · map sidebar) — đẩy lên Mongo via <span class="mono">/api/data</span>, dùng provider riêng (S3 / Cloudinary), hay khởi đầu chỉ <span class="mono">localStorage</span> dataURL?</li>
+      <li><b>Map engine</b>: tôi nghiêng về <b>MapLibre GL + OSM</b> (free, style được dark mode). OK không?</li>
+      <li><b>Plan view (04)</b> kanban 1 cột / 1 ngày, hay timeline ngang theo giờ (kiểu Google Cal day)?</li>
+      <li><b>Trip cards (02)</b> cover ảnh là 1 ảnh đại diện hay 3-photo collage? Đang vẽ 1 ảnh.</li>
+      <li><b>Expenses (05)</b> dùng base currency cố định (USD) hay theo currency của trip? Đang vẽ JPY native + USD muted bên cạnh.</li>
+      <li><b>"Settle with tripmate"</b> có cần Splitwise-style không (mỗi tx có người trả + danh sách share), hay v1 chỉ track solo?</li>
+    </ul>
+  </section>
+
+</div>
+</body>
+</html>
