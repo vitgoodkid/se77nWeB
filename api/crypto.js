@@ -8,7 +8,8 @@
 //
 // Sources (no API keys needed):
 //   - CoinGecko simple price + market_chart (BTC + PAXG, last ~40h)
-//   - exchangerate.host /latest + /timeseries (USD → TWD/VND, last 40 days)
+//   - CoinGecko BTC chart in TWD/VND → derive hourly exchange rate series
+//   - open.er-api.com /latest (USD → TWD/VND current rate, fallback)
 // Caches 60s at the edge.
 
 export const config = { runtime: 'nodejs' };
@@ -23,11 +24,19 @@ function tail(arr, n) {
   return arr.slice(arr.length - n);
 }
 
-function fxDateRange(days) {
-  const end = new Date();
-  const start = new Date(end.getTime() - (days - 1) * 86_400_000);
-  const fmt = (d) => d.toISOString().slice(0, 10);
-  return { start: fmt(start), end: fmt(end) };
+// Derive exchange rate series by dividing BTC price in fiat by BTC price in USD
+function fxSeriesFromBtcRatio(btcFiatPrices, btcUsdPrices) {
+  if (!Array.isArray(btcFiatPrices) || !Array.isArray(btcUsdPrices)) return null;
+  const len = Math.min(btcFiatPrices.length, btcUsdPrices.length);
+  const rates = [];
+  for (let i = 0; i < len; i++) {
+    const fiat = btcFiatPrices[i][1];
+    const usd  = btcUsdPrices[i][1];
+    if (Number.isFinite(fiat) && Number.isFinite(usd) && usd > 0) {
+      rates.push(fiat / usd);
+    }
+  }
+  return rates.length ? rates : null;
 }
 
 export default async function handler(req, res) {
@@ -39,52 +48,64 @@ export default async function handler(req, res) {
   }
 
   const out = { ts: now, series: {} };
-  const { start: fxStart, end: fxEnd } = fxDateRange(SERIES_LEN);
 
   try {
     const [
       cgPrice,
       cgBtcChart,
       cgGoldChart,
-      fxLatest,
-      fxSeries,
+      cgBtcChartTwd,
+      cgBtcChartVnd,
+      erLatest,
     ] = await Promise.allSettled([
-      fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,pax-gold&vs_currencies=usd', {
+      // BTC + GOLD + TWD/VND spot price via CoinGecko (twd/vnd derived from BTC ratio)
+      fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,pax-gold&vs_currencies=usd,twd,vnd', {
         headers: { Accept: 'application/json' },
       }).then((r) => r.json()),
-      // hourly granularity — CoinGecko returns hourly when days <= 90 and >1
+      // hourly BTC chart USD — used for BTC series and TWD/VND ratio denominator
       fetch('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=2&interval=hourly', {
         headers: { Accept: 'application/json' },
       }).then((r) => r.json()),
       fetch('https://api.coingecko.com/api/v3/coins/pax-gold/market_chart?vs_currency=usd&days=2&interval=hourly', {
         headers: { Accept: 'application/json' },
       }).then((r) => r.json()),
-      fetch('https://api.exchangerate.host/latest?base=USD&symbols=TWD,VND', {
+      // BTC chart in TWD/VND → divide by USD chart to get hourly FX rate series
+      fetch('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=twd&days=2&interval=hourly', {
         headers: { Accept: 'application/json' },
       }).then((r) => r.json()),
-      fetch(`https://api.exchangerate.host/timeseries?start_date=${fxStart}&end_date=${fxEnd}&base=USD&symbols=TWD,VND`, {
+      fetch('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=vnd&days=2&interval=hourly', {
+        headers: { Accept: 'application/json' },
+      }).then((r) => r.json()),
+      // open.er-api.com — free, no key, fallback for current FX rate
+      fetch('https://open.er-api.com/v6/latest/USD', {
         headers: { Accept: 'application/json' },
       }).then((r) => r.json()),
     ]);
 
+    // --- Current prices ---
     if (cgPrice.status === 'fulfilled') {
       const d = cgPrice.value;
-      if (d?.bitcoin?.usd) out.btc = d.bitcoin.usd;
+      if (d?.bitcoin?.usd)      out.btc  = d.bitcoin.usd;
       if (d?.['pax-gold']?.usd) out.gold = d['pax-gold'].usd;
-    }
-    if (fxLatest.status === 'fulfilled') {
-      const d = fxLatest.value;
-      if (d?.rates?.TWD) out.twd = d.rates.TWD;
-      if (d?.rates?.VND) out.vnd = d.rates.VND;
+      // Derive FX from BTC ratio (most accurate, same timestamp as price)
+      if (d?.bitcoin?.usd && d?.bitcoin?.twd) out.twd = d.bitcoin.twd / d.bitcoin.usd;
+      if (d?.bitcoin?.usd && d?.bitcoin?.vnd) out.vnd = d.bitcoin.vnd / d.bitcoin.usd;
     }
 
-    if (cgBtcChart.status === 'fulfilled') {
-      const prices = cgBtcChart.value?.prices;
-      if (Array.isArray(prices)) {
-        const closes = prices.map((p) => p[1]).filter((v) => Number.isFinite(v));
-        const t = tail(closes, SERIES_LEN);
-        if (t && t.length) out.series.btc = t;
-      }
+    // Fallback current FX from open.er-api.com if CoinGecko ratio failed
+    if (erLatest.status === 'fulfilled') {
+      const d = erLatest.value;
+      if (!Number.isFinite(out.twd) && d?.rates?.TWD) out.twd = d.rates.TWD;
+      if (!Number.isFinite(out.vnd) && d?.rates?.VND) out.vnd = d.rates.VND;
+    }
+
+    // --- Series ---
+    const btcUsdPrices = cgBtcChart.status === 'fulfilled' ? cgBtcChart.value?.prices : null;
+
+    if (Array.isArray(btcUsdPrices)) {
+      const closes = btcUsdPrices.map((p) => p[1]).filter((v) => Number.isFinite(v));
+      const t = tail(closes, SERIES_LEN);
+      if (t && t.length) out.series.btc = t;
     }
     if (cgGoldChart.status === 'fulfilled') {
       const prices = cgGoldChart.value?.prices;
@@ -94,20 +115,17 @@ export default async function handler(req, res) {
         if (t && t.length) out.series.gold = t;
       }
     }
-    if (fxSeries.status === 'fulfilled') {
-      const rates = fxSeries.value?.rates;
-      if (rates && typeof rates === 'object') {
-        const days = Object.keys(rates).sort();
-        const twd = [];
-        const vnd = [];
-        for (const d of days) {
-          const r = rates[d];
-          if (Number.isFinite(r?.TWD)) twd.push(r.TWD);
-          if (Number.isFinite(r?.VND)) vnd.push(r.VND);
-        }
-        if (twd.length) out.series.twd = tail(twd, SERIES_LEN);
-        if (vnd.length) out.series.vnd = tail(vnd, SERIES_LEN);
-      }
+
+    // TWD/VND series derived from BTC price ratio
+    if (cgBtcChartTwd.status === 'fulfilled' && btcUsdPrices) {
+      const rates = fxSeriesFromBtcRatio(cgBtcChartTwd.value?.prices, btcUsdPrices);
+      const t = tail(rates, SERIES_LEN);
+      if (t && t.length) out.series.twd = t;
+    }
+    if (cgBtcChartVnd.status === 'fulfilled' && btcUsdPrices) {
+      const rates = fxSeriesFromBtcRatio(cgBtcChartVnd.value?.prices, btcUsdPrices);
+      const t = tail(rates, SERIES_LEN);
+      if (t && t.length) out.series.vnd = t;
     }
 
     // Make sure last point of each series equals the live price so the card
