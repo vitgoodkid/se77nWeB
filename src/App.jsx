@@ -49,9 +49,6 @@ function useUiScale() {
 
 export default function App() {
   const isMobile = useMediaQuery('(max-width: 768px)');
-  const uiScale = useUiScale();
-  const railWidth = Math.round(84 * uiScale);
-  const topBarH   = Math.round(64 * uiScale);
 
   // Public read-only share path bypasses auth + nav. Detected via ?share=<hash>.
   const shareToken = typeof window !== 'undefined'
@@ -73,6 +70,9 @@ function AppDesktop() {
   const ambientOn = true;
   const showBg = true;
   const isMobile = useMediaQuery('(max-width: 768px)');
+  const uiScale = useUiScale();
+  const railWidth = Math.round(84 * uiScale);
+  const topBarH   = Math.round(64 * uiScale);
 
   const [route, setRoute] = useState(() => {
     // Match against first hash segment only — sub-routes like #/tv4/list/<slug>
