@@ -1047,33 +1047,38 @@ function ImageConverterTool({ accent }) {
 
 // Module-level singleton — FFmpeg core stays loaded across renders + tool re-opens.
 // Loaded lazily on first convert; ~25 MB download from CDN once per browser session.
+//
+// We use ESM build (not UMD): @ffmpeg/ffmpeg uses a module worker which
+// `import()`s the core, and UMD doesn't import cleanly as ESM. ESM URLs work
+// directly via dynamic import — no toBlobURL needed; module workers allow
+// cross-origin imports when CDN sends proper CORS headers (unpkg/jsdelivr do).
 let ffmpegInstance = null;
 let ffmpegLoading = null;
 const FFMPEG_CORE_VERSION = '0.12.6';
 const FFMPEG_CDN_BASES = [
-  `https://unpkg.com/@ffmpeg/core@${FFMPEG_CORE_VERSION}/dist/umd`,
-  `https://cdn.jsdelivr.net/npm/@ffmpeg/core@${FFMPEG_CORE_VERSION}/dist/umd`,
+  `https://unpkg.com/@ffmpeg/core@${FFMPEG_CORE_VERSION}/dist/esm`,
+  `https://cdn.jsdelivr.net/npm/@ffmpeg/core@${FFMPEG_CORE_VERSION}/dist/esm`,
 ];
 
 async function getFFmpeg() {
   if (ffmpegInstance) return ffmpegInstance;
   if (ffmpegLoading) return ffmpegLoading;
   ffmpegLoading = (async () => {
-    const [{ FFmpeg }, { toBlobURL }] = await Promise.all([
-      import('@ffmpeg/ffmpeg'),
-      import('@ffmpeg/util'),
-    ]);
+    const { FFmpeg } = await import('@ffmpeg/ffmpeg');
     let lastErr;
     for (const baseURL of FFMPEG_CDN_BASES) {
       try {
         const ff = new FFmpeg();
         await ff.load({
-          coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-          wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+          coreURL: `${baseURL}/ffmpeg-core.js`,
+          wasmURL: `${baseURL}/ffmpeg-core.wasm`,
         });
         ffmpegInstance = ff;
         return ff;
-      } catch (e) { lastErr = e; }
+      } catch (e) {
+        console.warn('[ffmpeg] CDN failed', baseURL, e);
+        lastErr = e;
+      }
     }
     throw new Error(`FFmpeg core load failed from all CDNs: ${lastErr?.message || lastErr}`);
   })();
