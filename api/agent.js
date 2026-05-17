@@ -77,9 +77,14 @@ export default async function handler(req, res) {
   try {
     if (cls.tool === 'image_gen' || cls.tool === 'image_edit') {
       const refined = cls.refined_prompt || prompt;
-      const editModel = process.env.FAL_IMAGE_MODEL || 'openai/gpt-image-2/edit';
-      const t2iModel = process.env.FAL_IMAGE_T2I_MODEL || 'openai/gpt-image-2';
-      const model = image ? editModel : t2iModel;
+      const engine = (req.body?.engine === 'nano') ? 'nano' : 'openai';
+      const model = engine === 'nano'
+        ? (image
+            ? (process.env.FAL_IMAGE_NANO_MODEL || 'fal-ai/nano-banana-pro/edit')
+            : (process.env.FAL_IMAGE_NANO_T2I_MODEL || 'fal-ai/nano-banana-pro'))
+        : (image
+            ? (process.env.FAL_IMAGE_MODEL || 'openai/gpt-image-2/edit')
+            : (process.env.FAL_IMAGE_T2I_MODEL || 'openai/gpt-image-2'));
       const input = { prompt: refined };
       if (image) input.image_urls = [image];
       const result = await falSubmitAndPoll(model, input);

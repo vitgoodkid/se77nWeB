@@ -34,12 +34,6 @@ const AI_PRESETS = [
     seed: 'Paste code, an error, or describe the bug. I\'ll diagnose + give you the minimal fix.',
   },
   {
-    id: 'name', kind: 'chat', label: 'Naming', icon: '✦',
-    system: 'You are a brand naming partner. Given a concept, return 6 name candidates. For each: NAME — one-line vibe — domain.com guess. No fluff.',
-    placeholder: 'Describe the product or vibe…',
-    seed: 'Tell me what you\'re naming and the vibe. I\'ll give 6 candidates with domain guesses.',
-  },
-  {
     id: 'image', kind: 'image', label: 'Image gen', icon: '◧',
     placeholder: 'Describe the image, or upload one + describe the edit…',
     seed: 'Drop a prompt (and optionally an image to edit). I\'ll render via fal.ai gpt-image-2.',
@@ -82,6 +76,10 @@ export function AIPlayground() {
     { localKey: 'se77n.ai.videoOpts', serverKey: 'aiVideoOpts' },
     { duration: 5, resolution: '720p', aspectRatio: '16:9', generateAudio: false },
   );
+  const [imageEngine, setImageEngine] = useSyncedData(
+    { localKey: 'se77n.ai.imageEngine', serverKey: 'aiImageEngine' },
+    'openai',
+  );
   const scrollRef = useRef(null);
 
   // Clipboard paste
@@ -116,6 +114,25 @@ export function AIPlayground() {
     return data;
   }
 
+  // When the API returns { pending: true, requestId, statusUrl }, poll until ready.
+  // statusUrl is a relative path the server constructs, e.g. /api/image?requestId=...&model=...
+  // Long cap because seedance video gen + nano-banana-pro both regularly run 2–5 min.
+  async function pollMedia(initial, kind) {
+    if (!initial?.pending || !initial.statusUrl) {
+      throw new Error(`${kind}: missing url and not pending`);
+    }
+    const url = initial.statusUrl;
+    const deadline = Date.now() + 10 * 60_000; // 10 min absolute cap
+    while (Date.now() < deadline) {
+      await new Promise((r) => setTimeout(r, 5000));
+      const res = await fetch(url);
+      const data = await safeJson(res, kind);
+      if (data[kind]) return data[kind];
+      if (!data.pending) throw new Error(`${kind}: unexpected response`);
+    }
+    throw new Error(`${kind}: still rendering after 10 min — try a shorter prompt`);
+  }
+
   async function send() {
     const q = input.trim();
     if ((!q && !imgRef) || busy) return;
@@ -141,10 +158,11 @@ export function AIPlayground() {
         const res = await fetch('/api/image', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt: q, image: usedImage?.dataUrl }),
+          body: JSON.stringify({ prompt: q, image: usedImage?.dataUrl, engine: imageEngine }),
         });
         const data = await safeJson(res, 'image');
-        assistantMsg = { role: 'assistant', content: '', image: data.image };
+        const finalUrl = data.image || await pollMedia(data, 'image');
+        assistantMsg = { role: 'assistant', content: '', image: finalUrl };
       } else if (preset.kind === 'video') {
         const res = await fetch('/api/video', {
           method: 'POST',
@@ -159,7 +177,8 @@ export function AIPlayground() {
           }),
         });
         const data = await safeJson(res, 'video');
-        assistantMsg = { role: 'assistant', content: '', video: data.video };
+        const finalUrl = data.video || await pollMedia(data, 'video');
+        assistantMsg = { role: 'assistant', content: '', video: finalUrl };
       } else if (preset.kind === 'bg-remove') {
         if (!usedImage) throw new Error('attach an image first');
         const res = await fetch('/api/bg-remove', {
@@ -271,27 +290,27 @@ export function AIPlayground() {
           })}
         </div>
         <div style={{ flex: 1 }} />
-        <div style={{
-          marginTop: 16, paddingTop: 14, borderTop: '1px solid ' + COLORS.line,
-          fontSize: 10, color: COLORS.muted, lineHeight: 1.6,
-        }} className="mono">
-          <div>chat · gemini-3.1-flash-lite</div>
-          <div>image · fal · gpt-image-2</div>
-          <div>video · fal · seedance-2.0</div>
-          <div>bg · fal · ideogram</div>
-          <div style={{ marginTop: 6, opacity: 0.6 }}>⌘V to paste images</div>
-        </div>
       </Panel>
       )}
 
       <Panel padding={0} style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <div style={{
           padding: '16px 20px', borderBottom: '1px solid ' + COLORS.line,
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
         }}>
-          <div>
-            <Kicker>SESSION · {presetId.toUpperCase()}</Kicker>
-            <div className="mono" style={{ fontSize: 16, fontWeight: 700, marginTop: 4 }}>{preset.label}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, minWidth: 0, flexWrap: 'wrap' }}>
+            <div>
+              <Kicker>SESSION · {presetId.toUpperCase()}</Kicker>
+              <div className="mono" style={{ fontSize: 16, fontWeight: 700, marginTop: 4 }}>{preset.label}</div>
+            </div>
+            {preset.kind === 'image' && (
+              <ModelSwap
+                label="MODEL"
+                value={imageEngine}
+                onChange={setImageEngine}
+                options={IMAGE_ENGINES}
+              />
+            )}
           </div>
           <Btn onClick={clearChat} variant="ghost">{t('ai.clear')}</Btn>
         </div>
@@ -312,6 +331,9 @@ export function AIPlayground() {
         </div>
         {preset.kind === 'video' && (
           <VideoOptionsBar opts={videoOpts} onChange={setVideoOpts} />
+        )}
+        {imgRef && (
+          <AttachmentChip imgRef={imgRef} onRemove={() => setImgRef(null)} />
         )}
         <div style={{
           padding: '14px 18px', borderTop: '1px solid ' + COLORS.line,
@@ -349,9 +371,154 @@ export function AIPlayground() {
 
 // Video gen options bar — duration / resolution / aspect ratio / audio toggle.
 // Persisted via useSyncedData (see videoOpts state above).
-const VIDEO_DURATIONS = [3, 5, 8, 10];
+const VIDEO_DURATIONS = [8, 10, 15];
 const VIDEO_RESOLUTIONS = ['480p', '720p', '1080p'];
 const VIDEO_ASPECTS = ['16:9', '9:16', '1:1', '21:9'];
+
+const IMAGE_ENGINES = [
+  { v: 'openai', l: 'GPT-IMAGE-2' },
+  { v: 'nano',   l: 'NANO-BANANA-PRO' },
+];
+
+// Animated dropdown — uses CSS transitions on opacity + transform for the
+// flip-card feel from the GSAP reference. Lightweight, no GSAP dep.
+function ModelSwap({ label, value, onChange, options }) {
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef(null);
+  const current = options.find((o) => o.v === value) || options[0];
+
+  // Click-outside to close.
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [open]);
+
+  return (
+    <div ref={wrapRef} style={{
+      position: 'relative', display: 'inline-flex', alignItems: 'center', gap: 8,
+      flexShrink: 0,
+    }}>
+      <span className="mono" style={{
+        fontSize: 9, letterSpacing: '0.22em', color: COLORS.muted,
+      }}>{label}</span>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="mono"
+        style={{
+          display: 'inline-flex', alignItems: 'center', gap: 8,
+          padding: '6px 12px', borderRadius: 999,
+          background: open ? COLORS.gold + '24' : COLORS.gold + '14',
+          border: `1px solid ${COLORS.gold}80`,
+          color: COLORS.gold, cursor: 'pointer',
+          fontSize: 11, letterSpacing: '0.14em',
+          fontFamily: 'JetBrains Mono, monospace',
+          whiteSpace: 'nowrap',
+          transition: 'background 180ms ease, transform 180ms ease',
+          transform: open ? 'translateY(-1px)' : 'translateY(0)',
+        }}
+      >
+        <span style={{
+          width: 6, height: 6, borderRadius: 999,
+          background: COLORS.gold, flexShrink: 0,
+          boxShadow: `0 0 8px ${COLORS.gold}`,
+        }} />
+        {current.l}
+        <span style={{
+          fontSize: 9, opacity: 0.7,
+          transition: 'transform 220ms ease',
+          transform: open ? 'rotate(180deg)' : 'rotate(0)',
+        }}>▾</span>
+      </button>
+      <div
+        style={{
+          position: 'absolute', left: 0, top: 'calc(100% + 6px)', zIndex: 30,
+          minWidth: 210,
+          background: COLORS.panel, border: '1px solid ' + COLORS.line,
+          borderRadius: 10, padding: 4,
+          boxShadow: '0 12px 30px rgba(0,0,0,0.5)',
+          opacity: open ? 1 : 0,
+          transform: open ? 'translateY(0) scale(1)' : 'translateY(-6px) scale(0.96)',
+          transformOrigin: 'top left',
+          pointerEvents: open ? 'auto' : 'none',
+          transition: 'opacity 180ms ease, transform 180ms ease',
+        }}
+      >
+        {options.map((o, i) => {
+          const on = o.v === value;
+          return (
+            <button
+              key={o.v}
+              type="button"
+              onClick={() => { onChange(o.v); setOpen(false); }}
+              className="mono"
+              style={{
+                display: 'block', width: '100%', textAlign: 'left',
+                padding: '8px 12px', borderRadius: 7,
+                background: on ? COLORS.gold + '1f' : 'transparent',
+                color: on ? COLORS.gold : COLORS.text,
+                border: 'none', cursor: 'pointer',
+                fontSize: 12, letterSpacing: '0.06em',
+                opacity: open ? 1 : 0,
+                transform: open ? 'translateX(0)' : 'translateX(-6px)',
+                transition: `opacity 220ms ease ${i * 30}ms, transform 220ms ease ${i * 30}ms, background 120ms ease`,
+              }}
+              onMouseEnter={(e) => { if (!on) e.currentTarget.style.background = 'rgba(245,237,224,0.05)'; }}
+              onMouseLeave={(e) => { if (!on) e.currentTarget.style.background = 'transparent'; }}
+            >
+              {o.l}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// Pill above the composer: thumbnail + filename + × so users can see at a glance
+// what they've attached, instead of just the gold dot on the paperclip.
+function AttachmentChip({ imgRef, onRemove }) {
+  const truncate = (s, n = 28) => (s && s.length > n ? s.slice(0, n - 1) + '…' : s || 'pasted-image.png');
+  return (
+    <div style={{
+      padding: '8px 18px', borderTop: '1px solid ' + COLORS.line,
+      background: COLORS.bg, display: 'flex', alignItems: 'center',
+    }}>
+      <div style={{
+        display: 'inline-flex', alignItems: 'center', gap: 10,
+        padding: '6px 10px 6px 6px', borderRadius: 999,
+        background: 'rgba(212,168,88,0.08)',
+        border: `1px solid ${COLORS.gold}55`,
+      }}>
+        <img
+          src={imgRef.dataUrl}
+          alt={imgRef.name || 'attachment'}
+          style={{
+            width: 28, height: 28, borderRadius: 999, objectFit: 'cover',
+            display: 'block', flexShrink: 0,
+            border: '1px solid ' + COLORS.line,
+          }}
+        />
+        <span className="mono" style={{
+          fontSize: 11, letterSpacing: '0.04em', color: COLORS.gold,
+        }}>{truncate(imgRef.name)}</span>
+        <button
+          type="button"
+          onClick={onRemove}
+          aria-label="Remove attachment"
+          style={{
+            background: 'transparent', border: 'none', cursor: 'pointer',
+            color: COLORS.gold, fontSize: 14, lineHeight: 1, padding: '0 4px',
+          }}
+        >×</button>
+      </div>
+    </div>
+  );
+}
 
 function VideoOptionsBar({ opts, onChange }) {
   const set = (patch) => onChange({ ...opts, ...patch });

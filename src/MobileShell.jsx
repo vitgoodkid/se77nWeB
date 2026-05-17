@@ -43,7 +43,6 @@ const SLASH_COMMANDS = [
   { cmd: '/code',      kind: 'prompt', accent: COLORS.green, desc: 'Diagnose & fix' },
   { cmd: '/image',     kind: 'prompt', accent: '#C77BFF',    desc: 'Generate · edit · remove bg' },
   { cmd: '/video',     kind: 'prompt', accent: COLORS.gold,  desc: '5s clip via seedance' },
-  { cmd: '/name',      kind: 'prompt', accent: COLORS.text,  desc: 'Product naming + domains' },
   // route shortcuts
   { cmd: '/todo',      kind: 'nav', route: 'todo',   accent: COLORS.green, desc: 'Jump · to-do list' },
   { cmd: '/crypto',    kind: 'nav', route: 'crypto', accent: COLORS.gold,  desc: 'Jump · markets' },
