@@ -1495,12 +1495,20 @@ function FeatureCard({ feature, onClick, idx }) {
       }}
     >
       {hover && (
-        <span aria-hidden style={{
-          position: 'absolute', top: 0, left: '-30%', width: '40%', height: '100%',
-          background: `linear-gradient(115deg, transparent 0%, ${feature.accent}28 50%, transparent 100%)`,
-          animation: 'rimSweep 900ms ease-out',
-          pointerEvents: 'none',
-        }} />
+        <>
+          <span aria-hidden style={{
+            position: 'absolute', top: 0, left: '-30%', width: '40%', height: '100%',
+            background: `linear-gradient(115deg, transparent 0%, ${feature.accent}28 50%, transparent 100%)`,
+            animation: 'rimSweep 900ms ease-out forwards',
+            pointerEvents: 'none',
+          }} />
+          <span aria-hidden style={{
+            position: 'absolute', inset: 0,
+            background: `radial-gradient(130% 90% at 30% 35%, ${feature.accent}1f 0%, transparent 65%)`,
+            animation: 'cardGlowIn 500ms ease-out 900ms both, cardGlow 2400ms ease-in-out 1400ms infinite',
+            pointerEvents: 'none',
+          }} />
+        </>
       )}
 
       <span style={{
