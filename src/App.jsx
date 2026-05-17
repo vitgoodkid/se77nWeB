@@ -1075,8 +1075,12 @@ function ExperimentWatermark({ number = EXPERIMENT_NUMBER }) {
   );
 }
 
-function MarqueeTicker({ speed = 60, items }) {
-  const doubled = [...items, ...items];
+function MarqueeTicker({ speed = 60, items, minRepeats = 6 }) {
+  // For short item lists we need to repeat enough times that the marquee track
+  // is wider than the viewport even after the -50% translate, otherwise the
+  // right side stays blank between loops.
+  const reps = Math.max(2, minRepeats);
+  const doubled = Array.from({ length: reps }).flatMap(() => items);
   return (
     <div style={{
       width: '100%', overflow: 'hidden', position: 'relative',
@@ -1111,22 +1115,47 @@ function MarqueeTicker({ speed = 60, items }) {
 function HomeView({ nav, ambient, ambientOn }) {
   const { t } = useLang();
   const [verb, setVerb] = useState(0);
+  const [markets, setMarkets] = useState({ btc: null, gold: null, twd: null, vnd: null });
   useEffect(() => {
     const id = setInterval(() => setVerb((v) => (v + 1) % VERBS.length), 1800);
     return () => clearInterval(id);
   }, []);
 
+  // Live BTC + gold + TWD↔VND for the ticker. /api/crypto polls CoinGecko + FX
+  // upstream and exposes them on a single endpoint. Refresh every 60s like the
+  // CryptoWatch module so we don't double-bill.
+  useEffect(() => {
+    let alive = true;
+    async function poll() {
+      try {
+        const r = await fetch('/api/crypto');
+        if (!r.ok) return;
+        const d = await r.json();
+        if (!alive) return;
+        setMarkets({
+          btc: Number.isFinite(d.btc) ? d.btc : null,
+          gold: Number.isFinite(d.gold) ? d.gold : null,
+          twd: Number.isFinite(d.twd) ? d.twd : null,
+          vnd: Number.isFinite(d.vnd) ? d.vnd : null,
+        });
+      } catch {}
+    }
+    poll();
+    const id = setInterval(poll, 60_000);
+    return () => { alive = false; clearInterval(id); };
+  }, []);
+
+  const fmtBtc = (v) => v == null ? '—' : '$' + Math.round(v).toLocaleString('en-US');
+  const fmtGold = (v) => v == null ? '—' : v.toFixed(2);
+  // /api/crypto returns USD→TWD and USD→VND. Convert to TWD→VND directly.
+  const twdVnd = (markets.twd && markets.vnd) ? markets.vnd / markets.twd : null;
+  const fmtTwdVnd = (v) => v == null ? '—' : v.toFixed(0);
+
   const tickerItems = useMemo(() => [
-    { c: COLORS.green, t: 'TECH · 11 SERVICES MONITORED' },
-    { c: COLORS.gold,  t: 'BURN · $147.83 / MO' },
-    { c: COLORS.gold,  t: 'BTC · 94,200 ↗ +0.8%' },
-    { c: COLORS.gold,  t: 'GOLD/OZ · 2,648.40' },
-    { c: COLORS.red,   t: 'AI · 1,204 PROMPTS LIFETIME' },
-    { c: COLORS.green, t: 'TRAVEL · 16 CITIES · 12 VISITED' },
-    { c: COLORS.green, t: 'TODO · 13 OPEN · 47 SHIPPED' },
-    { c: COLORS.red,   t: 'VAULT · 47 SECRETS · ROTATED 6d AGO' },
-    { c: COLORS.text,  t: 'BUILD · ' + new Date().toISOString().slice(0, 10).replaceAll('-', '.') },
-  ], []);
+    { c: COLORS.gold, t: 'BTC · ' + fmtBtc(markets.btc) },
+    { c: COLORS.gold, t: 'GOLD/OZ · ' + fmtGold(markets.gold) },
+    { c: COLORS.green, t: '1 TWD · ' + fmtTwdVnd(twdVnd) + ' VND' },
+  ], [markets.btc, markets.gold, twdVnd]);
 
   return (
     <div>
@@ -1179,7 +1208,7 @@ function HomeView({ nav, ambient, ambientOn }) {
       </section>
 
       <div style={{ margin: '36px -32px 36px -84px' }}>
-        <MarqueeTicker speed={60} items={tickerItems} />
+        <MarqueeTicker speed={30} items={tickerItems} />
       </div>
 
       <section style={{ marginBottom: 28 }}>
