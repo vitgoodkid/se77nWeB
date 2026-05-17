@@ -12,7 +12,9 @@
     { "source": "/api/auth/google/start", "destination": "/api/auth/google-start" },
     { "source": "/api/auth/google/callback", "destination": "/api/auth/google-callback" },
     { "source": "/api/auth/discord/start", "destination": "/api/auth/discord-start" },
-    { "source": "/api/auth/discord/callback", "destination": "/api/auth/discord-callback" }
+    { "source": "/api/auth/discord/callback", "destination": "/api/auth/discord-callback" },
+    { "source": "/s/:slug", "destination": "/api/short?slug=:slug&go=1" },
+    { "source": "/p/:id", "destination": "/api/paste?id=:id&view=1" }
   ],
   "headers": [
     {

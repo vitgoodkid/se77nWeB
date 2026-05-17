@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import {
   COLORS, CITIES,
   Panel, Btn, Field, Pill, Kicker,
-  useSyncedData, usePasteImage, copyText, useLang, useMediaQuery,
+  useSyncedData, usePasteImage, copyText, useLang, useMediaQuery, usePersisted,
 } from './lib.jsx';
 
 // ═════════════════════════════════════════════════════════════
@@ -644,7 +644,6 @@ const PUBLIC_TOOLS = [
 ];
 const PRIVATE_TOOLS = [
   { id: 'srv', name: 'Server',      desc: 'Home lab dashboard',  icon: '⌬' },
-  { id: 'pp',  name: 'Hộ chiếu số', desc: 'Identity vault',      icon: '⌘' },
   { id: 'fin', name: 'Tài chính',   desc: 'Net worth + tracking',icon: '$' },
 ];
 
@@ -813,6 +812,7 @@ function ToolDetail({ tool, accent, onBack }) {
          tool.id === 'imgc'  ? <ImageConverterTool accent={accent} /> :
          tool.id === 'v2g'   ? <VideoToTool accent={accent} /> :
          tool.id === 'fin'   ? <FinanceTool accent={accent} /> :
+         tool.id === 'game'  ? <GameResourcesTool accent={accent} /> :
          <PlaceholderTool tool={tool} accent={accent} />}
       </div>
     </div>
@@ -823,11 +823,29 @@ function ShortenerTool({ accent }) {
   const [url, setUrl] = useState('');
   const [alias, setAlias] = useState('');
   const [out, setOut] = useState(null);
-  function shorten() {
-    if (!url.trim()) return;
-    const slug = alias || Math.random().toString(36).slice(2, 8);
-    setOut(`se7.tn/${slug}`);
+  const [err, setErr] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  async function shorten() {
+    if (busy) return;
+    const u = url.trim();
+    if (!u) { setErr('URL is required'); return; }
+    setBusy(true); setErr(''); setOut(null);
+    try {
+      const r = await fetch('/api/short', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: u, alias: alias.trim() || undefined }),
+      });
+      const data = await r.json();
+      if (!r.ok) { setErr(data.error || 'Failed'); return; }
+      const fullUrl = `${window.location.origin}${data.path}`;
+      setOut({ slug: data.slug, url: fullUrl });
+    } catch (e) {
+      setErr(e.message || 'Network error');
+    } finally { setBusy(false); }
   }
+
   return (
     <div style={{ display: 'grid', gap: 14 }}>
       <div>
@@ -838,15 +856,32 @@ function ShortenerTool({ accent }) {
         <Kicker style={{ marginBottom: 8 }}>CUSTOM ALIAS (optional)</Kicker>
         <Field value={alias} onChange={setAlias} placeholder="my-link" />
       </div>
-      <div><Btn variant="solid" color={accent} onClick={shorten}>Shorten</Btn></div>
+      <div>
+        <Btn variant="solid" color={accent} onClick={shorten} disabled={busy}>
+          {busy ? 'Shortening…' : 'Shorten'}
+        </Btn>
+      </div>
+      {err && (
+        <div className="mono" style={{
+          padding: '10px 14px', borderRadius: 10,
+          border: `1px solid ${COLORS.red}55`, background: COLORS.red + '0e',
+          color: COLORS.red, fontSize: 12,
+        }}>✕ {err}</div>
+      )}
       {out && (
         <div style={{
           padding: 16, borderRadius: 10, border: `1px solid ${accent}55`,
           background: accent + '0e',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
         }}>
-          <div className="mono" style={{ fontSize: 14, color: accent, fontWeight: 700 }}>{out}</div>
-          <Btn variant="tinted" color={accent} onClick={() => copyText(out)}>Copy</Btn>
+          <a
+            href={out.url}
+            target="_blank"
+            rel="noreferrer"
+            className="mono"
+            style={{ fontSize: 14, color: accent, fontWeight: 700, textDecoration: 'none', wordBreak: 'break-all' }}
+          >{out.url}</a>
+          <Btn variant="tinted" color={accent} onClick={() => copyText(out.url)}>Copy</Btn>
         </div>
       )}
     </div>
@@ -856,11 +891,28 @@ function ShortenerTool({ accent }) {
 function PastebinTool({ accent }) {
   const [text, setText] = useState('');
   const [saved, setSaved] = useState(null);
-  function save() {
-    if (!text.trim()) return;
-    const id = Math.random().toString(36).slice(2, 8);
-    setSaved({ id, url: `se7.tn/p/${id}`, len: text.length });
+  const [err, setErr] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  async function save() {
+    if (busy) return;
+    if (!text.trim()) { setErr('Content is empty'); return; }
+    setBusy(true); setErr(''); setSaved(null);
+    try {
+      const r = await fetch('/api/paste', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: text }),
+      });
+      const data = await r.json();
+      if (!r.ok) { setErr(data.error || 'Failed'); return; }
+      const fullUrl = `${window.location.origin}${data.viewUrl}`;
+      setSaved({ id: data.id, url: fullUrl, len: text.length });
+    } catch (e) {
+      setErr(e.message || 'Network error');
+    } finally { setBusy(false); }
   }
+
   return (
     <div style={{ display: 'grid', gap: 14 }}>
       <Kicker>PASTE CONTENT</Kicker>
@@ -877,15 +929,33 @@ function PastebinTool({ accent }) {
         }}
       />
       <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-        <Btn variant="solid" color={accent} onClick={save}>Save paste</Btn>
-        <span className="mono" style={{ fontSize: 10, color: COLORS.muted }}>{text.length} chars</span>
+        <Btn variant="solid" color={accent} onClick={save} disabled={busy}>
+          {busy ? 'Saving…' : 'Save paste'}
+        </Btn>
+        <span className="mono" style={{ fontSize: 10, color: COLORS.muted }}>
+          {text.length} chars · {(new Blob([text]).size / 1024).toFixed(1)} KB
+        </span>
       </div>
+      {err && (
+        <div className="mono" style={{
+          padding: '10px 14px', borderRadius: 10,
+          border: `1px solid ${COLORS.red}55`, background: COLORS.red + '0e',
+          color: COLORS.red, fontSize: 12,
+        }}>✕ {err}</div>
+      )}
       {saved && (
         <div style={{
           padding: 14, borderRadius: 10, border: `1px solid ${accent}55`,
           background: accent + '0e', display: 'flex', justifyContent: 'space-between',
+          alignItems: 'center', gap: 10,
         }}>
-          <div className="mono" style={{ fontSize: 13, color: accent }}>{saved.url}</div>
+          <a
+            href={saved.url}
+            target="_blank"
+            rel="noreferrer"
+            className="mono"
+            style={{ fontSize: 13, color: accent, fontWeight: 700, textDecoration: 'none', wordBreak: 'break-all' }}
+          >{saved.url}</a>
           <Btn variant="tinted" color={accent} onClick={() => copyText(saved.url)}>Copy</Btn>
         </div>
       )}
@@ -1028,29 +1098,357 @@ function VideoToTool({ accent }) {
   );
 }
 
+const CCY_SUGGESTIONS = ['USD', 'TWD', 'VND', 'EUR', 'JPY', 'KRW', 'SGD', 'BTC', 'ETH', 'GOLD'];
+
 function FinanceTool({ accent }) {
-  const accounts = [
-    { name: 'Cash · TWD',   value: 145200,    ccy: 'TWD' },
-    { name: 'Cash · VND',   value: 28500000,  ccy: 'VND' },
-    { name: 'Cash · USD',   value: 4820,      ccy: 'USD' },
-    { name: 'Crypto · BTC', value: 0.137,     ccy: 'BTC' },
-    { name: 'Stocks · ETF', value: 12450,     ccy: 'USD' },
-  ];
+  const [accounts, setAccounts] = usePersisted('se77n.finance.accounts.v1', []);
+  const [adding, setAdding] = useState(false);
+  const [draft, setDraft] = useState({ name: '', value: '', ccy: 'USD' });
+  const [editingId, setEditingId] = useState(null);
+  const [editDraft, setEditDraft] = useState(null);
+
+  const totalsByCcy = useMemo(() => {
+    const m = {};
+    for (const a of accounts) {
+      const v = Number(a.value);
+      if (!Number.isFinite(v)) continue;
+      m[a.ccy] = (m[a.ccy] || 0) + v;
+    }
+    return Object.entries(m).sort(([, a], [, b]) => b - a);
+  }, [accounts]);
+
+  function addAccount() {
+    const name = draft.name.trim();
+    const ccy = draft.ccy.trim().toUpperCase();
+    const v = Number(draft.value);
+    if (!name || !ccy || !Number.isFinite(v)) return;
+    setAccounts([...accounts, {
+      id: Math.random().toString(36).slice(2, 10),
+      name, value: v, ccy,
+    }]);
+    setDraft({ name: '', value: '', ccy: 'USD' });
+    setAdding(false);
+  }
+  function startEdit(a) {
+    setEditingId(a.id);
+    setEditDraft({ name: a.name, value: String(a.value), ccy: a.ccy });
+  }
+  function saveEdit() {
+    if (!editingId || !editDraft) return;
+    const name = editDraft.name.trim();
+    const ccy = editDraft.ccy.trim().toUpperCase();
+    const v = Number(editDraft.value);
+    if (!name || !ccy || !Number.isFinite(v)) return;
+    setAccounts(accounts.map((a) =>
+      a.id === editingId ? { ...a, name, value: v, ccy } : a
+    ));
+    setEditingId(null); setEditDraft(null);
+  }
+  function deleteAccount(id) {
+    setAccounts(accounts.filter((a) => a.id !== id));
+    if (editingId === id) { setEditingId(null); setEditDraft(null); }
+  }
+
+  function formatVal(v, ccy) {
+    if (!Number.isFinite(v)) return '—';
+    const isCrypto = ccy === 'BTC' || ccy === 'ETH';
+    return isCrypto
+      ? v.toLocaleString(undefined, { maximumFractionDigits: 8 })
+      : v.toLocaleString(undefined, { maximumFractionDigits: 2 });
+  }
+
   return (
-    <div style={{ display: 'grid', gap: 12 }}>
-      {accounts.map((a) => (
-        <div key={a.name} style={{
-          padding: 14, borderRadius: 10, background: COLORS.bg,
-          border: '1px solid ' + COLORS.line,
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+    <div style={{ display: 'grid', gap: 16 }}>
+      {/* ─ Totals ─ */}
+      {totalsByCcy.length > 0 && (
+        <div style={{
+          padding: 16, borderRadius: 12, border: `1px solid ${accent}55`,
+          background: accent + '08',
         }}>
-          <div className="mono" style={{ fontSize: 12 }}>{a.name}</div>
-          <div className="mono" style={{ fontSize: 14, fontWeight: 700, color: accent }}>
-            {a.value.toLocaleString()}{' '}
-            <span style={{ fontSize: 10, color: COLORS.muted, marginLeft: 4 }}>{a.ccy}</span>
+          <Kicker style={{ color: accent, marginBottom: 10 }}>NET WORTH · BY CURRENCY</Kicker>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {totalsByCcy.map(([ccy, val]) => (
+              <div key={ccy} className="mono" style={{
+                padding: '8px 12px', borderRadius: 8,
+                border: '1px solid ' + COLORS.line, background: COLORS.bg,
+                fontSize: 12,
+              }}>
+                <span style={{ color: accent, fontWeight: 700 }}>{formatVal(val, ccy)}</span>
+                <span style={{ color: COLORS.muted, marginLeft: 6 }}>{ccy}</span>
+              </div>
+            ))}
           </div>
         </div>
-      ))}
+      )}
+
+      {/* ─ Account list ─ */}
+      <div style={{ display: 'grid', gap: 8 }}>
+        {accounts.length === 0 && !adding && (
+          <div style={{
+            padding: 28, textAlign: 'center', borderRadius: 12,
+            border: `1px dashed ${COLORS.line}`, background: COLORS.bg,
+            color: COLORS.muted, fontSize: 13,
+          }}>
+            <div className="mono" style={{ fontSize: 12, letterSpacing: '0.14em', marginBottom: 6 }}>
+              NO ACCOUNTS YET
+            </div>
+            Add cash, crypto, stocks, or any holding you want to track.
+          </div>
+        )}
+        {accounts.map((a) => {
+          const isEditing = editingId === a.id;
+          if (isEditing) {
+            return (
+              <div key={a.id} style={{
+                padding: 12, borderRadius: 10,
+                border: `1px solid ${accent}55`, background: accent + '08',
+                display: 'grid', gridTemplateColumns: '2fr 1fr 80px auto', gap: 8, alignItems: 'center',
+              }}>
+                <Field value={editDraft.name} onChange={(v) => setEditDraft({ ...editDraft, name: v })} placeholder="Name" />
+                <Field value={editDraft.value} onChange={(v) => setEditDraft({ ...editDraft, value: v })} placeholder="0" />
+                <Field value={editDraft.ccy} onChange={(v) => setEditDraft({ ...editDraft, ccy: v.toUpperCase() })} placeholder="USD" />
+                <div style={{ display: 'flex', gap: 4 }}>
+                  <Btn variant="solid" color={accent} onClick={saveEdit}>Save</Btn>
+                  <Btn variant="ghost" onClick={() => { setEditingId(null); setEditDraft(null); }}>✕</Btn>
+                </div>
+              </div>
+            );
+          }
+          return (
+            <div key={a.id} style={{
+              padding: 14, borderRadius: 10, background: COLORS.bg,
+              border: '1px solid ' + COLORS.line,
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12,
+            }}>
+              <div className="mono" style={{ fontSize: 12, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {a.name}
+              </div>
+              <div className="mono" style={{ fontSize: 14, fontWeight: 700, color: accent }}>
+                {formatVal(a.value, a.ccy)}
+                <span style={{ fontSize: 10, color: COLORS.muted, marginLeft: 6 }}>{a.ccy}</span>
+              </div>
+              <div style={{ display: 'flex', gap: 4 }}>
+                <Btn variant="ghost" onClick={() => startEdit(a)} title="Edit">✎</Btn>
+                <Btn variant="ghost" onClick={() => deleteAccount(a.id)} title="Delete">✕</Btn>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* ─ Add form ─ */}
+      {adding ? (
+        <div style={{
+          padding: 14, borderRadius: 10,
+          border: `1px solid ${accent}55`, background: accent + '08',
+          display: 'grid', gap: 10,
+        }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 80px', gap: 8 }}>
+            <div>
+              <Kicker style={{ marginBottom: 6 }}>NAME</Kicker>
+              <Field value={draft.name} onChange={(v) => setDraft({ ...draft, name: v })} placeholder="Cash · USD" />
+            </div>
+            <div>
+              <Kicker style={{ marginBottom: 6 }}>VALUE</Kicker>
+              <Field value={draft.value} onChange={(v) => setDraft({ ...draft, value: v })} placeholder="0" />
+            </div>
+            <div>
+              <Kicker style={{ marginBottom: 6 }}>CCY</Kicker>
+              <Field value={draft.ccy} onChange={(v) => setDraft({ ...draft, ccy: v.toUpperCase() })} placeholder="USD" />
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+            {CCY_SUGGESTIONS.map((c) => (
+              <button
+                key={c}
+                onClick={() => setDraft({ ...draft, ccy: c })}
+                className="mono"
+                style={{
+                  padding: '4px 8px', fontSize: 10, borderRadius: 6,
+                  border: '1px solid ' + COLORS.line, cursor: 'pointer',
+                  background: draft.ccy === c ? accent + '20' : 'transparent',
+                  color: draft.ccy === c ? accent : COLORS.muted,
+                  letterSpacing: '0.1em',
+                }}
+              >{c}</button>
+            ))}
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <Btn variant="solid" color={accent} onClick={addAccount}>Add</Btn>
+            <Btn variant="ghost" onClick={() => { setAdding(false); setDraft({ name: '', value: '', ccy: 'USD' }); }}>
+              Cancel
+            </Btn>
+          </div>
+        </div>
+      ) : (
+        <Btn variant="tinted" color={accent} onClick={() => setAdding(true)}>+ Add account</Btn>
+      )}
+    </div>
+  );
+}
+
+function GameResourcesTool({ accent }) {
+  const [files, setFiles] = useState(null);
+  const [err, setErr] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+
+  useEffect(() => {
+    let alive = true;
+    setLoading(true); setErr('');
+    fetch('/api/games')
+      .then(async (r) => {
+        const data = await r.json();
+        if (!alive) return;
+        if (!r.ok) { setErr(data.error || 'Failed to load'); setFiles([]); }
+        else { setFiles(data.files || []); }
+      })
+      .catch((e) => { if (alive) { setErr(e.message); setFiles([]); } })
+      .finally(() => { if (alive) setLoading(false); });
+    return () => { alive = false; };
+  }, []);
+
+  const filtered = useMemo(() => {
+    if (!files) return [];
+    const s = search.trim().toLowerCase();
+    if (!s) return files;
+    return files.filter((f) => f.name.toLowerCase().includes(s));
+  }, [files, search]);
+
+  function formatSize(n) {
+    if (!Number.isFinite(n) || n == null) return '—';
+    if (n < 1024) return n + ' B';
+    if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+    if (n < 1024 * 1024 * 1024) return (n / 1024 / 1024).toFixed(1) + ' MB';
+    return (n / 1024 / 1024 / 1024).toFixed(2) + ' GB';
+  }
+  function formatDate(s) {
+    try { return new Date(s).toISOString().slice(0, 10); } catch { return '—'; }
+  }
+  function iconFor(f) {
+    if (f.isFolder) return '▤';
+    const ext = (f.name.split('.').pop() || '').toLowerCase();
+    if (['zip', '7z', 'rar', 'tar', 'gz'].includes(ext)) return '◫';
+    if (['exe', 'msi', 'dmg', 'pkg'].includes(ext)) return '▶';
+    if (['iso', 'img'].includes(ext)) return '◉';
+    if (['txt', 'md', 'pdf', 'doc', 'docx'].includes(ext)) return '¶';
+    if (['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(ext)) return '◐';
+    if (['mp4', 'mkv', 'avi', 'mov', 'webm'].includes(ext)) return '▶';
+    return '◇';
+  }
+
+  if (loading) {
+    return (
+      <div style={{ padding: 40, textAlign: 'center', color: COLORS.muted }} className="mono">
+        ◇ loading drive…
+      </div>
+    );
+  }
+
+  if (err) {
+    const isSetup = err.includes('not configured');
+    return (
+      <div style={{
+        padding: 24, borderRadius: 12,
+        border: `1px solid ${COLORS.line}`, background: COLORS.bg,
+        color: COLORS.muted, fontSize: 13, lineHeight: 1.6,
+      }}>
+        <div className="mono" style={{ color: COLORS.red, fontSize: 12, letterSpacing: '0.14em', marginBottom: 10 }}>
+          {isSetup ? '⚠ SETUP REQUIRED' : '✕ ERROR'}
+        </div>
+        <div style={{ marginBottom: 12, color: COLORS.text }}>{err}</div>
+        {isSetup && (
+          <ol style={{ paddingLeft: 18, margin: 0, fontSize: 12 }}>
+            <li>Create a Google Drive folder, share "Anyone with link" → Viewer.</li>
+            <li>Grab the folder ID from the URL (the part after <code>/folders/</code>).</li>
+            <li>Google Cloud Console → enable Drive API → Create an API Key.</li>
+            <li>In Vercel → Project → Settings → Environment Variables, add:
+              <pre style={{ background: COLORS.bg, padding: 10, borderRadius: 6, marginTop: 6, fontSize: 11, color: COLORS.text }}>
+{`GDRIVE_API_KEY=AIza…
+GDRIVE_FOLDER_ID=1abcXYZ…`}
+              </pre>
+            </li>
+            <li>Redeploy.</li>
+          </ol>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ display: 'grid', gap: 14 }}>
+      <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+        <div style={{ flex: 1 }}>
+          <Field value={search} onChange={setSearch} placeholder="Search files…" />
+        </div>
+        <span className="mono" style={{ fontSize: 10, color: COLORS.muted, letterSpacing: '0.1em' }}>
+          {filtered.length}/{files.length} FILES
+        </span>
+      </div>
+
+      {filtered.length === 0 ? (
+        <div style={{
+          padding: 28, textAlign: 'center', borderRadius: 12,
+          border: `1px dashed ${COLORS.line}`, background: COLORS.bg,
+          color: COLORS.muted, fontSize: 13,
+        }}>
+          <div className="mono" style={{ fontSize: 12, letterSpacing: '0.14em', marginBottom: 6 }}>
+            {files.length === 0 ? 'FOLDER EMPTY' : 'NO MATCHES'}
+          </div>
+          {files.length === 0
+            ? 'Upload files to your Drive folder, then refresh.'
+            : 'Try a different search term.'}
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gap: 6 }}>
+          {filtered.map((f) => (
+            <div key={f.id} style={{
+              padding: 12, borderRadius: 10, background: COLORS.bg,
+              border: '1px solid ' + COLORS.line,
+              display: 'grid', gridTemplateColumns: '40px 1fr auto auto', gap: 12, alignItems: 'center',
+            }}>
+              <div style={{
+                width: 36, height: 36, display: 'grid', placeItems: 'center',
+                borderRadius: 8, border: `1px solid ${accent}55`,
+                color: accent, fontSize: 16, fontFamily: 'JetBrains Mono, monospace',
+              }}>{iconFor(f)}</div>
+              <div style={{ minWidth: 0 }}>
+                <div className="mono" style={{
+                  fontSize: 12, fontWeight: 700, overflow: 'hidden',
+                  textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                }}>{f.name}</div>
+                <div className="mono" style={{ fontSize: 10, color: COLORS.muted, marginTop: 3 }}>
+                  {formatSize(f.size)} · {formatDate(f.modifiedAt)}
+                </div>
+              </div>
+              <a
+                href={f.viewUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="mono"
+                style={{
+                  fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase',
+                  padding: '6px 10px', borderRadius: 6, color: COLORS.muted,
+                  border: '1px solid ' + COLORS.line, textDecoration: 'none',
+                }}
+              >View</a>
+              {!f.isFolder && (
+                <a
+                  href={f.downloadUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mono"
+                  style={{
+                    fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase',
+                    padding: '6px 10px', borderRadius: 6, color: accent, fontWeight: 700,
+                    border: `1px solid ${accent}55`, textDecoration: 'none',
+                  }}
+                >↓ DL</a>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
