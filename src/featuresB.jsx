@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import {
   COLORS, VAULT_SEED,
   Panel, Btn, Field, Pill, Kicker, Sparkline,
-  useSyncedData, copyText, useAuth,
+  useSyncedData, copyText, useAuth, useMediaQuery,
 } from './lib.jsx';
 
 // ═════════════════════════════════════════════════════════════
@@ -27,6 +27,7 @@ function daysUntil(iso) {
 
 export function TechStackMonitor() {
   const auth = useAuth();
+  const isMobile = useMediaQuery('(max-width: 768px)');
   const [data, setData] = useState(null); // { subs, owner, fx }
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState('');
@@ -107,9 +108,18 @@ export function TechStackMonitor() {
   }, [subs, fxRates]);
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 18, height: '100%' }}>
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: isMobile ? '1fr' : '1fr 340px',
+      gap: isMobile ? 12 : 18,
+      height: isMobile ? 'auto' : '100%',
+    }}>
       {/* ── LEFT: subscription list ── */}
-      <Panel padding={0} style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%' }}>
+      <Panel padding={0} style={{
+        display: 'flex', flexDirection: 'column',
+        overflow: isMobile ? 'visible' : 'hidden',
+        height: isMobile ? 'auto' : '100%',
+      }}>
         <div style={{
           padding: '16px 20px', borderBottom: '1px solid ' + COLORS.line,
           display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap',
@@ -130,7 +140,11 @@ export function TechStackMonitor() {
           </div>
         </div>
 
-        <div style={{ flex: 1, overflow: 'auto' }}>
+        <div style={{
+          flex: 1,
+          overflow: isMobile ? 'visible' : 'auto',
+          overflowX: isMobile ? 'auto' : 'auto',
+        }}>
           {loading ? (
             <div style={{ padding: 40, textAlign: 'center', color: COLORS.muted }} className="mono">◇ loading…</div>
           ) : err ? (
@@ -145,7 +159,8 @@ export function TechStackMonitor() {
             <div style={{ padding: 16 }}>
               {adding && (
                 <SubForm
-                  initial={{ name: '', price: '', currency: 'USD', period: 'monthly', url: '', nextRenewal: '' }}
+                  initial={{ name: '', price: '', currency: 'VND', period: 'monthly', url: '', nextRenewal: '' }}
+                  fxRates={fxRates}
                   onCancel={() => setAdding(false)}
                   onSave={async (sub) => {
                     await addSub(sub);
@@ -176,6 +191,7 @@ export function TechStackMonitor() {
                               <div style={{ padding: 12 }}>
                                 <SubForm
                                   initial={s}
+                                  fxRates={fxRates}
                                   onCancel={() => setEditingId(null)}
                                   onSave={async (sub) => {
                                     await updateSub(s.id, sub);
@@ -244,7 +260,10 @@ export function TechStackMonitor() {
       </Panel>
 
       {/* ── RIGHT: burn summary ── */}
-      <Panel padding={20} style={{ overflow: 'auto', height: '100%' }}>
+      <Panel padding={20} style={{
+        overflow: isMobile ? 'visible' : 'auto',
+        height: isMobile ? 'auto' : '100%',
+      }}>
         <Kicker style={{ marginBottom: 8 }}>MONTHLY BURN</Kicker>
         <div style={{
           padding: 16, borderRadius: 12, marginBottom: 14,
@@ -326,15 +345,39 @@ function EmptyState({ isYou, onAdd }) {
   );
 }
 
-function SubForm({ initial, onSave, onCancel }) {
+function SubForm({ initial, onSave, onCancel, fxRates }) {
   const [name, setName] = useState(initial.name || '');
   const [price, setPrice] = useState(String(initial.price ?? ''));
-  const [currency, setCurrency] = useState(initial.currency || 'USD');
+  const [currency, setCurrency] = useState(initial.currency || 'VND');
   const [period, setPeriod] = useState(initial.period || 'monthly');
   const [url, setUrl] = useState(initial.url || '');
   const [nextRenewal, setNextRenewal] = useState(initial.nextRenewal || '');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
+
+  // Live FX preview: convert entered price into the OTHER 2 of USD/TWD/VND
+  const conversions = useMemo(() => {
+    const p = Number(price);
+    if (!Number.isFinite(p) || p <= 0 || !fxRates) return null;
+    const baseRate = fxRates[currency];
+    if (!baseRate) return null;
+    const usd = p / baseRate;
+    const out = [];
+    for (const target of ['USD', 'VND', 'TWD']) {
+      if (target === currency) continue;
+      const r = fxRates[target];
+      if (!r) continue;
+      out.push({ ccy: target, val: usd * r });
+    }
+    return out;
+  }, [price, currency, fxRates]);
+
+  function fmtCcy(v, ccy) {
+    if (ccy === 'USD' || ccy === 'EUR' || ccy === 'GBP') {
+      return v.toLocaleString(undefined, { maximumFractionDigits: 2 });
+    }
+    return v.toLocaleString(undefined, { maximumFractionDigits: 0 });
+  }
 
   async function submit() {
     if (busy) return;
@@ -402,6 +445,23 @@ function SubForm({ initial, onSave, onCancel }) {
           <Field value={nextRenewal} onChange={setNextRenewal} placeholder="2026-06-15" />
         </div>
       </div>
+      {conversions && conversions.length > 0 && (
+        <div className="mono" style={{
+          padding: '10px 14px', borderRadius: 8,
+          background: COLORS.bg, border: '1px solid ' + COLORS.line,
+          fontSize: 11, color: COLORS.muted, display: 'flex',
+          flexWrap: 'wrap', gap: 14, alignItems: 'center',
+        }}>
+          <span style={{ color: COLORS.muted, letterSpacing: '0.1em' }}>≈</span>
+          {conversions.map((c, i) => (
+            <span key={c.ccy}>
+              <span style={{ color: COLORS.green, fontWeight: 700 }}>{fmtCcy(c.val, c.ccy)}</span>
+              <span style={{ color: COLORS.muted, marginLeft: 4 }}>{c.ccy}</span>
+              {period === 'yearly' && <span style={{ color: COLORS.muted, opacity: 0.6, marginLeft: 4 }}>/yr</span>}
+            </span>
+          ))}
+        </div>
+      )}
       {err && (
         <div className="mono" style={{
           padding: '8px 12px', borderRadius: 8, fontSize: 11,
@@ -422,6 +482,7 @@ function SubForm({ initial, onSave, onCancel }) {
 // 6. CRYPTO WATCH — real BTC + GOLD + TWD/VND, sparklines, converter
 // ═════════════════════════════════════════════════════════════
 export function CryptoWatch() {
+  const isMobile = useMediaQuery('(max-width: 768px)');
   const [ticks, setTicks] = useState({
     btc:  { price: null, series: [] },
     gold: { price: null, series: [] },
@@ -494,8 +555,17 @@ export function CryptoWatch() {
                     :                  COLORS.red;
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 18, height: '100%' }}>
-      <Panel padding={0} style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: isMobile ? '1fr' : '1fr 380px',
+      gap: isMobile ? 12 : 18,
+      height: isMobile ? 'auto' : '100%',
+    }}>
+      <Panel padding={0} style={{
+        display: 'flex', flexDirection: 'column',
+        overflow: isMobile ? 'visible' : 'hidden',
+        height: isMobile ? 'auto' : undefined,
+      }}>
         <div style={{
           padding: '16px 20px', borderBottom: '1px solid ' + COLORS.line,
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
@@ -571,7 +641,11 @@ export function CryptoWatch() {
         </div>
       </Panel>
 
-      <Panel padding={0} style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <Panel padding={0} style={{
+        display: 'flex', flexDirection: 'column',
+        overflow: isMobile ? 'visible' : 'hidden',
+        height: isMobile ? 'auto' : undefined,
+      }}>
         <div style={{ padding: '16px 20px', borderBottom: '1px solid ' + COLORS.line }}>
           <Kicker>CONVERTER · CROSS</Kicker>
           <div className="mono" style={{ fontSize: 18, fontWeight: 700, marginTop: 4 }}>TWD ⇄ VND</div>
@@ -832,6 +906,7 @@ const PRI = {
 };
 
 export function TodoList() {
+  const isMobile = useMediaQuery('(max-width: 768px)');
   const [items, setItems] = useSyncedData(
     { localKey: 'se77n.todo.v2', serverKey: 'todo' },
     [
@@ -874,8 +949,17 @@ export function TodoList() {
   };
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: 18, height: '100%' }}>
-      <Panel padding={0} style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: isMobile ? '1fr' : '1fr 280px',
+      gap: isMobile ? 12 : 18,
+      height: isMobile ? 'auto' : '100%',
+    }}>
+      <Panel padding={0} style={{
+        display: 'flex', flexDirection: 'column',
+        overflow: isMobile ? 'visible' : 'hidden',
+        height: isMobile ? 'auto' : undefined,
+      }}>
         <div style={{
           padding: '16px 20px', borderBottom: '1px solid ' + COLORS.line,
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
@@ -963,7 +1047,10 @@ export function TodoList() {
         </div>
       </Panel>
 
-      <Panel padding={20} style={{ overflow: 'auto' }}>
+      <Panel padding={20} style={{
+        overflow: isMobile ? 'visible' : 'auto',
+        height: isMobile ? 'auto' : undefined,
+      }}>
         <Kicker style={{ marginBottom: 16 }}>BREAKDOWN</Kicker>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {Object.entries(PRI).map(([k, v]) => (
