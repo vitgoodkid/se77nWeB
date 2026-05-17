@@ -293,7 +293,7 @@ export function AIPlayground() {
       </Panel>
       )}
 
-      <Panel padding={0} style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <Panel padding={0} style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%' }}>
         <div style={{
           padding: '16px 20px', borderBottom: '1px solid ' + COLORS.line,
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
@@ -669,7 +669,7 @@ export function Toolbox() {
   const accent = tab === 'public' ? COLORS.green : COLORS.red;
 
   return (
-    <Panel padding={0} style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <Panel padding={0} style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%' }}>
       <div style={{
         padding: '16px 20px', borderBottom: '1px solid ' + COLORS.line,
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -2801,7 +2801,7 @@ function makeDottedLandscape(W, H) {
 // ═════════════════════════════════════════════════════════════
 export function GamePanel() {
   return (
-    <Panel padding={0} style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <Panel padding={0} style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%' }}>
       <div style={{ padding: '16px 20px', borderBottom: '1px solid ' + COLORS.line }}>
         <Kicker>GAME · WIP</Kicker>
         <div className="mono" style={{ fontSize: 18, fontWeight: 700, marginTop: 4 }}>Coming soon</div>
