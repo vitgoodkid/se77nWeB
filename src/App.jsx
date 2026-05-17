@@ -292,6 +292,7 @@ function TopBar({ phase, now, geo, nav, ambient, ambientOn }) {
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <LangToggle lang={lang} toggle={toggle} title={t('topbar.toggleLang')} />
+        <ThemeToggle ambient={ambient} title="Theme" />
         {!isMobile && <TimeChip phase={phase} city={geo.city} timeStr={tStr} />}
         <AuthChip />
       </div>
@@ -367,6 +368,110 @@ function LangToggle({ lang, toggle, title }) {
         color: !isEn ? active : inactive,
       }}>VI</span>
     </button>
+  );
+}
+
+const THEME_OPTIONS = [
+  { idx: null, label: 'AUTO',    swatch: null },
+  { idx: 0,    label: 'RED',     swatch: ['#E04545'] },
+  { idx: 1,    label: 'GREEN',   swatch: ['#5BA868'] },
+  { idx: 2,    label: 'GOLD',    swatch: ['#D4A858'] },
+  { idx: 3,    label: 'DUO R×G', swatch: ['#E04545', '#5BA868'] },
+  { idx: 4,    label: 'DUO G×R', swatch: ['#D4A858', '#E04545'] },
+  { idx: 5,    label: 'WHITE',   swatch: ['#FAFAF7'] },
+];
+
+function ThemeSwatch({ colors, size = 12 }) {
+  const base = { width: size, height: size, borderRadius: 999, flexShrink: 0 };
+  if (!colors) return <span style={{
+    ...base,
+    background: `conic-gradient(${COLORS.red}, ${COLORS.green}, ${COLORS.gold}, ${COLORS.red})`,
+    border: '1px solid ' + COLORS.line,
+  }} />;
+  if (colors.length === 1) return <span style={{
+    ...base, background: colors[0],
+    boxShadow: `0 0 6px ${colors[0]}88`,
+  }} />;
+  return <span style={{
+    ...base,
+    background: `linear-gradient(135deg, ${colors[0]} 50%, ${colors[1]} 50%)`,
+  }} />;
+}
+
+function ThemeToggle({ ambient, title }) {
+  const { lockedIdx, setLockedIdx, isLive } = ambient;
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [open]);
+
+  const current = THEME_OPTIONS.find((o) => o.idx === lockedIdx) || THEME_OPTIONS[0];
+
+  return (
+    <div ref={ref} style={{ position: 'relative' }}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        title={isLive ? 'Spotify live — theme override pauses until rotation resumes' : title}
+        aria-label={title}
+        className="mono"
+        style={{
+          height: 32, padding: '0 10px 0 9px', borderRadius: 999,
+          background: 'transparent',
+          border: '1px solid ' + (open ? COLORS.text + '55' : COLORS.line),
+          color: COLORS.text, cursor: 'pointer',
+          fontSize: 10, letterSpacing: '0.14em', fontWeight: 700,
+          display: 'flex', alignItems: 'center', gap: 7,
+          opacity: isLive ? 0.6 : 1,
+          transition: 'border-color 120ms, opacity 120ms',
+        }}
+        onMouseEnter={(e) => { e.currentTarget.style.borderColor = COLORS.text + '55'; }}
+        onMouseLeave={(e) => { if (!open) e.currentTarget.style.borderColor = COLORS.line; }}
+      >
+        <ThemeSwatch colors={current.swatch} />
+        <span>{current.label}</span>
+        <span style={{ color: COLORS.muted, fontSize: 9, marginLeft: -2 }}>▾</span>
+      </button>
+      {open && (
+        <div role="menu" style={{
+          position: 'absolute', top: 'calc(100% + 8px)', right: 0, zIndex: 60,
+          minWidth: 160, padding: 6, borderRadius: 12,
+          background: COLORS.panel, border: '1px solid ' + COLORS.line,
+          boxShadow: '0 24px 60px -20px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.04)',
+          animation: 'fadeUp 180ms ease-out',
+        }}>
+          {THEME_OPTIONS.map((opt) => {
+            const active = opt.idx === lockedIdx;
+            return (
+              <button key={String(opt.idx)}
+                onClick={() => { setLockedIdx(opt.idx); setOpen(false); }}
+                className="mono"
+                style={{
+                  width: '100%', textAlign: 'left',
+                  padding: '8px 10px', borderRadius: 8,
+                  background: active ? COLORS.text + '12' : 'transparent',
+                  border: 'none', color: COLORS.text, cursor: 'pointer',
+                  fontSize: 10, letterSpacing: '0.14em', fontWeight: 700,
+                  display: 'flex', alignItems: 'center', gap: 10,
+                }}
+                onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = COLORS.text + '08'; }}
+                onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = 'transparent'; }}
+              >
+                <ThemeSwatch colors={opt.swatch} />
+                <span style={{ flex: 1 }}>{opt.label}</span>
+                {active && <span style={{ color: COLORS.text, fontSize: 9 }}>●</span>}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }
 

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, createContext, useContext } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef, createContext, useContext } from 'react';
 
 // ── i18n ───────────────────────────────────────────────────────
 // Tiny translation system. Flat keys, EN fallback, persisted in localStorage.
@@ -639,33 +639,55 @@ export const AMBIENT_TRACKS = [
   { artist: 'Phum Viphurit', title: 'Lover Boy', album: 'OST', palette: ['#D4A858', '#1a1408'] },
   { artist: 'MAVERICK', title: 'NEON·SADE', album: '∂005', palette: ['#E04545', '#5BA868'] },
   { artist: 'Tame Impala', title: 'Borderline', album: 'Slow Rush', palette: ['#D4A858', '#E04545'] },
+  { artist: 'Nils Frahm', title: 'Says', album: 'Spaces', palette: ['#FAFAF7', '#E4E4E1'] },
 ];
 
 export function useAmbient(enabled = true, lanyard = null) {
   const [trackIdx, setTrackIdx] = useState(0);
+  const [lockedIdx, setLockedIdx] = usePersisted('se77n.theme.lockIdx', null);
   const [t, setT] = useState(0);
   const [playing, setPlaying] = useState(true);
 
   const spotify = lanyard?.spotify || null;
   const isLive = !!(lanyard?.listening_to_spotify && spotify);
+  const activeIdx = lockedIdx != null && lockedIdx >= 0 && lockedIdx < AMBIENT_TRACKS.length
+    ? lockedIdx : trackIdx;
 
-  // Build the active track: real Spotify when live, fallback otherwise
+  // Build the active track: real Spotify when live, fallback otherwise.
+  // When live, metadata is Spotify's but palette borrows from the rotation
+  // (so the theme cycles with each new song instead of being locked to Spotify green).
   const track = useMemo(() => {
     if (isLive) {
       return {
         artist: spotify.artist?.split(';').join(', ') || '—',
         title: spotify.song || '—',
         album: spotify.album || '',
-        palette: ['#1DB954', '#0b1a12'], // Spotify brand green
+        palette: AMBIENT_TRACKS[activeIdx].palette,
         coverUrl: spotify.album_art_url || null,
         live: true,
       };
     }
-    return AMBIENT_TRACKS[trackIdx];
-  }, [isLive, spotify?.track_id, spotify?.song, spotify?.artist, spotify?.album, spotify?.album_art_url, trackIdx]);
+    return AMBIENT_TRACKS[activeIdx];
+  }, [isLive, spotify?.track_id, spotify?.song, spotify?.artist, spotify?.album, spotify?.album_art_url, activeIdx]);
+
+  // When Spotify is live and a new track plays, advance the rotation (unless theme is locked).
+  const prevTrackIdRef = useRef(null);
+  useEffect(() => {
+    if (!isLive) {
+      prevTrackIdRef.current = null;
+      return;
+    }
+    const id = spotify?.track_id;
+    if (id == null) return;
+    const prev = prevTrackIdRef.current;
+    prevTrackIdRef.current = id;
+    if (prev != null && prev !== id && lockedIdx == null) {
+      setTrackIdx((i) => (i + 1) % AMBIENT_TRACKS.length);
+    }
+  }, [isLive, spotify?.track_id, lockedIdx]);
 
   // Progress driver — Spotify timestamps when live, palette-rotation timer when not.
-  // Not-live: rotate palette every 40s; no fake progress tracking (widget hidden anyway).
+  // Not-live: rotate palette every 40s; pause rotation when theme is locked.
   useEffect(() => {
     if (isLive) {
       const start = spotify.timestamps?.start;
@@ -683,12 +705,12 @@ export function useAmbient(enabled = true, lanyard = null) {
       return () => clearInterval(id);
     }
     setT(0);
-    if (!playing) return;
+    if (!playing || lockedIdx != null) return;
     const id = setInterval(() => {
       setTrackIdx((i) => (i + 1) % AMBIENT_TRACKS.length);
     }, 40_000);
     return () => clearInterval(id);
-  }, [playing, isLive, spotify?.timestamps?.start, spotify?.timestamps?.end]);
+  }, [playing, isLive, lockedIdx, spotify?.timestamps?.start, spotify?.timestamps?.end]);
 
   // Push palette into CSS vars for the AmbientBackground
   useEffect(() => {
@@ -725,6 +747,8 @@ export function useAmbient(enabled = true, lanyard = null) {
     status: lanyard?.discord_status || 'offline',
     elapsed,
     total,
+    lockedIdx,
+    setLockedIdx,
   };
 }
 
