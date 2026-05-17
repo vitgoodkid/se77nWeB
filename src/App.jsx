@@ -140,10 +140,11 @@ function AppDesktop() {
       <main style={{
         position: 'relative', marginLeft: 84,
         padding: '24px 32px 32px',
-        minHeight: 'calc(100vh - 64px)', marginTop: 64,
+        height: 'calc(100vh - 64px)', marginTop: 64,
+        display: 'flex', flexDirection: 'column', overflow: 'hidden',
       }}>
         <Breadcrumbs route={route} nav={nav} feature={activeFeature} />
-        <div style={{ position: 'relative', minHeight: 'calc(100vh - 200px)' }}>
+        <div style={{ position: 'relative', flex: 1, minHeight: 0 }}>
           <div
             key={route + '_' + transitioning}
             style={{
