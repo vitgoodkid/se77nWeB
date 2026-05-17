@@ -29,7 +29,7 @@ const FEATURES = [
   { id: 'tech',   label: 'Subscription Manager',  icon: '⌬',   accent: COLORS.green, short: '05', desc: 'Monthly + yearly burn' },
   { id: 'crypto', label: 'Currency',              icon: '$',   accent: COLORS.gold,  short: '06', desc: 'BTC · GOLD · TWD ⇄ VND' },
   { id: 'todo',   label: 'To-Do List',            icon: '✓',   accent: COLORS.green, short: '07', desc: 'Priorities · localStorage' },
-  { id: 'feed',   label: 'Feed',                  icon: '◧',   accent: COLORS.gold,  short: '08', desc: 'Private AI history' },
+  { id: 'feed',   label: 'History',               icon: '◧',   accent: COLORS.gold,  short: '08', desc: 'Private AI history', ownerOnly: true },
 ];
 
 const EXPERIMENT_NUMBER = '007';
@@ -169,7 +169,7 @@ function AppDesktop() {
               {route === 'tech'   && <TechStackMonitor />}
               {route === 'crypto' && <CryptoWatch />}
               {route === 'todo'   && <TodoList />}
-              {route === 'feed'   && <Feed />}
+              {route === 'feed'   && (authUser?.isHistoryOwner ? <Feed /> : <RouteFallback />)}
             </Suspense>
           </div>
         </div>
@@ -771,6 +771,9 @@ function GameChip({ game }) {
 // Nav rail
 // ─────────────────────────────────────────────────────────────
 function NavRail({ route, nav }) {
+  const { user } = useAuth();
+  const isOwner = !!user?.isHistoryOwner;
+  const visibleFeatures = FEATURES.filter((f) => !f.ownerOnly || isOwner);
   return (
     <aside style={{
       position: 'fixed', top: 64, left: 0, bottom: 0,
@@ -781,7 +784,7 @@ function NavRail({ route, nav }) {
       padding: '20px 0',
       display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
     }}>
-      {FEATURES.map((f) => {
+      {visibleFeatures.map((f) => {
         const active = f.id === route;
         return (
           <button key={f.id} onClick={() => nav(f.id)} title={f.label}
@@ -1120,6 +1123,7 @@ function MarqueeTicker({ speed = 60, items, minRepeats = 6 }) {
 
 function HomeView({ nav, ambient, ambientOn }) {
   const { t } = useLang();
+  const { user } = useAuth();
   const [verb, setVerb] = useState(0);
   const [markets, setMarkets] = useState({ btc: null, gold: null, twd: null, vnd: null });
   useEffect(() => {
@@ -1236,7 +1240,7 @@ function HomeView({ nav, ambient, ambientOn }) {
           gridTemplateColumns: 'repeat(6, minmax(0, 1fr))',
           gap: 16,
         }}>
-          {FEATURES.filter((f) => f.id !== 'home').map((f, i) => (
+          {FEATURES.filter((f) => f.id !== 'home' && (!f.ownerOnly || user?.isHistoryOwner)).map((f, i) => (
             <FeatureCard key={f.id} feature={f} onClick={() => nav(f.id)} idx={i} />
           ))}
         </div>

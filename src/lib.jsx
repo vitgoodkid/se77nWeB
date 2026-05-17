@@ -20,7 +20,7 @@ const I18N = {
     'nav.tech':   'Subscription Manager',
     'nav.crypto': 'Currency',
     'nav.todo':   'To-Do List',
-    'nav.feed':   'Feed',
+    'nav.feed':   'History',
 
     'feature.ai.desc':     'Chat · image · video',
     'feature.tools.desc':  'Public + private utilities',
@@ -118,7 +118,7 @@ const I18N = {
     'nav.tech':   'Quản lý Subscription',
     'nav.crypto': 'Tiền tệ',
     'nav.todo':   'Việc cần làm',
-    'nav.feed':   'Bảng tin',
+    'nav.feed':   'Lịch sử',
 
     'feature.ai.desc':     'Chat · ảnh · video',
     'feature.tools.desc':  'Tiện ích công khai + riêng tư',

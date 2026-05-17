@@ -31,7 +31,7 @@ const MODULES = [
   { id: 'tech',   short: '05', accent: COLORS.green, icon: '⌬', i18nLabel: 'nav.tech',   i18nDesc: 'feature.tech.desc' },
   { id: 'crypto', short: '06', accent: COLORS.gold,  icon: '$', i18nLabel: 'nav.crypto', i18nDesc: 'feature.crypto.desc' },
   { id: 'todo',   short: '07', accent: COLORS.green, icon: '✓', i18nLabel: 'nav.todo',   i18nDesc: 'feature.todo.desc' },
-  { id: 'feed',   short: '08', accent: COLORS.gold,  icon: '◧', i18nLabel: 'nav.feed',   i18nDesc: 'feature.feed.desc' },
+  { id: 'feed',   short: '08', accent: COLORS.gold,  icon: '◧', i18nLabel: 'nav.feed',   i18nDesc: 'feature.feed.desc', ownerOnly: true },
 ];
 
 // Slash commands → either prefix the prompt for the chat agent (so the
@@ -145,6 +145,8 @@ function Drawer({ open, onClose, route, onNav }) {
   const { t, lang, toggle } = useLang();
   const { status, user, login, logout } = useAuth();
   const [authPanel, setAuthPanel] = useState(false);
+  const isOwner = !!user?.isHistoryOwner;
+  const visibleModules = MODULES.filter((m) => !m.ownerOnly || isOwner);
 
   // close auth panel when drawer closes
   useEffect(() => { if (!open) setAuthPanel(false); }, [open]);
@@ -210,7 +212,7 @@ function Drawer({ open, onClose, route, onNav }) {
             fontSize: 8.5, letterSpacing: '0.24em', color: COLORS.muted,
             padding: '6px 10px 8px', textTransform: 'uppercase',
           }}>{t('home.modules')}</div>
-          {MODULES.map((m) => {
+          {visibleModules.map((m) => {
             const active = m.id === route;
             return (
               <button key={m.id} onClick={() => { onNav(m.id); onClose(); }}
@@ -1009,7 +1011,7 @@ export default function MobileShell() {
             {route === 'tech'   && <TechStackMonitor />}
             {route === 'crypto' && <CryptoWatch />}
             {route === 'todo'   && <TodoList />}
-            {route === 'feed'   && <Feed />}
+            {route === 'feed'   && (user?.isHistoryOwner ? <Feed /> : <RouteFallback />)}
             {route === 'tv4'    && <TravelV4 />}
           </Suspense>
         </div>

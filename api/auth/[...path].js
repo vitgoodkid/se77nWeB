@@ -53,6 +53,17 @@ async function handleMe(req, res) {
     const u = await (await getUsers()).findOne({ _id: oid });
     if (!u) return res.status(200).json({ user: null });
 
+    // Owner gate for the History feature: matches FEED_WHITELIST_EMAILS plus
+    // PUBLIC_TECH_OWNER_EMAIL (case-insensitive). Surfaced as a boolean so the
+    // client can hide the nav entry without leaking the whitelist.
+    const userEmail = (u.email || '').trim().toLowerCase();
+    const ownerEmail = process.env.PUBLIC_TECH_OWNER_EMAIL?.trim()?.toLowerCase();
+    const whitelist = (process.env.FEED_WHITELIST_EMAILS || '')
+      .split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
+    const isHistoryOwner = !!userEmail && (
+      userEmail === ownerEmail || whitelist.includes(userEmail)
+    );
+
     return res.status(200).json({
       user: {
         id: u._id.toString(),
@@ -62,6 +73,7 @@ async function handleMe(req, res) {
         username: u.username,
         email: u.email,
         avatarUrl: u.avatarUrl,
+        isHistoryOwner,
       },
     });
   } catch (e) {
