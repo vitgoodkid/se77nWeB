@@ -10,7 +10,9 @@
 //
 // Public — no auth.
 
+import { ObjectId } from 'mongodb';
 import { getDb } from './_lib/mongo.js';
+import { readSession } from './_lib/session.js';
 
 export const config = { maxDuration: 15 };
 
@@ -21,7 +23,8 @@ export default async function handler(req, res) {
       case 'short': return await handleShort(req, res);
       case 'paste': return await handlePaste(req, res);
       case 'games': return await handleGames(req, res);
-      default: return res.status(400).json({ error: 'unknown kind', hint: 'expected ?kind=short|paste|games' });
+      case 'tech':  return await handleTech(req, res);
+      default: return res.status(400).json({ error: 'unknown kind', hint: 'expected ?kind=short|paste|games|tech' });
     }
   } catch (err) {
     console.error('[/api/toolbox]', kind, err);
@@ -353,4 +356,180 @@ function filterGameFiles(files, search) {
   if (!search) return { files, total: files.length };
   const filtered = files.filter((f) => f.name.toLowerCase().includes(search));
   return { files: filtered, total: filtered.length, filteredFrom: files.length };
+}
+
+// ═════════════════════════════════════════════════════════════
+// TECH — subscription tracker (per-user stack + 1 public default)
+// ═════════════════════════════════════════════════════════════
+const TECH_CURRENCIES = new Set(['USD', 'TWD', 'VND', 'EUR', 'JPY', 'KRW', 'SGD', 'CAD', 'GBP', 'CNY', 'THB', 'AUD']);
+const TECH_PERIODS = new Set(['monthly', 'yearly']);
+const MAX_SUBS = 100;
+const MAX_NAME = 80;
+const MAX_URL = 500;
+
+let techIndexEnsured = false;
+async function ensureTechIndex(col) {
+  if (techIndexEnsured) return;
+  try {
+    await col.createIndex({ ownerId: 1 }, { unique: true, name: 'tech_owner_unique' });
+    techIndexEnsured = true;
+  } catch { /* race */ }
+}
+
+// Reuse fx.js's snapshot collection. Falls back to a hard-coded last-known set
+// if the network is down — UI shows a stale-rates warning client-side.
+const FX_FALLBACK = { USD: 1, TWD: 32, VND: 25500, EUR: 0.92, JPY: 155, KRW: 1370, SGD: 1.34, CAD: 1.37, GBP: 0.79, CNY: 7.2, THB: 36, AUD: 1.52 };
+let fxMemCache = { at: 0, rates: null };
+const FX_MEM_TTL = 60 * 60 * 1000; // 1h in-memory per lambda
+
+async function getFxUSD(db) {
+  if (fxMemCache.rates && Date.now() - fxMemCache.at < FX_MEM_TTL) return fxMemCache.rates;
+
+  const coll = db.collection('tv4_fx_snapshots');
+  const today = new Date().toISOString().slice(0, 10);
+  let snap = await coll.findOne({ date: today, base: 'USD' });
+  if (!snap) {
+    try {
+      const r = await fetch('https://api.exchangerate.host/latest?base=USD', { headers: { Accept: 'application/json' } });
+      if (r.ok) {
+        const j = await r.json();
+        const rates = j.rates || j.conversion_rates;
+        if (rates && typeof rates === 'object' && Object.keys(rates).length) {
+          await coll.updateOne(
+            { date: today, base: 'USD' },
+            { $set: { date: today, base: 'USD', rates, source: 'exchangerate.host', updatedAt: new Date() } },
+            { upsert: true },
+          );
+          snap = { rates };
+        }
+      }
+    } catch { /* fall through */ }
+  }
+  if (!snap) snap = await coll.findOne({ base: 'USD' }, { sort: { date: -1 } });
+  const rates = snap?.rates || FX_FALLBACK;
+  fxMemCache = { at: Date.now(), rates };
+  return rates;
+}
+
+function newSubId() {
+  return Math.random().toString(36).slice(2, 10);
+}
+
+function validateSub(input) {
+  if (!input || typeof input !== 'object') return { error: 'invalid sub' };
+  const name = String(input.name || '').trim();
+  if (!name) return { error: 'name required' };
+  if (name.length > MAX_NAME) return { error: `name too long (>${MAX_NAME})` };
+  const price = Number(input.price);
+  if (!Number.isFinite(price) || price < 0) return { error: 'price must be a non-negative number' };
+  const currency = String(input.currency || 'USD').toUpperCase();
+  if (!TECH_CURRENCIES.has(currency)) return { error: `currency not supported (${currency})` };
+  const period = String(input.period || 'monthly').toLowerCase();
+  if (!TECH_PERIODS.has(period)) return { error: 'period must be monthly or yearly' };
+  const url = input.url ? String(input.url).trim() : '';
+  if (url && url.length > MAX_URL) return { error: 'url too long' };
+  if (url && !/^https?:\/\//i.test(url)) return { error: 'url must start with http:// or https://' };
+  const nextRenewal = input.nextRenewal ? String(input.nextRenewal).trim() : '';
+  if (nextRenewal && !/^\d{4}-\d{2}-\d{2}$/.test(nextRenewal)) return { error: 'nextRenewal must be YYYY-MM-DD' };
+  return { sub: { name, price, currency, period, url, nextRenewal } };
+}
+
+async function findPublicOwner(users) {
+  const email = process.env.PUBLIC_TECH_OWNER_EMAIL?.trim()?.toLowerCase();
+  if (!email) return null;
+  return await users.findOne({ email: { $regex: `^${email.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, $options: 'i' } });
+}
+
+async function handleTech(req, res) {
+  const db = await getDb();
+  const stacks = db.collection('techstacks');
+  const users = db.collection('users');
+  await ensureTechIndex(stacks);
+
+  const session = readSession(req);
+  let ownerId = null;
+  let owner = null;
+  let isYou = false;
+
+  if (session?.uid) {
+    try { ownerId = new ObjectId(session.uid); } catch { return res.status(401).json({ error: 'invalid session' }); }
+    owner = await users.findOne({ _id: ownerId });
+    if (!owner) return res.status(401).json({ error: 'session user not found' });
+    isYou = true;
+  } else {
+    // Anonymous: read public owner's stack (env var)
+    const pub = await findPublicOwner(users);
+    if (pub) { ownerId = pub._id; owner = pub; }
+  }
+
+  // ── GET: read stack ──
+  if (req.method === 'GET') {
+    const subs = ownerId ? ((await stacks.findOne({ ownerId }))?.subs || []) : [];
+    const fx = await getFxUSD(db);
+    return res.status(200).json({
+      subs,
+      owner: owner ? {
+        name: owner.displayName || owner.username || owner.email || 'Owner',
+        isYou,
+      } : null,
+      fx,
+    });
+  }
+
+  // ── Mutations require own session ──
+  if (!isYou) return res.status(401).json({ error: 'login required' });
+
+  if (req.method === 'POST') {
+    const v = validateSub(req.body);
+    if (v.error) return res.status(400).json({ error: v.error });
+    const sub = { id: newSubId(), ...v.sub };
+
+    const cur = await stacks.findOne({ ownerId });
+    if (cur && cur.subs && cur.subs.length >= MAX_SUBS) {
+      return res.status(413).json({ error: `Max ${MAX_SUBS} subscriptions per stack` });
+    }
+    await stacks.updateOne(
+      { ownerId },
+      { $push: { subs: sub }, $set: { updatedAt: new Date() }, $setOnInsert: { createdAt: new Date() } },
+      { upsert: true },
+    );
+    return res.status(201).json({ sub });
+  }
+
+  if (req.method === 'PUT') {
+    const id = (req.query?.id || '').toString();
+    if (!id) return res.status(400).json({ error: 'id required' });
+    const v = validateSub(req.body);
+    if (v.error) return res.status(400).json({ error: v.error });
+
+    const result = await stacks.updateOne(
+      { ownerId, 'subs.id': id },
+      {
+        $set: {
+          'subs.$.name': v.sub.name,
+          'subs.$.price': v.sub.price,
+          'subs.$.currency': v.sub.currency,
+          'subs.$.period': v.sub.period,
+          'subs.$.url': v.sub.url,
+          'subs.$.nextRenewal': v.sub.nextRenewal,
+          updatedAt: new Date(),
+        },
+      },
+    );
+    if (result.matchedCount === 0) return res.status(404).json({ error: 'sub not found' });
+    return res.status(200).json({ sub: { id, ...v.sub } });
+  }
+
+  if (req.method === 'DELETE') {
+    const id = (req.query?.id || '').toString();
+    if (!id) return res.status(400).json({ error: 'id required' });
+    const result = await stacks.updateOne(
+      { ownerId },
+      { $pull: { subs: { id } }, $set: { updatedAt: new Date() } },
+    );
+    if (result.modifiedCount === 0) return res.status(404).json({ error: 'sub not found' });
+    return res.status(200).json({ ok: true });
+  }
+
+  return res.status(405).json({ error: 'method not allowed' });
 }

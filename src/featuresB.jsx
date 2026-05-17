@@ -1,157 +1,419 @@
 import { useState, useEffect, useMemo } from 'react';
 import {
-  COLORS, TECH, VAULT_SEED,
+  COLORS, VAULT_SEED,
   Panel, Btn, Field, Pill, Kicker, Sparkline,
-  useSyncedData, copyText,
+  useSyncedData, copyText, useAuth,
 } from './lib.jsx';
 
 // ═════════════════════════════════════════════════════════════
-// 5. TECH STACK MONITOR — 11 services, $/month, breakdown
+// 5. TECH STACK MONITOR — per-user subscription tracker
 // ═════════════════════════════════════════════════════════════
-const TECH_CATEGORY_COLORS = {
-  design:   COLORS.gold,
-  dev:      COLORS.green,
-  infra:    COLORS.red,
-  ai:       '#C77BFF',
-  media:    '#7ABEFF',
-  storage:  COLORS.muted,
-  security: COLORS.gold,
-};
+const TECH_CURRENCIES = ['USD', 'TWD', 'VND', 'EUR', 'JPY', 'KRW', 'SGD', 'CAD', 'GBP', 'CNY', 'THB', 'AUD'];
+
+function subToMonthlyUSD(sub, fxRates) {
+  const rate = fxRates?.[sub.currency] ?? 1;
+  if (!rate || !Number.isFinite(rate)) return 0;
+  const usd = Number(sub.price) / rate;
+  if (!Number.isFinite(usd)) return 0;
+  return sub.period === 'yearly' ? usd / 12 : usd;
+}
+
+function daysUntil(iso) {
+  if (!iso) return null;
+  const d = new Date(iso + 'T00:00:00');
+  if (Number.isNaN(d.getTime())) return null;
+  return Math.ceil((d - new Date()) / (1000 * 60 * 60 * 24));
+}
 
 export function TechStackMonitor() {
-  const total = TECH.reduce((s, t) => s + t.cost, 0);
-  const byCat = useMemo(() => {
-    const m = {};
-    for (const t of TECH) m[t.category] = (m[t.category] || 0) + t.cost;
-    return Object.entries(m).sort((a, b) => b[1] - a[1]);
-  }, []);
+  const auth = useAuth();
+  const [data, setData] = useState(null); // { subs, owner, fx }
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState('');
+  const [editingId, setEditingId] = useState(null);
+  const [adding, setAdding] = useState(false);
 
-  // Live USD→TWD/VND rate from /api/crypto for accurate burn estimates
-  const [fx, setFx] = useState({ twd: 32, vnd: 25000 });
+  const isYou = !!data?.owner?.isYou;
+
+  // ── Load on mount + when auth status changes ──
   useEffect(() => {
     let alive = true;
-    fetch('/api/crypto')
-      .then((r) => r.json())
-      .then((d) => {
-        if (!alive || !d) return;
-        if (d.twd) setFx((f) => ({ ...f, twd: d.twd }));
-        if (d.vnd) setFx((f) => ({ ...f, vnd: d.vnd }));
+    setLoading(true); setErr('');
+    fetch('/api/toolbox?kind=tech', { credentials: 'include' })
+      .then(async (r) => {
+        const j = await r.json();
+        if (!alive) return;
+        if (!r.ok) { setErr(j.error || 'Failed'); setData(null); }
+        else setData(j);
       })
-      .catch(() => {});
+      .catch((e) => { if (alive) { setErr(e.message); setData(null); } })
+      .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
-  }, []);
+  }, [auth.status]);
+
+  async function refresh() {
+    const r = await fetch('/api/toolbox?kind=tech', { credentials: 'include' });
+    const j = await r.json();
+    if (r.ok) setData(j);
+  }
+
+  async function addSub(sub) {
+    const r = await fetch('/api/toolbox?kind=tech', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(sub),
+    });
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error || 'Add failed');
+    await refresh();
+  }
+  async function updateSub(id, sub) {
+    const r = await fetch(`/api/toolbox?kind=tech&id=${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(sub),
+    });
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error || 'Update failed');
+    await refresh();
+  }
+  async function deleteSub(id) {
+    const r = await fetch(`/api/toolbox?kind=tech&id=${encodeURIComponent(id)}`, {
+      method: 'DELETE', credentials: 'include',
+    });
+    if (!r.ok) {
+      const j = await r.json().catch(() => ({}));
+      throw new Error(j.error || 'Delete failed');
+    }
+    await refresh();
+  }
+
+  const subs = data?.subs || [];
+  const fxRates = data?.fx || { USD: 1, TWD: 32, VND: 25500 };
+
+  const totals = useMemo(() => {
+    let monthlyUSD = 0;
+    for (const s of subs) monthlyUSD += subToMonthlyUSD(s, fxRates);
+    return {
+      monthlyUSD,
+      yearlyUSD: monthlyUSD * 12,
+      monthlyTWD: monthlyUSD * (fxRates.TWD || 0),
+      monthlyVND: monthlyUSD * (fxRates.VND || 0),
+      yearlyTWD: monthlyUSD * 12 * (fxRates.TWD || 0),
+      yearlyVND: monthlyUSD * 12 * (fxRates.VND || 0),
+    };
+  }, [subs, fxRates]);
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 18, height: '100%' }}>
-      <Panel padding={0} style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      {/* ── LEFT: subscription list ── */}
+      <Panel padding={0} style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%' }}>
         <div style={{
           padding: '16px 20px', borderBottom: '1px solid ' + COLORS.line,
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap',
         }}>
           <div>
-            <Kicker>SUBSCRIPTIONS · 11</Kicker>
-            <div className="mono" style={{ fontSize: 18, fontWeight: 700, marginTop: 4 }}>Tech stack monitor</div>
+            <Kicker>SUBSCRIPTIONS · {String(subs.length).padStart(2, '0')}</Kicker>
+            <div className="mono" style={{ fontSize: 18, fontWeight: 700, marginTop: 4 }}>
+              {data?.owner?.name ? `${data.owner.name}'s stack` : 'Tech stack monitor'}
+            </div>
           </div>
-          <Pill color={COLORS.green}>● ALL ACTIVE</Pill>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {isYou
+              ? <Pill color={COLORS.green}>● YOURS</Pill>
+              : <Pill color={COLORS.gold}>● PUBLIC · READ ONLY</Pill>}
+            {isYou && !adding && (
+              <Btn variant="solid" color={COLORS.green} onClick={() => setAdding(true)}>+ Add</Btn>
+            )}
+          </div>
         </div>
-        <div style={{ flex: 1, overflow: 'auto', padding: 16 }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }} className="mono">
-            <thead>
-              <tr style={{ fontSize: 9, letterSpacing: '0.18em', color: COLORS.muted, textAlign: 'left' }}>
-                <th style={{ padding: '10px 12px', fontWeight: 500 }}>SERVICE</th>
-                <th style={{ padding: '10px 12px', fontWeight: 500 }}>CATEGORY</th>
-                <th style={{ padding: '10px 12px', fontWeight: 500 }}>NATIVE</th>
-                <th style={{ padding: '10px 12px', fontWeight: 500, textAlign: 'right' }}>USD/MO</th>
-              </tr>
-            </thead>
-            <tbody>
-              {TECH.map((t) => {
-                const c = TECH_CATEGORY_COLORS[t.category] || COLORS.muted;
-                return (
-                  <tr key={t.id} style={{ borderTop: '1px solid ' + COLORS.line }}>
-                    <td style={{ padding: '14px 12px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <span style={{
-                          width: 28, height: 28, borderRadius: 8,
-                          border: `1px solid ${c}55`, background: c + '14',
-                          display: 'grid', placeItems: 'center',
-                          color: c, fontSize: 12, fontWeight: 700,
-                        }}>{t.name[0]}</span>
-                        <span style={{ fontSize: 13, color: COLORS.text }}>{t.name}</span>
-                      </div>
-                    </td>
-                    <td style={{ padding: '14px 12px' }}>
-                      <Pill color={c}>{t.category}</Pill>
-                    </td>
-                    <td style={{ padding: '14px 12px', fontSize: 12, color: COLORS.muted }}>
-                      {t.native.toLocaleString()} {t.currency}
-                    </td>
-                    <td style={{ padding: '14px 12px', fontSize: 14, fontWeight: 700, textAlign: 'right' }}>
-                      ${t.cost.toFixed(2)}
-                    </td>
-                  </tr>
-                );
-              })}
-              <tr style={{ borderTop: '2px solid ' + COLORS.red + '40' }}>
-                <td colSpan="3" style={{ padding: '16px 12px', fontSize: 11, letterSpacing: '0.18em', color: COLORS.muted }}>
-                  TOTAL · MONTHLY
-                </td>
-                <td style={{ padding: '16px 12px', fontSize: 18, fontWeight: 800, color: COLORS.red, textAlign: 'right' }}>
-                  ${total.toFixed(2)}
-                </td>
-              </tr>
-              <tr>
-                <td colSpan="3" style={{ padding: '6px 12px', fontSize: 10, color: COLORS.muted }}>
-                  PROJECTED · ANNUAL
-                </td>
-                <td style={{ padding: '6px 12px', fontSize: 12, color: COLORS.muted, textAlign: 'right' }}>
-                  ${(total * 12).toFixed(0)}
-                </td>
-              </tr>
-            </tbody>
-          </table>
+
+        <div style={{ flex: 1, overflow: 'auto' }}>
+          {loading ? (
+            <div style={{ padding: 40, textAlign: 'center', color: COLORS.muted }} className="mono">◇ loading…</div>
+          ) : err ? (
+            <div style={{ padding: 24 }}>
+              <div className="mono" style={{
+                padding: '10px 14px', borderRadius: 10,
+                border: `1px solid ${COLORS.red}55`, background: COLORS.red + '0e',
+                color: COLORS.red, fontSize: 12,
+              }}>✕ {err}</div>
+            </div>
+          ) : (
+            <div style={{ padding: 16 }}>
+              {adding && (
+                <SubForm
+                  initial={{ name: '', price: '', currency: 'USD', period: 'monthly', url: '', nextRenewal: '' }}
+                  onCancel={() => setAdding(false)}
+                  onSave={async (sub) => {
+                    await addSub(sub);
+                    setAdding(false);
+                  }}
+                />
+              )}
+
+              {subs.length === 0 && !adding ? (
+                <EmptyState isYou={isYou} onAdd={() => setAdding(true)} />
+              ) : (
+                <table style={{ width: '100%', borderCollapse: 'collapse' }} className="mono">
+                  <thead>
+                    <tr style={{ fontSize: 9, letterSpacing: '0.18em', color: COLORS.muted, textAlign: 'left' }}>
+                      <th style={{ padding: '10px 12px', fontWeight: 500 }}>SERVICE</th>
+                      <th style={{ padding: '10px 12px', fontWeight: 500 }}>NATIVE</th>
+                      <th style={{ padding: '10px 12px', fontWeight: 500 }}>PERIOD</th>
+                      <th style={{ padding: '10px 12px', fontWeight: 500, textAlign: 'right' }}>USD/MO</th>
+                      {isYou && <th style={{ padding: '10px 12px', fontWeight: 500, width: 80 }}></th>}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {subs.map((s) => {
+                      if (editingId === s.id) {
+                        return (
+                          <tr key={s.id}>
+                            <td colSpan={isYou ? 5 : 4} style={{ padding: 0, borderTop: '1px solid ' + COLORS.line }}>
+                              <div style={{ padding: 12 }}>
+                                <SubForm
+                                  initial={s}
+                                  onCancel={() => setEditingId(null)}
+                                  onSave={async (sub) => {
+                                    await updateSub(s.id, sub);
+                                    setEditingId(null);
+                                  }}
+                                />
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      }
+                      const monthly = subToMonthlyUSD(s, fxRates);
+                      const days = daysUntil(s.nextRenewal);
+                      return (
+                        <tr key={s.id} style={{ borderTop: '1px solid ' + COLORS.line }}>
+                          <td style={{ padding: '14px 12px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                              <span style={{
+                                width: 28, height: 28, borderRadius: 8,
+                                border: `1px solid ${COLORS.green}55`, background: COLORS.green + '14',
+                                display: 'grid', placeItems: 'center',
+                                color: COLORS.green, fontSize: 12, fontWeight: 700,
+                              }}>{s.name[0]?.toUpperCase()}</span>
+                              <div style={{ minWidth: 0 }}>
+                                {s.url ? (
+                                  <a href={s.url} target="_blank" rel="noreferrer" style={{ fontSize: 13, color: COLORS.text, textDecoration: 'none' }}>{s.name} ↗</a>
+                                ) : (
+                                  <span style={{ fontSize: 13, color: COLORS.text }}>{s.name}</span>
+                                )}
+                                {s.nextRenewal && (
+                                  <div style={{ fontSize: 10, color: days != null && days < 7 ? COLORS.red : COLORS.muted, marginTop: 2 }}>
+                                    renews {s.nextRenewal}{days != null && (days < 0 ? ' · overdue' : ` · in ${days}d`)}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+                          <td style={{ padding: '14px 12px', fontSize: 12, color: COLORS.muted }}>
+                            {Number(s.price).toLocaleString()} {s.currency}
+                          </td>
+                          <td style={{ padding: '14px 12px', fontSize: 11, color: COLORS.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                            {s.period === 'yearly' ? 'YEARLY' : 'MONTHLY'}
+                          </td>
+                          <td style={{ padding: '14px 12px', fontSize: 14, fontWeight: 700, textAlign: 'right' }}>
+                            ${monthly.toFixed(2)}
+                          </td>
+                          {isYou && (
+                            <td style={{ padding: '14px 12px', textAlign: 'right' }}>
+                              <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
+                                <Btn variant="ghost" onClick={() => setEditingId(s.id)} title="Edit">✎</Btn>
+                                <Btn variant="ghost" onClick={() => {
+                                  if (confirm(`Delete "${s.name}"?`)) deleteSub(s.id).catch((e) => alert(e.message));
+                                }} title="Delete">✕</Btn>
+                              </div>
+                            </td>
+                          )}
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          )}
         </div>
       </Panel>
 
-      <Panel padding={20} style={{ overflow: 'auto' }}>
-        <Kicker style={{ marginBottom: 16 }}>BREAKDOWN BY CATEGORY</Kicker>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {byCat.map(([cat, sum]) => {
-            const pct = (sum / total) * 100;
-            const c = TECH_CATEGORY_COLORS[cat] || COLORS.muted;
-            return (
-              <div key={cat}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <span className="mono" style={{ fontSize: 11, color: c, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{cat}</span>
-                  <span className="mono" style={{ fontSize: 12, fontWeight: 700 }}>${sum.toFixed(2)} · {pct.toFixed(0)}%</span>
-                </div>
-                <div style={{ height: 7, borderRadius: 4, background: COLORS.bg, overflow: 'hidden' }}>
-                  <div style={{
-                    height: '100%', width: pct + '%',
-                    background: c, opacity: 0.85, transition: 'width 600ms ease-out',
-                  }} />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
+      {/* ── RIGHT: burn summary ── */}
+      <Panel padding={20} style={{ overflow: 'auto', height: '100%' }}>
+        <Kicker style={{ marginBottom: 8 }}>MONTHLY BURN</Kicker>
         <div style={{
-          marginTop: 24, padding: 16, borderRadius: 12,
+          padding: 16, borderRadius: 12, marginBottom: 14,
           background: 'linear-gradient(135deg, ' + COLORS.red + '14, ' + COLORS.gold + '0a)',
           border: '1px solid ' + COLORS.red + '40',
         }}>
-          <Kicker style={{ color: COLORS.red, marginBottom: 8 }}>MONTHLY BURN</Kicker>
           <div className="mono" style={{ fontSize: 30, fontWeight: 800 }}>
-            ${total.toFixed(2)}
+            ${totals.monthlyUSD.toFixed(2)}
             <span style={{ fontSize: 11, color: COLORS.muted, marginLeft: 8, fontWeight: 400 }}>USD</span>
           </div>
-          <div className="mono" style={{ fontSize: 10, color: COLORS.muted, marginTop: 6, lineHeight: 1.5 }}>
-            ≈ {(total * fx.twd).toLocaleString(undefined, { maximumFractionDigits: 0 })} TWD<br />
-            ≈ {(total * fx.vnd).toLocaleString(undefined, { maximumFractionDigits: 0 })} VND
+          <div className="mono" style={{ fontSize: 11, color: COLORS.muted, marginTop: 8, lineHeight: 1.6 }}>
+            ≈ {totals.monthlyTWD.toLocaleString(undefined, { maximumFractionDigits: 0 })} TWD<br />
+            ≈ {totals.monthlyVND.toLocaleString(undefined, { maximumFractionDigits: 0 })} VND
           </div>
         </div>
+
+        <Kicker style={{ marginBottom: 8 }}>YEARLY BURN</Kicker>
+        <div style={{
+          padding: 16, borderRadius: 12, marginBottom: 20,
+          background: COLORS.bg, border: '1px solid ' + COLORS.line,
+        }}>
+          <div className="mono" style={{ fontSize: 22, fontWeight: 800, color: COLORS.gold }}>
+            ${totals.yearlyUSD.toFixed(0)}
+            <span style={{ fontSize: 11, color: COLORS.muted, marginLeft: 8, fontWeight: 400 }}>USD</span>
+          </div>
+          <div className="mono" style={{ fontSize: 11, color: COLORS.muted, marginTop: 8, lineHeight: 1.6 }}>
+            ≈ {totals.yearlyTWD.toLocaleString(undefined, { maximumFractionDigits: 0 })} TWD<br />
+            ≈ {totals.yearlyVND.toLocaleString(undefined, { maximumFractionDigits: 0 })} VND
+          </div>
+        </div>
+
+        {!isYou && (
+          <div style={{
+            padding: 16, borderRadius: 12,
+            border: `1px dashed ${COLORS.green}55`, background: COLORS.green + '06',
+          }}>
+            <Kicker style={{ color: COLORS.green, marginBottom: 8 }}>CREATE YOUR OWN</Kicker>
+            <div style={{ fontSize: 12, color: COLORS.muted, lineHeight: 1.5, marginBottom: 12 }}>
+              {auth.status === 'authed'
+                ? 'Sign in as a different account to manage your own subscription stack.'
+                : 'Sign in to track your own subscriptions. Private — only you see your list.'}
+            </div>
+            {auth.status === 'authed' ? (
+              <Btn variant="solid" color={COLORS.green} onClick={() => auth.logout()}>Sign out</Btn>
+            ) : (
+              <div style={{ display: 'flex', gap: 8 }}>
+                <Btn variant="solid" color={COLORS.green} onClick={() => auth.login('google')}>Google</Btn>
+                <Btn variant="tinted" color={COLORS.green} onClick={() => auth.login('discord')}>Discord</Btn>
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="mono" style={{ fontSize: 9, color: COLORS.muted, marginTop: 16, letterSpacing: '0.06em', lineHeight: 1.5 }}>
+          ◇ FX rates auto-refreshed from exchangerate.host. Yearly subs amortized to monthly for burn math.
+        </div>
       </Panel>
+    </div>
+  );
+}
+
+function EmptyState({ isYou, onAdd }) {
+  return (
+    <div style={{
+      padding: 40, textAlign: 'center', borderRadius: 12, margin: 8,
+      border: `1px dashed ${COLORS.line}`, background: COLORS.bg,
+      color: COLORS.muted,
+    }}>
+      <div className="mono" style={{ fontSize: 12, letterSpacing: '0.16em', color: COLORS.text, marginBottom: 8 }}>
+        {isYou ? 'NO SUBSCRIPTIONS YET' : 'STACK IS EMPTY'}
+      </div>
+      <div style={{ fontSize: 12, lineHeight: 1.5, marginBottom: isYou ? 14 : 0 }}>
+        {isYou
+          ? 'Add Netflix, Spotify, Cursor, AWS, anything you pay for monthly or yearly.'
+          : 'The owner hasn\'t added any subscriptions yet.'}
+      </div>
+      {isYou && <Btn variant="solid" color={COLORS.green} onClick={onAdd}>+ Add your first</Btn>}
+    </div>
+  );
+}
+
+function SubForm({ initial, onSave, onCancel }) {
+  const [name, setName] = useState(initial.name || '');
+  const [price, setPrice] = useState(String(initial.price ?? ''));
+  const [currency, setCurrency] = useState(initial.currency || 'USD');
+  const [period, setPeriod] = useState(initial.period || 'monthly');
+  const [url, setUrl] = useState(initial.url || '');
+  const [nextRenewal, setNextRenewal] = useState(initial.nextRenewal || '');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+
+  async function submit() {
+    if (busy) return;
+    setBusy(true); setErr('');
+    try {
+      await onSave({
+        name: name.trim(),
+        price: Number(price),
+        currency,
+        period,
+        url: url.trim(),
+        nextRenewal: nextRenewal.trim(),
+      });
+    } catch (e) { setErr(e.message || 'Failed'); }
+    finally { setBusy(false); }
+  }
+
+  return (
+    <div style={{
+      padding: 14, borderRadius: 10, marginBottom: 10,
+      border: `1px solid ${COLORS.green}55`, background: COLORS.green + '08',
+      display: 'grid', gap: 10,
+    }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: 8 }}>
+        <div>
+          <Kicker style={{ marginBottom: 6 }}>NAME</Kicker>
+          <Field value={name} onChange={setName} placeholder="Cursor Pro" />
+        </div>
+        <div>
+          <Kicker style={{ marginBottom: 6 }}>PRICE</Kicker>
+          <Field value={price} onChange={setPrice} placeholder="20" />
+        </div>
+        <div>
+          <Kicker style={{ marginBottom: 6 }}>CCY</Kicker>
+          <select
+            value={currency}
+            onChange={(e) => setCurrency(e.target.value)}
+            className="mono"
+            style={{
+              width: '100%', background: COLORS.bg, color: COLORS.text,
+              border: '1px solid ' + COLORS.line, borderRadius: 8,
+              padding: '10px 12px', fontSize: 12, outline: 'none',
+            }}
+          >
+            {TECH_CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </div>
+        <div>
+          <Kicker style={{ marginBottom: 6 }}>PERIOD</Kicker>
+          <div style={{ display: 'flex', gap: 4 }}>
+            <Btn variant={period === 'monthly' ? 'tinted' : 'ghost'} color={COLORS.green}
+              onClick={() => setPeriod('monthly')}>mo</Btn>
+            <Btn variant={period === 'yearly' ? 'tinted' : 'ghost'} color={COLORS.green}
+              onClick={() => setPeriod('yearly')}>yr</Btn>
+          </div>
+        </div>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 8 }}>
+        <div>
+          <Kicker style={{ marginBottom: 6 }}>URL (optional)</Kicker>
+          <Field value={url} onChange={setUrl} placeholder="https://cursor.com" />
+        </div>
+        <div>
+          <Kicker style={{ marginBottom: 6 }}>NEXT RENEWAL (optional)</Kicker>
+          <Field value={nextRenewal} onChange={setNextRenewal} placeholder="2026-06-15" />
+        </div>
+      </div>
+      {err && (
+        <div className="mono" style={{
+          padding: '8px 12px', borderRadius: 8, fontSize: 11,
+          border: `1px solid ${COLORS.red}55`, background: COLORS.red + '0e', color: COLORS.red,
+        }}>✕ {err}</div>
+      )}
+      <div style={{ display: 'flex', gap: 8 }}>
+        <Btn variant="solid" color={COLORS.green} onClick={submit} disabled={busy}>
+          {busy ? 'Saving…' : 'Save'}
+        </Btn>
+        <Btn variant="ghost" onClick={onCancel} disabled={busy}>Cancel</Btn>
+      </div>
     </div>
   );
 }
