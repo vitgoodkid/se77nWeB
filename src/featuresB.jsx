@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import {
-  COLORS, VAULT_SEED,
+  COLORS,
   Panel, Btn, Field, Pill, Kicker, Sparkline,
   useSyncedData, copyText, useAuth, useMediaQuery,
 } from './lib.jsx';
@@ -145,7 +145,7 @@ export function TechStackMonitor() {
           <div>
             <Kicker>SUBSCRIPTIONS · {String(subs.length).padStart(2, '0')}</Kicker>
             <div className="mono" style={{ fontSize: 18, fontWeight: 700, marginTop: 4 }}>
-              {data?.owner?.name ? `${data.owner.name}'s stack` : 'Tech stack monitor'}
+              {data?.owner?.name ? `${data.owner.name}'s subscriptions` : 'Subscription Manager'}
             </div>
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -662,7 +662,7 @@ export function CryptoWatch() {
         }}>
           <div>
             <Kicker>MARKETS · {statusLabel}</Kicker>
-            <div className="mono" style={{ fontSize: 18, fontWeight: 700, marginTop: 4 }}>Crypto watch</div>
+            <div className="mono" style={{ fontSize: 18, fontWeight: 700, marginTop: 4 }}>Currency</div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{
@@ -819,170 +819,6 @@ export function CryptoWatch() {
         </div>
       </Panel>
     </div>
-  );
-}
-
-// ═════════════════════════════════════════════════════════════
-// 7. DIGITAL VAULT
-// ═════════════════════════════════════════════════════════════
-export function DigitalVault() {
-  const [q, setQ] = useState('');
-  const [cat, setCat] = useState('all');
-  const [revealed, setRevealed] = useState({});
-  const [copied, setCopied] = useState(null);
-
-  const categories = useMemo(() => {
-    const set = new Set(VAULT_SEED.map((v) => v.category));
-    return ['all', ...Array.from(set)];
-  }, []);
-
-  const filtered = useMemo(() => {
-    const ql = q.trim().toLowerCase();
-    return VAULT_SEED.filter(
-      (v) =>
-        (cat === 'all' || v.category === cat) &&
-        (!ql ||
-          v.label.toLowerCase().includes(ql) ||
-          v.user.toLowerCase().includes(ql) ||
-          v.tags.some((t) => t.includes(ql))),
-    );
-  }, [q, cat]);
-
-  function copy(text, id) {
-    copyText(text);
-    setCopied(id);
-    setTimeout(() => setCopied(null), 1200);
-  }
-
-  return (
-    <Panel padding={0} style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%' }}>
-      <div style={{
-        padding: '16px 20px', borderBottom: '1px solid ' + COLORS.line,
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 14, flexWrap: 'wrap',
-      }}>
-        <div>
-          <Kicker>VAULT · {VAULT_SEED.length} ENTRIES</Kicker>
-          <div className="mono" style={{ fontSize: 18, fontWeight: 700, marginTop: 4 }}>Digital vault</div>
-        </div>
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flex: 1, justifyContent: 'flex-end' }}>
-          <div style={{ position: 'relative', minWidth: 240, flex: '0 1 320px' }}>
-            <span className="mono" style={{
-              position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
-              color: COLORS.muted, fontSize: 12, pointerEvents: 'none',
-            }}>⌕</span>
-            <Field value={q} onChange={setQ} placeholder="Search labels, users, tags…" style={{ paddingLeft: 32 }} />
-          </div>
-        </div>
-      </div>
-
-      <div style={{
-        padding: '12px 20px', display: 'flex', gap: 6, flexWrap: 'wrap',
-        borderBottom: '1px solid ' + COLORS.line,
-      }}>
-        {categories.map((c) => {
-          const active = c === cat;
-          return (
-            <button key={c} onClick={() => setCat(c)} className="mono" style={{
-              padding: '6px 12px', borderRadius: 999,
-              fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', cursor: 'pointer',
-              background: active ? COLORS.red + '1a' : 'transparent',
-              border: `1px solid ${active ? COLORS.red + '60' : COLORS.line}`,
-              color: active ? COLORS.red : COLORS.muted,
-            }}>{c}</button>
-          );
-        })}
-      </div>
-
-      <div style={{ flex: 1, overflow: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }} className="mono">
-          <thead>
-            <tr style={{ fontSize: 9, letterSpacing: '0.18em', color: COLORS.muted, textAlign: 'left' }}>
-              <th style={{ padding: '12px 20px', fontWeight: 500 }}>LABEL</th>
-              <th style={{ padding: '12px 12px', fontWeight: 500 }}>USER</th>
-              <th style={{ padding: '12px 12px', fontWeight: 500 }}>SECRET</th>
-              <th style={{ padding: '12px 12px', fontWeight: 500 }}>TAGS</th>
-              <th style={{ padding: '12px 12px', fontWeight: 500 }}>UPDATED</th>
-              <th style={{ padding: '12px 20px', fontWeight: 500, textAlign: 'right' }}>ACTIONS</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((v) => {
-              const isRev = revealed[v.id];
-              return (
-                <tr key={v.id} style={{ borderTop: '1px solid ' + COLORS.line, transition: 'background 120ms' }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.02)')}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-                >
-                  <td style={{ padding: '14px 20px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <span style={{
-                        width: 32, height: 32, borderRadius: 8,
-                        background: COLORS.red + '14', border: `1px solid ${COLORS.red}40`,
-                        display: 'grid', placeItems: 'center', fontWeight: 700,
-                        fontSize: 13, color: COLORS.red,
-                      }}>{v.label[0]}</span>
-                      <div>
-                        <div style={{ fontSize: 13, color: COLORS.text, fontWeight: 700 }}>{v.label}</div>
-                        <div style={{ fontSize: 9, color: COLORS.muted, marginTop: 2, letterSpacing: '0.1em' }}>
-                          {v.category.toUpperCase()}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td style={{ padding: '14px 12px', fontSize: 12, color: COLORS.muted }}>{v.user}</td>
-                  <td style={{ padding: '14px 12px' }}>
-                    <span style={{
-                      display: 'inline-block', padding: '4px 10px',
-                      background: COLORS.bg, border: '1px solid ' + COLORS.line, borderRadius: 6,
-                      fontSize: 12, color: isRev ? COLORS.gold : COLORS.muted,
-                      letterSpacing: isRev ? '0.04em' : '0.16em', minWidth: 140,
-                    }}>{isRev ? v.secret.replace(/•+/g, 'p4ssW0rd_xYz') : v.secret}</span>
-                  </td>
-                  <td style={{ padding: '14px 12px' }}>
-                    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                      {v.tags.map((t) => (
-                        <span key={t} style={{
-                          fontSize: 9, letterSpacing: '0.1em',
-                          padding: '3px 7px', borderRadius: 4,
-                          background: COLORS.green + '14', color: COLORS.green,
-                          border: `1px solid ${COLORS.green}30`,
-                        }}>{t}</span>
-                      ))}
-                    </div>
-                  </td>
-                  <td style={{ padding: '14px 12px', fontSize: 11, color: COLORS.muted }}>{v.updated}</td>
-                  <td style={{ padding: '14px 20px', textAlign: 'right' }}>
-                    <div style={{ display: 'inline-flex', gap: 6 }}>
-                      <button onClick={() => setRevealed((r) => ({ ...r, [v.id]: !r[v.id] }))} className="mono"
-                        style={{
-                          padding: '6px 10px', borderRadius: 6, cursor: 'pointer',
-                          background: 'transparent', border: '1px solid ' + COLORS.line,
-                          color: COLORS.muted, fontSize: 10, letterSpacing: '0.1em',
-                        }}>{isRev ? 'HIDE' : 'REVEAL'}</button>
-                      <button onClick={() => copy('p4ssW0rd_xYz', v.id)} className="mono"
-                        style={{
-                          padding: '6px 10px', borderRadius: 6, cursor: 'pointer',
-                          background: copied === v.id ? COLORS.green + '14' : 'transparent',
-                          border: `1px solid ${copied === v.id ? COLORS.green : COLORS.line}`,
-                          color: copied === v.id ? COLORS.green : COLORS.muted,
-                          fontSize: 10, letterSpacing: '0.1em', minWidth: 60,
-                        }}>{copied === v.id ? '✓ COPIED' : 'COPY'}</button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-            {filtered.length === 0 && (
-              <tr>
-                <td colSpan="6" style={{ padding: 40, textAlign: 'center', color: COLORS.muted, fontSize: 13 }}>
-                  No entries match — try clearing the filter.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-    </Panel>
   );
 }
 

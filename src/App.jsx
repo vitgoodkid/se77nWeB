@@ -17,19 +17,17 @@ const SharedTripView     = lazy(() => import('./tv4/SharedTripView.jsx'));
 const GamePanel          = lazy(() => import('./featuresA.jsx').then((m) => ({ default: m.GamePanel })));
 const TechStackMonitor   = lazy(() => import('./featuresB.jsx').then((m) => ({ default: m.TechStackMonitor })));
 const CryptoWatch        = lazy(() => import('./featuresB.jsx').then((m) => ({ default: m.CryptoWatch })));
-const DigitalVault       = lazy(() => import('./featuresB.jsx').then((m) => ({ default: m.DigitalVault })));
 const TodoList           = lazy(() => import('./featuresB.jsx').then((m) => ({ default: m.TodoList })));
 
 const FEATURES = [
-  { id: 'home',   label: 'Home',                icon: '⌂',   accent: COLORS.text,  short: '00' },
-  { id: 'ai',     label: 'AI Playground',       icon: '✦',   accent: COLORS.red,   short: '01', desc: 'Chat · image · video' },
-  { id: 'tools',  label: 'Toolbox',             icon: '⚒',   accent: COLORS.green, short: '02', desc: 'Public + private utilities' },
-  { id: 'tv4',    label: 'Travel',              icon: (c) => <GlobeIcon color={c} size={20} />, accent: COLORS.gold,  short: '03', desc: 'Trips · plans · expenses' },
-  { id: 'game',   label: 'Game',                icon: (c) => <ControllerIcon color={c} size={22} />, accent: COLORS.red,   short: '04', desc: 'Coming soon' },
-  { id: 'tech',   label: 'Tech Stack Monitor',  icon: '⌬',   accent: COLORS.green, short: '05', desc: '11 services · monthly burn' },
-  { id: 'crypto', label: 'Crypto Watch',        icon: '$',   accent: COLORS.gold,  short: '06', desc: 'BTC · GOLD · TWD ⇄ VND' },
-  { id: 'vault',  label: 'Digital Vault',       icon: '⌘',   accent: COLORS.red,   short: '07', desc: 'Credentials manager' },
-  { id: 'todo',   label: 'To-Do List',          icon: '✓',   accent: COLORS.green, short: '08', desc: 'Priorities · localStorage' },
+  { id: 'home',   label: 'Home',                  icon: '⌂',   accent: COLORS.text,  short: '00' },
+  { id: 'ai',     label: 'AI Playground',         icon: '✦',   accent: COLORS.red,   short: '01', desc: 'Chat · image · video' },
+  { id: 'tools',  label: 'Toolbox',               icon: '⚒',   accent: COLORS.green, short: '02', desc: 'Public + private utilities' },
+  { id: 'tv4',    label: 'Travel Plan',           icon: (c) => <GlobeIcon color={c} size={20} />, accent: COLORS.gold,  short: '03', desc: 'Trips · plans · expenses' },
+  { id: 'game',   label: 'Game',                  icon: (c) => <ControllerIcon color={c} size={22} />, accent: COLORS.red,   short: '04', desc: 'Coming soon' },
+  { id: 'tech',   label: 'Subscription Manager',  icon: '⌬',   accent: COLORS.green, short: '05', desc: 'Monthly + yearly burn' },
+  { id: 'crypto', label: 'Currency',              icon: '$',   accent: COLORS.gold,  short: '06', desc: 'BTC · GOLD · TWD ⇄ VND' },
+  { id: 'todo',   label: 'To-Do List',            icon: '✓',   accent: COLORS.green, short: '07', desc: 'Priorities · localStorage' },
 ];
 
 const EXPERIMENT_NUMBER = '007';
@@ -163,7 +161,6 @@ function AppDesktop() {
               {route === 'game'   && <GamePanel />}
               {route === 'tech'   && <TechStackMonitor />}
               {route === 'crypto' && <CryptoWatch />}
-              {route === 'vault'  && <DigitalVault />}
               {route === 'todo'   && <TodoList />}
             </Suspense>
           </div>
@@ -1196,8 +1193,8 @@ function HomeView({ nav, ambient, ambientOn }) {
             margin: '20px 0 0', maxWidth: 720,
             fontSize: 16, color: COLORS.muted, lineHeight: 1.6,
           }}>
-            A personal control surface — eight modules wired to one prompt.
-            AI, finance, travel, vault, and tools, woven into a single command center.
+            A personal control surface — seven modules wired to one prompt.
+            AI, finance, travel, subscriptions, and tools, woven into a single command center.
           </p>
           <div style={{ marginTop: 26, display: 'flex', gap: 10 }}>
             <Btn variant="solid" color={COLORS.red} onClick={() => nav('ai')}>{t('home.openAi')}</Btn>
