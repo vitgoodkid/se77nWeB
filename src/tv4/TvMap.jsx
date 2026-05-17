@@ -39,7 +39,7 @@ const RASTER_STYLE = {
   ],
 };
 
-export default function TvMap({ trips, onOpenTrip }) {
+export default function TvMap({ trips, onOpenTrip, onRefreshTrips }) {
   const isMobile = useMediaQuery('(max-width: 768px)');
   const mapRef = useRef(null);
   const containerRef = useRef(null);
@@ -59,6 +59,7 @@ export default function TvMap({ trips, onOpenTrip }) {
   const [projection, setProjection] = useState('mercator');
   const [editMode, setEditMode] = useState(false);
   const [newPinDraft, setNewPinDraft] = useState(null);
+  const [newTripDraft, setNewTripDraft] = useState(null);
   const [enableClustering, setEnableClustering] = useState(true);
   const clusterMarkersRef = useRef([]);
   const supRef = useRef(null);
@@ -230,15 +231,18 @@ export default function TvMap({ trips, onOpenTrip }) {
     };
   }, [pins, activeTripId, editMode, enableClustering]);
 
-  // Click-to-add in edit mode.
+  // Click-to-add: in edit mode → new pin; otherwise → new trip pre-filled with lat/lng.
   useEffect(() => {
     const onClick = (e) => {
-      if (!editMode) return;
-      if (!activeTripId) {
-        alert('Pick a trip in the drawer before adding pins.');
-        return;
+      if (editMode) {
+        if (!activeTripId) {
+          alert('Pick a trip in the drawer before adding pins.');
+          return;
+        }
+        setNewPinDraft({ lat: e.detail.lat, lng: e.detail.lng });
+      } else {
+        setNewTripDraft({ lat: e.detail.lat, lng: e.detail.lng });
       }
-      setNewPinDraft({ lat: e.detail.lat, lng: e.detail.lng });
     };
     window.addEventListener('tv4-map-click', onClick);
     return () => window.removeEventListener('tv4-map-click', onClick);
@@ -451,6 +455,19 @@ export default function TvMap({ trips, onOpenTrip }) {
             const trip = trips.find((t) => t._id === activeTripId);
             setPins((arr) => [...arr, { ...created, _tripSlug: trip?.slug, _tripTitle: trip?.title, _tripStatus: trip?.status }]);
             setNewPinDraft(null);
+          }}
+        />
+      )}
+
+      {newTripDraft && (
+        <NewTripFromMapModal
+          initial={newTripDraft}
+          onClose={() => setNewTripDraft(null)}
+          onCreated={async (trip) => {
+            setNewTripDraft(null);
+            await onRefreshTrips?.();
+            setActiveTripId(trip._id);
+            mapRef.current?.flyTo({ center: [newTripDraft.lng, newTripDraft.lat], zoom: 9, speed: 1.4 });
           }}
         />
       )}
@@ -919,6 +936,129 @@ function NewPinModal({ initial, tripId, onClose, onCreated }) {
     </div>
   );
 }
+
+// ─── New trip from map click ────────────────────────────────────
+function NewTripFromMapModal({ initial, onClose, onCreated }) {
+  const [title, setTitle] = useState('');
+  const [status, setStatus] = useState('planned');
+  const [country, setCountry] = useState('');
+  const [region, setRegion] = useState('NEA');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [tripCurrency, setTripCurrency] = useState('JPY');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState(null);
+
+  const onSubmit = async (e) => {
+    e?.preventDefault();
+    if (!title.trim()) { setError('Title is required'); return; }
+    setSubmitting(true); setError(null);
+    try {
+      const body = {
+        title: title.trim(),
+        status,
+        country: country.trim() || undefined,
+        region,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+        tripCurrency: tripCurrency || undefined,
+        homeBase: { lat: initial.lat, lng: initial.lng, name: country.trim() || '' },
+      };
+      const { doc } = await tv4.create('trips', body);
+      onCreated(doc);
+    } catch (err) {
+      setError(err.message || 'create_failed');
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div role="dialog" onClick={onClose} style={{
+      position: 'fixed', inset: 0, zIndex: 2000,
+      background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
+    }}>
+      <form onClick={(e) => e.stopPropagation()} onSubmit={onSubmit} style={{
+        background: COLORS.panel, border: '1px solid ' + COLORS.line,
+        borderRadius: 14, padding: 24, width: 460, maxWidth: '100%',
+        color: COLORS.text, display: 'flex', flexDirection: 'column', gap: 12,
+      }}>
+        <div>
+          <div className="mono" style={{ fontSize: 10, letterSpacing: '0.22em', color: COLORS.gold }}>
+            PLAN A TRIP HERE
+          </div>
+          <div style={{ fontSize: 17, fontWeight: 700, marginTop: 4 }}>New trip</div>
+          <div className="mono" style={{ fontSize: 10, color: COLORS.muted, marginTop: 4 }}>
+            home base · {initial.lat.toFixed(4)}°, {initial.lng.toFixed(4)}°
+          </div>
+        </div>
+
+        <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <span className="mono" style={{ fontSize: 9, letterSpacing: '0.2em', color: COLORS.muted, textTransform: 'uppercase' }}>Title</span>
+          <Field value={title} onChange={setTitle} placeholder="Tokyo · Akiba nights" autoFocus mono={false} />
+        </label>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <span className="mono" style={{ fontSize: 9, letterSpacing: '0.2em', color: COLORS.muted, textTransform: 'uppercase' }}>Status</span>
+            <select value={status} onChange={(e) => setStatus(e.target.value)} className="mono" style={selectStyle}>
+              {['planned', 'ongoing', 'visited'].map((s) => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </label>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <span className="mono" style={{ fontSize: 9, letterSpacing: '0.2em', color: COLORS.muted, textTransform: 'uppercase' }}>Region</span>
+            <select value={region} onChange={(e) => setRegion(e.target.value)} className="mono" style={selectStyle}>
+              {['SEA', 'NEA', 'EU', 'NA', 'OCEANIA', 'SA', 'AF', 'ME', 'OTHER'].map((r) => <option key={r} value={r}>{r}</option>)}
+            </select>
+          </label>
+        </div>
+
+        <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <span className="mono" style={{ fontSize: 9, letterSpacing: '0.2em', color: COLORS.muted, textTransform: 'uppercase' }}>Country</span>
+          <Field value={country} onChange={setCountry} placeholder="JP" />
+        </label>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <span className="mono" style={{ fontSize: 9, letterSpacing: '0.2em', color: COLORS.muted, textTransform: 'uppercase' }}>Start</span>
+            <Field type="date" value={startDate} onChange={setStartDate} />
+          </label>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <span className="mono" style={{ fontSize: 9, letterSpacing: '0.2em', color: COLORS.muted, textTransform: 'uppercase' }}>End</span>
+            <Field type="date" value={endDate} onChange={setEndDate} />
+          </label>
+        </div>
+
+        <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <span className="mono" style={{ fontSize: 9, letterSpacing: '0.2em', color: COLORS.muted, textTransform: 'uppercase' }}>Trip currency</span>
+          <Field value={tripCurrency} onChange={setTripCurrency} placeholder="JPY" />
+        </label>
+
+        {error && (
+          <div style={{
+            padding: 10, borderRadius: 8,
+            background: COLORS.red + '12', border: `1px solid ${COLORS.red}44`,
+            color: COLORS.red, fontSize: 12,
+          }}>{error}</div>
+        )}
+
+        <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
+          <Btn onClick={onClose} type="button">Cancel</Btn>
+          <div style={{ marginLeft: 'auto' }}>
+            <Btn type="submit" variant="solid" color={COLORS.gold} disabled={submitting}>
+              {submitting ? '…' : 'Create trip'}
+            </Btn>
+          </div>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+const selectStyle = {
+  background: COLORS.bg, border: '1px solid ' + COLORS.line,
+  borderRadius: 10, padding: '11px 14px', color: COLORS.text, fontSize: 13,
+};
 
 // ─── Helpers ────────────────────────────────────────────────────
 function tripDays(trip) {

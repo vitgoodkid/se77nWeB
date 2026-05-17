@@ -78,6 +78,10 @@ export function AIPlayground() {
   const [input, setInput] = useState('');
   const [imgRef, setImgRef] = useState(null); // { dataUrl, name }
   const [busy, setBusy] = useState(false);
+  const [videoOpts, setVideoOpts] = useSyncedData(
+    { localKey: 'se77n.ai.videoOpts', serverKey: 'aiVideoOpts' },
+    { duration: 5, resolution: '720p', aspectRatio: '16:9', generateAudio: false },
+  );
   const scrollRef = useRef(null);
 
   // Clipboard paste
@@ -145,7 +149,14 @@ export function AIPlayground() {
         const res = await fetch('/api/video', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt: q, image: usedImage?.dataUrl }),
+          body: JSON.stringify({
+            prompt: q,
+            image: usedImage?.dataUrl,
+            duration: videoOpts.duration,
+            resolution: videoOpts.resolution,
+            aspectRatio: videoOpts.aspectRatio,
+            generateAudio: videoOpts.generateAudio,
+          }),
         });
         const data = await safeJson(res, 'video');
         assistantMsg = { role: 'assistant', content: '', video: data.video };
@@ -299,6 +310,9 @@ export function AIPlayground() {
           ))}
           {busy && <Message role="assistant" content="…" typing kind={preset.kind} />}
         </div>
+        {preset.kind === 'video' && (
+          <VideoOptionsBar opts={videoOpts} onChange={setVideoOpts} />
+        )}
         <div style={{
           padding: '14px 18px', borderTop: '1px solid ' + COLORS.line,
           background: COLORS.panel2, display: 'flex', gap: 10, alignItems: 'center',
@@ -329,6 +343,72 @@ export function AIPlayground() {
           <Btn variant="solid" onClick={send} disabled={busy || (!input.trim() && !imgRef)}>↗ {t('ai.send')}</Btn>
         </div>
       </Panel>
+    </div>
+  );
+}
+
+// Video gen options bar — duration / resolution / aspect ratio / audio toggle.
+// Persisted via useSyncedData (see videoOpts state above).
+const VIDEO_DURATIONS = [3, 5, 8, 10];
+const VIDEO_RESOLUTIONS = ['480p', '720p', '1080p'];
+const VIDEO_ASPECTS = ['16:9', '9:16', '1:1', '21:9'];
+
+function VideoOptionsBar({ opts, onChange }) {
+  const set = (patch) => onChange({ ...opts, ...patch });
+  return (
+    <div style={{
+      padding: '10px 18px', borderTop: '1px solid ' + COLORS.line,
+      display: 'flex', flexWrap: 'wrap', gap: 14, alignItems: 'center',
+      background: COLORS.bg, fontSize: 11,
+    }}>
+      <PillGroup label="DURATION" value={opts.duration} onChange={(v) => set({ duration: v })}
+        options={VIDEO_DURATIONS.map((s) => ({ v: s, l: `${s}s` }))} />
+      <PillGroup label="RES" value={opts.resolution} onChange={(v) => set({ resolution: v })}
+        options={VIDEO_RESOLUTIONS.map((r) => ({ v: r, l: r }))} />
+      <PillGroup label="ASPECT" value={opts.aspectRatio} onChange={(v) => set({ aspectRatio: v })}
+        options={VIDEO_ASPECTS.map((a) => ({ v: a, l: a }))} />
+      <button
+        type="button"
+        onClick={() => set({ generateAudio: !opts.generateAudio })}
+        className="mono"
+        style={{
+          padding: '5px 12px', borderRadius: 999,
+          background: opts.generateAudio ? COLORS.gold + '1f' : 'transparent',
+          border: '1px solid ' + (opts.generateAudio ? COLORS.gold + '80' : COLORS.line),
+          color: opts.generateAudio ? COLORS.gold : COLORS.muted,
+          fontSize: 10, letterSpacing: '0.18em', cursor: 'pointer',
+        }}
+        title="Generate audio track with the video"
+      >
+        ♪ AUDIO {opts.generateAudio ? 'ON' : 'OFF'}
+      </button>
+    </div>
+  );
+}
+
+function PillGroup({ label, value, onChange, options }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      <span className="mono" style={{ fontSize: 9, letterSpacing: '0.2em', color: COLORS.muted }}>{label}</span>
+      <div style={{ display: 'inline-flex', border: '1px solid ' + COLORS.line, borderRadius: 8, overflow: 'hidden' }}>
+        {options.map((o) => {
+          const on = String(value) === String(o.v);
+          return (
+            <button
+              key={o.v}
+              type="button"
+              onClick={() => onChange(o.v)}
+              className="mono"
+              style={{
+                padding: '5px 10px', cursor: 'pointer',
+                background: on ? COLORS.gold + '1f' : 'transparent',
+                color: on ? COLORS.gold : COLORS.muted,
+                border: 'none', fontSize: 10, letterSpacing: '0.14em',
+              }}
+            >{o.l}</button>
+          );
+        })}
+      </div>
     </div>
   );
 }

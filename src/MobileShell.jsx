@@ -16,7 +16,6 @@ import {
 
 const AIPlayground       = lazy(() => import('./featuresA.jsx').then((m) => ({ default: m.AIPlayground })));
 const Toolbox            = lazy(() => import('./featuresA.jsx').then((m) => ({ default: m.Toolbox })));
-const TravelArchive      = lazy(() => import('./featuresA.jsx').then((m) => ({ default: m.TravelArchive })));
 const TravelV4           = lazy(() => import('./tv4/index.jsx').then((m) => ({ default: m.TravelV4 })));
 const GamePanel          = lazy(() => import('./featuresA.jsx').then((m) => ({ default: m.GamePanel })));
 const TechStackMonitor   = lazy(() => import('./featuresB.jsx').then((m) => ({ default: m.TechStackMonitor })));
@@ -27,13 +26,12 @@ const TodoList           = lazy(() => import('./featuresB.jsx').then((m) => ({ d
 const MODULES = [
   { id: 'ai',     short: '01', accent: COLORS.red,   icon: '✦', i18nLabel: 'nav.ai',     i18nDesc: 'feature.ai.desc' },
   { id: 'tools',  short: '02', accent: COLORS.green, icon: '⚒', i18nLabel: 'nav.tools',  i18nDesc: 'feature.tools.desc' },
-  { id: 'travel', short: '03', accent: COLORS.gold,  icon: '◯', i18nLabel: 'nav.travel', i18nDesc: 'feature.travel.desc' },
+  { id: 'tv4',    short: '03', accent: COLORS.gold,  icon: '✈', label: 'Travel',         desc: 'Trips · plans · expenses' },
   { id: 'game',   short: '04', accent: COLORS.red,   icon: '◐', i18nLabel: 'nav.game',   i18nDesc: 'feature.game.desc' },
   { id: 'tech',   short: '05', accent: COLORS.green, icon: '⌬', i18nLabel: 'nav.tech',   i18nDesc: 'feature.tech.desc' },
   { id: 'crypto', short: '06', accent: COLORS.gold,  icon: '$', i18nLabel: 'nav.crypto', i18nDesc: 'feature.crypto.desc' },
   { id: 'vault',  short: '07', accent: COLORS.red,   icon: '⌘', i18nLabel: 'nav.vault',  i18nDesc: 'feature.vault.desc' },
   { id: 'todo',   short: '08', accent: COLORS.green, icon: '✓', i18nLabel: 'nav.todo',   i18nDesc: 'feature.todo.desc' },
-  { id: 'tv4',    short: '09', accent: COLORS.gold,  icon: '✈', label: 'Travel',         desc: 'Trips · plans · expenses' },
 ];
 
 // Slash commands → either prefix the prompt for the chat agent (so the
@@ -50,7 +48,7 @@ const SLASH_COMMANDS = [
   { cmd: '/todo',      kind: 'nav', route: 'todo',   accent: COLORS.green, desc: 'Jump · to-do list' },
   { cmd: '/crypto',    kind: 'nav', route: 'crypto', accent: COLORS.gold,  desc: 'Jump · markets' },
   { cmd: '/vault',     kind: 'nav', route: 'vault',  accent: COLORS.red,   desc: 'Jump · vault' },
-  { cmd: '/travel',    kind: 'nav', route: 'travel', accent: COLORS.gold,  desc: 'Jump · travel archive' },
+  { cmd: '/travel',    kind: 'nav', route: 'tv4',    accent: COLORS.gold,  desc: 'Jump · travel' },
   { cmd: '/tech',      kind: 'nav', route: 'tech',   accent: COLORS.green, desc: 'Jump · tech stack' },
   { cmd: '/tools',     kind: 'nav', route: 'tools',  accent: COLORS.green, desc: 'Jump · toolbox' },
   { cmd: '/game',      kind: 'nav', route: 'game',   accent: COLORS.red,   desc: 'Jump · game' },
@@ -819,8 +817,8 @@ export default function MobileShell() {
   const displayName = (user?.displayName || user?.username || 'zzzzz').toLowerCase();
 
   const [route, setRoute] = useState(() => {
-    const h = (typeof window !== 'undefined' ? window.location.hash : '').replace(/^#\//, '');
-    return ['ai', 'tools', 'travel', 'game', 'tech', 'crypto', 'vault', 'todo'].includes(h) ? h : 'ai';
+    const h = (typeof window !== 'undefined' ? window.location.hash : '').replace(/^#\//, '').split('/')[0];
+    return ['ai', 'tools', 'tv4', 'game', 'tech', 'crypto', 'vault', 'todo'].includes(h) ? h : 'ai';
   });
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -847,8 +845,8 @@ export default function MobileShell() {
   // hashchange sync (back/forward button)
   useEffect(() => {
     const onHash = () => {
-      const h = window.location.hash.replace(/^#\//, '');
-      const next = ['ai', 'tools', 'travel', 'game', 'tech', 'crypto', 'vault', 'todo'].includes(h) ? h : 'ai';
+      const h = window.location.hash.replace(/^#\//, '').split('/')[0];
+      const next = ['ai', 'tools', 'tv4', 'game', 'tech', 'crypto', 'vault', 'todo'].includes(h) ? h : 'ai';
       if (next !== route) setRoute(next);
     };
     window.addEventListener('hashchange', onHash);
@@ -1008,7 +1006,6 @@ export default function MobileShell() {
         }}>
           <Suspense fallback={<RouteFallback />}>
             {route === 'tools'  && <Toolbox />}
-            {route === 'travel' && <TravelArchive />}
             {route === 'game'   && <GamePanel />}
             {route === 'tech'   && <TechStackMonitor />}
             {route === 'crypto' && <CryptoWatch />}

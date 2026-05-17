@@ -12,7 +12,6 @@ import MobileShell from './MobileShell.jsx';
 
 const AIPlayground       = lazy(() => import('./featuresA.jsx').then((m) => ({ default: m.AIPlayground })));
 const Toolbox            = lazy(() => import('./featuresA.jsx').then((m) => ({ default: m.Toolbox })));
-const TravelArchive      = lazy(() => import('./featuresA.jsx').then((m) => ({ default: m.TravelArchive })));
 const TravelV4           = lazy(() => import('./tv4/index.jsx').then((m) => ({ default: m.TravelV4 })));
 const SharedTripView     = lazy(() => import('./tv4/SharedTripView.jsx'));
 const GamePanel          = lazy(() => import('./featuresA.jsx').then((m) => ({ default: m.GamePanel })));
@@ -25,13 +24,12 @@ const FEATURES = [
   { id: 'home',   label: 'Home',                icon: '⌂',   accent: COLORS.text,  short: '00' },
   { id: 'ai',     label: 'AI Playground',       icon: '✦',   accent: COLORS.red,   short: '01', desc: 'Chat · image · video' },
   { id: 'tools',  label: 'Toolbox',             icon: '⚒',   accent: COLORS.green, short: '02', desc: 'Public + private utilities' },
-  { id: 'travel', label: 'Travel Archive',      icon: (c) => <GlobeIcon color={c} size={20} />, accent: COLORS.gold,  short: '03', desc: 'World map · 16 cities' },
+  { id: 'tv4',    label: 'Travel',              icon: (c) => <GlobeIcon color={c} size={20} />, accent: COLORS.gold,  short: '03', desc: 'Trips · plans · expenses' },
   { id: 'game',   label: 'Game',                icon: (c) => <ControllerIcon color={c} size={22} />, accent: COLORS.red,   short: '04', desc: 'Coming soon' },
   { id: 'tech',   label: 'Tech Stack Monitor',  icon: '⌬',   accent: COLORS.green, short: '05', desc: '11 services · monthly burn' },
   { id: 'crypto', label: 'Crypto Watch',        icon: '$',   accent: COLORS.gold,  short: '06', desc: 'BTC · GOLD · TWD ⇄ VND' },
   { id: 'vault',  label: 'Digital Vault',       icon: '⌘',   accent: COLORS.red,   short: '07', desc: 'Credentials manager' },
   { id: 'todo',   label: 'To-Do List',          icon: '✓',   accent: COLORS.green, short: '08', desc: 'Priorities · localStorage' },
-  { id: 'tv4',    label: 'Travel',              icon: '✈',   accent: COLORS.gold,  short: '09', desc: 'Trips · plans · expenses' },
 ];
 
 const EXPERIMENT_NUMBER = '007';
@@ -160,7 +158,6 @@ function AppDesktop() {
               {route === 'home'   && <HomeView nav={nav} ambient={ambient} ambientOn={ambientOn} />}
               {route === 'ai'     && <AIPlayground />}
               {route === 'tools'  && <Toolbox />}
-              {route === 'travel' && <TravelArchive />}
               {route === 'tv4'    && <TravelV4 />}
               {route === 'game'   && <GamePanel />}
               {route === 'tech'   && <TechStackMonitor />}

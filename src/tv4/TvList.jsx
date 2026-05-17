@@ -1,6 +1,6 @@
 // 02 LIST · all trips. Filter rail + stat row + trip grid with mini-map SVG covers.
 // No photo features (replaced PHOTOS stat → COUNTRIES, cover image → mini-map).
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { COLORS, Btn, Field, useMediaQuery } from '../lib.jsx';
 import { tv4 } from './api.js';
 

@@ -13,7 +13,9 @@ export default async function handler(req, res) {
   if (!prompt && !image) return res.status(400).json({ error: 'prompt or image required' });
 
   const apiKey = process.env.FAL_API_KEY;
-  const model = process.env.FAL_IMAGE_MODEL || 'fal-ai/openai/gpt-image-2/edit';
+  const editModel = process.env.FAL_IMAGE_MODEL || 'openai/gpt-image-2/edit';
+  const t2iModel = process.env.FAL_IMAGE_T2I_MODEL || 'openai/gpt-image-2';
+  const model = image ? editModel : t2iModel;
   if (!apiKey) return res.status(500).json({ error: 'FAL_API_KEY not configured' });
 
   const input = { prompt };

@@ -122,7 +122,7 @@ export function TravelV4() {
 
       <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
         {view === 'map' && (
-          <TvMap trips={trips} onOpenTrip={(t) => nav('folder', t.slug)} />
+          <TvMap trips={trips} onOpenTrip={(t) => nav('folder', t.slug)} onRefreshTrips={refreshTrips} />
         )}
         {view === 'list' && (
           <TvList

@@ -77,7 +77,9 @@ export default async function handler(req, res) {
   try {
     if (cls.tool === 'image_gen' || cls.tool === 'image_edit') {
       const refined = cls.refined_prompt || prompt;
-      const model = process.env.FAL_IMAGE_MODEL || 'fal-ai/openai/gpt-image-2/edit';
+      const editModel = process.env.FAL_IMAGE_MODEL || 'openai/gpt-image-2/edit';
+      const t2iModel = process.env.FAL_IMAGE_T2I_MODEL || 'openai/gpt-image-2';
+      const model = image ? editModel : t2iModel;
       const input = { prompt: refined };
       if (image) input.image_urls = [image];
       const result = await falSubmitAndPoll(model, input);
@@ -91,8 +93,8 @@ export default async function handler(req, res) {
 
     if (cls.tool === 'video_gen') {
       const refined = cls.refined_prompt || prompt;
-      const t2v = process.env.FAL_VIDEO_T2V_MODEL || 'fal-ai/bytedance/seedance-2.0/text-to-video';
-      const i2v = process.env.FAL_VIDEO_I2V_MODEL || 'fal-ai/bytedance/seedance-2.0/image-to-video';
+      const t2v = process.env.FAL_VIDEO_T2V_MODEL || 'bytedance/seedance-2.0/text-to-video';
+      const i2v = process.env.FAL_VIDEO_I2V_MODEL || 'bytedance/seedance-2.0/image-to-video';
       const model = image ? i2v : t2v;
       const input = { prompt: refined };
       if (image) input.image_url = image;

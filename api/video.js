@@ -1,5 +1,6 @@
 // POST /api/video
-// Body: { prompt: string, image?: string (data URL or http URL) }
+// Body: { prompt: string, image?: string, duration?: number, resolution?: '480p'|'720p'|'1080p',
+//         aspectRatio?: '16:9'|'9:16'|'1:1'|'21:9', generateAudio?: boolean }
 // Returns: { video: string (URL) }
 //
 // Proxies to fal.ai seedance-2.0 (text-to-video by default; switches to image-to-video if `image` provided).
@@ -10,17 +11,28 @@ export const config = { maxDuration: 60 };
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { prompt = '', image } = req.body || {};
+  const {
+    prompt = '',
+    image,
+    duration,
+    resolution,
+    aspectRatio,
+    generateAudio,
+  } = req.body || {};
   if (!prompt) return res.status(400).json({ error: 'prompt required' });
 
   const apiKey = process.env.FAL_API_KEY;
-  const t2v = process.env.FAL_VIDEO_T2V_MODEL || 'fal-ai/bytedance/seedance-2.0/text-to-video';
-  const i2v = process.env.FAL_VIDEO_I2V_MODEL || 'fal-ai/bytedance/seedance-2.0/image-to-video';
+  const t2v = process.env.FAL_VIDEO_T2V_MODEL || 'bytedance/seedance-2.0/text-to-video';
+  const i2v = process.env.FAL_VIDEO_I2V_MODEL || 'bytedance/seedance-2.0/image-to-video';
   const model = image ? i2v : t2v;
   if (!apiKey) return res.status(500).json({ error: 'FAL_API_KEY not configured' });
 
   const input = { prompt };
   if (image) input.image_url = image;
+  if (Number.isFinite(Number(duration))) input.duration = Number(duration);
+  if (resolution) input.resolution = resolution;
+  if (aspectRatio) input.aspect_ratio = aspectRatio;
+  if (typeof generateAudio === 'boolean') input.generate_audio = generateAudio;
 
   try {
     const submit = await fetch(`https://queue.fal.run/${model}`, {
