@@ -38,14 +38,6 @@ const EXPERIMENT_NUMBER = '007';
 // otherwise render the full desktop control surface. Splitting like this
 // keeps the desktop hooks (useLanyard, useAmbient, etc.) from running on
 // mobile where their data is never displayed.
-// At very wide viewports (32"+ monitors, 4K @ 100% scaling, ultra-wides), the
-// fixed-width nav rail + top bar feel cramped. Bump them in two steps so the
-// 27" look stays the same.
-function useUiScale() {
-  const wide     = useMediaQuery('(min-width: 2400px)');
-  const veryWide = useMediaQuery('(min-width: 3200px)');
-  return veryWide ? 1.5 : wide ? 1.25 : 1;
-}
 
 export default function App() {
   const isMobile = useMediaQuery('(max-width: 768px)');
@@ -70,9 +62,10 @@ function AppDesktop() {
   const ambientOn = true;
   const showBg = true;
   const isMobile = useMediaQuery('(max-width: 768px)');
-  const uiScale = useUiScale();
-  const railWidth = Math.round(84 * uiScale);
-  const topBarH   = Math.round(64 * uiScale);
+  // Fixed rail + top-bar sizes so 27"/32" QHD look identical. Wider viewports
+  // get letterboxed by the max-width cap on <main>, not scaled chrome.
+  const railWidth = 84;
+  const topBarH   = 64;
 
   const [route, setRoute] = useState(() => {
     // Match against first hash segment only — sub-routes like #/tv4/list/<slug>
@@ -146,17 +139,22 @@ function AppDesktop() {
     }}>
       {showBg && <AmbientBackground phase={phase} enabled={ambientOn} track={ambient.track} />}
 
-      <TopBar phase={phase} now={now} geo={geo} route={route} nav={nav} ambient={ambient} ambientOn={ambientOn} uiScale={uiScale} topBarH={topBarH} />
-      <NavRail route={route} nav={nav} uiScale={uiScale} topBarH={topBarH} />
+      <TopBar phase={phase} now={now} geo={geo} route={route} nav={nav} ambient={ambient} ambientOn={ambientOn} />
+      <NavRail route={route} nav={nav} />
 
       <main style={{
         position: 'relative', marginLeft: railWidth,
-        padding: '24px 32px 32px',
         height: `calc(100vh - ${topBarH}px)`, marginTop: topBarH,
         display: 'flex', flexDirection: 'column', overflow: 'hidden',
       }}>
-        <Breadcrumbs route={route} nav={nav} feature={activeFeature} />
-        <div style={{ position: 'relative', flex: 1, minHeight: 0 }}>
+        <div style={{
+          width: '100%', maxWidth: 1800,
+          margin: '0 auto', padding: '24px 32px 32px',
+          flex: 1, minHeight: 0,
+          display: 'flex', flexDirection: 'column',
+        }}>
+          <Breadcrumbs route={route} nav={nav} feature={activeFeature} />
+          <div style={{ position: 'relative', flex: 1, minHeight: 0 }}>
           <div
             key={route + '_' + transitioning}
             style={{
@@ -193,6 +191,7 @@ function AppDesktop() {
             {phase === 'day' ? '◐ DAYLIGHT' : '◑ NIGHTSHIFT'}
           </span>
         </footer>
+        </div>
       </main>
 
       <ChatFab open={chatOpen}
@@ -252,20 +251,19 @@ function AmbientBackground({ phase, enabled, track }) {
 // ─────────────────────────────────────────────────────────────
 // Top bar
 // ─────────────────────────────────────────────────────────────
-function TopBar({ phase, now, geo, nav, ambient, ambientOn, uiScale = 1, topBarH = 64 }) {
+function TopBar({ phase, now, geo, nav, ambient, ambientOn }) {
   const { lang, toggle, t } = useLang();
   const isMobile = useMediaQuery('(max-width: 768px)');
   const tStr = now.toLocaleTimeString('en-GB', {
     hour: '2-digit', minute: '2-digit', second: '2-digit',
   });
-  // Height bumped to match the zoomed NavRail's top offset. We don't `zoom`
-  // the bar itself (a left:0/right:0 element would overflow horizontally).
+  // Fixed-height bar; rail + bar both stay 64/84 across viewports so 27"/32" QHD render identically.
   return (
     <header style={{
       position: 'fixed', top: 0, left: 0, right: 0,
-      height: topBarH, zIndex: 50,
+      height: 64, zIndex: 50,
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      padding: `0 ${Math.round(28 * uiScale)}px 0 ${Math.round(22 * uiScale)}px`,
+      padding: '0 28px 0 22px',
       background: 'rgba(13,10,8,0.7)',
       backdropFilter: 'blur(14px)',
       borderBottom: '1px solid ' + COLORS.line,
@@ -778,17 +776,16 @@ function GameChip({ game }) {
 // ─────────────────────────────────────────────────────────────
 // Nav rail
 // ─────────────────────────────────────────────────────────────
-function NavRail({ route, nav, uiScale = 1, topBarH = 64 }) {
+function NavRail({ route, nav }) {
   return (
     <aside style={{
-      position: 'fixed', top: topBarH, left: 0, bottom: 0,
+      position: 'fixed', top: 64, left: 0, bottom: 0,
       width: 84, zIndex: 40,
       borderRight: '1px solid ' + COLORS.line,
       background: 'rgba(13,10,8,0.6)',
       backdropFilter: 'blur(8px)',
       padding: '20px 0',
       display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
-      zoom: uiScale,
     }}>
       {FEATURES.map((f) => {
         const active = f.id === route;
