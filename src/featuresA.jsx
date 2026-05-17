@@ -832,7 +832,7 @@ function ShortenerTool({ accent }) {
     if (!u) { setErr('URL is required'); return; }
     setBusy(true); setErr(''); setOut(null);
     try {
-      const r = await fetch('/api/short', {
+      const r = await fetch('/api/toolbox?kind=short', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url: u, alias: alias.trim() || undefined }),
@@ -899,7 +899,7 @@ function PastebinTool({ accent }) {
     if (!text.trim()) { setErr('Content is empty'); return; }
     setBusy(true); setErr(''); setSaved(null);
     try {
-      const r = await fetch('/api/paste', {
+      const r = await fetch('/api/toolbox?kind=paste', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content: text }),
@@ -1492,7 +1492,7 @@ function GameResourcesTool({ accent }) {
   useEffect(() => {
     let alive = true;
     setLoading(true); setErr('');
-    fetch('/api/games')
+    fetch('/api/toolbox?kind=games')
       .then(async (r) => {
         const data = await r.json();
         if (!alive) return;
