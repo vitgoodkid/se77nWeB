@@ -1049,9 +1049,13 @@ function ImageConverterTool({ accent }) {
 // Loaded lazily on first convert; ~25 MB download from CDN once per browser session.
 let ffmpegInstance = null;
 let ffmpegLoading = null;
-const FFMPEG_CORE_VERSION = '0.12.10';
+const FFMPEG_CORE_VERSION = '0.12.6';
+const FFMPEG_CDN_BASES = [
+  `https://unpkg.com/@ffmpeg/core@${FFMPEG_CORE_VERSION}/dist/umd`,
+  `https://cdn.jsdelivr.net/npm/@ffmpeg/core@${FFMPEG_CORE_VERSION}/dist/umd`,
+];
 
-async function getFFmpeg(onLog) {
+async function getFFmpeg() {
   if (ffmpegInstance) return ffmpegInstance;
   if (ffmpegLoading) return ffmpegLoading;
   ffmpegLoading = (async () => {
@@ -1059,15 +1063,19 @@ async function getFFmpeg(onLog) {
       import('@ffmpeg/ffmpeg'),
       import('@ffmpeg/util'),
     ]);
-    const baseURL = `https://unpkg.com/@ffmpeg/core@${FFMPEG_CORE_VERSION}/dist/umd`;
-    const ff = new FFmpeg();
-    if (onLog) ff.on('log', ({ message }) => onLog(message));
-    await ff.load({
-      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-      wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
-    });
-    ffmpegInstance = ff;
-    return ff;
+    let lastErr;
+    for (const baseURL of FFMPEG_CDN_BASES) {
+      try {
+        const ff = new FFmpeg();
+        await ff.load({
+          coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+          wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+        });
+        ffmpegInstance = ff;
+        return ff;
+      } catch (e) { lastErr = e; }
+    }
+    throw new Error(`FFmpeg core load failed from all CDNs: ${lastErr?.message || lastErr}`);
   })();
   try { return await ffmpegLoading; }
   finally { ffmpegLoading = null; }
@@ -1109,10 +1117,15 @@ function VideoToTool({ accent }) {
   async function convert() {
     if (!src || busy) return;
     setBusy(true); setErr(''); setOutput(null); setProgress(0); setStage('Loading FFmpeg…');
+
+    const logs = [];
+    const onLog = ({ message }) => { logs.push(message); };
+    const onProgress = ({ progress }) => setProgress(Math.max(0, Math.min(1, progress)));
+    let ff = null;
     try {
-      const ff = await getFFmpeg();
+      ff = await getFFmpeg();
       const { fetchFile } = await import('@ffmpeg/util');
-      const onProgress = ({ progress }) => setProgress(Math.max(0, Math.min(1, progress)));
+      ff.on('log', onLog);
       ff.on('progress', onProgress);
 
       const inputName = 'input' + (src.name.match(/\.[a-z0-9]+$/i)?.[0] || '.mp4');
@@ -1124,17 +1137,27 @@ function VideoToTool({ accent }) {
 
       if (mode === 'gif') {
         outExt = 'gif'; outName = 'out.gif'; mime = 'image/gif';
-        args.push('-vf', `fps=${fps},scale=${width}:-1:flags=lanczos`, '-loop', '0', outName);
+        args.push('-vf', `fps=${fps},scale=${width}:-2:flags=lanczos`, '-loop', '0', outName);
       } else {
         outExt = 'mp3'; outName = 'out.mp3'; mime = 'audio/mpeg';
         args.push('-vn', '-acodec', 'libmp3lame', '-b:a', bitrate, outName);
       }
 
       setStage(mode === 'gif' ? 'Converting to GIF…' : 'Extracting MP3…');
-      await ff.exec(args);
+      try {
+        await ff.exec(args);
+      } catch (execErr) {
+        const tail = logs.slice(-8).join(' | ');
+        const code = typeof execErr === 'number' ? execErr : (execErr?.message ?? String(execErr));
+        throw new Error(`FFmpeg exec failed (${code}). Last log: ${tail || '(empty — check console)'}`);
+      }
 
-      const data = await ff.readFile(outName);
-      ff.off('progress', onProgress);
+      let data;
+      try { data = await ff.readFile(outName); }
+      catch (readErr) {
+        const tail = logs.slice(-8).join(' | ');
+        throw new Error(`Output file not produced. Last log: ${tail || '(empty)'}`);
+      }
 
       const blob = new Blob([data.buffer], { type: mime });
       const url = URL.createObjectURL(blob);
@@ -1146,10 +1169,14 @@ function VideoToTool({ accent }) {
       try { await ff.deleteFile(inputName); } catch {}
       try { await ff.deleteFile(outName); } catch {}
     } catch (e) {
-      console.error('ffmpeg error', e);
-      setErr(e.message || 'Conversion failed');
+      console.error('[ffmpeg]', e, '\n— logs —\n', logs.join('\n'));
+      setErr(e?.message || String(e) || 'Conversion failed (check browser console for details)');
       setStage('');
-    } finally { setBusy(false); }
+    } finally {
+      try { ff?.off?.('log', onLog); } catch {}
+      try { ff?.off?.('progress', onProgress); } catch {}
+      setBusy(false);
+    }
   }
 
   return (
