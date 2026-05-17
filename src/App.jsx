@@ -6,7 +6,7 @@ import {
   GlyphSun, GlyphMoon, GlobeIcon, ControllerIcon,
   PaperclipIcon, ChatBubbleIcon,
   useClock, useGeoDayNight, useAmbient, useLanyard, useLang, useAuth,
-  usePersisted, useSyncedData, usePasteImage, resolveAssetUrl, useMediaQuery,
+  usePersisted, useSyncedData, usePasteImage, useMediaQuery,
 } from './lib.jsx';
 import MobileShell from './MobileShell.jsx';
 
@@ -281,7 +281,14 @@ function TopBar({ phase, now, geo, nav, ambient, ambientOn }) {
         </div>
       </button>
 
-      {ambient.isLive && <NowPlaying ambient={ambient} on={ambientOn} />}
+      {ambient.isLive && (
+        <div style={{
+          position: 'absolute', left: '50%', top: '50%',
+          transform: 'translate(-50%, -50%)',
+        }}>
+          <NowPlaying ambient={ambient} on={ambientOn} />
+        </div>
+      )}
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <LangToggle lang={lang} toggle={toggle} title={t('topbar.toggleLang')} />
@@ -441,7 +448,7 @@ function AuthChip() {
           onMouseEnter={(e) => { e.currentTarget.style.background = COLORS.red + '22'; }}
           onMouseLeave={(e) => { e.currentTarget.style.background = COLORS.red + '14'; }}
         >
-          ◐ {t('auth.signIn')}
+          {t('auth.signIn')}
         </button>
       )}
 
@@ -576,7 +583,7 @@ function AuthErrorToast() {
 }
 
 function NowPlaying({ ambient, on }) {
-  const { track, playing, setPlaying, next, prev, isLive, game } = ambient;
+  const { track, playing, isLive, game } = ambient;
   return (
     <div style={{
       display: 'flex', alignItems: 'center', gap: 14,
@@ -622,44 +629,20 @@ function NowPlaying({ ambient, on }) {
         }}>{track.artist}{track.album ? ' · ' + track.album : ''}</div>
       </div>
       {game && <GameChip game={game} />}
-      {isLive ? (
-        <span className="mono" title="Live from Discord · Spotify"
-          style={{
-            fontSize: 8, letterSpacing: '0.18em', fontWeight: 700,
-            padding: '4px 8px', borderRadius: 999,
-            background: '#1DB95418', border: '1px solid #1DB95455', color: '#1DB954',
-          }}>● LIVE</span>
-      ) : (
-        <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-          <PlayerBtn onClick={prev}>◀</PlayerBtn>
-          <PlayerBtn onClick={() => setPlaying((p) => !p)} primary>
-            {playing ? '❚❚' : '▶'}
-          </PlayerBtn>
-          <PlayerBtn onClick={next}>▶</PlayerBtn>
-        </div>
-      )}
     </div>
   );
 }
 
 function GameChip({ game }) {
-  const art = resolveAssetUrl(game, 'large_image');
   return (
     <div title={[game.name, game.details, game.state].filter(Boolean).join(' · ')}
       style={{
-        display: 'flex', alignItems: 'center', gap: 8,
-        padding: '4px 10px 4px 4px', borderRadius: 999,
+        display: 'flex', alignItems: 'center',
+        padding: '4px 12px', borderRadius: 999,
         background: COLORS.red + '12',
         border: '1px solid ' + COLORS.red + '40',
         maxWidth: 200, flexShrink: 0,
       }}>
-      <span style={{
-        width: 22, height: 22, borderRadius: 6, flexShrink: 0,
-        background: art ? `url(${art}) center/cover no-repeat` : COLORS.red + '40',
-        display: 'grid', placeItems: 'center',
-      }}>
-        {!art && <span className="mono" style={{ fontSize: 10, color: COLORS.red, fontWeight: 800 }}>◐</span>}
-      </span>
       <div style={{ minWidth: 0 }}>
         <div className="mono" style={{
           fontSize: 8, letterSpacing: '0.16em', color: COLORS.red, fontWeight: 700, lineHeight: 1,
@@ -670,19 +653,6 @@ function GameChip({ game }) {
         }}>{game.name}</div>
       </div>
     </div>
-  );
-}
-
-function PlayerBtn({ children, onClick, primary }) {
-  return (
-    <button onClick={onClick} style={{
-      width: 26, height: 26, borderRadius: 999,
-      background: primary ? COLORS.text : 'transparent',
-      border: `1px solid ${primary ? COLORS.text : COLORS.line}`,
-      color: primary ? '#0d0a08' : COLORS.muted,
-      cursor: 'pointer', fontSize: 9,
-      display: 'grid', placeItems: 'center',
-    }}>{children}</button>
   );
 }
 
