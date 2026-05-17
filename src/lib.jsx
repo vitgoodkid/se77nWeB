@@ -20,6 +20,7 @@ const I18N = {
     'nav.tech':   'Subscription Manager',
     'nav.crypto': 'Currency',
     'nav.todo':   'To-Do List',
+    'nav.feed':   'Feed',
 
     'feature.ai.desc':     'Chat · image · video',
     'feature.tools.desc':  'Public + private utilities',
@@ -28,6 +29,7 @@ const I18N = {
     'feature.tech.desc':   'Monthly + yearly burn',
     'feature.crypto.desc': 'BTC · GOLD · TWD ⇄ VND',
     'feature.todo.desc':   'Priorities · localStorage',
+    'feature.feed.desc':   'Private AI history',
 
     'breadcrumb.home':    'HOME',
     'breadcrumb.escHome': '← ESC · HOME',
@@ -38,9 +40,9 @@ const I18N = {
 
     'home.online':     '● ONLINE · EXP',
     'home.allOnline':  '● ALL ONLINE',
-    'home.modules':    'MODULES · 07',
+    'home.modules':    'MODULES · 08',
     'home.dashboard':  'The dashboard',
-    'home.subtitle':   'A personal control surface — seven modules wired to one prompt. AI, finance, travel, subscriptions, and tools, woven into a single command center.',
+    'home.subtitle':   'A personal control surface — eight modules wired to one prompt. AI, finance, travel, subscriptions, and tools, woven into a single command center.',
     'home.openAi':     '↗ Open AI Playground',
     'home.markets':    '$ Markets',
     'home.todo':       '✓ To-Do',
@@ -116,6 +118,7 @@ const I18N = {
     'nav.tech':   'Quản lý Subscription',
     'nav.crypto': 'Tiền tệ',
     'nav.todo':   'Việc cần làm',
+    'nav.feed':   'Bảng tin',
 
     'feature.ai.desc':     'Chat · ảnh · video',
     'feature.tools.desc':  'Tiện ích công khai + riêng tư',
@@ -124,6 +127,7 @@ const I18N = {
     'feature.tech.desc':   'Chi phí hàng tháng + hàng năm',
     'feature.crypto.desc': 'BTC · VÀNG · TWD ⇄ VND',
     'feature.todo.desc':   'Ưu tiên · localStorage',
+    'feature.feed.desc':   'Bảng tin AI riêng tư',
 
     'breadcrumb.home':    'TRANG CHỦ',
     'breadcrumb.escHome': '← ESC · TRANG CHỦ',
@@ -134,9 +138,9 @@ const I18N = {
 
     'home.online':     '● ĐANG HOẠT ĐỘNG · EXP',
     'home.allOnline':  '● TẤT CẢ ONLINE',
-    'home.modules':    'MÔ-ĐUN · 07',
+    'home.modules':    'MÔ-ĐUN · 08',
     'home.dashboard':  'Bảng điều khiển',
-    'home.subtitle':   'Một trung tâm điều khiển cá nhân — bảy mô-đun gắn vào một prompt. AI, tài chính, du lịch, subscription và công cụ, gói gọn trong một command center.',
+    'home.subtitle':   'Một trung tâm điều khiển cá nhân — tám mô-đun gắn vào một prompt. AI, tài chính, du lịch, subscription và công cụ, gói gọn trong một command center.',
     'home.openAi':     '↗ Mở Sân chơi AI',
     'home.markets':    '$ Thị trường',
     'home.todo':       '✓ Việc cần làm',

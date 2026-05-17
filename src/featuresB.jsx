@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import {
   COLORS,
   Panel, Btn, Field, Pill, Kicker, Sparkline,
@@ -129,6 +129,7 @@ export function TechStackMonitor() {
     <div style={{
       display: 'grid',
       gridTemplateColumns: isMobile ? '1fr' : '1fr 340px',
+      gridTemplateRows: isMobile ? 'auto' : 'minmax(0, 1fr) auto',
       gap: isMobile ? 12 : 18,
       height: isMobile ? 'auto' : '100%',
     }}>
@@ -341,6 +342,10 @@ export function TechStackMonitor() {
         </div>
       </Panel>
 
+      <div style={{ gridColumn: isMobile ? '1' : '1 / -1' }}>
+        <StackChat subs={subs} fxRates={fxRates} owner={data?.owner} totals={totals} />
+      </div>
+
       {confirmDelete && (
         <ConfirmDialog
           title="Delete subscription?"
@@ -412,6 +417,219 @@ function ConfirmDialog({ title, body, confirmLabel, confirmColor, onConfirm, onC
         </div>
       </div>
     </div>
+  );
+}
+
+// ── Stack chat: collapsed by default, expands into a small advisor chat ──
+function StackChat({ subs, fxRates, owner, totals }) {
+  const [open, setOpen] = useState(false);
+  const [messages, setMessages] = useState([]); // [{ role, text }]
+  const [input, setInput] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  const bodyRef = useRef(null);
+  const taRef = useRef(null);
+
+  // Build a fresh system prompt every send so it reflects current totals/subs.
+  function buildSystem() {
+    const lines = subs.map((s, i) => {
+      const monthlyUSD = subToMonthlyUSD(s, fxRates);
+      const periodTag = s.period === 'yearly' ? '/yr' : '/mo';
+      const url = s.url ? ` <${s.url}>` : '';
+      const renew = s.nextRenewal ? ` · renews ${s.nextRenewal}` : '';
+      return `${i + 1}. ${s.name} — ${s.price} ${s.currency}${periodTag} (~$${monthlyUSD.toFixed(2)} USD/mo)${url}${renew}`;
+    }).join('\n');
+
+    const ownerTag = owner?.isYou ? "the user's own" : `${owner?.name || 'a public'}`;
+    return (
+      `You are se77n's subscription advisor — a concise, opinionated financial copilot focused on recurring software/service spending.\n\n` +
+      `You are looking at ${ownerTag} subscription stack:\n` +
+      (lines || '(empty)') +
+      `\n\nTotals:\n` +
+      `- Monthly burn: $${totals.monthlyUSD.toFixed(2)} USD ≈ ${totals.monthlyTWD.toLocaleString(undefined, { maximumFractionDigits: 0 })} TWD ≈ ${totals.monthlyVND.toLocaleString(undefined, { maximumFractionDigits: 0 })} VND\n` +
+      `- Yearly burn: $${totals.yearlyUSD.toFixed(0)} USD ≈ ${totals.yearlyTWD.toLocaleString(undefined, { maximumFractionDigits: 0 })} TWD ≈ ${totals.yearlyVND.toLocaleString(undefined, { maximumFractionDigits: 0 })} VND\n\n` +
+      `Style: short paragraphs or bullet lists. Lean on numbers. If asked for analysis, ` +
+      `look for: (1) duplicates / overlap, (2) most expensive, (3) underused categories, ` +
+      `(4) yearly savings if switching from monthly→annual or cancelling. Match the user's language (English or Vietnamese).`
+    );
+  }
+
+  async function sendPrompt(userText, opts = {}) {
+    if (busy) return;
+    setBusy(true); setErr('');
+    const isAuto = opts.auto === true;
+    // For the auto-summary we don't show the prompt as a user bubble — feels chatty.
+    const next = isAuto ? messages : [...messages, { role: 'user', text: userText }];
+    if (!isAuto) setMessages(next);
+    try {
+      const transcript = next.map((m) => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.text}`).join('\n\n');
+      const prompt = isAuto
+        ? userText
+        : (transcript ? transcript + '\n\nAssistant:' : userText);
+      const r = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ system: buildSystem(), prompt }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || 'Chat failed');
+      setMessages([...next, { role: 'assistant', text: data.text || '(empty response)' }]);
+    } catch (e) {
+      setErr(e.message || 'Network error');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function onOpen() {
+    setOpen(true);
+    if (messages.length === 0 && subs.length > 0) {
+      sendPrompt(
+        `Give a brief summary of this subscription stack: total monthly + yearly burn, the 3 most expensive items, and 1–2 honest suggestions (cancel/downgrade/switch to annual). 4–6 short bullets.`,
+        { auto: true },
+      );
+    }
+  }
+
+  async function onSend() {
+    const t = input.trim();
+    if (!t) return;
+    setInput('');
+    await sendPrompt(t);
+  }
+
+  useEffect(() => {
+    if (bodyRef.current) bodyRef.current.scrollTop = bodyRef.current.scrollHeight;
+  }, [messages, busy]);
+
+  // Collapsed
+  if (!open) {
+    return (
+      <button
+        onClick={onOpen}
+        disabled={subs.length === 0}
+        style={{
+          width: '100%', padding: '14px 18px', borderRadius: 14,
+          background: COLORS.panel, border: '1px solid ' + COLORS.line,
+          color: COLORS.text, textAlign: 'left', cursor: subs.length ? 'pointer' : 'not-allowed',
+          opacity: subs.length ? 1 : 0.5,
+          display: 'flex', alignItems: 'center', gap: 14,
+          transition: 'border-color 120ms, background 120ms',
+        }}
+        onMouseEnter={(e) => { if (subs.length) { e.currentTarget.style.borderColor = COLORS.green + '60'; e.currentTarget.style.background = COLORS.green + '0a'; } }}
+        onMouseLeave={(e) => { e.currentTarget.style.borderColor = COLORS.line; e.currentTarget.style.background = COLORS.panel; }}
+      >
+        <span style={{
+          width: 36, height: 36, borderRadius: 10,
+          border: `1px solid ${COLORS.green}55`, background: COLORS.green + '14',
+          display: 'grid', placeItems: 'center', color: COLORS.green, fontSize: 18,
+          flexShrink: 0,
+        }}>✦</span>
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <div className="mono" style={{ fontSize: 11, color: COLORS.green, letterSpacing: '0.16em', fontWeight: 700 }}>
+            ASK AI · STACK ADVISOR
+          </div>
+          <div style={{ fontSize: 12, color: COLORS.muted, marginTop: 3 }}>
+            {subs.length === 0
+              ? 'Add a subscription to enable analysis.'
+              : `Get a summary + suggestions on ${subs.length} ${subs.length === 1 ? 'subscription' : 'subscriptions'}.`}
+          </div>
+        </div>
+        <span className="mono" style={{ fontSize: 18, color: COLORS.muted }}>↓</span>
+      </button>
+    );
+  }
+
+  // Expanded
+  return (
+    <Panel padding={0} style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', maxHeight: 480 }}>
+      <div style={{
+        padding: '12px 18px', borderBottom: '1px solid ' + COLORS.line,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span style={{
+            width: 28, height: 28, borderRadius: 8,
+            border: `1px solid ${COLORS.green}55`, background: COLORS.green + '14',
+            display: 'grid', placeItems: 'center', color: COLORS.green, fontSize: 14,
+          }}>✦</span>
+          <div>
+            <Kicker style={{ color: COLORS.green }}>STACK ADVISOR</Kicker>
+            <div className="mono" style={{ fontSize: 11, color: COLORS.muted, marginTop: 2 }}>
+              Gemini · context: {subs.length} subs · ${totals.monthlyUSD.toFixed(0)}/mo
+            </div>
+          </div>
+        </div>
+        <Btn variant="ghost" onClick={() => setOpen(false)}>✕</Btn>
+      </div>
+
+      <div ref={bodyRef} style={{
+        flex: 1, overflowY: 'auto', padding: 16,
+        display: 'flex', flexDirection: 'column', gap: 12, minHeight: 120,
+      }}>
+        {messages.length === 0 && !busy && (
+          <div className="mono" style={{ fontSize: 11, color: COLORS.muted, textAlign: 'center', padding: 20 }}>
+            ◇ Type a question below.
+          </div>
+        )}
+        {messages.map((m, i) => (
+          <div key={i} style={{
+            alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
+            maxWidth: '85%',
+            padding: '10px 14px', borderRadius: 12,
+            background: m.role === 'user' ? COLORS.green + '14' : COLORS.bg,
+            border: '1px solid ' + (m.role === 'user' ? COLORS.green + '40' : COLORS.line),
+            fontSize: 13, color: COLORS.text, lineHeight: 1.55,
+            whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+          }}>
+            {m.text}
+          </div>
+        ))}
+        {busy && (
+          <div className="mono" style={{
+            alignSelf: 'flex-start',
+            padding: '10px 14px', borderRadius: 12,
+            background: COLORS.bg, border: '1px solid ' + COLORS.line,
+            fontSize: 11, color: COLORS.muted, letterSpacing: '0.12em',
+          }}>
+            ◇ thinking…
+          </div>
+        )}
+      </div>
+
+      {err && (
+        <div className="mono" style={{
+          margin: '0 16px 8px', padding: '8px 12px', borderRadius: 8, fontSize: 11,
+          border: `1px solid ${COLORS.red}55`, background: COLORS.red + '0e', color: COLORS.red,
+        }}>✕ {err}</div>
+      )}
+
+      <div style={{
+        padding: 12, borderTop: '1px solid ' + COLORS.line,
+        display: 'flex', gap: 8, alignItems: 'flex-end',
+      }}>
+        <textarea
+          ref={taRef}
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); onSend(); }
+          }}
+          rows={1}
+          placeholder="Ask follow-up… (Enter to send, Shift+Enter for newline)"
+          className="mono"
+          style={{
+            flex: 1, resize: 'none', minHeight: 36, maxHeight: 120,
+            background: COLORS.bg, border: '1px solid ' + COLORS.line,
+            borderRadius: 8, padding: '8px 12px', color: COLORS.text,
+            fontSize: 12, outline: 'none',
+          }}
+        />
+        <Btn variant="solid" color={COLORS.green} onClick={onSend} disabled={busy || !input.trim()}>
+          Send
+        </Btn>
+      </div>
+    </Panel>
   );
 }
 
@@ -1008,6 +1226,379 @@ export function TodoList() {
           </div>
         </div>
       </Panel>
+    </div>
+  );
+}
+
+// ═════════════════════════════════════════════════════════════
+// 9. FEED — private AI history (whitelist-only)
+// ═════════════════════════════════════════════════════════════
+export function Feed() {
+  const auth = useAuth();
+  const isMobile = useMediaQuery('(max-width: 768px)');
+  const [state, setState] = useState({ status: 'loading', items: [], folders: [], isAdmin: false, err: '' });
+  const [folder, setFolder] = useState(''); // ownerKey filter, '' = all
+  const [confirmDel, setConfirmDel] = useState(null);
+  const [delBusy, setDelBusy] = useState(false);
+  const [delErr, setDelErr] = useState('');
+
+  async function load(filter) {
+    const f = filter !== undefined ? filter : folder;
+    setState((s) => ({ ...s, status: 'loading', err: '' }));
+    try {
+      const url = '/api/toolbox?kind=history' + (f ? `&owner=${encodeURIComponent(f)}` : '');
+      const r = await fetch(url, { credentials: 'include' });
+      const data = await r.json();
+      if (r.status === 401) { setState({ status: 'login_required', items: [], folders: [], isAdmin: false, err: '' }); return; }
+      if (r.status === 403) { setState({ status: 'forbidden', items: [], folders: [], isAdmin: false, err: data.error || 'Forbidden' }); return; }
+      if (!r.ok) { setState({ status: 'error', items: [], folders: [], isAdmin: false, err: data.error || 'Failed' }); return; }
+      setState({
+        status: 'ok',
+        items: data.items || [],
+        folders: data.folders || [],
+        isAdmin: !!data.isAdmin,
+        err: '',
+      });
+    } catch (e) {
+      setState({ status: 'error', items: [], folders: [], isAdmin: false, err: e.message || 'Network error' });
+    }
+  }
+
+  useEffect(() => { load(folder); /* eslint-disable-next-line */ }, [auth.status, folder]);
+
+  async function doDelete(id) {
+    setDelBusy(true); setDelErr('');
+    try {
+      const r = await fetch(`/api/toolbox?kind=history&id=${encodeURIComponent(id)}`, {
+        method: 'DELETE', credentials: 'include',
+      });
+      if (!r.ok) {
+        const j = await r.json().catch(() => ({}));
+        throw new Error(j.error || 'Delete failed');
+      }
+      setConfirmDel(null);
+      await load(folder);
+    } catch (e) {
+      setDelErr(e.message);
+    } finally {
+      setDelBusy(false);
+    }
+  }
+
+  if (state.status === 'loading' && state.items.length === 0) {
+    return <div style={{ padding: 40, textAlign: 'center', color: COLORS.muted }} className="mono">◇ loading feed…</div>;
+  }
+  if (state.status === 'login_required') {
+    return (
+      <Panel padding={32} style={{ maxWidth: 520, margin: '40px auto' }}>
+        <Kicker style={{ color: COLORS.gold, marginBottom: 10 }}>● PRIVATE FEED</Kicker>
+        <div className="mono" style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Sign in required</div>
+        <div style={{ fontSize: 13, color: COLORS.muted, lineHeight: 1.55, marginBottom: 18 }}>
+          This feed is invite-only. Sign in with a whitelisted email to view it.
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <Btn variant="solid" color={COLORS.green} onClick={() => auth.login('google')}>Google</Btn>
+          <Btn variant="tinted" color={COLORS.green} onClick={() => auth.login('discord')}>Discord</Btn>
+        </div>
+      </Panel>
+    );
+  }
+  if (state.status === 'forbidden') {
+    return (
+      <Panel padding={32} style={{ maxWidth: 520, margin: '40px auto' }}>
+        <Kicker style={{ color: COLORS.red, marginBottom: 10 }}>● ACCESS DENIED</Kicker>
+        <div className="mono" style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Not on the whitelist</div>
+        <div style={{ fontSize: 13, color: COLORS.muted, lineHeight: 1.55, marginBottom: 18 }}>
+          You're signed in as <span className="mono" style={{ color: COLORS.text }}>{auth.user?.email}</span> but this email isn't on the allowlist. Contact the owner to request access.
+        </div>
+        <Btn variant="ghost" onClick={() => auth.logout()}>Sign out</Btn>
+      </Panel>
+    );
+  }
+  if (state.status === 'error') {
+    return (
+      <div style={{ padding: 24 }}>
+        <div className="mono" style={{
+          padding: '12px 16px', borderRadius: 10,
+          border: `1px solid ${COLORS.red}55`, background: COLORS.red + '0e',
+          color: COLORS.red, fontSize: 13,
+        }}>✕ {state.err}</div>
+      </div>
+    );
+  }
+
+  const totalAll = state.folders.reduce((s, f) => s + f.count, 0);
+
+  return (
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: isMobile ? '1fr' : '260px 1fr',
+      gap: isMobile ? 12 : 18,
+      height: isMobile ? 'auto' : '100%',
+    }}>
+      {/* ── Folder sidebar ── */}
+      <Panel padding={0} style={{
+        display: 'flex', flexDirection: 'column',
+        overflow: isMobile ? 'visible' : 'hidden',
+        height: isMobile ? 'auto' : '100%',
+      }}>
+        <div style={{
+          padding: '14px 18px', borderBottom: '1px solid ' + COLORS.line,
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10,
+        }}>
+          <Kicker>FOLDERS · {String(state.folders.length).padStart(2, '0')}</Kicker>
+          {state.isAdmin && <Pill color={COLORS.red}>● ADMIN</Pill>}
+        </div>
+        <div style={{
+          flex: 1, overflowY: isMobile ? 'visible' : 'auto',
+          padding: 8, display: 'flex', flexDirection: 'column', gap: 4,
+        }}>
+          <FolderRow
+            label="All activity"
+            sub={`${totalAll} items`}
+            active={folder === ''}
+            onClick={() => setFolder('')}
+            color={COLORS.gold}
+            icon="◧"
+          />
+          {state.folders.map((f) => (
+            <FolderRow
+              key={f.ownerKey}
+              label={f.ownerName}
+              sub={`${f.count} · ${new Date(f.lastAt).toLocaleDateString()}`}
+              active={folder === f.ownerKey}
+              onClick={() => setFolder(f.ownerKey)}
+              color={f.ownerType === 'guest' ? COLORS.muted : COLORS.green}
+              icon={f.ownerType === 'guest' ? '◯' : '◉'}
+              avatar={f.ownerAvatar}
+            />
+          ))}
+        </div>
+      </Panel>
+
+      {/* ── Items list ── */}
+      <Panel padding={0} style={{
+        display: 'flex', flexDirection: 'column',
+        overflow: isMobile ? 'visible' : 'hidden',
+        height: isMobile ? 'auto' : '100%',
+      }}>
+        <div style={{
+          padding: '16px 20px', borderBottom: '1px solid ' + COLORS.line,
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10,
+        }}>
+          <div>
+            <Kicker>{folder ? folder.toUpperCase() : 'ALL'} · {String(state.items.length).padStart(2, '0')} ITEMS</Kicker>
+            <div className="mono" style={{ fontSize: 18, fontWeight: 700, marginTop: 4 }}>
+              {folder ? state.folders.find((f) => f.ownerKey === folder)?.ownerName || folder : 'AI activity log'}
+            </div>
+          </div>
+          <Btn variant="ghost" onClick={() => load(folder)}>↻ Refresh</Btn>
+        </div>
+
+        <div style={{
+          flex: 1,
+          overflow: isMobile ? 'visible' : 'auto',
+          padding: 16,
+          display: 'flex', flexDirection: 'column', gap: 12,
+        }}>
+          {state.items.length === 0 ? (
+            <div style={{
+              padding: 36, textAlign: 'center', borderRadius: 12,
+              border: `1px dashed ${COLORS.line}`, background: COLORS.bg,
+              color: COLORS.muted,
+            }}>
+              <div className="mono" style={{ fontSize: 12, letterSpacing: '0.16em', color: COLORS.text, marginBottom: 6 }}>
+                FEED IS EMPTY
+              </div>
+              <div style={{ fontSize: 12, lineHeight: 1.5 }}>
+                {folder
+                  ? 'This folder has no items yet.'
+                  : 'Chat with the AI Playground — every reply is auto-logged here.'}
+              </div>
+            </div>
+          ) : state.items.map((it) => (
+            <FeedCard key={it.id} item={it} onDelete={() => { setConfirmDel({ id: it.id, ownerName: it.ownerName }); setDelErr(''); }} />
+          ))}
+        </div>
+      </Panel>
+
+      {confirmDel && (
+        <ConfirmDialog
+          title="Delete from feed?"
+          body={<>Remove this item from <strong style={{ color: COLORS.text }}>{confirmDel.ownerName}</strong>'s activity? This can't be undone.</>}
+          confirmLabel="Delete"
+          confirmColor={COLORS.red}
+          busy={delBusy}
+          err={delErr}
+          onCancel={() => { setConfirmDel(null); setDelErr(''); }}
+          onConfirm={() => doDelete(confirmDel.id)}
+        />
+      )}
+    </div>
+  );
+}
+
+function FolderRow({ label, sub, active, onClick, color, icon, avatar }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 10,
+        padding: '10px 12px', borderRadius: 10,
+        border: `1px solid ${active ? color + '55' : 'transparent'}`,
+        background: active ? color + '14' : 'transparent',
+        cursor: 'pointer', textAlign: 'left', color: COLORS.text,
+        transition: 'background 100ms, border-color 100ms',
+      }}
+      onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = COLORS.bg; }}
+      onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = 'transparent'; }}
+    >
+      {avatar ? (
+        <img src={avatar} alt="" style={{ width: 28, height: 28, borderRadius: 999, objectFit: 'cover', flexShrink: 0 }} />
+      ) : (
+        <div style={{
+          width: 28, height: 28, borderRadius: 999,
+          background: color + '14', border: `1px solid ${color}55`,
+          display: 'grid', placeItems: 'center', color: color, fontSize: 12, fontWeight: 700,
+          flexShrink: 0,
+        }}>{icon}</div>
+      )}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div className="mono" style={{
+          fontSize: 12, fontWeight: 700,
+          color: active ? color : COLORS.text,
+          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+        }}>{label}</div>
+        <div className="mono" style={{ fontSize: 10, color: COLORS.muted, marginTop: 2 }}>{sub}</div>
+      </div>
+    </button>
+  );
+}
+
+const KIND_META = {
+  'chat':      { label: 'CHAT',    color: '#7ABEFF' },
+  'image':     { label: 'IMAGE',   color: '#C77BFF' },
+  'video':     { label: 'VIDEO',   color: COLORS.gold },
+  'bg-remove': { label: 'BG-REMOVE', color: COLORS.green },
+};
+
+function FeedCard({ item, onDelete }) {
+  const [expanded, setExpanded] = useState(false);
+  const meta = KIND_META[item.kind] || { label: item.kind?.toUpperCase() || 'ITEM', color: COLORS.muted };
+  const hasReply = !!item.reply;
+  const hasMedia = !!item.mediaUrl;
+  const replyShort = hasReply && item.reply.length > 320 ? item.reply.slice(0, 320) + '…' : item.reply;
+  const promptShort = item.prompt && item.prompt.length > 200 ? item.prompt.slice(0, 200) + '…' : item.prompt;
+  const showExpandBtn = (hasReply && item.reply.length > 320) || (item.prompt && item.prompt.length > 200);
+  const dateStr = new Date(item.createdAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+
+  return (
+    <div style={{
+      padding: 16, borderRadius: 12, background: COLORS.bg,
+      border: '1px solid ' + COLORS.line,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+        {item.ownerAvatar ? (
+          <img src={item.ownerAvatar} alt="" style={{ width: 28, height: 28, borderRadius: 999, objectFit: 'cover' }} />
+        ) : (
+          <div style={{
+            width: 28, height: 28, borderRadius: 999,
+            background: (item.ownerType === 'guest' ? COLORS.muted : COLORS.green) + '14',
+            border: `1px solid ${(item.ownerType === 'guest' ? COLORS.muted : COLORS.green)}55`,
+            display: 'grid', placeItems: 'center',
+            color: item.ownerType === 'guest' ? COLORS.muted : COLORS.green,
+            fontSize: 11, fontWeight: 700,
+          }}>{item.ownerName[0]?.toUpperCase()}</div>
+        )}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="mono" style={{ fontSize: 12, fontWeight: 700, color: COLORS.text }}>{item.ownerName}</div>
+          <div className="mono" style={{ fontSize: 10, color: COLORS.muted, marginTop: 2 }}>
+            {dateStr}{item.preset && ` · ${item.preset}`}
+          </div>
+        </div>
+        <span className="mono" style={{
+          fontSize: 9, letterSpacing: '0.14em', fontWeight: 700,
+          padding: '4px 8px', borderRadius: 6,
+          color: meta.color, background: meta.color + '14',
+          border: `1px solid ${meta.color}55`,
+        }}>{meta.label}</span>
+        {item.canDelete && (
+          <Btn variant="ghost" onClick={onDelete} title="Delete">✕</Btn>
+        )}
+      </div>
+
+      {item.prompt && (
+        <div style={{
+          padding: '10px 12px', borderRadius: 8,
+          background: COLORS.green + '08', border: `1px solid ${COLORS.green}30`,
+          fontSize: 12, color: COLORS.text, lineHeight: 1.55,
+          marginBottom: 8, whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+        }}>
+          <div className="mono" style={{ fontSize: 9, letterSpacing: '0.16em', color: COLORS.green, marginBottom: 4 }}>PROMPT</div>
+          {expanded ? item.prompt : promptShort}
+        </div>
+      )}
+
+      {hasReply && (
+        <div style={{
+          padding: '10px 12px', borderRadius: 8,
+          background: COLORS.panel, border: '1px solid ' + COLORS.line,
+          fontSize: 12, color: COLORS.text, lineHeight: 1.6,
+          whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+        }}>
+          <div className="mono" style={{ fontSize: 9, letterSpacing: '0.16em', color: COLORS.muted, marginBottom: 4 }}>REPLY</div>
+          {expanded ? item.reply : replyShort}
+        </div>
+      )}
+
+      {hasMedia && (
+        <div style={{
+          padding: 10, borderRadius: 8,
+          background: COLORS.panel, border: '1px solid ' + COLORS.line,
+        }}>
+          <div className="mono" style={{ fontSize: 9, letterSpacing: '0.16em', color: COLORS.muted, marginBottom: 8 }}>
+            {meta.label} · OUTPUT
+          </div>
+          {item.kind === 'video' ? (
+            <video src={item.mediaUrl} controls style={{ display: 'block', width: '100%', borderRadius: 6, maxHeight: 400 }} />
+          ) : (
+            <img
+              src={item.mediaUrl}
+              alt=""
+              loading="lazy"
+              style={{ display: 'block', maxWidth: '100%', borderRadius: 6 }}
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+                e.currentTarget.nextElementSibling.style.display = 'block';
+              }}
+            />
+          )}
+          <div style={{ display: 'none', padding: 8, fontSize: 11, color: COLORS.muted }} className="mono">
+            ◇ Media link expired (fal.ai URLs have short TTL).
+          </div>
+          <div style={{ marginTop: 8, display: 'flex', gap: 6 }}>
+            <a
+              href={item.mediaUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="mono"
+              style={{
+                fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase',
+                padding: '5px 10px', borderRadius: 6, color: COLORS.muted,
+                border: '1px solid ' + COLORS.line, textDecoration: 'none',
+              }}
+            >Open ↗</a>
+          </div>
+        </div>
+      )}
+
+      {showExpandBtn && (
+        <div style={{ marginTop: 8 }}>
+          <Btn variant="ghost" onClick={() => setExpanded(!expanded)}>
+            {expanded ? '↑ Collapse' : '↓ Expand'}
+          </Btn>
+        </div>
+      )}
     </div>
   );
 }

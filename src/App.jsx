@@ -18,6 +18,7 @@ const GamePanel          = lazy(() => import('./featuresA.jsx').then((m) => ({ d
 const TechStackMonitor   = lazy(() => import('./featuresB.jsx').then((m) => ({ default: m.TechStackMonitor })));
 const CryptoWatch        = lazy(() => import('./featuresB.jsx').then((m) => ({ default: m.CryptoWatch })));
 const TodoList           = lazy(() => import('./featuresB.jsx').then((m) => ({ default: m.TodoList })));
+const Feed               = lazy(() => import('./featuresB.jsx').then((m) => ({ default: m.Feed })));
 
 const FEATURES = [
   { id: 'home',   label: 'Home',                  icon: '⌂',   accent: COLORS.text,  short: '00' },
@@ -28,6 +29,7 @@ const FEATURES = [
   { id: 'tech',   label: 'Subscription Manager',  icon: '⌬',   accent: COLORS.green, short: '05', desc: 'Monthly + yearly burn' },
   { id: 'crypto', label: 'Currency',              icon: '$',   accent: COLORS.gold,  short: '06', desc: 'BTC · GOLD · TWD ⇄ VND' },
   { id: 'todo',   label: 'To-Do List',            icon: '✓',   accent: COLORS.green, short: '07', desc: 'Priorities · localStorage' },
+  { id: 'feed',   label: 'Feed',                  icon: '◧',   accent: COLORS.gold,  short: '08', desc: 'Private AI history' },
 ];
 
 const EXPERIMENT_NUMBER = '007';
@@ -162,6 +164,7 @@ function AppDesktop() {
               {route === 'tech'   && <TechStackMonitor />}
               {route === 'crypto' && <CryptoWatch />}
               {route === 'todo'   && <TodoList />}
+              {route === 'feed'   && <Feed />}
             </Suspense>
           </div>
         </div>
@@ -1193,7 +1196,7 @@ function HomeView({ nav, ambient, ambientOn }) {
             margin: '20px 0 0', maxWidth: 720,
             fontSize: 16, color: COLORS.muted, lineHeight: 1.6,
           }}>
-            A personal control surface — seven modules wired to one prompt.
+            A personal control surface — eight modules wired to one prompt.
             AI, finance, travel, subscriptions, and tools, woven into a single command center.
           </p>
           <div style={{ marginTop: 26, display: 'flex', gap: 10 }}>

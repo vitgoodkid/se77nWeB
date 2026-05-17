@@ -190,6 +190,34 @@ export function AIPlayground() {
         assistantMsg = { role: 'assistant', content: '', image: data.image };
       }
       setMessages((m) => [...m, assistantMsg]);
+
+      // Auto-log every successful AI activity to the private history feed.
+      // Server identifies the actor (auth user via session, guest via cookie).
+      // Fire-and-forget so a failed log never blocks the chat UX.
+      const histPayload = (() => {
+        const promptStr = (q || '').trim();
+        if (preset.kind === 'chat' && assistantMsg?.content) {
+          return { kind: 'chat', prompt: promptStr, reply: assistantMsg.content, preset: preset.id };
+        }
+        if (preset.kind === 'image' && assistantMsg?.image) {
+          return { kind: 'image', prompt: promptStr, mediaUrl: assistantMsg.image, preset: preset.id };
+        }
+        if (preset.kind === 'video' && assistantMsg?.video) {
+          return { kind: 'video', prompt: promptStr, mediaUrl: assistantMsg.video, preset: preset.id };
+        }
+        if (preset.kind === 'bg-remove' && assistantMsg?.image) {
+          return { kind: 'bg-remove', prompt: promptStr || '(no prompt)', mediaUrl: assistantMsg.image, preset: preset.id };
+        }
+        return null;
+      })();
+      if (histPayload) {
+        fetch('/api/toolbox?kind=history', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(histPayload),
+        }).catch(() => { /* silent */ });
+      }
     } catch (e) {
       setMessages((m) => [...m, { role: 'assistant', content: '⚠ ' + (e.message || 'Connection wobble. Try again?') }]);
     } finally {

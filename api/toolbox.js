@@ -12,7 +12,7 @@
 
 import { ObjectId } from 'mongodb';
 import { getDb } from './_lib/mongo.js';
-import { readSession } from './_lib/session.js';
+import { readSession, parseCookies } from './_lib/session.js';
 
 export const config = { maxDuration: 15 };
 
@@ -24,7 +24,8 @@ export default async function handler(req, res) {
       case 'paste': return await handlePaste(req, res);
       case 'games': return await handleGames(req, res);
       case 'tech':  return await handleTech(req, res);
-      default: return res.status(400).json({ error: 'unknown kind', hint: 'expected ?kind=short|paste|games|tech' });
+      case 'history': return await handleHistory(req, res);
+      default: return res.status(400).json({ error: 'unknown kind', hint: 'expected ?kind=short|paste|games|tech|history' });
     }
   } catch (err) {
     console.error('[/api/toolbox]', kind, err);
@@ -417,6 +418,42 @@ function newSubId() {
   return Math.random().toString(36).slice(2, 10);
 }
 
+// Advance a YYYY-MM-DD date by one period. Uses UTC math so server timezone
+// doesn't shift the day. Yearly adds 1 year; monthly adds 1 month.
+function advanceDate(iso, period) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  if (!m) return iso;
+  const dt = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+  if (period === 'yearly') dt.setUTCFullYear(dt.getUTCFullYear() + 1);
+  else dt.setUTCMonth(dt.getUTCMonth() + 1);
+  return dt.toISOString().slice(0, 10);
+}
+
+// Loop forward until the date is strictly after `today`. Safety cap prevents
+// runaway loops on malformed data; 60 iterations covers 60 years monthly.
+function rollForward(iso, period, today) {
+  let cur = iso;
+  let n = 60;
+  while (cur <= today && n-- > 0) cur = advanceDate(cur, period);
+  return cur;
+}
+
+// Walk a stack's subs and roll any past-due nextRenewal forward.
+// Returns { subs, mutated } so the caller can persist only when needed.
+function autoRollRenewals(subs) {
+  const today = new Date().toISOString().slice(0, 10);
+  let mutated = false;
+  const next = subs.map((s) => {
+    if (!s.nextRenewal || !s.period) return s;
+    if (s.nextRenewal > today) return s;
+    const rolled = rollForward(s.nextRenewal, s.period, today);
+    if (rolled === s.nextRenewal) return s;
+    mutated = true;
+    return { ...s, nextRenewal: rolled };
+  });
+  return { subs: next, mutated };
+}
+
 function validateSub(input) {
   if (!input || typeof input !== 'object') return { error: 'invalid sub' };
   const name = String(input.name || '').trim();
@@ -466,7 +503,19 @@ async function handleTech(req, res) {
 
   // ── GET: read stack ──
   if (req.method === 'GET') {
-    const subs = ownerId ? ((await stacks.findOne({ ownerId }))?.subs || []) : [];
+    let subs = ownerId ? ((await stacks.findOne({ ownerId }))?.subs || []) : [];
+    if (ownerId && subs.length) {
+      const rolled = autoRollRenewals(subs);
+      if (rolled.mutated) {
+        subs = rolled.subs;
+        // Fire-and-forget; even if write fails the client sees the rolled dates,
+        // and the next request will retry.
+        stacks.updateOne(
+          { ownerId },
+          { $set: { subs, updatedAt: new Date() } },
+        ).catch((e) => console.warn('[tech] auto-roll write failed', e?.message));
+      }
+    }
     const fx = await getFxUSD(db);
     return res.status(200).json({
       subs,
@@ -530,6 +579,248 @@ async function handleTech(req, res) {
       { $pull: { subs: { id } }, $set: { updatedAt: new Date() } },
     );
     if (result.modifiedCount === 0) return res.status(404).json({ error: 'sub not found' });
+    return res.status(200).json({ ok: true });
+  }
+
+  return res.status(405).json({ error: 'method not allowed' });
+}
+
+// ═════════════════════════════════════════════════════════════
+// HISTORY — auto-logged activity feed, one "folder" per identity.
+//
+// Writes are open: anyone using the site auto-logs activity. Authed users use
+// their email as ownerKey; guests get a server-issued `guestN` cookie. Reads
+// are restricted to FEED_WHITELIST_EMAILS so guests can't see each other.
+// ═════════════════════════════════════════════════════════════
+const HISTORY_MAX_PROMPT = 4_000;
+const HISTORY_MAX_REPLY = 12_000;
+const HISTORY_MAX_URL = 2_000;
+const HISTORY_PAGE_DEFAULT = 30;
+const HISTORY_PAGE_MAX = 200;
+const HISTORY_KINDS = new Set(['chat', 'image', 'video', 'bg-remove']);
+const GUEST_COOKIE = 'se77n_guest';
+
+let historyIndexEnsured = false;
+async function ensureHistoryIndex(col) {
+  if (historyIndexEnsured) return;
+  try {
+    await col.createIndex({ createdAt: -1 }, { name: 'history_recent' });
+    await col.createIndex({ ownerKey: 1, createdAt: -1 }, { name: 'history_by_owner_key' });
+    historyIndexEnsured = true;
+  } catch { /* race — ignore */ }
+}
+
+function getWhitelistEmails() {
+  const raw = process.env.FEED_WHITELIST_EMAILS?.trim();
+  if (!raw) return null;
+  return new Set(raw.split(/[\s,]+/).map((s) => s.trim().toLowerCase()).filter(Boolean));
+}
+
+function isWhitelisted(user) {
+  const wl = getWhitelistEmails();
+  if (!wl) return false;
+  const email = (user?.email || '').trim().toLowerCase();
+  return !!email && wl.has(email);
+}
+
+function isAdmin(user) {
+  const adminEmail = process.env.PUBLIC_TECH_OWNER_EMAIL?.trim()?.toLowerCase();
+  const userEmail = (user?.email || '').trim().toLowerCase();
+  return !!(adminEmail && userEmail && adminEmail === userEmail);
+}
+
+function isProd() {
+  return process.env.VERCEL_ENV === 'production' || process.env.NODE_ENV === 'production';
+}
+
+function buildGuestCookie(value) {
+  const parts = [
+    `${GUEST_COOKIE}=${encodeURIComponent(value)}`,
+    'Max-Age=31536000', // 1 year
+    'Path=/',
+    'HttpOnly',
+    'SameSite=Lax',
+  ];
+  if (isProd()) parts.push('Secure');
+  return parts.join('; ');
+}
+
+// Atomic guestN allocation. Mongo `counters` doc { _id: 'guest', n: 42 }.
+async function nextGuestKey(db) {
+  const counters = db.collection('counters');
+  const result = await counters.findOneAndUpdate(
+    { _id: 'guest' },
+    { $inc: { n: 1 } },
+    { upsert: true, returnDocument: 'after' },
+  );
+  // mongo driver 6 returns the doc directly; 4-5 wraps in { value }
+  const doc = result?.value || result;
+  const n = doc?.n || 1;
+  return `guest${n}`;
+}
+
+function isValidHttpUrl(s) {
+  try {
+    const u = new URL(s);
+    return u.protocol === 'http:' || u.protocol === 'https:';
+  } catch { return false; }
+}
+
+async function handleHistory(req, res) {
+  const db = await getDb();
+  const feed = db.collection('history_feed');
+  const users = db.collection('users');
+  await ensureHistoryIndex(feed);
+
+  // Resolve identity (auth'd or guest cookie). Used by POST always; by GET/DELETE
+  // we only care if the user is authed + whitelisted.
+  const session = readSession(req);
+  let authUser = null;
+  if (session?.uid) {
+    try {
+      const oid = new ObjectId(session.uid);
+      authUser = await users.findOne({ _id: oid });
+    } catch { /* fall through as guest */ }
+  }
+
+  // ── POST: append an item (open to anyone) ──
+  if (req.method === 'POST') {
+    const body = req.body || {};
+    const kind = String(body.kind || 'chat').toLowerCase();
+    if (!HISTORY_KINDS.has(kind)) return res.status(400).json({ error: 'unknown kind' });
+
+    const prompt = (body.prompt || '').toString().trim().slice(0, HISTORY_MAX_PROMPT);
+    const reply = (body.reply || '').toString().trim().slice(0, HISTORY_MAX_REPLY);
+    const mediaUrl = (body.mediaUrl || '').toString().trim().slice(0, HISTORY_MAX_URL);
+    const preset = body.preset ? String(body.preset).slice(0, 32) : null;
+
+    if (kind === 'chat') {
+      if (!prompt) return res.status(400).json({ error: 'prompt is empty' });
+      if (!reply) return res.status(400).json({ error: 'reply is empty' });
+    } else {
+      if (!mediaUrl) return res.status(400).json({ error: 'mediaUrl required for media kinds' });
+      if (!isValidHttpUrl(mediaUrl)) return res.status(400).json({ error: 'mediaUrl must be http(s)' });
+    }
+
+    // Identity for the item
+    let ownerKey, ownerType, ownerId = null, ownerName, ownerAvatar = null;
+    if (authUser) {
+      ownerType = 'user';
+      ownerKey = (authUser.email || authUser._id.toString()).toLowerCase();
+      ownerId = authUser._id;
+      ownerName = authUser.displayName || authUser.username || authUser.email || 'User';
+      ownerAvatar = authUser.avatarUrl || null;
+    } else {
+      ownerType = 'guest';
+      const cookies = parseCookies(req.headers?.cookie || '');
+      let key = cookies[GUEST_COOKIE];
+      if (!key) {
+        key = await nextGuestKey(db);
+        res.setHeader('Set-Cookie', buildGuestCookie(key));
+      }
+      ownerKey = key;
+      ownerName = key;
+    }
+
+    const doc = {
+      ownerKey, ownerType, ownerId, ownerName, ownerAvatar,
+      kind, preset, prompt, reply, mediaUrl,
+      createdAt: new Date(),
+    };
+    const result = await feed.insertOne(doc);
+    return res.status(201).json({
+      item: {
+        id: result.insertedId.toString(),
+        ownerKey, ownerType,
+        ownerName, ownerAvatar,
+        kind, preset, prompt, reply, mediaUrl,
+        createdAt: doc.createdAt,
+        canDelete: ownerType === 'user',
+      },
+    });
+  }
+
+  // ── Reads/deletes require auth + whitelist ──
+  if (!authUser) return res.status(401).json({ error: 'login required to view feed' });
+  if (!isWhitelisted(authUser)) {
+    return res.status(403).json({
+      error: 'Feed is private',
+      hint: 'Your email is not on the whitelist. Contact the owner.',
+    });
+  }
+
+  if (req.method === 'GET') {
+    const limit = Math.min(
+      HISTORY_PAGE_MAX,
+      Math.max(1, parseInt(req.query?.limit, 10) || HISTORY_PAGE_DEFAULT),
+    );
+    const before = req.query?.before ? new Date(req.query.before) : null;
+    const ownerKey = (req.query?.owner || '').toString().trim().toLowerCase();
+    const filter = {};
+    if (before && !Number.isNaN(before.getTime())) filter.createdAt = { $lt: before };
+    if (ownerKey) filter.ownerKey = ownerKey;
+
+    const items = await feed.find(filter).sort({ createdAt: -1 }).limit(limit).toArray();
+
+    // Aggregate folder list (one entry per ownerKey, with item count + last activity)
+    const folders = await feed.aggregate([
+      { $group: {
+        _id: '$ownerKey',
+        ownerType: { $first: '$ownerType' },
+        ownerName: { $last: '$ownerName' },
+        ownerAvatar: { $last: '$ownerAvatar' },
+        count: { $sum: 1 },
+        lastAt: { $max: '$createdAt' },
+      } },
+      { $sort: { lastAt: -1 } },
+      { $limit: 200 },
+    ]).toArray();
+
+    const admin = isAdmin(authUser);
+    const myKey = (authUser.email || '').toLowerCase();
+
+    return res.status(200).json({
+      items: items.map((it) => ({
+        id: it._id.toString(),
+        ownerKey: it.ownerKey,
+        ownerType: it.ownerType,
+        ownerName: it.ownerName,
+        ownerAvatar: it.ownerAvatar || null,
+        kind: it.kind,
+        preset: it.preset || null,
+        prompt: it.prompt || '',
+        reply: it.reply || '',
+        mediaUrl: it.mediaUrl || '',
+        createdAt: it.createdAt,
+        canDelete: admin || it.ownerKey === myKey,
+      })),
+      folders: folders.map((f) => ({
+        ownerKey: f._id,
+        ownerType: f.ownerType,
+        ownerName: f.ownerName,
+        ownerAvatar: f.ownerAvatar || null,
+        count: f.count,
+        lastAt: f.lastAt,
+      })),
+      isAdmin: admin,
+      myKey,
+    });
+  }
+
+  if (req.method === 'DELETE') {
+    const id = (req.query?.id || '').toString();
+    if (!id) return res.status(400).json({ error: 'id required' });
+    let itemOid;
+    try { itemOid = new ObjectId(id); } catch { return res.status(400).json({ error: 'invalid id' }); }
+
+    const item = await feed.findOne({ _id: itemOid });
+    if (!item) return res.status(404).json({ error: 'not found' });
+
+    const myKey = (authUser.email || '').toLowerCase();
+    if (!isAdmin(authUser) && item.ownerKey !== myKey) {
+      return res.status(403).json({ error: 'you can only delete your own items' });
+    }
+    await feed.deleteOne({ _id: itemOid });
     return res.status(200).json({ ok: true });
   }
 
