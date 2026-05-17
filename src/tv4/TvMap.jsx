@@ -1,12 +1,11 @@
-// 01 MAP · MapLibre canvas + right drawer + pins + command palette + layers.
-// Tile source: CARTO Dark Matter (free OSS raster, no key). Switch to vector + Protomaps
-// for a denser map experience later — keep this simple for v0.4.
+// 01 MAP · Dotted-world SVG map + right drawer + pins + command palette.
+// Replaces the previous MapLibre raster engine with a deterministic SVG render
+// (see DottedWorldMap.jsx) that pulses world capitals in gold. Click → pan/select,
+// right-click → context menu (add pin / plan trip / set as home).
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import maplibregl from 'maplibre-gl';
-import Supercluster from 'supercluster';
-import 'maplibre-gl/dist/maplibre-gl.css';
 import { COLORS, Btn, Field, useMediaQuery } from '../lib.jsx';
 import { tv4 } from './api.js';
+import DottedWorldMap from './DottedWorldMap.jsx';
 
 const PIN_COLORS = {
   see:      COLORS.green,
@@ -18,34 +17,8 @@ const PIN_COLORS = {
   ongoing:  COLORS.gold,
 };
 
-const RASTER_STYLE = {
-  version: 8,
-  glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
-  sources: {
-    'carto-dark': {
-      type: 'raster',
-      tiles: [
-        'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
-        'https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
-        'https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
-      ],
-      tileSize: 256,
-      attribution: '© OpenStreetMap contributors © CARTO',
-    },
-  },
-  layers: [
-    { id: 'bg', type: 'background', paint: { 'background-color': '#0d0a08' } },
-    { id: 'carto', type: 'raster', source: 'carto-dark', minzoom: 0, maxzoom: 19, paint: { 'raster-opacity': 0.85 } },
-  ],
-};
-
 export default function TvMap({ trips, onOpenTrip, onRefreshTrips }) {
   const isMobile = useMediaQuery('(max-width: 768px)');
-  const mapRef = useRef(null);
-  const containerRef = useRef(null);
-  const markersRef = useRef([]);
-  const routeLayerId = 'tv4-routes';
-  const heatLayerId = 'tv4-heat';
 
   const [pins, setPins] = useState([]);
   const [activeTripId, setActiveTripId] = useState(null);
@@ -61,8 +34,13 @@ export default function TvMap({ trips, onOpenTrip, onRefreshTrips }) {
   const [newPinDraft, setNewPinDraft] = useState(null);
   const [newTripDraft, setNewTripDraft] = useState(null);
   const [enableClustering, setEnableClustering] = useState(true);
-  const clusterMarkersRef = useRef([]);
-  const supRef = useRef(null);
+  // Inline toast — replaces native alert(), auto-dismisses after 3s.
+  const [toast, setToast] = useState(null);
+  useEffect(() => {
+    if (!toast) return;
+    const id = setTimeout(() => setToast(null), 3000);
+    return () => clearTimeout(id);
+  }, [toast]);
 
   // Load all pins for all trips on mount.
   useEffect(() => {
@@ -83,194 +61,16 @@ export default function TvMap({ trips, onOpenTrip, onRefreshTrips }) {
     return () => { cancel = true; };
   }, [trips]);
 
-  // Map init.
-  useEffect(() => {
-    if (!containerRef.current || mapRef.current) return;
-    const map = new maplibregl.Map({
-      container: containerRef.current,
-      style: RASTER_STYLE,
-      center: [121.56, 25.04], // Taipei default
-      zoom: 1.6,
-      attributionControl: { compact: true },
-    });
-    map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right');
-    mapRef.current = map;
-
-    map.on('contextmenu', (e) => {
-      setContextMenu({ x: e.point.x, y: e.point.y, lng: e.lngLat.lng, lat: e.lngLat.lat });
-    });
-    map.on('click', (e) => {
-      setContextMenu(null);
-      // editMode click-to-add handled in a separate effect that reads latest state.
-      const ev = new CustomEvent('tv4-map-click', { detail: { lng: e.lngLat.lng, lat: e.lngLat.lat } });
-      window.dispatchEvent(ev);
-    });
-
-    return () => {
-      map.remove();
-      mapRef.current = null;
-    };
+  // Pin select from the SVG map.
+  const onPinSelect = useCallback((p) => {
+    setActivePinId(p._id);
+    setActiveTripId(p.tripId);
   }, []);
 
-  // Sync projection.
-  useEffect(() => {
-    const m = mapRef.current;
-    if (!m) return;
-    try {
-      // setProjection exists on MapLibre 4+; ignore on older.
-      m.setProjection?.({ type: projection });
-    } catch (e) {
-      // older versions silently noop
-    }
-  }, [projection]);
-
-  // Markers (raw pins + cluster bubbles). Re-renders when pins/zoom/active change.
-  useEffect(() => {
-    const m = mapRef.current;
-    if (!m) return;
-
-    // Build supercluster index once per pins set.
-    const points = pins
-      .filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lng))
-      .map((p) => ({
-        type: 'Feature',
-        properties: { pinId: p._id },
-        geometry: { type: 'Point', coordinates: [p.lng, p.lat] },
-      }));
-    supRef.current = new Supercluster({ radius: 50, maxZoom: 14 }).load(points);
-
-    const renderMarkers = () => {
-      // Clear all.
-      markersRef.current.forEach((mk) => mk.remove());
-      markersRef.current = [];
-      clusterMarkersRef.current.forEach((mk) => mk.remove());
-      clusterMarkersRef.current = [];
-
-      const bounds = m.getBounds();
-      const z = Math.floor(m.getZoom());
-      const clusters = enableClustering ? supRef.current.getClusters(
-        [bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()],
-        z,
-      ) : points;
-
-      for (const c of clusters) {
-        const [lng, lat] = c.geometry.coordinates;
-        if (c.properties?.cluster) {
-          const count = c.properties.point_count;
-          const el = document.createElement('button');
-          el.style.cssText = `
-            width:${28 + Math.min(count, 50)}px;height:${28 + Math.min(count, 50)}px;
-            border-radius:999px;background:${COLORS.gold}33;color:${COLORS.gold};
-            border:2px solid ${COLORS.gold};cursor:pointer;padding:0;
-            font-family:JetBrains Mono, monospace;font-weight:700;font-size:12px;
-            box-shadow:0 0 18px ${COLORS.gold}55;
-          `;
-          el.textContent = String(count);
-          el.addEventListener('click', () => {
-            const expansionZoom = Math.min(supRef.current.getClusterExpansionZoom(c.properties.cluster_id), 14);
-            m.flyTo({ center: [lng, lat], zoom: expansionZoom + 0.5, speed: 1.4 });
-          });
-          const mk = new maplibregl.Marker({ element: el }).setLngLat([lng, lat]).addTo(m);
-          clusterMarkersRef.current.push(mk);
-          continue;
-        }
-
-        const pinId = c.properties?.pinId;
-        const p = pins.find((x) => x._id === pinId);
-        if (!p) continue;
-        const dim = activeTripId && p.tripId !== activeTripId && !editMode;
-        const color = PIN_COLORS[p.type] || PIN_COLORS.other;
-
-        const el = document.createElement('div');
-        el.style.cssText = 'position:relative;';
-        el.innerHTML = `
-          <button style="
-            width:${editMode ? 18 : 14}px;height:${editMode ? 18 : 14}px;border-radius:999px;
-            border:2px solid ${COLORS.bg};
-            background:${color};cursor:pointer;padding:0;
-            box-shadow:0 0 0 1px ${color}55,0 0 12px ${color}66;
-            opacity:${dim ? 0.35 : 1};
-            ${p.type === 'wishlist' ? 'border-style:dashed;background:transparent;' : ''}
-            ${p.type === 'ongoing' ? 'animation:tv4PinPulse 1.8s ease-in-out infinite;' : ''}
-          " title="${(p.name || '').replace(/"/g, '&quot;')} — ${(p._tripTitle || '').replace(/"/g, '&quot;')}"></button>
-          ${editMode ? `<button class="tv4-pin-del" style="
-            position:absolute;top:-8px;right:-8px;width:16px;height:16px;border-radius:999px;
-            background:${COLORS.red};color:${COLORS.bg};border:none;cursor:pointer;
-            font-size:11px;font-weight:700;line-height:1;
-          ">×</button>` : ''}
-        `;
-        el.querySelector('button')?.addEventListener('click', (e) => {
-          e.stopPropagation();
-          setActivePinId(p._id);
-          setActiveTripId(p.tripId);
-          m.flyTo({ center: [p.lng, p.lat], zoom: 12, speed: 1.4 });
-        });
-        if (editMode) {
-          el.querySelector('.tv4-pin-del')?.addEventListener('click', async (e) => {
-            e.stopPropagation();
-            if (!window.confirm(`Delete pin "${p.name}"?`)) return;
-            try {
-              await tv4.remove('pins', p._id);
-              setPins((arr) => arr.filter((x) => x._id !== p._id));
-            } catch (err) {
-              alert('Delete failed: ' + err.message);
-            }
-          });
-        }
-        const mk = new maplibregl.Marker({ element: el }).setLngLat([lng, lat]).addTo(m);
-        markersRef.current.push(mk);
-      }
-    };
-
-    renderMarkers();
-    m.on('moveend', renderMarkers);
-    m.on('zoomend', renderMarkers);
-    return () => {
-      m.off('moveend', renderMarkers);
-      m.off('zoomend', renderMarkers);
-    };
-  }, [pins, activeTripId, editMode, enableClustering]);
-
-  // Click-to-add: in edit mode → new pin; otherwise → new trip pre-filled with lat/lng.
-  useEffect(() => {
-    const onClick = (e) => {
-      if (editMode) {
-        if (!activeTripId) {
-          alert('Pick a trip in the drawer before adding pins.');
-          return;
-        }
-        setNewPinDraft({ lat: e.detail.lat, lng: e.detail.lng });
-      } else {
-        setNewTripDraft({ lat: e.detail.lat, lng: e.detail.lng });
-      }
-    };
-    window.addEventListener('tv4-map-click', onClick);
-    return () => window.removeEventListener('tv4-map-click', onClick);
-  }, [editMode, activeTripId]);
-
-  // Routes layer.
-  useEffect(() => {
-    const m = mapRef.current;
-    if (!m || !m.isStyleLoaded()) {
-      // wait for style
-      const handler = () => {
-        toggleRoutes(mapRef.current, pins, activeTripId, layerRoutes, routeLayerId);
-      };
-      m?.once('load', handler);
-      return () => m?.off('load', handler);
-    }
-    toggleRoutes(m, pins, activeTripId, layerRoutes, routeLayerId);
-  }, [pins, activeTripId, layerRoutes]);
-
-  // Heat layer.
-  useEffect(() => {
-    const m = mapRef.current;
-    if (!m) return;
-    const apply = () => toggleHeat(m, pins, layerHeat, heatLayerId);
-    if (m.isStyleLoaded()) apply();
-    else m.once('load', apply);
-    return () => m.off('load', apply);
-  }, [pins, layerHeat]);
+  // Right-click on the SVG → open context menu at click position.
+  const onMapContextMenu = useCallback((c) => {
+    setContextMenu({ x: c.x, y: c.y, lat: c.lat, lng: c.lng });
+  }, []);
 
   // Keyboard shortcuts: '[' toggles drawer, '⌘K' or 'ctrl+K' opens palette.
   useEffect(() => {
@@ -323,16 +123,8 @@ export default function TvMap({ trips, onOpenTrip, onRefreshTrips }) {
   const activeTrip = useMemo(() => trips.find((t) => t._id === activeTripId), [trips, activeTripId]);
 
   const focusTrip = useCallback((trip) => {
-    const m = mapRef.current; if (!m) return;
     setActiveTripId(trip._id);
-    const tripPins = pins.filter((p) => p.tripId === trip._id && Number.isFinite(p.lat) && Number.isFinite(p.lng));
-    if (!tripPins.length) return;
-    const lngs = tripPins.map((p) => p.lng), lats = tripPins.map((p) => p.lat);
-    m.fitBounds(
-      [[Math.min(...lngs), Math.min(...lats)], [Math.max(...lngs), Math.max(...lats)]],
-      { padding: 80, duration: 800 },
-    );
-  }, [pins]);
+  }, []);
 
   return (
     <div style={{
@@ -343,8 +135,13 @@ export default function TvMap({ trips, onOpenTrip, onRefreshTrips }) {
       gridTemplateRows: isMobile && drawerOpen ? '1fr auto' : '1fr',
       height: '100%', position: 'relative',
     }}>
-      <div ref={containerRef} style={{ position: 'relative', overflow: 'hidden' }}>
-        <style>{`@keyframes tv4PinPulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.3); opacity: 0.6; } }`}</style>
+      <div style={{ position: 'relative', overflow: 'hidden' }}>
+        <DottedWorldMap
+          pins={pins}
+          activeTripId={activeTripId}
+          onPinSelect={onPinSelect}
+          onContextMenu={onMapContextMenu}
+        />
 
         {!drawerOpen && (
           <button
@@ -359,20 +156,6 @@ export default function TvMap({ trips, onOpenTrip, onRefreshTrips }) {
             }}
           >SHOW DRAWER · [</button>
         )}
-
-        <div style={{
-          position: 'absolute', bottom: 12, left: 12, zIndex: 5,
-          display: 'flex', gap: 6,
-        }}>
-          <LayerToggle on={layerRoutes} onClick={() => setLayerRoutes((v) => !v)} label="ROUTES" />
-          <LayerToggle on={layerHeat} onClick={() => setLayerHeat((v) => !v)} label="HEATMAP" />
-          <LayerToggle on={enableClustering} onClick={() => setEnableClustering((v) => !v)} label="CLUSTER" />
-          <LayerToggle
-            on={projection === 'globe'}
-            onClick={() => setProjection((p) => p === 'globe' ? 'mercator' : 'globe')}
-            label="🌐 GLOBE"
-          />
-        </div>
 
         {editMode && (
           <div style={{
@@ -402,12 +185,69 @@ export default function TvMap({ trips, onOpenTrip, onRefreshTrips }) {
               boxShadow: '0 12px 30px rgba(0,0,0,0.4)',
             }}
           >
-            <CtxItem label={`Add pin here (${contextMenu.lat.toFixed(2)}, ${contextMenu.lng.toFixed(2)})`}
-              onClick={() => alert('Pin add via map — task #11')} />
-            <CtxItem label="Set as home" onClick={() => alert('Home base via Settings')} />
-            <CtxItem label="Plan a trip from here" onClick={() => alert('Pre-fill new trip — todo')} />
+            <CtxItem
+              label={`Add pin here (${contextMenu.lat.toFixed(2)}, ${contextMenu.lng.toFixed(2)})`}
+              onClick={() => {
+                if (!activeTripId) {
+                  setToast({ kind: 'warn', text: 'Pick a trip in the drawer before adding pins.' });
+                  setContextMenu(null);
+                  return;
+                }
+                setNewPinDraft({ lat: contextMenu.lat, lng: contextMenu.lng });
+                setContextMenu(null);
+              }}
+            />
+            <CtxItem
+              label="Plan a trip from here"
+              onClick={() => {
+                setNewTripDraft({ lat: contextMenu.lat, lng: contextMenu.lng });
+                setContextMenu(null);
+              }}
+            />
+            <CtxItem
+              label="Set as home"
+              onClick={async () => {
+                const { lat, lng } = contextMenu;
+                setContextMenu(null);
+                try {
+                  const { doc: existing } = await tv4.getSettings();
+                  const next = {
+                    ...(existing || {}),
+                    homeBase: { lat, lng, name: existing?.homeBase?.name || '' },
+                  };
+                  await tv4.saveSettings(next);
+                  setToast({ kind: 'ok', text: `Home base set · ${lat.toFixed(3)}°, ${lng.toFixed(3)}°` });
+                } catch (e) {
+                  setToast({ kind: 'err', text: 'Save failed: ' + (e.message || 'unknown') });
+                }
+              }}
+            />
             <CtxItem label="Cancel" onClick={() => setContextMenu(null)} />
           </div>
+        )}
+
+        {toast && (
+          <div
+            role="status"
+            style={{
+              position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)',
+              zIndex: 20,
+              padding: '8px 14px', borderRadius: 999,
+              background: toast.kind === 'err' ? COLORS.red + '22'
+                       : toast.kind === 'ok'  ? COLORS.green + '22'
+                       : COLORS.gold + '22',
+              border: '1px solid ' + (toast.kind === 'err' ? COLORS.red + '80'
+                                  :   toast.kind === 'ok'  ? COLORS.green + '80'
+                                  :   COLORS.gold + '80'),
+              color: toast.kind === 'err' ? COLORS.red
+                  :  toast.kind === 'ok'  ? COLORS.green
+                  :  COLORS.gold,
+              fontFamily: 'JetBrains Mono, monospace',
+              fontSize: 11, letterSpacing: '0.14em',
+              boxShadow: '0 6px 20px rgba(0,0,0,0.4)',
+              whiteSpace: 'nowrap',
+            }}
+          >{toast.text}</div>
         )}
       </div>
 
@@ -426,7 +266,7 @@ export default function TvMap({ trips, onOpenTrip, onRefreshTrips }) {
             onSearch={() => setPaletteOpen(true)}
             editMode={editMode}
             onToggleEdit={() => {
-              if (!activeTripId && !editMode) { alert('Pick a trip first'); return; }
+              if (!activeTripId && !editMode) { setToast({ kind: 'warn', text: 'Pick a trip first.' }); return; }
               setEditMode((v) => !v);
             }}
           />
