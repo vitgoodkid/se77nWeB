@@ -39,7 +39,7 @@ function tripDays(trip) {
   return Math.max(1, Math.round((e - s) / 86400000) + 1);
 }
 
-export default function TvFolder({ trip, sub, onSubChange, onTripUpdate, onGotoPlan, onGotoExpenses }) {
+export default function TvFolder({ trip, sub, onSubChange, onTripUpdate, onGotoPlan, onGotoExpenses, onTripDeleted }) {
   const isMobile = useMediaQuery('(max-width: 768px)');
   const subId = SUB_TABS.find((t) => t.id === sub) ? sub : 'overview';
   const [pins, setPins] = useState([]);
@@ -123,6 +123,18 @@ export default function TvFolder({ trip, sub, onSubChange, onTripUpdate, onGotoP
     }
   }, [tripId, onTripUpdate]);
 
+  const deleteTrip = useCallback(async () => {
+    if (!tripId) return;
+    if (!window.confirm(`Delete "${trip.title}"? All pins, plans, expenses, and notes for this trip will be removed. This cannot be undone.`)) return;
+    try {
+      await tv4.remove('trips', tripId);
+      setMenuOpen(false);
+      onTripDeleted?.();
+    } catch (e) {
+      alert('Delete failed: ' + (e.message || 'unknown'));
+    }
+  }, [tripId, trip, onTripDeleted]);
+
   if (!trip) return <EmptyState />;
 
   return (
@@ -135,6 +147,7 @@ export default function TvFolder({ trip, sub, onSubChange, onTripUpdate, onGotoP
               updateTrip({ status: 'visited' });
             }
           }}
+          onDelete={deleteTrip}
         />
 
         <div style={{ marginTop: 14, marginBottom: 14 }}>
@@ -223,7 +236,7 @@ function SubTabs({ value, onChange }) {
   );
 }
 
-function TopPills({ trip, sumDates, stats, onMenu, menuOpen, onArchive, onPromote }) {
+function TopPills({ trip, sumDates, stats, onMenu, menuOpen, onArchive, onPromote, onDelete }) {
   const c = STATUS_COLOR[trip.status] || COLORS.muted;
   return (
     <div style={{
@@ -258,6 +271,8 @@ function TopPills({ trip, sumDates, stats, onMenu, menuOpen, onArchive, onPromot
             <MenuItem label="Duplicate (todo)" onClick={() => alert('Duplicate — coming with templates task #13')} />
             <MenuItem label="Share read-only (todo)" onClick={() => alert('Share — coming with exports task #12')} />
             <MenuItem label="Print" onClick={() => window.print()} />
+            <div style={{ height: 1, background: COLORS.line, margin: '4px 0' }} />
+            <MenuItem label="Delete trip…" danger onClick={onDelete} />
           </div>
         )}
       </div>
@@ -265,17 +280,18 @@ function TopPills({ trip, sumDates, stats, onMenu, menuOpen, onArchive, onPromot
   );
 }
 
-function MenuItem({ label, onClick }) {
+function MenuItem({ label, onClick, danger }) {
   return (
     <button
       onClick={onClick}
       style={{
         display: 'block', width: '100%', textAlign: 'left',
         padding: '7px 10px', borderRadius: 6,
-        background: 'transparent', border: 'none', color: COLORS.text,
+        background: 'transparent', border: 'none',
+        color: danger ? COLORS.red : COLORS.text,
         cursor: 'pointer', fontSize: 12,
       }}
-      onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(245,237,224,0.04)'}
+      onMouseEnter={(e) => e.currentTarget.style.background = danger ? COLORS.red + '14' : 'rgba(245,237,224,0.04)'}
       onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
     >{label}</button>
   );

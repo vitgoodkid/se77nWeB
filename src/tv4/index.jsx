@@ -142,6 +142,10 @@ export function TravelV4() {
             onTripUpdate={refreshTrips}
             onGotoPlan={() => nav('plan', activeTrip?.slug)}
             onGotoExpenses={() => nav('expenses', activeTrip?.slug)}
+            onTripDeleted={async () => {
+              await refreshTrips();
+              nav('list');
+            }}
           />
         )}
         {view === 'plan' && (
