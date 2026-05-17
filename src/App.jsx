@@ -1233,7 +1233,7 @@ function HomeView({ nav, ambient, ambientOn }) {
 
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+          gridTemplateColumns: 'repeat(6, minmax(0, 1fr))',
           gap: 16,
         }}>
           {FEATURES.filter((f) => f.id !== 'home').map((f, i) => (
