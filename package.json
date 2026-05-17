@@ -10,6 +10,8 @@
     "vercel-dev": "vercel dev"
   },
   "dependencies": {
+    "@ffmpeg/ffmpeg": "^0.12.15",
+    "@ffmpeg/util": "^0.12.2",
     "jsonwebtoken": "9.0.2",
     "mongodb": "6.10.0",
     "react": "^18.3.1",

@@ -1045,14 +1045,113 @@ function ImageConverterTool({ accent }) {
   );
 }
 
+// Module-level singleton — FFmpeg core stays loaded across renders + tool re-opens.
+// Loaded lazily on first convert; ~25 MB download from CDN once per browser session.
+let ffmpegInstance = null;
+let ffmpegLoading = null;
+const FFMPEG_CORE_VERSION = '0.12.10';
+
+async function getFFmpeg(onLog) {
+  if (ffmpegInstance) return ffmpegInstance;
+  if (ffmpegLoading) return ffmpegLoading;
+  ffmpegLoading = (async () => {
+    const [{ FFmpeg }, { toBlobURL }] = await Promise.all([
+      import('@ffmpeg/ffmpeg'),
+      import('@ffmpeg/util'),
+    ]);
+    const baseURL = `https://unpkg.com/@ffmpeg/core@${FFMPEG_CORE_VERSION}/dist/umd`;
+    const ff = new FFmpeg();
+    if (onLog) ff.on('log', ({ message }) => onLog(message));
+    await ff.load({
+      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+      wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+    });
+    ffmpegInstance = ff;
+    return ff;
+  })();
+  try { return await ffmpegLoading; }
+  finally { ffmpegLoading = null; }
+}
+
 function VideoToTool({ accent }) {
   const [src, setSrc] = useState(null);
+  const [duration, setDuration] = useState(0);
   const [mode, setMode] = useState('gif');
+  const [fps, setFps] = useState(10);
+  const [width, setWidth] = useState(480);
+  const [bitrate, setBitrate] = useState('192k');
+  const [startTime, setStartTime] = useState(0);
+  const [clipLen, setClipLen] = useState(8);
+  const [busy, setBusy] = useState(false);
+  const [stage, setStage] = useState('');
+  const [progress, setProgress] = useState(0);
+  const [err, setErr] = useState('');
+  const [output, setOutput] = useState(null);
+  const videoRef = useRef(null);
+
   function onFile(e) {
     const f = e.target.files?.[0];
     if (!f) return;
-    setSrc({ name: f.name, size: f.size, url: URL.createObjectURL(f) });
+    if (output) { URL.revokeObjectURL(output.url); setOutput(null); }
+    setSrc({ name: f.name, size: f.size, url: URL.createObjectURL(f), file: f });
+    setErr(''); setProgress(0); setStage(''); setStartTime(0);
   }
+
+  function onMetadata() {
+    if (!videoRef.current) return;
+    const d = videoRef.current.duration;
+    if (Number.isFinite(d)) {
+      setDuration(d);
+      setClipLen(Math.min(8, Math.floor(d)));
+    }
+  }
+
+  async function convert() {
+    if (!src || busy) return;
+    setBusy(true); setErr(''); setOutput(null); setProgress(0); setStage('Loading FFmpeg…');
+    try {
+      const ff = await getFFmpeg();
+      const { fetchFile } = await import('@ffmpeg/util');
+      const onProgress = ({ progress }) => setProgress(Math.max(0, Math.min(1, progress)));
+      ff.on('progress', onProgress);
+
+      const inputName = 'input' + (src.name.match(/\.[a-z0-9]+$/i)?.[0] || '.mp4');
+      setStage('Loading file…');
+      await ff.writeFile(inputName, await fetchFile(src.file));
+
+      const args = ['-ss', String(startTime), '-i', inputName, '-t', String(clipLen)];
+      let outName, mime, outExt;
+
+      if (mode === 'gif') {
+        outExt = 'gif'; outName = 'out.gif'; mime = 'image/gif';
+        args.push('-vf', `fps=${fps},scale=${width}:-1:flags=lanczos`, '-loop', '0', outName);
+      } else {
+        outExt = 'mp3'; outName = 'out.mp3'; mime = 'audio/mpeg';
+        args.push('-vn', '-acodec', 'libmp3lame', '-b:a', bitrate, outName);
+      }
+
+      setStage(mode === 'gif' ? 'Converting to GIF…' : 'Extracting MP3…');
+      await ff.exec(args);
+
+      const data = await ff.readFile(outName);
+      ff.off('progress', onProgress);
+
+      const blob = new Blob([data.buffer], { type: mime });
+      const url = URL.createObjectURL(blob);
+      const base = src.name.replace(/\.[^.]+$/, '');
+      setOutput({ url, name: `${base}.${outExt}`, size: blob.size, mode });
+      setStage('Done');
+      setProgress(1);
+
+      try { await ff.deleteFile(inputName); } catch {}
+      try { await ff.deleteFile(outName); } catch {}
+    } catch (e) {
+      console.error('ffmpeg error', e);
+      setErr(e.message || 'Conversion failed');
+      setStage('');
+    } finally { setBusy(false); }
+  }
+
   return (
     <div style={{ display: 'grid', gap: 16 }}>
       <Kicker>UPLOAD VIDEO</Kicker>
@@ -1063,9 +1162,11 @@ function VideoToTool({ accent }) {
         <input type="file" accept="video/*" onChange={onFile} style={{ display: 'none' }} />
         {src ? (
           <div>
-            <video src={src.url} controls style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 8 }} />
+            <video ref={videoRef} src={src.url} controls onLoadedMetadata={onMetadata}
+              style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 8 }} />
             <div className="mono" style={{ fontSize: 11, color: COLORS.muted, marginTop: 8 }}>
               {src.name} · {(src.size / 1024 / 1024).toFixed(2)} MB
+              {duration > 0 && ` · ${duration.toFixed(1)}s`}
             </div>
           </div>
         ) : (
@@ -1077,6 +1178,7 @@ function VideoToTool({ accent }) {
           </div>
         )}
       </label>
+
       <div>
         <Kicker style={{ marginBottom: 8 }}>EXTRACT AS</Kicker>
         <div style={{ display: 'flex', gap: 6 }}>
@@ -1087,13 +1189,107 @@ function VideoToTool({ accent }) {
           ))}
         </div>
       </div>
-      <div style={{
-        padding: 14, borderRadius: 10, background: COLORS.bg,
-        border: '1px solid ' + COLORS.line, fontSize: 12, color: COLORS.muted, lineHeight: 1.5,
-      }} className="mono">
-        ◇ Heavy conversion routes through edge worker — drop your file, set the trim window, hit convert. Demo only here.
+
+      {src && (
+        <div style={{ display: 'grid', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div>
+              <Kicker style={{ marginBottom: 8 }}>START · {startTime.toFixed(1)}s</Kicker>
+              <input type="range" min="0" max={Math.max(0, duration - 0.5)} step="0.1"
+                value={startTime} onChange={(e) => setStartTime(+e.target.value)}
+                style={{ width: '100%', accentColor: accent }} />
+            </div>
+            <div>
+              <Kicker style={{ marginBottom: 8 }}>DURATION · {clipLen}s</Kicker>
+              <input type="range" min="1" max={Math.max(1, Math.floor(duration - startTime))} step="1"
+                value={clipLen} onChange={(e) => setClipLen(+e.target.value)}
+                style={{ width: '100%', accentColor: accent }} />
+            </div>
+          </div>
+
+          {mode === 'gif' ? (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div>
+                <Kicker style={{ marginBottom: 8 }}>FPS · {fps}</Kicker>
+                <input type="range" min="5" max="24" step="1"
+                  value={fps} onChange={(e) => setFps(+e.target.value)}
+                  style={{ width: '100%', accentColor: accent }} />
+              </div>
+              <div>
+                <Kicker style={{ marginBottom: 8 }}>WIDTH · {width}px</Kicker>
+                <input type="range" min="240" max="960" step="40"
+                  value={width} onChange={(e) => setWidth(+e.target.value)}
+                  style={{ width: '100%', accentColor: accent }} />
+              </div>
+            </div>
+          ) : (
+            <div>
+              <Kicker style={{ marginBottom: 8 }}>BITRATE</Kicker>
+              <div style={{ display: 'flex', gap: 6 }}>
+                {['128k', '192k', '320k'].map((b) => (
+                  <Btn key={b} variant={bitrate === b ? 'tinted' : 'ghost'} color={accent}
+                    onClick={() => setBitrate(b)}>{b}</Btn>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className="mono" style={{
+        padding: '10px 14px', borderRadius: 10, background: COLORS.bg,
+        border: '1px solid ' + COLORS.line, fontSize: 11, color: COLORS.muted, lineHeight: 1.5,
+      }}>
+        ◇ Conversion runs 100% in your browser via ffmpeg.wasm. First convert downloads ~25 MB lib (one-time, cached). Nothing leaves your device.
       </div>
-      <Btn variant="solid" color={accent} disabled={!src}>Convert & Download</Btn>
+
+      {(busy || progress > 0) && (
+        <div>
+          <div className="mono" style={{ fontSize: 11, color: COLORS.muted, marginBottom: 6, display: 'flex', justifyContent: 'space-between' }}>
+            <span>{stage}</span>
+            <span>{Math.round(progress * 100)}%</span>
+          </div>
+          <div style={{ height: 4, background: COLORS.line, borderRadius: 4, overflow: 'hidden' }}>
+            <div style={{
+              height: '100%', width: `${progress * 100}%`,
+              background: accent, transition: 'width 120ms',
+            }} />
+          </div>
+        </div>
+      )}
+
+      {err && (
+        <div className="mono" style={{
+          padding: '10px 14px', borderRadius: 10,
+          border: `1px solid ${COLORS.red}55`, background: COLORS.red + '0e',
+          color: COLORS.red, fontSize: 12,
+        }}>✕ {err}</div>
+      )}
+
+      {output && (
+        <div style={{
+          padding: 14, borderRadius: 12, border: `1px solid ${accent}55`,
+          background: accent + '08', display: 'grid', gap: 10,
+        }}>
+          {output.mode === 'gif' ? (
+            <img src={output.url} alt="GIF preview" style={{ maxWidth: '100%', borderRadius: 8 }} />
+          ) : (
+            <audio src={output.url} controls style={{ width: '100%' }} />
+          )}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+            <div className="mono" style={{ fontSize: 11, color: COLORS.muted }}>
+              {output.name} · {(output.size / 1024).toFixed(1)} KB
+            </div>
+            <a href={output.url} download={output.name} style={{ textDecoration: 'none' }}>
+              <Btn variant="solid" color={accent}>↓ Download</Btn>
+            </a>
+          </div>
+        </div>
+      )}
+
+      <Btn variant="solid" color={accent} disabled={!src || busy} onClick={convert}>
+        {busy ? 'Converting…' : 'Convert'}
+      </Btn>
     </div>
   );
 }
