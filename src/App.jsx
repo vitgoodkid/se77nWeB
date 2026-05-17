@@ -144,17 +144,12 @@ function AppDesktop() {
 
       <main style={{
         position: 'relative', marginLeft: railWidth,
+        padding: '24px 32px 32px',
         height: `calc(100vh - ${topBarH}px)`, marginTop: topBarH,
         display: 'flex', flexDirection: 'column', overflow: 'hidden',
       }}>
-        <div style={{
-          width: '100%', maxWidth: 1800,
-          margin: '0 auto', padding: '24px 32px 32px',
-          flex: 1, minHeight: 0,
-          display: 'flex', flexDirection: 'column',
-        }}>
-          <Breadcrumbs route={route} nav={nav} feature={activeFeature} />
-          <div style={{ position: 'relative', flex: 1, minHeight: 0 }}>
+        <Breadcrumbs route={route} nav={nav} feature={activeFeature} />
+        <div style={{ position: 'relative', flex: 1, minHeight: 0 }}>
           <div
             key={route + '_' + transitioning}
             style={{
@@ -191,7 +186,6 @@ function AppDesktop() {
             {phase === 'day' ? '◐ DAYLIGHT' : '◑ NIGHTSHIFT'}
           </span>
         </footer>
-        </div>
       </main>
 
       <ChatFab open={chatOpen}
