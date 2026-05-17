@@ -26,7 +26,7 @@ const TodoList           = lazy(() => import('./featuresB.jsx').then((m) => ({ d
 const MODULES = [
   { id: 'ai',     short: '01', accent: COLORS.red,   icon: '✦', i18nLabel: 'nav.ai',     i18nDesc: 'feature.ai.desc' },
   { id: 'tools',  short: '02', accent: COLORS.green, icon: '⚒', i18nLabel: 'nav.tools',  i18nDesc: 'feature.tools.desc' },
-  { id: 'tv4',    short: '03', accent: COLORS.gold,  icon: '✈', label: 'Travel',         desc: 'Trips · plans · expenses' },
+  { id: 'tv4',    short: '03', accent: COLORS.gold,  icon: '✈', i18nLabel: 'nav.travel', i18nDesc: 'feature.travel.desc' },
   { id: 'game',   short: '04', accent: COLORS.red,   icon: '◐', i18nLabel: 'nav.game',   i18nDesc: 'feature.game.desc' },
   { id: 'tech',   short: '05', accent: COLORS.green, icon: '⌬', i18nLabel: 'nav.tech',   i18nDesc: 'feature.tech.desc' },
   { id: 'crypto', short: '06', accent: COLORS.gold,  icon: '$', i18nLabel: 'nav.crypto', i18nDesc: 'feature.crypto.desc' },

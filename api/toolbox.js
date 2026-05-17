@@ -406,7 +406,9 @@ async function getFxUSD(db) {
     } catch { /* fall through */ }
   }
   if (!snap) snap = await coll.findOne({ base: 'USD' }, { sort: { date: -1 } });
-  const rates = snap?.rates || FX_FALLBACK;
+  // Merge fallback so every supported currency has a rate, even if upstream
+  // returned partial data (e.g. frankfurter.app doesn't include VND).
+  const rates = { ...FX_FALLBACK, ...(snap?.rates || {}) };
   fxMemCache = { at: Date.now(), rates };
   return rates;
 }

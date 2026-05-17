@@ -10,9 +10,22 @@ import {
 // ═════════════════════════════════════════════════════════════
 const TECH_CURRENCIES = ['USD', 'TWD', 'VND', 'EUR', 'JPY', 'KRW', 'SGD', 'CAD', 'GBP', 'CNY', 'THB', 'AUD'];
 
+// Hard-coded fallback in case the server response is missing rates for a currency.
+// Mirrors api/toolbox.js FX_FALLBACK so the UI stays sane even if FX fetch fails.
+const FX_FALLBACK_CLIENT = {
+  USD: 1, TWD: 32, VND: 25500, EUR: 0.92, JPY: 155, KRW: 1370,
+  SGD: 1.34, CAD: 1.37, GBP: 0.79, CNY: 7.2, THB: 36, AUD: 1.52,
+};
+
+function getRate(fxRates, ccy) {
+  const r = fxRates?.[ccy];
+  if (Number.isFinite(r) && r > 0) return r;
+  return FX_FALLBACK_CLIENT[ccy] || null;
+}
+
 function subToMonthlyUSD(sub, fxRates) {
-  const rate = fxRates?.[sub.currency] ?? 1;
-  if (!rate || !Number.isFinite(rate)) return 0;
+  const rate = getRate(fxRates, sub.currency);
+  if (!rate) return 0;
   const usd = Number(sub.price) / rate;
   if (!Number.isFinite(usd)) return 0;
   return sub.period === 'yearly' ? usd / 12 : usd;
@@ -33,6 +46,9 @@ export function TechStackMonitor() {
   const [err, setErr] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [adding, setAdding] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(null); // { id, name } | null
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteErr, setDeleteErr] = useState('');
 
   const isYou = !!data?.owner?.isYou;
 
@@ -97,13 +113,15 @@ export function TechStackMonitor() {
   const totals = useMemo(() => {
     let monthlyUSD = 0;
     for (const s of subs) monthlyUSD += subToMonthlyUSD(s, fxRates);
+    const twdRate = getRate(fxRates, 'TWD') || 0;
+    const vndRate = getRate(fxRates, 'VND') || 0;
     return {
       monthlyUSD,
       yearlyUSD: monthlyUSD * 12,
-      monthlyTWD: monthlyUSD * (fxRates.TWD || 0),
-      monthlyVND: monthlyUSD * (fxRates.VND || 0),
-      yearlyTWD: monthlyUSD * 12 * (fxRates.TWD || 0),
-      yearlyVND: monthlyUSD * 12 * (fxRates.VND || 0),
+      monthlyTWD: monthlyUSD * twdRate,
+      monthlyVND: monthlyUSD * vndRate,
+      yearlyTWD: monthlyUSD * 12 * twdRate,
+      yearlyVND: monthlyUSD * 12 * vndRate,
     };
   }, [subs, fxRates]);
 
@@ -243,7 +261,8 @@ export function TechStackMonitor() {
                               <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
                                 <Btn variant="ghost" onClick={() => setEditingId(s.id)} title="Edit">✎</Btn>
                                 <Btn variant="ghost" onClick={() => {
-                                  if (confirm(`Delete "${s.name}"?`)) deleteSub(s.id).catch((e) => alert(e.message));
+                                  setConfirmDelete({ id: s.id, name: s.name });
+                                  setDeleteErr('');
                                 }} title="Delete">✕</Btn>
                               </div>
                             </td>
@@ -321,6 +340,77 @@ export function TechStackMonitor() {
           ◇ FX rates auto-refreshed from exchangerate.host. Yearly subs amortized to monthly for burn math.
         </div>
       </Panel>
+
+      {confirmDelete && (
+        <ConfirmDialog
+          title="Delete subscription?"
+          body={<>This will permanently remove <strong style={{ color: COLORS.text }}>"{confirmDelete.name}"</strong> from your stack.</>}
+          confirmLabel="Delete"
+          confirmColor={COLORS.red}
+          busy={deleteBusy}
+          err={deleteErr}
+          onCancel={() => { setConfirmDelete(null); setDeleteErr(''); }}
+          onConfirm={async () => {
+            setDeleteBusy(true); setDeleteErr('');
+            try {
+              await deleteSub(confirmDelete.id);
+              setConfirmDelete(null);
+            } catch (e) {
+              setDeleteErr(e.message || 'Delete failed');
+            } finally {
+              setDeleteBusy(false);
+            }
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function ConfirmDialog({ title, body, confirmLabel, confirmColor, onConfirm, onCancel, busy, err }) {
+  useEffect(() => {
+    function onKey(e) {
+      if (e.key === 'Escape' && !busy) onCancel();
+      if (e.key === 'Enter' && !busy) onConfirm();
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [busy, onConfirm, onCancel]);
+
+  return (
+    <div
+      onClick={(e) => { if (e.target === e.currentTarget && !busy) onCancel(); }}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 1000,
+        background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)',
+        display: 'grid', placeItems: 'center',
+        animation: 'fadeUp 160ms ease-out',
+        padding: 20,
+      }}
+    >
+      <div style={{
+        maxWidth: 420, width: '100%',
+        background: COLORS.panel, border: '1px solid ' + COLORS.line,
+        borderRadius: 14, padding: 24,
+        boxShadow: '0 24px 60px rgba(0,0,0,0.6)',
+      }}>
+        <Kicker style={{ color: confirmColor, marginBottom: 10 }}>● CONFIRM</Kicker>
+        <div className="mono" style={{ fontSize: 16, fontWeight: 700, marginBottom: 10 }}>{title}</div>
+        <div style={{ fontSize: 13, color: COLORS.muted, lineHeight: 1.55, marginBottom: 18 }}>{body}</div>
+        {err && (
+          <div className="mono" style={{
+            padding: '10px 14px', borderRadius: 10, marginBottom: 14,
+            border: `1px solid ${COLORS.red}55`, background: COLORS.red + '0e',
+            color: COLORS.red, fontSize: 12,
+          }}>✕ {err}</div>
+        )}
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+          <Btn variant="ghost" onClick={onCancel} disabled={busy}>Cancel</Btn>
+          <Btn variant="solid" color={confirmColor || COLORS.red} onClick={onConfirm} disabled={busy}>
+            {busy ? 'Working…' : confirmLabel}
+          </Btn>
+        </div>
+      </div>
     </div>
   );
 }
@@ -358,14 +448,14 @@ function SubForm({ initial, onSave, onCancel, fxRates }) {
   // Live FX preview: convert entered price into the OTHER 2 of USD/TWD/VND
   const conversions = useMemo(() => {
     const p = Number(price);
-    if (!Number.isFinite(p) || p <= 0 || !fxRates) return null;
-    const baseRate = fxRates[currency];
+    if (!Number.isFinite(p) || p <= 0) return null;
+    const baseRate = getRate(fxRates, currency);
     if (!baseRate) return null;
     const usd = p / baseRate;
     const out = [];
     for (const target of ['USD', 'VND', 'TWD']) {
       if (target === currency) continue;
-      const r = fxRates[target];
+      const r = getRate(fxRates, target);
       if (!r) continue;
       out.push({ ccy: target, val: usd * r });
     }
@@ -442,7 +532,7 @@ function SubForm({ initial, onSave, onCancel, fxRates }) {
         </div>
         <div>
           <Kicker style={{ marginBottom: 6 }}>NEXT RENEWAL (optional)</Kicker>
-          <Field value={nextRenewal} onChange={setNextRenewal} placeholder="2026-06-15" />
+          <Field type="date" value={nextRenewal} onChange={setNextRenewal} placeholder="" />
         </div>
       </div>
       {conversions && conversions.length > 0 && (
