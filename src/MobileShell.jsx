@@ -17,6 +17,7 @@ import {
 const AIPlayground       = lazy(() => import('./featuresA.jsx').then((m) => ({ default: m.AIPlayground })));
 const Toolbox            = lazy(() => import('./featuresA.jsx').then((m) => ({ default: m.Toolbox })));
 const TravelArchive      = lazy(() => import('./featuresA.jsx').then((m) => ({ default: m.TravelArchive })));
+const TravelV4           = lazy(() => import('./tv4/index.jsx').then((m) => ({ default: m.TravelV4 })));
 const GamePanel          = lazy(() => import('./featuresA.jsx').then((m) => ({ default: m.GamePanel })));
 const TechStackMonitor   = lazy(() => import('./featuresB.jsx').then((m) => ({ default: m.TechStackMonitor })));
 const CryptoWatch        = lazy(() => import('./featuresB.jsx').then((m) => ({ default: m.CryptoWatch })));
@@ -32,6 +33,7 @@ const MODULES = [
   { id: 'crypto', short: '06', accent: COLORS.gold,  icon: '$', i18nLabel: 'nav.crypto', i18nDesc: 'feature.crypto.desc' },
   { id: 'vault',  short: '07', accent: COLORS.red,   icon: '⌘', i18nLabel: 'nav.vault',  i18nDesc: 'feature.vault.desc' },
   { id: 'todo',   short: '08', accent: COLORS.green, icon: '✓', i18nLabel: 'nav.todo',   i18nDesc: 'feature.todo.desc' },
+  { id: 'tv4',    short: '09', accent: COLORS.gold,  icon: '✈', label: 'Travel',         desc: 'Trips · plans · expenses' },
 ];
 
 // Slash commands → either prefix the prompt for the chat agent (so the
@@ -1012,6 +1014,7 @@ export default function MobileShell() {
             {route === 'crypto' && <CryptoWatch />}
             {route === 'vault'  && <DigitalVault />}
             {route === 'todo'   && <TodoList />}
+            {route === 'tv4'    && <TravelV4 />}
           </Suspense>
         </div>
       )}

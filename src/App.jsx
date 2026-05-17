@@ -13,6 +13,8 @@ import MobileShell from './MobileShell.jsx';
 const AIPlayground       = lazy(() => import('./featuresA.jsx').then((m) => ({ default: m.AIPlayground })));
 const Toolbox            = lazy(() => import('./featuresA.jsx').then((m) => ({ default: m.Toolbox })));
 const TravelArchive      = lazy(() => import('./featuresA.jsx').then((m) => ({ default: m.TravelArchive })));
+const TravelV4           = lazy(() => import('./tv4/index.jsx').then((m) => ({ default: m.TravelV4 })));
+const SharedTripView     = lazy(() => import('./tv4/SharedTripView.jsx'));
 const GamePanel          = lazy(() => import('./featuresA.jsx').then((m) => ({ default: m.GamePanel })));
 const TechStackMonitor   = lazy(() => import('./featuresB.jsx').then((m) => ({ default: m.TechStackMonitor })));
 const CryptoWatch        = lazy(() => import('./featuresB.jsx').then((m) => ({ default: m.CryptoWatch })));
@@ -29,6 +31,7 @@ const FEATURES = [
   { id: 'crypto', label: 'Crypto Watch',        icon: '$',   accent: COLORS.gold,  short: '06', desc: 'BTC · GOLD · TWD ⇄ VND' },
   { id: 'vault',  label: 'Digital Vault',       icon: '⌘',   accent: COLORS.red,   short: '07', desc: 'Credentials manager' },
   { id: 'todo',   label: 'To-Do List',          icon: '✓',   accent: COLORS.green, short: '08', desc: 'Priorities · localStorage' },
+  { id: 'tv4',    label: 'Travel',              icon: '✈',   accent: COLORS.gold,  short: '09', desc: 'Trips · plans · expenses' },
 ];
 
 const EXPERIMENT_NUMBER = '007';
@@ -39,6 +42,19 @@ const EXPERIMENT_NUMBER = '007';
 // mobile where their data is never displayed.
 export default function App() {
   const isMobile = useMediaQuery('(max-width: 768px)');
+
+  // Public read-only share path bypasses auth + nav. Detected via ?share=<hash>.
+  const shareToken = typeof window !== 'undefined'
+    ? new URLSearchParams(window.location.search).get('share')
+    : null;
+  if (shareToken) {
+    return (
+      <Suspense fallback={<div style={{ padding: 40, color: COLORS.muted }} className="mono">◇ loading share…</div>}>
+        <SharedTripView token={shareToken} />
+      </Suspense>
+    );
+  }
+
   if (isMobile) return <MobileShell />;
   return <AppDesktop />;
 }
@@ -49,7 +65,9 @@ function AppDesktop() {
   const isMobile = useMediaQuery('(max-width: 768px)');
 
   const [route, setRoute] = useState(() => {
-    const h = window.location.hash.replace(/^#\//, '');
+    // Match against first hash segment only — sub-routes like #/tv4/list/<slug>
+    // belong to the feature module and are parsed there.
+    const h = window.location.hash.replace(/^#\//, '').split('/')[0];
     if (FEATURES.find((f) => f.id === h)) return h;
     // On mobile, default landing → AI chat instead of the desktop landing page.
     const mobileNow = typeof window !== 'undefined' && window.matchMedia
@@ -102,7 +120,7 @@ function AppDesktop() {
 
   useEffect(() => {
     const onHash = () => {
-      const id = window.location.hash.replace(/^#\//, '') || 'home';
+      const id = window.location.hash.replace(/^#\//, '').split('/')[0] || 'home';
       if (FEATURES.find((f) => f.id === id) && id !== route) setRoute(id);
     };
     window.addEventListener('hashchange', onHash);
@@ -143,6 +161,7 @@ function AppDesktop() {
               {route === 'ai'     && <AIPlayground />}
               {route === 'tools'  && <Toolbox />}
               {route === 'travel' && <TravelArchive />}
+              {route === 'tv4'    && <TravelV4 />}
               {route === 'game'   && <GamePanel />}
               {route === 'tech'   && <TechStackMonitor />}
               {route === 'crypto' && <CryptoWatch />}
