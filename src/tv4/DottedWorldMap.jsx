@@ -8,7 +8,7 @@
 // y = (90-lat)/180 * H. Adjust H scale (×0.95 + small offset) so the dotted
 // landmasses fit nicely in the viewport.
 
-import { useMemo, useRef } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { COLORS } from '../lib.jsx';
 
 const W = 1000;
@@ -66,10 +66,13 @@ function project(lat, lng) {
 }
 
 export default function DottedWorldMap({
-  pins, activeTripId, onPinSelect, onContextMenu, onActivePinChange,
+  pins, trips, activeTripId, onPinSelect, onContextMenu,
 }) {
   const dots = useMemo(() => makeDottedLandscape(W, H), []);
   const svgRef = useRef(null);
+  const [hoverCap, setHoverCap] = useState(null);
+  const [hoverPin, setHoverPin] = useState(null);
+  const [hoverTrip, setHoverTrip] = useState(null);
 
   // Convert client px → svg viewBox coordinates → lat/lng (for right-click menu).
   const clientToLatLng = (clientX, clientY) => {
@@ -94,6 +97,15 @@ export default function DottedWorldMap({
   };
 
   const validPins = pins.filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lng));
+
+  // Trip home-base markers — show on map even before any pins are dropped, so a
+  // newly created trip (which seeded its homeBase from the right-click coords)
+  // appears immediately. Skips trips that already have a real pin nearby.
+  const tripMarkers = (trips || [])
+    .filter((t) => t?.homeBase && Number.isFinite(t.homeBase.lat) && Number.isFinite(t.homeBase.lng))
+    .filter((t) => !validPins.some((p) => p.tripId === t._id));
+
+  const hoverLabel = hoverCap || hoverPin || hoverTrip;
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
@@ -135,8 +147,14 @@ export default function DottedWorldMap({
         {/* Capitals — pulse glow + steady core */}
         {CAPITALS.map((c) => {
           const [x, y] = project(c.lat, c.lng);
+          const on = hoverCap?.id === c.id;
           return (
-            <g key={c.id}>
+            <g
+              key={c.id}
+              style={{ cursor: 'help' }}
+              onMouseEnter={() => setHoverCap({ id: c.id, name: c.name, x, y })}
+              onMouseLeave={() => setHoverCap(null)}
+            >
               <circle cx={x} cy={y} r="14" fill={`url(#tv4-capital-glow)`}
                 style={{
                   transformOrigin: `${x}px ${y}px`,
@@ -144,7 +162,26 @@ export default function DottedWorldMap({
                   animationDelay: `${(c.lat + c.lng) % 2}s`,
                 }}
               />
-              <circle cx={x} cy={y} r="2.2" fill={COLORS.gold} opacity="0.85" />
+              <circle cx={x} cy={y} r={on ? 3.2 : 2.2} fill={COLORS.gold} opacity="0.9" />
+            </g>
+          );
+        })}
+
+        {/* Trip home-base markers — placeholders until a real pin lands */}
+        {tripMarkers.map((t) => {
+          const [x, y] = project(t.homeBase.lat, t.homeBase.lng);
+          const dim = activeTripId && t._id !== activeTripId;
+          return (
+            <g
+              key={`trip-${t._id}`}
+              style={{ cursor: 'pointer', opacity: dim ? 0.35 : 1 }}
+              onClick={() => onPinSelect?.({ _id: `__trip_${t._id}`, tripId: t._id, name: t.title, lat: t.homeBase.lat, lng: t.homeBase.lng, type: 'other' })}
+              onMouseEnter={() => setHoverTrip({ name: t.title + ' · home', x, y })}
+              onMouseLeave={() => setHoverTrip(null)}
+            >
+              <circle cx={x} cy={y} r="13" fill={COLORS.gold} opacity="0.12" />
+              <circle cx={x} cy={y} r="6"  fill="none" stroke={COLORS.gold} strokeWidth="1.5" strokeDasharray="3 2" />
+              <circle cx={x} cy={y} r="2.5" fill={COLORS.gold} />
             </g>
           );
         })}
@@ -159,6 +196,8 @@ export default function DottedWorldMap({
               key={p._id}
               style={{ cursor: 'pointer', opacity: dim ? 0.35 : 1 }}
               onClick={() => onPinSelect?.(p)}
+              onMouseEnter={() => setHoverPin({ name: p.name || '—', x, y })}
+              onMouseLeave={() => setHoverPin(null)}
             >
               <circle cx={x} cy={y} r="11" fill={col} opacity="0.18" />
               <circle cx={x} cy={y} r="6"  fill={col} opacity="0.4" />
@@ -170,8 +209,40 @@ export default function DottedWorldMap({
             </g>
           );
         })}
+
+        {/* Hover label — last layer so it draws over everything */}
+        {hoverLabel && <HoverLabel x={hoverLabel.x} y={hoverLabel.y} text={hoverLabel.name} />}
       </svg>
     </div>
+  );
+}
+
+function HoverLabel({ x, y, text }) {
+  // SVG text width is hard to measure pre-render; estimate at 6.4px per char.
+  const w = Math.max(40, text.length * 6.4 + 16);
+  const pad = 10;
+  // Flip to the left if too close to the right edge.
+  const flip = x > W - w - pad;
+  const lx = flip ? x - w - pad : x + pad;
+  const ly = y - 26;
+  return (
+    <g pointerEvents="none">
+      <rect
+        x={lx} y={ly}
+        width={w} height={20} rx="4"
+        fill="rgba(13,10,8,0.92)"
+        stroke="rgba(212,168,88,0.6)"
+        strokeWidth="1"
+      />
+      <text
+        x={lx + w / 2} y={ly + 13}
+        textAnchor="middle"
+        fontFamily="JetBrains Mono, ui-monospace, monospace"
+        fontSize="10"
+        letterSpacing="1.4"
+        fill={COLORS.text}
+      >{text.toUpperCase()}</text>
+    </g>
   );
 }
 

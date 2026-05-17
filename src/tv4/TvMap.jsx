@@ -138,6 +138,7 @@ export default function TvMap({ trips, onOpenTrip, onRefreshTrips }) {
       <div style={{ position: 'relative', overflow: 'hidden' }}>
         <DottedWorldMap
           pins={pins}
+          trips={trips}
           activeTripId={activeTripId}
           onPinSelect={onPinSelect}
           onContextMenu={onMapContextMenu}
