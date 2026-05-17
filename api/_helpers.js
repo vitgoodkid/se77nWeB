@@ -51,7 +51,7 @@ export async function falSubmitAndPoll(model, input, { maxWaitMs = 55_000, pollM
   const submit = await fetch(`https://queue.fal.run/${model}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Key ${apiKey}` },
-    body: JSON.stringify({ input }),
+    body: JSON.stringify(input),
   });
   const submitData = await submit.json();
   if (!submit.ok) {

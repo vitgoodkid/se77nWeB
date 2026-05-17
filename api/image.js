@@ -25,7 +25,7 @@ export default async function handler(req, res) {
     const submit = await fetch(`https://queue.fal.run/${model}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Key ${apiKey}` },
-      body: JSON.stringify({ input }),
+      body: JSON.stringify(input),
     });
     const submitData = await submit.json();
     if (!submit.ok) return res.status(submit.status).json({ error: submitData?.detail || 'submit failed', upstream: submitData });
