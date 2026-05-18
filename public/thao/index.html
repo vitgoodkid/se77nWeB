@@ -4,7 +4,8 @@
 <meta charset="UTF-8" />
 <title>Em là vũ trụ — Phiên bản cosmic</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<script src="image-slot.js"></script>
+<base href="/thao/" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23ffd0e0%22%2F%3E%3Cstop%20offset%3D%22.5%22%20stop-color%3D%22%23f59cb4%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23c47ad6%22%2F%3E%3C%2FlinearGradient%3E%3C%2Fdefs%3E%3Cpath%20fill%3D%22url(%23g)%22%20d%3D%22M12%2021s-7.5-4.6-10-9.3C.6%208.1%202.6%204%206.3%204c2.1%200%203.6%201.1%204.7%202.8C12.1%205.1%2013.6%204%2015.7%204%2019.4%204%2021.4%208.1%2022%2011.7%2019.5%2016.4%2012%2021%2012%2021z%22%2F%3E%3C%2Fsvg%3E" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Inter:wght@200;300;400;500&family=Dancing+Script:wght@500;700&display=swap" rel="stylesheet" />
@@ -544,6 +545,7 @@
     box-shadow: inset -20px -28px 40px rgba(0,0,0,.35), inset 14px 16px 30px rgba(255,210,225,.25);
   }
   .planet-slot image-slot{display:block;width:100%;height:100%}
+  .planet-slot > img{display:block;width:100%;height:100%;object-fit:cover;border-radius:50%;user-select:none;-webkit-user-drag:none}
   .planet-slot.s1{top:6%;left:50%;transform:translateX(-50%);width:160px;height:160px}
   .planet-slot.s2{bottom:14%;left:8%;width:130px;height:130px;animation-delay:-2s}
   .planet-slot.s3{bottom:14%;right:8%;width:130px;height:130px;animation-delay:-4s}
@@ -716,15 +718,20 @@
   }
   @keyframes ekgDraw{to{stroke-dashoffset:0}}
   @keyframes ekgPulse{0%,100%{filter:drop-shadow(0 0 8px rgba(245,156,180,.9)) drop-shadow(0 0 18px rgba(245,156,180,.6))}50%{filter:drop-shadow(0 0 14px rgba(245,156,180,1)) drop-shadow(0 0 30px rgba(245,156,180,.9))}}
+  .ekg-heart-wrap{
+    position:absolute;inset:0;
+    display:flex;align-items:center;justify-content:center;
+    pointer-events:none;
+  }
   .ekg-wrap svg.ekg-heart{
-    position:absolute;left:50%;top:50%;right:auto;bottom:auto;inset:auto;
-    transform:translate(-50%,-50%) scale(0);
+    position:relative;inset:auto;left:auto;top:auto;right:auto;bottom:auto;
     width:54px;height:54px;color:#f59cb4;
     filter: drop-shadow(0 0 14px rgba(245,156,180,1));
+    transform:scale(0);
     transition: transform .6s cubic-bezier(.2,.8,.2,1) 3.8s;
   }
-  .ekg-wrap.draw svg.ekg-heart{transform:translate(-50%,-50%) scale(1); animation: beatBig 1.2s ease-in-out 4.4s infinite}
-  @keyframes beatBig{0%,100%{transform:translate(-50%,-50%) scale(1)}30%{transform:translate(-50%,-50%) scale(1.22)}}
+  .ekg-wrap.draw svg.ekg-heart{transform:scale(1); animation: beatBig 1.2s ease-in-out 4.4s infinite}
+  @keyframes beatBig{0%,100%{transform:scale(1)}30%{transform:scale(1.22)}}
   .ekg-caption{
     margin-top:18px;font-family:'Dancing Script',cursive;
     font-size: clamp(26px, 3vw, 38px);
@@ -979,13 +986,13 @@
       <div class="planet-orbit po3"></div>
 
       <div class="planet-slot s1">
-        <image-slot id="photo-1" shape="circle" placeholder="Ảnh kỷ niệm 1"></image-slot>
+        <img src="photos/1.jpg" alt="Ảnh kỷ niệm 1" draggable="false" />
       </div>
       <div class="planet-slot s2">
-        <image-slot id="photo-2" shape="circle" placeholder="Ảnh kỷ niệm 2"></image-slot>
+        <img src="photos/2.jpg" alt="Ảnh kỷ niệm 2" draggable="false" />
       </div>
       <div class="planet-slot s3">
-        <image-slot id="photo-3" shape="circle" placeholder="Ảnh kỷ niệm 3"></image-slot>
+        <img src="photos/3.jpg" alt="Ảnh kỷ niệm 3" draggable="false" />
       </div>
 
       <div class="planet-center">
@@ -1023,9 +1030,11 @@
           L 1000 140
         "/>
       </svg>
-      <svg class="ekg-heart" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M12 21s-7.5-4.6-10-9.3C.6 8.1 2.6 4 6.3 4c2.1 0 3.6 1.1 4.7 2.8C12.1 5.1 13.6 4 15.7 4 19.4 4 21.4 8.1 22 11.7 19.5 16.4 12 21 12 21z"/>
-      </svg>
+      <div class="ekg-heart-wrap">
+        <svg class="ekg-heart" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 21s-7.5-4.6-10-9.3C.6 8.1 2.6 4 6.3 4c2.1 0 3.6 1.1 4.7 2.8C12.1 5.1 13.6 4 15.7 4 19.4 4 21.4 8.1 22 11.7 19.5 16.4 12 21 12 21z"/>
+        </svg>
+      </div>
     </div>
     <div class="ekg-caption">anh — ♥ — em</div>
   </section>

@@ -14,7 +14,9 @@
     { "source": "/api/auth/discord/start", "destination": "/api/auth/discord-start" },
     { "source": "/api/auth/discord/callback", "destination": "/api/auth/discord-callback" },
     { "source": "/s/:slug", "destination": "/api/toolbox?kind=short&slug=:slug&go=1" },
-    { "source": "/p/:id", "destination": "/api/toolbox?kind=paste&id=:id&view=1" }
+    { "source": "/p/:id", "destination": "/api/toolbox?kind=paste&id=:id&view=1" },
+    { "source": "/thao/iuuuu", "destination": "/thao/index.html" },
+    { "source": "/thao/iuuuu/", "destination": "/thao/index.html" }
   ],
   "headers": [
     {

@@ -889,7 +889,7 @@ function ThaoTool({ onClose }) {
   const accent = '#f59cb4';
 
   function openLetter() {
-    window.open('/thao/index.html', '_blank', 'noopener');
+    window.open('/thao/iuuuu', '_blank', 'noopener');
   }
 
   function tryUnlock() {
