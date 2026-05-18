@@ -676,7 +676,7 @@ const PRIVATE_TOOLS = [
   { id: 'fin', name: 'Tài chính',   desc: 'Net worth + tracking',icon: '$' },
 ];
 
-const THAO_PIN = '1402';
+const THAO_PIN = '2609';
 
 export function Toolbox() {
   const [tab, setTab] = useState('public');
@@ -879,75 +879,29 @@ function ToolDetail({ tool, accent, onBack }) {
   );
 }
 
-// Letter-cosmic experience — gated by a 4-digit PIN, then rendered in a
-// fullscreen iframe overlay so the standalone HTML keeps its scroll, audio,
-// and particle stack intact.
+// Letter-cosmic experience — gated by a 4-digit PIN, then opened in a new
+// standalone tab so the standalone HTML keeps its scroll, audio, and particle
+// stack intact without competing with the dashboard chrome.
 function ThaoTool({ onClose }) {
   const [unlocked, setUnlocked] = usePersisted('se77n.tools.thao.unlocked', false);
   const [pin, setPin] = useState('');
   const [err, setErr] = useState(false);
-  const [show, setShow] = useState(false);
   const accent = '#f59cb4';
+
+  function openLetter() {
+    window.open('/thao/index.html', '_blank', 'noopener');
+  }
 
   function tryUnlock() {
     if (pin === THAO_PIN) {
       setUnlocked(true);
       setErr(false);
-      setShow(true);
+      openLetter();
     } else {
       setErr(true);
       setTimeout(() => setErr(false), 600);
       setPin('');
     }
-  }
-
-  // Listen for the iframe's postMessage close event.
-  useEffect(() => {
-    function onMsg(e) {
-      if (e.data && e.data.type === 'thao:close') setShow(false);
-    }
-    window.addEventListener('message', onMsg);
-    return () => window.removeEventListener('message', onMsg);
-  }, []);
-
-  // Esc closes the overlay (iframe also handles its own Esc, but this catches
-  // focus-outside-iframe cases like clicks on the parent backdrop).
-  useEffect(() => {
-    if (!show) return;
-    const onKey = (e) => { if (e.key === 'Escape') setShow(false); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [show]);
-
-  if (show) {
-    return (
-      <div style={{
-        position: 'fixed', inset: 0, zIndex: 999,
-        background: '#0e0512',
-      }}>
-        <iframe
-          src="/thao/index.html"
-          title="Thảo"
-          style={{
-            position: 'absolute', inset: 0,
-            width: '100%', height: '100%', border: 'none',
-            background: '#0e0512',
-          }}
-        />
-        <button
-          onClick={() => setShow(false)}
-          aria-label="Đóng"
-          style={{
-            position: 'fixed', top: 16, right: 16, zIndex: 1000,
-            padding: '8px 14px', borderRadius: 999,
-            background: 'rgba(13,10,8,0.6)', backdropFilter: 'blur(10px)',
-            border: '1px solid ' + accent + '55', color: '#f8e6ee',
-            fontSize: 11, letterSpacing: '0.2em', cursor: 'pointer',
-            fontFamily: 'JetBrains Mono, monospace',
-          }}
-        >✕ ĐÓNG</button>
-      </div>
-    );
   }
 
   return (
@@ -969,12 +923,12 @@ function ThaoTool({ onClose }) {
         }}>Thảo</div>
         <div style={{ fontSize: 12, color: COLORS.muted, marginBottom: 22, lineHeight: 1.5 }}>
           {unlocked
-            ? 'Bấm mở để xem lại lá thư.'
+            ? 'Bấm mở để xem lại lá thư (mở trong tab mới).'
             : 'Nhập 4 số bí mật để mở lá thư.'}
         </div>
         {unlocked ? (
-          <Btn variant="solid" color={accent} onClick={() => setShow(true)} style={{ width: '100%' }}>
-            ♥ Mở thư
+          <Btn variant="solid" color={accent} onClick={openLetter} style={{ width: '100%' }}>
+            ♥ Mở thư ↗
           </Btn>
         ) : (
           <>

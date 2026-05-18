@@ -716,14 +716,14 @@
   }
   @keyframes ekgDraw{to{stroke-dashoffset:0}}
   @keyframes ekgPulse{0%,100%{filter:drop-shadow(0 0 8px rgba(245,156,180,.9)) drop-shadow(0 0 18px rgba(245,156,180,.6))}50%{filter:drop-shadow(0 0 14px rgba(245,156,180,1)) drop-shadow(0 0 30px rgba(245,156,180,.9))}}
-  .ekg-heart{
-    position:absolute;left:50%;top:50%;
+  .ekg-wrap svg.ekg-heart{
+    position:absolute;left:50%;top:50%;right:auto;bottom:auto;inset:auto;
     transform:translate(-50%,-50%) scale(0);
     width:54px;height:54px;color:#f59cb4;
     filter: drop-shadow(0 0 14px rgba(245,156,180,1));
     transition: transform .6s cubic-bezier(.2,.8,.2,1) 3.8s;
   }
-  .ekg-wrap.draw .ekg-heart{transform:translate(-50%,-50%) scale(1); animation: beatBig 1.2s ease-in-out 4.4s infinite}
+  .ekg-wrap.draw svg.ekg-heart{transform:translate(-50%,-50%) scale(1); animation: beatBig 1.2s ease-in-out 4.4s infinite}
   @keyframes beatBig{0%,100%{transform:translate(-50%,-50%) scale(1)}30%{transform:translate(-50%,-50%) scale(1.22)}}
   .ekg-caption{
     margin-top:18px;font-family:'Dancing Script',cursive;
@@ -887,8 +887,7 @@
       <div class="counter-cell"><div class="num" id="cHB">0</div><div class="lbl">nhịp tim</div></div>
     </div>
     <div class="since-row">
-      <span>kể từ ngày <b id="sinceLabel">14 · 02 · 2020</b></span>
-      <button id="setDate">Đổi ngày bắt đầu</button>
+      <span>kể từ ngày <b id="sinceLabel">17 · 10 · 2024</b></span>
     </div>
   </section>
 
@@ -1290,24 +1289,7 @@
   }
 
   // ===== LOVE COUNTER =====
-  const LOVE_KEY = 'cosmic_love_date';
-  const defaultDate = '2020-02-14T00:00:00';
-  function getSince(){
-    return localStorage.getItem(LOVE_KEY) || defaultDate;
-  }
-  function setSince(v){ localStorage.setItem(LOVE_KEY, v); updateSinceLabel(); tickCounter(true); }
-  function fmtVN(iso){
-    try{
-      const d = new Date(iso);
-      const dd = String(d.getDate()).padStart(2,'0');
-      const mm = String(d.getMonth()+1).padStart(2,'0');
-      const yy = d.getFullYear();
-      return `${dd} · ${mm} · ${yy}`;
-    }catch(e){return '14 · 02 · 2020'}
-  }
-  function updateSinceLabel(){
-    document.getElementById('sinceLabel').textContent = fmtVN(getSince());
-  }
+  const SINCE_DATE = '2024-10-17T00:00:00';
   const counterEls = {
     D: document.getElementById('cD'),
     H: document.getElementById('cH'),
@@ -1317,7 +1299,7 @@
   };
   const lastVals = {D:null,H:null,M:null,S:null,HB:null};
   function tickCounter(force){
-    const start = new Date(getSince()).getTime();
+    const start = new Date(SINCE_DATE).getTime();
     const now = Date.now();
     const diff = Math.max(0, now - start);
     const sec = Math.floor(diff/1000);
@@ -1338,16 +1320,8 @@
       }
     });
   }
-  updateSinceLabel();
   tickCounter(true);
   setInterval(tickCounter, 1000);
-  document.getElementById('setDate').addEventListener('click', ()=>{
-    const cur = getSince().slice(0,10);
-    const v = prompt('Nhập ngày bắt đầu yêu nhau (YYYY-MM-DD):', cur);
-    if(!v) return;
-    if(!/^\d{4}-\d{2}-\d{2}$/.test(v)){ alert('Định dạng phải là YYYY-MM-DD, ví dụ 2020-02-14'); return; }
-    setSince(v+'T00:00:00');
-  });
 
   // ===== MEMORY STAR — tap to pin (mobile) =====
   document.querySelectorAll('.mstar').forEach(s=>{
