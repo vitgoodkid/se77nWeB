@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<title>Gửi em yêu — Ba phiên bản</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500&family=Caveat:wght@500;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg: #faf3ef;
+    --bg-2: #f4e7e0;
+    --ink: #2a1a22;
+    --muted: #7a5e63;
+    --rose: #c97a8a;
+    --rose-deep: #a85a6e;
+    --gold: #b08a52;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:'Inter',-apple-system,sans-serif;
+    background:
+      radial-gradient(1200px 800px at 80% -10%, #f8d7d0 0%, transparent 55%),
+      radial-gradient(900px 700px at -10% 110%, #e9d4e2 0%, transparent 55%),
+      linear-gradient(180deg, #fbf3ef 0%, #f1e3dc 100%);
+    color:var(--ink);
+    min-height:100vh;
+    overflow-x:hidden;
+    position:relative;
+  }
+  /* Floating hearts background */
+  .bg-hearts{
+    position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;
+  }
+  .bg-hearts span{
+    position:absolute;display:block;
+    color:rgba(201,122,138,0.18);
+    font-size:18px;
+    animation:floatUp linear infinite;
+  }
+  @keyframes floatUp{
+    0%{transform:translateY(110vh) rotate(0deg) scale(0.6);opacity:0}
+    10%{opacity:1}
+    90%{opacity:1}
+    100%{transform:translateY(-15vh) rotate(360deg) scale(1.1);opacity:0}
+  }
+
+  header{
+    position:relative;z-index:2;
+    padding:64px 48px 24px;text-align:center;
+  }
+  .eyebrow{
+    font-family:'Inter',sans-serif;font-weight:400;
+    letter-spacing:0.42em;text-transform:uppercase;
+    font-size:11px;color:var(--gold);
+    margin-bottom:18px;
+  }
+  .eyebrow::before,.eyebrow::after{
+    content:"";display:inline-block;width:36px;height:1px;
+    background:var(--gold);vertical-align:middle;margin:0 14px;opacity:0.6;
+  }
+  h1{
+    font-family:'Cormorant Garamond', serif;
+    font-weight:500;font-style:italic;
+    font-size:clamp(44px, 6vw, 76px);
+    line-height:1.05;
+    color:var(--ink);
+    margin-bottom:16px;
+  }
+  h1 em{
+    color:var(--rose-deep);font-style:italic;
+    background:linear-gradient(120deg,var(--rose-deep),#d4889a 60%,var(--gold));
+    -webkit-background-clip:text;background-clip:text;
+    -webkit-text-fill-color:transparent;
+  }
+  .lede{
+    max-width:560px;margin:0 auto;
+    font-size:16px;line-height:1.65;color:var(--muted);
+    font-weight:300;
+  }
+
+  main{
+    position:relative;z-index:2;
+    max-width:1280px;margin:0 auto;
+    padding:48px 48px 96px;
+    display:grid;grid-template-columns:repeat(3,1fr);
+    gap:28px;
+  }
+  @media (max-width:980px){main{grid-template-columns:1fr;}}
+
+  .card{
+    position:relative;
+    border-radius:22px;
+    overflow:hidden;
+    background:#fff;
+    box-shadow: 0 1px 0 rgba(255,255,255,.7) inset, 0 30px 60px -30px rgba(120,40,60,.25), 0 8px 24px -12px rgba(120,40,60,.15);
+    text-decoration:none;color:inherit;
+    transition: transform .5s cubic-bezier(.2,.7,.2,1), box-shadow .5s;
+    transform: translateY(20px); opacity:0;
+    animation: rise .9s cubic-bezier(.2,.8,.2,1) forwards;
+  }
+  .card:nth-child(1){animation-delay:.1s}
+  .card:nth-child(2){animation-delay:.25s}
+  .card:nth-child(3){animation-delay:.4s}
+  @keyframes rise{to{transform:translateY(0);opacity:1}}
+  .card:hover{
+    transform:translateY(-6px);
+    box-shadow: 0 1px 0 rgba(255,255,255,.7) inset, 0 40px 80px -30px rgba(120,40,60,.35), 0 14px 32px -12px rgba(120,40,60,.22);
+  }
+  .preview{
+    aspect-ratio: 4 / 5;
+    position:relative;overflow:hidden;
+  }
+  .preview-inner{position:absolute;inset:0;}
+
+  /* Card 1 — vintage */
+  .c1 .preview-inner{
+    background:
+      radial-gradient(120% 100% at 50% 0%, #fbe6dd 0%, #f3cdc1 60%, #d29ea4 100%);
+  }
+  .c1 .paper{
+    position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(-3deg);
+    width:62%;aspect-ratio:.78;
+    background:linear-gradient(180deg, #fff7ee, #faead7);
+    border-radius:4px;
+    box-shadow:0 25px 40px -20px rgba(120,40,60,.4), 0 0 0 1px rgba(160,90,80,.15);
+    padding:18px 16px;
+    font-family:'Caveat',cursive;
+    color:#7a3a48;
+    font-size:13px;line-height:1.5;
+    transition: transform .8s cubic-bezier(.2,.7,.2,1);
+  }
+  .c1:hover .paper{transform:translate(-50%,-50%) rotate(-1deg) scale(1.04)}
+  .c1 .paper::before{content:"♡";position:absolute;top:8px;right:10px;color:#c97a8a;font-size:18px}
+  .c1 .rose{position:absolute;font-size:26px;color:#a85a6e;opacity:.65;}
+  .c1 .r1{top:8%;left:8%;animation: drift1 6s ease-in-out infinite alternate}
+  .c1 .r2{bottom:10%;right:6%;animation: drift1 7s ease-in-out infinite alternate-reverse}
+  .c1 .r3{top:42%;right:10%;font-size:18px;opacity:.5;animation: drift1 8s ease-in-out infinite alternate}
+  @keyframes drift1{to{transform:translate(8px,-6px) rotate(15deg)}}
+
+  /* Card 2 — cosmic */
+  .c2 .preview-inner{
+    background:
+      radial-gradient(80% 60% at 70% 30%, #ffb6c4 0%, transparent 50%),
+      radial-gradient(60% 60% at 20% 80%, #b88ad6 0%, transparent 55%),
+      linear-gradient(180deg,#2a1735 0%, #4a1f47 50%, #6a2b54 100%);
+  }
+  .c2 .stars{position:absolute;inset:0}
+  .c2 .stars i{position:absolute;width:2px;height:2px;background:#fff;border-radius:50%;box-shadow:0 0 6px #fff;animation: twinkle 3s ease-in-out infinite}
+  @keyframes twinkle{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.3)}}
+  .c2 .moon{
+    position:absolute;top:18%;left:50%;transform:translateX(-50%);
+    width:90px;height:90px;border-radius:50%;
+    background:radial-gradient(circle at 35% 35%, #fff0e6, #f4c9d4 60%, #c97a8a 100%);
+    box-shadow:0 0 40px rgba(255,200,210,.6), 0 0 80px rgba(200,120,160,.4);
+    animation: moonGlow 4s ease-in-out infinite;
+  }
+  @keyframes moonGlow{0%,100%{box-shadow:0 0 40px rgba(255,200,210,.6), 0 0 80px rgba(200,120,160,.4)}50%{box-shadow:0 0 60px rgba(255,200,210,.9), 0 0 120px rgba(200,120,160,.6)}}
+  .c2 .heart-cosmic{
+    position:absolute;bottom:18%;left:50%;transform:translateX(-50%);
+    font-family:'Cormorant Garamond',serif;font-style:italic;
+    color:#fce4ec;font-size:24px;letter-spacing:.05em;
+    text-shadow:0 0 20px rgba(255,180,200,.8);
+  }
+
+  /* Card 3 — sakura */
+  .c3 .preview-inner{
+    background:
+      linear-gradient(180deg, #fce8ec 0%, #fff5ef 55%, #e8efe2 100%);
+  }
+  .c3 .branch{
+    position:absolute;bottom:-10%;left:-10%;width:130%;height:55%;
+    background:
+      radial-gradient(8px 8px at 20% 30%, #f7b6c3, transparent 60%),
+      radial-gradient(7px 7px at 22% 35%, #f7b6c3, transparent 60%),
+      radial-gradient(10px 10px at 35% 25%, #f7b6c3, transparent 60%),
+      radial-gradient(8px 8px at 50% 35%, #f7b6c3, transparent 60%),
+      radial-gradient(9px 9px at 65% 25%, #f7b6c3, transparent 60%),
+      radial-gradient(7px 7px at 80% 30%, #f7b6c3, transparent 60%);
+  }
+  .c3 .branchline{
+    position:absolute;bottom:25%;left:-5%;width:110%;height:2px;
+    background:linear-gradient(90deg, transparent, #6b4a3c 20%, #6b4a3c 80%, transparent);
+    transform:rotate(-4deg);
+  }
+  .c3 .petal{position:absolute;width:14px;height:14px;background:radial-gradient(circle at 30% 30%, #fff, #f5a8bc 70%);border-radius:50% 0;animation: fall 7s linear infinite;}
+  @keyframes fall{0%{transform:translateY(-20px) rotate(0)}100%{transform:translateY(120%) rotate(360deg)}}
+  .c3 .kanji{
+    position:absolute;top:14%;right:14%;
+    writing-mode:vertical-rl;
+    font-family:'Cormorant Garamond',serif;font-style:italic;
+    color:#7a5e63;font-size:18px;letter-spacing:.4em;
+    opacity:.8;
+  }
+
+  .info{padding:22px 24px 26px}
+  .tag{font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;font-weight:500}
+  .name{font-family:'Cormorant Garamond',serif;font-size:28px;font-style:italic;color:var(--ink);margin-bottom:6px}
+  .desc{font-size:13px;color:var(--muted);line-height:1.55;margin-bottom:14px;font-weight:300}
+  .open{
+    display:inline-flex;align-items:center;gap:8px;
+    font-size:12px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--rose-deep);font-weight:500;
+  }
+  .open .arr{display:inline-block;transition:transform .4s cubic-bezier(.2,.7,.2,1)}
+  .card:hover .open .arr{transform:translateX(6px)}
+
+  footer{
+    position:relative;z-index:2;text-align:center;padding:0 0 56px;
+    font-family:'Cormorant Garamond',serif;font-style:italic;
+    color:var(--muted);font-size:14px;
+  }
+  footer .sig{color:var(--rose-deep);font-family:'Caveat',cursive;font-size:22px;display:block;margin-top:6px}
+</style>
+</head>
+<body>
+  <div class="bg-hearts" id="bgHearts" aria-hidden="true"></div>
+
+  <header data-screen-label="00 Chooser">
+    <div class="eyebrow">Một bức thư · Ba cách kể</div>
+    <h1>Gửi <em>người vợ</em> của anh</h1>
+    <p class="lede">Anh không biết phải bắt đầu thế nào, nên anh viết ba lần — một bức cổ điển, một bức giữa trời sao, và một bức trong vườn anh đào. Em chọn cái nào cũng là của em.</p>
+  </header>
+
+  <main>
+    <a class="card c1" href="versions/letter-vintage.html" data-screen-label="Card Vintage">
+      <div class="preview"><div class="preview-inner">
+        <span class="rose r1">❀</span>
+        <span class="rose r2">❀</span>
+        <span class="rose r3">❀</span>
+        <div class="paper">
+          Em yêu của anh,<br/>
+          Hôm nay anh ngồi xuống<br/>
+          và viết cho em những<br/>
+          điều mà mỗi sáng anh<br/>
+          quên nói…
+        </div>
+      </div></div>
+      <div class="info">
+        <div class="tag">Phiên bản 01</div>
+        <div class="name">Thư tình cổ điển</div>
+        <div class="desc">Giấy ngà, mực nâu, cánh hồng rơi. Nhạc music-box dìu dặt. Một bức thư anh viết tay, mở ra từ từ.</div>
+        <div class="open">Mở thư <span class="arr">→</span></div>
+      </div>
+    </a>
+
+    <a class="card c2" href="versions/letter-cosmic.html" data-screen-label="Card Cosmic">
+      <div class="preview"><div class="preview-inner">
+        <div class="stars" id="stars2"></div>
+        <div class="moon"></div>
+        <div class="heart-cosmic">em là vũ trụ của anh</div>
+      </div></div>
+      <div class="info">
+        <div class="tag">Phiên bản 02</div>
+        <div class="name">Vũ trụ của anh</div>
+        <div class="desc">Hồng nebula trên nền tím than. Sao parallax, chữ trôi giữa thiên hà. Nhạc ambient mơ màng.</div>
+        <div class="open">Bước vào dải ngân hà <span class="arr">→</span></div>
+      </div>
+    </a>
+
+    <a class="card c3" href="versions/letter-sakura.html" data-screen-label="Card Sakura">
+      <div class="preview"><div class="preview-inner">
+        <div class="branch"></div>
+        <div class="branchline"></div>
+        <div class="petal" style="left:15%;animation-delay:0s"></div>
+        <div class="petal" style="left:40%;animation-delay:2s"></div>
+        <div class="petal" style="left:65%;animation-delay:4s"></div>
+        <div class="petal" style="left:85%;animation-delay:1s"></div>
+        <div class="kanji">愛 · forever yours</div>
+      </div></div>
+      <div class="info">
+        <div class="tag">Phiên bản 03</div>
+        <div class="name">Vườn anh đào</div>
+        <div class="desc">Hồng sakura phối xanh trà, watercolor mềm. Cánh hoa rơi từng nhịp. Nhạc koto thanh nhã.</div>
+        <div class="open">Bước vào vườn <span class="arr">→</span></div>
+      </div>
+    </a>
+  </main>
+
+  <footer>
+    Cả ba bức đều dành cho một người duy nhất.
+    <span class="sig">— anh.</span>
+  </footer>
+
+<script>
+  // Floating hearts background
+  (function(){
+    const wrap = document.getElementById('bgHearts');
+    const chars = ['♡','♥','❀','✿','✦'];
+    for(let i=0;i<26;i++){
+      const s=document.createElement('span');
+      s.textContent = chars[i%chars.length];
+      s.style.left = (Math.random()*100)+'%';
+      s.style.fontSize = (10+Math.random()*22)+'px';
+      s.style.animationDuration = (12+Math.random()*16)+'s';
+      s.style.animationDelay = (-Math.random()*20)+'s';
+      s.style.color = ['rgba(201,122,138,0.20)','rgba(176,138,82,0.18)','rgba(168,90,110,0.18)'][i%3];
+      wrap.appendChild(s);
+    }
+  })();
+  // Stars in cosmic preview
+  (function(){
+    const wrap = document.getElementById('stars2');
+    for(let i=0;i<40;i++){
+      const s=document.createElement('i');
+      s.style.left=(Math.random()*100)+'%';
+      s.style.top=(Math.random()*100)+'%';
+      s.style.animationDelay=(Math.random()*3)+'s';
+      s.style.opacity=(0.3+Math.random()*0.7);
+      wrap.appendChild(s);
+    }
+  })();
+</script>
+</body>
+</html>

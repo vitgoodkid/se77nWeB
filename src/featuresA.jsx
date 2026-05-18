@@ -669,11 +669,14 @@ const PUBLIC_TOOLS = [
   { id: 'game',  name: 'Game resources',   desc: 'Cheat sheets, mods, saves',      icon: '◉' },
   { id: 'imgc',  name: 'Image Converter',  desc: 'PNG/JPG/WebP + compressor',      icon: '◐' },
   { id: 'v2g',   name: 'Video → GIF / MP3',desc: 'Extract clips và audio',         icon: '▶' },
+  { id: 'thao',  name: 'Thảo',             desc: 'Gửi em yêu — cosmic letter',     icon: '♥' },
 ];
 const PRIVATE_TOOLS = [
   { id: 'srv', name: 'Server',      desc: 'Home lab dashboard',  icon: '⌬' },
   { id: 'fin', name: 'Tài chính',   desc: 'Net worth + tracking',icon: '$' },
 ];
+
+const THAO_PIN = '1402';
 
 export function Toolbox() {
   const [tab, setTab] = useState('public');
@@ -681,6 +684,34 @@ export function Toolbox() {
   const [pin, setPin] = useState('');
   const [err, setErr] = useState(false);
   const [activeTool, setActiveTool] = useState(null);
+
+  // Sub-route #/tools/thao opens the Thảo letter directly.
+  useEffect(() => {
+    function syncFromHash() {
+      const sub = window.location.hash.replace(/^#\//, '').split('/')[1] || '';
+      if (sub === 'thao') {
+        const t = PUBLIC_TOOLS.find((x) => x.id === 'thao');
+        if (t) { setTab('public'); setActiveTool(t); }
+      } else if (sub === '' && activeTool?.id === 'thao') {
+        setActiveTool(null);
+      }
+    }
+    syncFromHash();
+    window.addEventListener('hashchange', syncFromHash);
+    return () => window.removeEventListener('hashchange', syncFromHash);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Push #/tools/thao when opening; clear when leaving.
+  useEffect(() => {
+    if (activeTool?.id === 'thao') {
+      if (!/^#\/tools\/thao/.test(window.location.hash)) {
+        window.history.replaceState(null, '', '#/tools/thao');
+      }
+    } else if (/^#\/tools\/thao/.test(window.location.hash)) {
+      window.history.replaceState(null, '', '#/tools');
+    }
+  }, [activeTool]);
 
   function tryUnlock() {
     if (pin === '7777') {
@@ -841,7 +872,136 @@ function ToolDetail({ tool, accent, onBack }) {
          tool.id === 'v2g'   ? <VideoToTool accent={accent} /> :
          tool.id === 'fin'   ? <FinanceTool accent={accent} /> :
          tool.id === 'game'  ? <GameResourcesTool accent={accent} /> :
+         tool.id === 'thao'  ? <ThaoTool onClose={onBack} /> :
          <PlaceholderTool tool={tool} accent={accent} />}
+      </div>
+    </div>
+  );
+}
+
+// Letter-cosmic experience — gated by a 4-digit PIN, then rendered in a
+// fullscreen iframe overlay so the standalone HTML keeps its scroll, audio,
+// and particle stack intact.
+function ThaoTool({ onClose }) {
+  const [unlocked, setUnlocked] = usePersisted('se77n.tools.thao.unlocked', false);
+  const [pin, setPin] = useState('');
+  const [err, setErr] = useState(false);
+  const [show, setShow] = useState(false);
+  const accent = '#f59cb4';
+
+  function tryUnlock() {
+    if (pin === THAO_PIN) {
+      setUnlocked(true);
+      setErr(false);
+      setShow(true);
+    } else {
+      setErr(true);
+      setTimeout(() => setErr(false), 600);
+      setPin('');
+    }
+  }
+
+  // Listen for the iframe's postMessage close event.
+  useEffect(() => {
+    function onMsg(e) {
+      if (e.data && e.data.type === 'thao:close') setShow(false);
+    }
+    window.addEventListener('message', onMsg);
+    return () => window.removeEventListener('message', onMsg);
+  }, []);
+
+  // Esc closes the overlay (iframe also handles its own Esc, but this catches
+  // focus-outside-iframe cases like clicks on the parent backdrop).
+  useEffect(() => {
+    if (!show) return;
+    const onKey = (e) => { if (e.key === 'Escape') setShow(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [show]);
+
+  if (show) {
+    return (
+      <div style={{
+        position: 'fixed', inset: 0, zIndex: 999,
+        background: '#0e0512',
+      }}>
+        <iframe
+          src="/thao/index.html"
+          title="Thảo"
+          style={{
+            position: 'absolute', inset: 0,
+            width: '100%', height: '100%', border: 'none',
+            background: '#0e0512',
+          }}
+        />
+        <button
+          onClick={() => setShow(false)}
+          aria-label="Đóng"
+          style={{
+            position: 'fixed', top: 16, right: 16, zIndex: 1000,
+            padding: '8px 14px', borderRadius: 999,
+            background: 'rgba(13,10,8,0.6)', backdropFilter: 'blur(10px)',
+            border: '1px solid ' + accent + '55', color: '#f8e6ee',
+            fontSize: 11, letterSpacing: '0.2em', cursor: 'pointer',
+            fontFamily: 'JetBrains Mono, monospace',
+          }}
+        >✕ ĐÓNG</button>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ display: 'grid', placeItems: 'center', minHeight: 360 }}>
+      <div style={{
+        padding: 36, textAlign: 'center', border: '1px solid ' + COLORS.line,
+        borderRadius: 16, background: COLORS.bg, maxWidth: 380,
+        animation: err ? 'shake 350ms ease' : 'fadeUp 250ms ease-out',
+      }}>
+        <div style={{
+          width: 56, height: 56, margin: '0 auto 16px', borderRadius: 999,
+          display: 'grid', placeItems: 'center',
+          background: accent + '14', border: `1px solid ${accent}55`,
+          fontSize: 26, color: accent,
+        }}>♥</div>
+        <div className="mono" style={{
+          fontSize: 13, letterSpacing: '0.18em', textTransform: 'uppercase',
+          color: COLORS.text, fontWeight: 700, marginBottom: 6,
+        }}>Thảo</div>
+        <div style={{ fontSize: 12, color: COLORS.muted, marginBottom: 22, lineHeight: 1.5 }}>
+          {unlocked
+            ? 'Bấm mở để xem lại lá thư.'
+            : 'Nhập 4 số bí mật để mở lá thư.'}
+        </div>
+        {unlocked ? (
+          <Btn variant="solid" color={accent} onClick={() => setShow(true)} style={{ width: '100%' }}>
+            ♥ Mở thư
+          </Btn>
+        ) : (
+          <>
+            <Field
+              value={pin}
+              onChange={(v) => setPin(v.replace(/\D/g, '').slice(0, 4))}
+              placeholder="• • • •"
+              type="password"
+              onKeyDown={(e) => { if (e.key === 'Enter') tryUnlock(); }}
+              style={{
+                textAlign: 'center', fontSize: 22, letterSpacing: '0.5em',
+                padding: '14px 16px', borderColor: err ? COLORS.red : COLORS.line,
+              }}
+              autoFocus
+            />
+            <div style={{ marginTop: 16 }}>
+              <Btn variant="solid" color={accent} onClick={tryUnlock} style={{ width: '100%' }}>
+                Mở
+              </Btn>
+            </div>
+            {err && (
+              <div className="mono" style={{
+                fontSize: 10, color: COLORS.red, marginTop: 12, letterSpacing: '0.12em',
+              }}>✕ SAI MÃ</div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );
