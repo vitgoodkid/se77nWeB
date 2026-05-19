@@ -293,52 +293,44 @@
     </div>
   </section>
 
-  <!-- runtime / models grid -->
+  <!-- pages nav -->
   <section class="relative mx-auto max-w-[1640px] px-10 pb-12">
     <div class="mono text-[10px] uppercase tracking-kicker text-mute mb-5 flex items-baseline gap-3">
-      <span class="text-mute2">───</span><span>runtime · models loaded</span><span class="dot-pulse w-1.5 h-1.5 rounded-full bg-green"></span><span class="text-mute2 tracking-tag normal-case">· health-checked every 30s</span>
+      <span class="text-mute2">───</span><span>dashboard pages</span><span class="text-mute2 tracking-tag normal-case">· 4 surfaces</span>
     </div>
-    <div class="grid grid-cols-5 gap-3">
-      <div class="rounded-[12px] border border-line bg-panel/80 p-4">
-        <div class="mono text-[9px] uppercase tracking-label text-mute2 mb-2">chat · default</div>
-        <div class="mono text-[13px] text-ink font-medium tracking-tight">gemini-3-flash</div>
-        <div class="flex items-center justify-between mt-3 mono text-[10px] tracking-label uppercase">
-          <span class="flex items-center gap-1.5 text-green"><span class="w-1.5 h-1.5 rounded-full bg-green dot-pulse"></span>ok</span>
-          <span class="text-mute2">142ms</span>
+    <div class="grid grid-cols-4 gap-3">
+      <a href="servers.html" class="group rounded-[12px] border border-line bg-panel/80 p-5 hover:border-green/40 hover:-translate-y-0.5 transition block">
+        <div class="flex items-center justify-between mb-3">
+          <span class="mono text-[10px] tracking-label uppercase text-green">02</span>
+          <span class="mono text-[10px] tracking-label uppercase text-mute2 group-hover:text-ink">↗</span>
         </div>
-      </div>
-      <div class="rounded-[12px] border border-line bg-panel/80 p-4">
-        <div class="mono text-[9px] uppercase tracking-label text-mute2 mb-2">image · default</div>
-        <div class="mono text-[13px] text-ink font-medium tracking-tight">nano-banana-pro</div>
-        <div class="flex items-center justify-between mt-3 mono text-[10px] tracking-label uppercase">
-          <span class="flex items-center gap-1.5 text-green"><span class="w-1.5 h-1.5 rounded-full bg-green dot-pulse"></span>ok</span>
-          <span class="text-mute2">22.4s p50</span>
+        <div class="text-[15px] font-medium lowercase tracking-tight text-ink">servers list</div>
+        <div class="mono text-[10px] text-mute mt-2">/kata/servers.html</div>
+      </a>
+      <a href="overview.html" class="group rounded-[12px] border border-line bg-panel/80 p-5 hover:border-red/40 hover:-translate-y-0.5 transition block">
+        <div class="flex items-center justify-between mb-3">
+          <span class="mono text-[10px] tracking-label uppercase text-red">03</span>
+          <span class="mono text-[10px] tracking-label uppercase text-mute2 group-hover:text-ink">↗</span>
         </div>
-      </div>
-      <div class="rounded-[12px] border border-line bg-panel/80 p-4">
-        <div class="mono text-[9px] uppercase tracking-label text-mute2 mb-2">video · default</div>
-        <div class="mono text-[13px] text-ink font-medium tracking-tight">seedance-v2-t2v</div>
-        <div class="flex items-center justify-between mt-3 mono text-[10px] tracking-label uppercase">
-          <span class="flex items-center gap-1.5 text-warn"><span class="w-1.5 h-1.5 rounded-full" style="background:#c9a653"></span>queue · 2</span>
-          <span class="text-mute2">3m 12s p50</span>
+        <div class="text-[15px] font-medium lowercase tracking-tight text-ink">server overview</div>
+        <div class="mono text-[10px] text-mute mt-2">/kata/overview.html</div>
+      </a>
+      <a href="logs-image.html" class="group rounded-[12px] border border-line bg-panel/80 p-5 hover:border-gold/40 hover:-translate-y-0.5 transition block">
+        <div class="flex items-center justify-between mb-3">
+          <span class="mono text-[10px] tracking-label uppercase text-gold">04</span>
+          <span class="mono text-[10px] tracking-label uppercase text-mute2 group-hover:text-ink">↗</span>
         </div>
-      </div>
-      <div class="rounded-[12px] border border-line bg-panel/80 p-4">
-        <div class="mono text-[9px] uppercase tracking-label text-mute2 mb-2">search</div>
-        <div class="mono text-[13px] text-ink font-medium tracking-tight">grok-4</div>
-        <div class="flex items-center justify-between mt-3 mono text-[10px] tracking-label uppercase">
-          <span class="flex items-center gap-1.5 text-green"><span class="w-1.5 h-1.5 rounded-full bg-green dot-pulse"></span>ok</span>
-          <span class="text-mute2">2.1s</span>
+        <div class="text-[15px] font-medium lowercase tracking-tight text-ink">logs · image</div>
+        <div class="mono text-[10px] text-mute mt-2">/kata/logs-image.html</div>
+      </a>
+      <a href="cost.html" class="group rounded-[12px] border border-line bg-panel/80 p-5 hover:border-gold/40 hover:-translate-y-0.5 transition block">
+        <div class="flex items-center justify-between mb-3">
+          <span class="mono text-[10px] tracking-label uppercase text-gold">05</span>
+          <span class="mono text-[10px] tracking-label uppercase text-mute2 group-hover:text-ink">↗</span>
         </div>
-      </div>
-      <div class="rounded-[12px] border border-line bg-panel/80 p-4">
-        <div class="mono text-[9px] uppercase tracking-label text-mute2 mb-2">router · intent</div>
-        <div class="mono text-[13px] text-ink font-medium tracking-tight">flash-lite</div>
-        <div class="flex items-center justify-between mt-3 mono text-[10px] tracking-label uppercase">
-          <span class="flex items-center gap-1.5 text-green"><span class="w-1.5 h-1.5 rounded-full bg-green dot-pulse"></span>ok</span>
-          <span class="text-mute2">88ms</span>
-        </div>
-      </div>
+        <div class="text-[15px] font-medium lowercase tracking-tight text-ink">cost</div>
+        <div class="mono text-[10px] text-mute mt-2">/kata/cost.html</div>
+      </a>
     </div>
   </section>
 

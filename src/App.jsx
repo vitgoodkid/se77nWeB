@@ -19,7 +19,6 @@ const TechStackMonitor   = lazy(() => import('./featuresB.jsx').then((m) => ({ d
 const CryptoWatch        = lazy(() => import('./featuresB.jsx').then((m) => ({ default: m.CryptoWatch })));
 const TodoList           = lazy(() => import('./featuresB.jsx').then((m) => ({ default: m.TodoList })));
 const Feed               = lazy(() => import('./featuresB.jsx').then((m) => ({ default: m.Feed })));
-const KataDashboard      = lazy(() => import('./featuresB.jsx').then((m) => ({ default: m.KataDashboard })));
 
 const FEATURES = [
   { id: 'home',   label: 'Home',                  icon: '⌂',   accent: COLORS.text,  short: '00' },
@@ -73,7 +72,8 @@ function AppDesktop() {
     // Match against first hash segment only — sub-routes like #/tv4/list/<slug>
     // belong to the feature module and are parsed there.
     const h = window.location.hash.replace(/^#\//, '').split('/')[0];
-    if (FEATURES.find((f) => f.id === h)) return h;
+    if (h === 'kata') { window.open('/kata', '_blank', 'noopener'); window.history.replaceState(null, '', '#/home'); }
+    else if (FEATURES.find((f) => f.id === h)) return h;
     // On mobile, default landing → AI chat instead of the desktop landing page.
     const mobileNow = typeof window !== 'undefined' && window.matchMedia
       ? window.matchMedia('(max-width: 768px)').matches : false;
@@ -126,6 +126,7 @@ function AppDesktop() {
   useEffect(() => {
     const onHash = () => {
       const id = window.location.hash.replace(/^#\//, '').split('/')[0] || 'home';
+      if (id === 'kata') { window.open('/kata', '_blank', 'noopener'); window.history.replaceState(null, '', '#/' + route); return; }
       if (FEATURES.find((f) => f.id === id) && id !== route) setRoute(id);
     };
     window.addEventListener('hashchange', onHash);
@@ -172,7 +173,6 @@ function AppDesktop() {
               {route === 'crypto' && <CryptoWatch />}
               {route === 'todo'   && <TodoList />}
               {route === 'feed'   && (authUser?.isHistoryOwner ? <Feed /> : <RouteFallback />)}
-              {route === 'kata'   && <KataDashboard />}
             </Suspense>
           </div>
         </div>
@@ -1244,7 +1244,15 @@ function HomeView({ nav, ambient, ambientOn }) {
           gap: 16,
         }}>
           {FEATURES.filter((f) => f.id !== 'home' && (!f.ownerOnly || user?.isHistoryOwner)).map((f, i) => (
-            <FeatureCard key={f.id} feature={f} onClick={() => nav(f.id)} idx={i} />
+            <FeatureCard
+              key={f.id}
+              feature={f}
+              onClick={() => {
+                if (f.id === 'kata') window.open('/kata', '_blank', 'noopener');
+                else nav(f.id);
+              }}
+              idx={i}
+            />
           ))}
         </div>
       </section>

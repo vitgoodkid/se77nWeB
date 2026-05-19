@@ -22,7 +22,6 @@ const TechStackMonitor   = lazy(() => import('./featuresB.jsx').then((m) => ({ d
 const CryptoWatch        = lazy(() => import('./featuresB.jsx').then((m) => ({ default: m.CryptoWatch })));
 const TodoList           = lazy(() => import('./featuresB.jsx').then((m) => ({ default: m.TodoList })));
 const Feed               = lazy(() => import('./featuresB.jsx').then((m) => ({ default: m.Feed })));
-const KataDashboard      = lazy(() => import('./featuresB.jsx').then((m) => ({ default: m.KataDashboard })));
 
 const MODULES = [
   { id: 'ai',     short: '01', accent: COLORS.red,   icon: '✦', i18nLabel: 'nav.ai',     i18nDesc: 'feature.ai.desc' },
@@ -53,7 +52,7 @@ const SLASH_COMMANDS = [
   { cmd: '/tools',     kind: 'nav', route: 'tools',  accent: COLORS.green, desc: 'Jump · toolbox' },
   { cmd: '/feed',      kind: 'nav', route: 'feed',   accent: COLORS.gold,  desc: 'Jump · feed' },
   { cmd: '/game',      kind: 'nav', route: 'game',   accent: COLORS.red,   desc: 'Jump · game' },
-  { cmd: '/kata',      kind: 'nav', route: 'kata',   accent: COLORS.red,   desc: 'Jump · KataS dashboard' },
+  { cmd: '/kata',      kind: 'url', url: '/kata',    accent: COLORS.red,   desc: 'Open · KataS dashboard' },
 ];
 
 const SUGGESTIONS = [
@@ -217,8 +216,13 @@ function Drawer({ open, onClose, route, onNav }) {
           }}>{t('home.modules')}</div>
           {visibleModules.map((m) => {
             const active = m.id === route;
+            const handleClick = () => {
+              if (m.id === 'kata') { window.open('/kata', '_blank', 'noopener'); onClose(); return; }
+              onNav(m.id);
+              onClose();
+            };
             return (
-              <button key={m.id} onClick={() => { onNav(m.id); onClose(); }}
+              <button key={m.id} onClick={handleClick}
                 style={{
                   width: '100%', display: 'flex', alignItems: 'center', gap: 12,
                   padding: '10px 10px', borderRadius: 10,
@@ -822,7 +826,7 @@ export default function MobileShell() {
 
   const [route, setRoute] = useState(() => {
     const h = (typeof window !== 'undefined' ? window.location.hash : '').replace(/^#\//, '').split('/')[0];
-    return ['ai', 'tools', 'tv4', 'game', 'tech', 'crypto', 'todo', 'feed', 'kata'].includes(h) ? h : 'ai';
+    return ['ai', 'tools', 'tv4', 'game', 'tech', 'crypto', 'todo', 'feed'].includes(h) ? h : 'ai';
   });
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -850,7 +854,7 @@ export default function MobileShell() {
   useEffect(() => {
     const onHash = () => {
       const h = window.location.hash.replace(/^#\//, '').split('/')[0];
-      const next = ['ai', 'tools', 'tv4', 'game', 'tech', 'crypto', 'todo', 'feed', 'kata'].includes(h) ? h : 'ai';
+      const next = ['ai', 'tools', 'tv4', 'game', 'tech', 'crypto', 'todo', 'feed'].includes(h) ? h : 'ai';
       if (next !== route) setRoute(next);
     };
     window.addEventListener('hashchange', onHash);
@@ -889,6 +893,11 @@ export default function MobileShell() {
     if (slashEntry && slashEntry.kind === 'nav') {
       setInput('');
       nav(slashEntry.route);
+      return;
+    }
+    if (slashEntry && slashEntry.kind === 'url') {
+      setInput('');
+      window.open(slashEntry.url, '_blank', 'noopener');
       return;
     }
     // Slash menu picked a /prompt command → fill the input, focus, wait for user
@@ -1016,7 +1025,6 @@ export default function MobileShell() {
             {route === 'todo'   && <TodoList />}
             {route === 'feed'   && (user?.isHistoryOwner ? <Feed /> : <RouteFallback />)}
             {route === 'tv4'    && <TravelV4 />}
-            {route === 'kata'   && <KataDashboard />}
           </Suspense>
         </div>
       )}
