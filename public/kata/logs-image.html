@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>server alpha · logs · image · katas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = { theme: { extend: {
+    colors: { bg:'#0d0a08', panel:'#15110d', panel2:'#1c1813', line:'rgba(255,255,255,0.08)', line2:'rgba(255,255,255,0.14)', ink:'#f5ede0', mute:'rgba(245,237,224,0.5)', mute2:'rgba(245,237,224,0.3)', red:'#E04545', green:'#5BA868', gold:'#D4A858', info:'#7a9eb5', warn:'#c9a653', err:'#c46868' },
+    fontFamily: { sans:['Geist','system-ui','sans-serif'], mono:['"JetBrains Mono"','ui-monospace','monospace'] },
+    letterSpacing: { kicker:'0.22em', label:'0.18em', tag:'0.12em' },
+  }}};
+</script>
+<style>
+  html, body { background: #0d0a08; color: #f5ede0; font-family: Geist, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+  @keyframes pulse77 { 0%,100% { opacity:1; transform: scale(1); } 50% { opacity:.55; transform: scale(.82); } }
+  .dot-pulse { animation: pulse77 2s ease-in-out infinite; }
+  .glow77 { text-shadow: 0 0 6px #E04545cc, 0 0 18px #E0454566, 0 0 36px #E0454533; }
+  .grain { background-image: radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px); background-size: 3px 3px; }
+  .ambient { background-image:
+      radial-gradient(60% 50% at 18% 12%, #E0454520 0%, transparent 65%),
+      radial-gradient(50% 45% at 90% 88%, #5BA86820 0%, transparent 70%); }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
+
+  /* placeholder image swatches */
+  .ph-1 { background: linear-gradient(135deg, #2a3a5c 0%, #6b7fa8 30%, #e0c891 65%, #c46868 100%); }
+  .ph-2 { background: linear-gradient(135deg, #1f2f3a 0%, #4a6b8a 50%, #7a9eb5 100%); }
+  .ph-3 { background: linear-gradient(135deg, #5a4012 0%, #D4A858 100%); }
+  .ph-4 { background: linear-gradient(135deg, #1f3a26 0%, #5BA868 50%, #c9d4a8 100%); }
+  .ph-5 { background: linear-gradient(135deg, #2a1a3a 0%, #5a3a7a 40%, #c46868 100%); }
+  .ph-6 { background: linear-gradient(135deg, #3a1f1f 0%, #7a2e2e 40%, #E04545 100%); }
+  .ph-7 { background: linear-gradient(135deg, #1a1612 0%, #4a423a 50%, #b8aea0 100%); }
+  .ph-8 { background: linear-gradient(135deg, #0d2818 0%, #2e5a45 50%, #8aca9a 100%); }
+  .ph-9 { background: linear-gradient(135deg, #4a2a12 0%, #8a5a2e 50%, #e0c891 100%); }
+  .ph-10 { background: linear-gradient(135deg, #1a2a3a 0%, #3a5a7a 30%, #c46868 80%); }
+</style>
+</head>
+<body class="bg-bg text-ink min-h-screen overflow-x-hidden">
+
+<div aria-hidden class="fixed inset-0 z-0 pointer-events-none ambient"></div>
+<div aria-hidden class="fixed inset-0 z-0 pointer-events-none grain opacity-40"></div>
+
+<!-- top bar -->
+<header class="fixed top-0 inset-x-0 h-16 z-50 flex items-center justify-between px-6 backdrop-blur-md border-b border-line" style="background:rgba(13,10,8,0.7)">
+  <div class="flex items-center gap-5">
+    <a href="index.html" class="flex flex-col items-start gap-1 leading-none">
+      <div class="mono text-[24px] font-extrabold tracking-[-0.025em]">se<span class="text-red glow77">77</span>n<span class="text-mute font-normal"> / kata</span></div>
+      <div class="mono text-[9px] uppercase tracking-kicker text-mute">Experiment <span class="text-red font-bold">007</span> · katas dashboard</div>
+    </a>
+    <div class="flex items-center gap-2 ml-3 mono text-[10px] tracking-label uppercase">
+      <a href="index.html" class="text-mute hover:text-ink">se77n</a><span class="text-mute2">/</span>
+      <a href="index.html" class="text-mute hover:text-ink">kata</a><span class="text-mute2">/</span>
+      <a href="servers.html" class="text-mute hover:text-ink">servers</a><span class="text-mute2">/</span>
+      <a href="overview.html" class="text-mute hover:text-ink">server alpha</a><span class="text-mute2">/</span>
+      <span class="text-ink">logs · image</span>
+    </div>
+    <span class="mono text-[10px] tracking-label uppercase text-green flex items-center gap-1.5 ml-2"><span class="dot-pulse w-1.5 h-1.5 rounded-full bg-green"></span>live · 4s</span>
+  </div>
+
+  <div class="flex items-center gap-2.5">
+    <button class="mono h-8 px-3 rounded-full border border-line text-mute hover:text-ink text-[10px] tracking-label flex items-center gap-2"><span>⌘K</span></button>
+    <button class="mono h-8 rounded-full border border-line px-1 text-[10px] tracking-label font-bold flex items-center">
+      <span class="px-2 py-1 rounded-full text-mute">EN</span><span class="text-mute2 text-[9px]">·</span><span class="px-2 py-1 rounded-full bg-ink/10 text-ink">VI</span>
+    </button>
+    <button class="mono h-8 px-3 rounded-full border border-line text-[10px] tracking-label font-bold flex items-center gap-2">
+      <span class="w-3 h-3 rounded-full" style="background:conic-gradient(#E04545,#5BA868,#D4A858,#E04545);border:1px solid rgba(255,255,255,.1)"></span><span>AUTO</span><span class="text-mute text-[9px]">▾</span>
+    </button>
+    <button class="h-8 pl-1 pr-3 rounded-full border border-line flex items-center gap-2 mono text-[11px]">
+      <span class="w-[26px] h-[26px] rounded-full grid place-items-center text-[11px] font-extrabold" style="background:#E0454522;color:#E04545">M</span>
+      <span class="max-w-[96px] truncate">m</span>
+      <span class="text-mute text-[9px]">▾</span>
+    </button>
+  </div>
+</header>
+
+<!-- side nav -->
+<aside class="fixed top-16 left-0 bottom-0 w-[220px] z-40 border-r border-line backdrop-blur-md overflow-y-auto" style="background:rgba(13,10,8,0.6)">
+  <div class="p-5 border-b border-line">
+    <div class="w-12 h-12 rounded-[10px] grid place-items-center mono text-[16px] font-extrabold mb-3" style="background:linear-gradient(135deg,#E04545,#7a1e1e);color:#0d0a08">SA</div>
+    <div class="text-[14px] font-medium tracking-tight text-ink">Server Alpha</div>
+    <div class="mono text-[10px] text-mute mt-1">1,245 thành viên</div>
+    <div class="mono text-[9px] text-mute2 mt-2 tracking-label uppercase flex items-center gap-1.5"><span class="dot-pulse w-1.5 h-1.5 rounded-full bg-green"></span>online · 7d 04h</div>
+  </div>
+  <nav class="px-3 py-4 mono text-[11px] tracking-label uppercase">
+    <a href="overview.html" class="flex items-center justify-between px-3 py-2 rounded-[8px] mb-1 text-mute hover:text-ink hover:bg-ink/[0.03]">▸ overview</a>
+    <div class="px-3 py-2 mb-1 text-ink">▸ logs</div>
+    <a href="#" class="block px-3 py-1.5 ml-3 rounded-[8px] text-mute hover:text-ink hover:bg-ink/[0.03]">↳ chat</a>
+    <a href="logs-image.html" class="block px-3 py-1.5 ml-3 rounded-[8px] text-red" style="background:#E0454510;border-left:2px solid #E04545">↳ image</a>
+    <a href="#" class="block px-3 py-1.5 ml-3 rounded-[8px] text-mute hover:text-ink hover:bg-ink/[0.03]">↳ video</a>
+    <a href="#" class="block px-3 py-1.5 ml-3 rounded-[8px] text-mute hover:text-ink hover:bg-ink/[0.03]">↳ commands</a>
+    <div class="px-3 py-2 mt-2 mb-1 text-mute">▸ settings</div>
+    <a href="#" class="block px-3 py-1.5 ml-3 rounded-[8px] text-mute hover:text-ink hover:bg-ink/[0.03]">↳ sysprompt</a>
+    <a href="#" class="block px-3 py-1.5 ml-3 rounded-[8px] text-mute hover:text-ink hover:bg-ink/[0.03]">↳ language</a>
+    <a href="#" class="block px-3 py-1.5 ml-3 rounded-[8px] text-mute hover:text-ink hover:bg-ink/[0.03]">↳ models</a>
+    <a href="#" class="block px-3 py-1.5 ml-3 rounded-[8px] text-mute hover:text-ink hover:bg-ink/[0.03]">↳ commands</a>
+    <a href="#" class="block px-3 py-1.5 ml-3 rounded-[8px] text-mute hover:text-ink hover:bg-ink/[0.03]">↳ moderation</a>
+    <a href="#" class="block px-3 py-1.5 ml-3 rounded-[8px] text-mute hover:text-ink hover:bg-ink/[0.03]">↳ channels</a>
+    <a href="cost.html" class="flex items-center justify-between px-3 py-2 rounded-[8px] mt-2 mb-1 text-mute hover:text-ink hover:bg-ink/[0.03]">▸ cost</a>
+    <a href="#" class="flex items-center justify-between px-3 py-2 rounded-[8px] mb-1 text-mute hover:text-ink hover:bg-ink/[0.03]">▸ playground</a>
+  </nav>
+  <div class="px-5 py-4 border-t border-line">
+    <a href="servers.html" class="mono text-[10px] tracking-label uppercase text-mute hover:text-ink flex items-center gap-2">← all servers</a>
+  </div>
+</aside>
+
+<!-- main content -->
+<main class="relative z-10 pt-20 pb-16 pl-[244px] pr-8">
+
+  <!-- tab header -->
+  <div class="flex items-end justify-between gap-6 mb-5">
+    <div>
+      <div class="mono text-[10px] uppercase tracking-kicker text-mute mb-2 flex items-center gap-3">
+        <span class="dot-pulse w-1.5 h-1.5 rounded-full bg-green"></span>
+        TAB · LOGS / IMAGE · LIVE · 4S
+      </div>
+      <h1 class="mono text-[36px] leading-none font-extrabold tracking-[-0.035em] lowercase">logs<span class="text-red font-extrabold"> · image</span><span class="text-red glow77">.</span></h1>
+      <div class="mono text-[11px] text-mute mt-3">vĩnh viễn · 1,248 entries · <span class="text-ink">145 trong tháng này</span></div>
+    </div>
+    <div class="flex items-center gap-2">
+      <div class="flex items-center gap-0.5 p-0.5 rounded-[10px] border border-line bg-bg mono text-[10px] tracking-label uppercase">
+        <button class="px-3 h-7 rounded-[8px] text-ink" style="background:#1c1813">● live</button>
+        <button class="px-3 h-7 rounded-[8px] text-mute hover:text-ink">○ paused</button>
+      </div>
+      <button class="mono h-9 px-3.5 rounded-[10px] border border-line text-mute hover:text-ink text-[10px] tracking-label uppercase">↧ export csv</button>
+    </div>
+  </div>
+
+  <!-- log type tabs -->
+  <div class="flex items-center gap-1 mb-5 border-b border-line">
+    <a href="#" class="mono text-[11px] tracking-label uppercase px-4 pb-3 pt-2 text-mute hover:text-ink">chat <span class="text-mute2 ml-1.5">2.4k</span></a>
+    <a href="logs-image.html" class="mono text-[11px] tracking-label uppercase px-4 pb-3 pt-2 text-red font-bold relative">image <span class="text-mute2 ml-1.5">145</span>
+      <span class="absolute left-2 right-2 bottom-[-1px] h-[2px] bg-red"></span>
+    </a>
+    <a href="#" class="mono text-[11px] tracking-label uppercase px-4 pb-3 pt-2 text-mute hover:text-ink">video <span class="text-mute2 ml-1.5">18</span></a>
+    <a href="#" class="mono text-[11px] tracking-label uppercase px-4 pb-3 pt-2 text-mute hover:text-ink">commands <span class="text-mute2 ml-1.5">412</span></a>
+  </div>
+
+  <!-- filters -->
+  <div class="flex items-center gap-2 mb-6 flex-wrap">
+    <div class="mono text-[10px] tracking-label uppercase text-mute2 mr-1">filter</div>
+    <button class="mono h-8 px-3 rounded-[8px] border border-line text-ink hover:border-line2 text-[11px] flex items-center gap-2"><span class="text-mute2 text-[10px] tracking-label uppercase">user</span><span>@all</span><span class="text-mute2">▾</span></button>
+    <button class="mono h-8 px-3 rounded-[8px] border border-line text-ink hover:border-line2 text-[11px] flex items-center gap-2"><span class="text-mute2 text-[10px] tracking-label uppercase">channel</span><span>#all</span><span class="text-mute2">▾</span></button>
+    <button class="mono h-8 px-3 rounded-[8px] border border-line text-ink hover:border-line2 text-[11px] flex items-center gap-2"><span class="text-mute2 text-[10px] tracking-label uppercase">command</span><span>/all</span><span class="text-mute2">▾</span></button>
+    <button class="mono h-8 px-3 rounded-[8px] border border-line text-ink hover:border-line2 text-[11px] flex items-center gap-2"><span class="text-mute2 text-[10px] tracking-label uppercase">model</span><span>nano-banana-pro</span><span class="text-mute2">▾</span></button>
+    <button class="mono h-8 px-3 rounded-[8px] border border-line text-ink hover:border-line2 text-[11px] flex items-center gap-2"><span class="text-mute2 text-[10px] tracking-label uppercase">date</span><span>30d</span><span class="text-mute2">▾</span></button>
+    <div class="relative">
+      <input placeholder="search prompt…" class="mono bg-bg border border-line rounded-[8px] h-8 pl-8 pr-3 w-[200px] text-[11px] text-ink placeholder:text-mute2 focus:outline-none focus:border-red/60" />
+      <svg class="absolute left-2.5 top-2 text-mute2" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+    </div>
+    <div class="flex-1"></div>
+    <button class="mono h-8 px-3 rounded-[8px] text-[10px] tracking-label uppercase text-red hover:underline">clear all</button>
+  </div>
+
+  <!-- log entries -->
+  <div class="space-y-2.5">
+
+    <!-- new (live) entry -->
+    <article class="rounded-[14px] border bg-panel relative overflow-hidden" style="border-color:#E0454544">
+      <div class="absolute inset-y-0 left-0 w-[3px]" style="background:#E04545"></div>
+      <div class="absolute top-3 right-3 mono text-[9px] tracking-label uppercase text-red flex items-center gap-1.5"><span class="dot-pulse w-1.5 h-1.5 rounded-full bg-red"></span>new</div>
+      <div class="p-5 flex gap-5">
+        <!-- thumbs in/out -->
+        <div class="flex items-center gap-3 flex-shrink-0">
+          <div class="text-center">
+            <div class="w-[72px] h-[72px] rounded-[8px] ph-1 border border-line"></div>
+            <div class="mono text-[8px] tracking-label uppercase text-mute2 mt-1.5">input</div>
+          </div>
+          <span class="text-mute2 text-lg">→</span>
+          <div class="text-center">
+            <div class="w-[72px] h-[72px] rounded-[8px] ph-2 border border-line"></div>
+            <div class="mono text-[8px] tracking-label uppercase text-mute2 mt-1.5">output</div>
+          </div>
+        </div>
+        <!-- meta + prompt -->
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-4 mb-3 mono text-[11px]">
+            <span class="flex items-center gap-2"><span class="w-5 h-5 rounded-full grid place-items-center text-[9px] font-extrabold" style="background:#E0454522;color:#E04545">A</span><span class="text-ink">@lambo_ai</span></span>
+            <span class="text-mute2">·</span>
+            <span class="text-red text-[10px] tracking-label uppercase">/edit</span>
+            <span class="text-mute2">·</span>
+            <span class="text-mute">#ai-chat</span>
+            <span class="text-mute2">·</span>
+            <span class="text-mute">just now</span>
+          </div>
+          <div class="text-[13px] text-mute leading-[1.55] mb-3">
+            <span class="text-mute2 mono text-[10px] uppercase tracking-label mr-2">prompt</span>
+            <span class="text-ink">"make the sky purple at golden hour, add 2 zeppelins in background, keep the city skyline and lighting exactly the same"</span>
+          </div>
+          <div class="flex items-center gap-3 mono text-[10px] tracking-label uppercase flex-wrap">
+            <span class="px-2 py-1 rounded-full bg-ink/[0.05] border border-line">model · nano-banana-pro/edit</span>
+            <span class="text-mute2">fallback · none</span>
+            <span class="text-mute2">latency · 28.4s</span>
+            <span class="text-mute2">size · 1024×1024</span>
+            <span class="text-gold">cost · $0.04</span>
+          </div>
+        </div>
+        <!-- actions -->
+        <div class="flex flex-col gap-1.5 flex-shrink-0">
+          <button class="mono h-7 px-2.5 rounded-[6px] border border-line text-mute hover:text-ink text-[9px] tracking-label uppercase">↗ discord</button>
+          <button class="mono h-7 px-2.5 rounded-[6px] border border-line text-mute hover:text-ink text-[9px] tracking-label uppercase">↧ output</button>
+          <button class="mono h-7 px-2.5 rounded-[6px] border border-line text-mute hover:text-ink text-[9px] tracking-label uppercase">⤢ view full</button>
+        </div>
+      </div>
+    </article>
+
+    <!-- regular entries -->
+    <article class="rounded-[14px] border border-line bg-panel">
+      <div class="p-5 flex gap-5">
+        <div class="flex items-center gap-3 flex-shrink-0">
+          <div class="w-[72px] h-[72px] rounded-[8px] grid place-items-center border border-line" style="background:#0a0807">
+            <span class="mono text-[9px] text-mute2 tracking-label uppercase">no input</span>
+          </div>
+          <span class="text-mute2 text-lg">→</span>
+          <div class="w-[72px] h-[72px] rounded-[8px] ph-3 border border-line"></div>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-4 mb-3 mono text-[11px]">
+            <span class="flex items-center gap-2"><span class="w-5 h-5 rounded-full grid place-items-center text-[9px] font-extrabold" style="background:#5BA86822;color:#5BA868">N</span><span class="text-ink">@nha.que</span></span>
+            <span class="text-mute2">·</span>
+            <span class="text-red text-[10px] tracking-label uppercase">/img</span>
+            <span class="text-mute2">·</span>
+            <span class="text-mute">#bot-spam</span>
+            <span class="text-mute2">·</span>
+            <span class="text-mute">14p trước</span>
+          </div>
+          <div class="text-[13px] text-mute leading-[1.55] mb-3">
+            <span class="text-mute2 mono text-[10px] uppercase tracking-label mr-2">prompt</span>
+            <span class="text-ink">"a cyberpunk vietnamese pho cart at midnight, neon signs, steam rising, photorealistic 35mm"</span>
+          </div>
+          <div class="flex items-center gap-3 mono text-[10px] tracking-label uppercase flex-wrap">
+            <span class="px-2 py-1 rounded-full bg-ink/[0.05] border border-line">model · nano-banana-pro</span>
+            <span class="text-mute2">latency · 22.1s</span>
+            <span class="text-mute2">size · 1024×1024</span>
+            <span class="text-gold">cost · $0.04</span>
+          </div>
+        </div>
+        <div class="flex flex-col gap-1.5 flex-shrink-0">
+          <button class="mono h-7 px-2.5 rounded-[6px] border border-line text-mute hover:text-ink text-[9px] tracking-label uppercase">↗ discord</button>
+          <button class="mono h-7 px-2.5 rounded-[6px] border border-line text-mute hover:text-ink text-[9px] tracking-label uppercase">↧ output</button>
+          <button class="mono h-7 px-2.5 rounded-[6px] border border-line text-mute hover:text-ink text-[9px] tracking-label uppercase">⤢ view full</button>
+        </div>
+      </div>
+    </article>
+
+    <!-- fallback used -->
+    <article class="rounded-[14px] border border-line bg-panel">
+      <div class="p-5 flex gap-5">
+        <div class="flex items-center gap-3 flex-shrink-0">
+          <div class="w-[72px] h-[72px] rounded-[8px] ph-4 border border-line"></div>
+          <span class="text-mute2 text-lg">→</span>
+          <div class="w-[72px] h-[72px] rounded-[8px] ph-5 border border-line"></div>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-4 mb-3 mono text-[11px]">
+            <span class="flex items-center gap-2"><span class="w-5 h-5 rounded-full grid place-items-center text-[9px] font-extrabold" style="background:#D4A85822;color:#D4A858">K</span><span class="text-ink">@kuro</span></span>
+            <span class="text-mute2">·</span>
+            <span class="text-red text-[10px] tracking-label uppercase">/wfi2i</span>
+            <span class="text-mute2">·</span>
+            <span class="text-mute">#general</span>
+            <span class="text-mute2">·</span>
+            <span class="text-mute">38p trước</span>
+            <span class="mono text-[9px] tracking-label uppercase px-2 py-0.5 rounded-full" style="background:#c9a65318;border:1px solid #c9a65340;color:#c9a653">FALLBACK · WAN-2.6</span>
+          </div>
+          <div class="text-[13px] text-mute leading-[1.55] mb-3">
+            <span class="text-mute2 mono text-[10px] uppercase tracking-label mr-2">prompt</span>
+            <span class="text-ink">"turn this dog into a baroque oil painting, dramatic chiaroscuro lighting"</span>
+          </div>
+          <div class="flex items-center gap-3 mono text-[10px] tracking-label uppercase flex-wrap">
+            <span class="px-2 py-1 rounded-full bg-ink/[0.05] border border-line">model · flux/dev → wan-2.6</span>
+            <span class="text-warn">fallback · timeout 60s</span>
+            <span class="text-mute2">latency · 47.8s</span>
+            <span class="text-mute2">size · 1024×1024</span>
+            <span class="text-gold">cost · $0.04</span>
+          </div>
+        </div>
+        <div class="flex flex-col gap-1.5 flex-shrink-0">
+          <button class="mono h-7 px-2.5 rounded-[6px] border border-line text-mute hover:text-ink text-[9px] tracking-label uppercase">↗ discord</button>
+          <button class="mono h-7 px-2.5 rounded-[6px] border border-line text-mute hover:text-ink text-[9px] tracking-label uppercase">↧ output</button>
+          <button class="mono h-7 px-2.5 rounded-[6px] border border-line text-mute hover:text-ink text-[9px] tracking-label uppercase">⤢ view full</button>
+        </div>
+      </div>
+    </article>
+
+    <!-- nsfw blocked -->
+    <article class="rounded-[14px] border bg-panel relative overflow-hidden" style="background:#c4686808;border-color:#c4686844">
+      <div class="absolute inset-y-0 left-0 w-[3px]" style="background:#c46868"></div>
+      <div class="p-5 flex gap-5">
+        <div class="flex items-center gap-3 flex-shrink-0">
+          <div class="w-[72px] h-[72px] rounded-[8px] grid place-items-center border" style="background:#0a0807;border-color:#c4686844">
+            <span class="mono text-[9px] text-mute2 tracking-label uppercase">no input</span>
+          </div>
+          <span class="text-mute2 text-lg">→</span>
+          <div class="w-[72px] h-[72px] rounded-[8px] grid place-items-center border" style="background:#0a0807;border-color:#c4686844">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c46868" stroke-width="1.6"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 14.14 14.14"/></svg>
+          </div>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-4 mb-3 mono text-[11px]">
+            <span class="flex items-center gap-2"><span class="w-5 h-5 rounded-full grid place-items-center text-[9px] font-extrabold" style="background:#c4686822;color:#c46868">?</span><span class="text-ink">@throwaway_2</span></span>
+            <span class="text-mute2">·</span>
+            <span class="text-[10px] tracking-label uppercase" style="color:#c46868">/img · blocked</span>
+            <span class="text-mute2">·</span>
+            <span class="text-mute">#general (safe ch)</span>
+            <span class="text-mute2">·</span>
+            <span class="text-mute">24p trước</span>
+            <span class="mono text-[9px] tracking-label uppercase px-2 py-0.5 rounded-full" style="background:#c4686818;border:1px solid #c4686844;color:#c46868">BLOCKED · NSFW 0.84</span>
+          </div>
+          <div class="text-[13px] leading-[1.55] mb-3" style="color:rgba(245,237,224,0.45)">
+            <span class="text-mute2 mono text-[10px] uppercase tracking-label mr-2">prompt</span>
+            <span class="italic" style="color:#c46868">[prompt hidden · classifier score 0.84 in non-nsfw channel]</span>
+          </div>
+          <div class="flex items-center gap-3 mono text-[10px] tracking-label uppercase flex-wrap">
+            <span class="text-mute2">model · nano-banana-pro</span>
+            <span class="text-mute2">action · pre-check block</span>
+            <span class="text-mute2">classifier · flash-lite</span>
+            <span class="text-mute2">user warn count · 2/5</span>
+          </div>
+        </div>
+        <div class="flex flex-col gap-1.5 flex-shrink-0">
+          <button class="mono h-7 px-2.5 rounded-[6px] border text-[9px] tracking-label uppercase" style="border-color:#c4686844;color:#c46868">⚠ details</button>
+          <button class="mono h-7 px-2.5 rounded-[6px] border border-line text-mute hover:text-ink text-[9px] tracking-label uppercase">↗ user</button>
+        </div>
+      </div>
+    </article>
+
+    <!-- bg remove -->
+    <article class="rounded-[14px] border border-line bg-panel">
+      <div class="p-5 flex gap-5">
+        <div class="flex items-center gap-3 flex-shrink-0">
+          <div class="w-[72px] h-[72px] rounded-[8px] ph-6 border border-line"></div>
+          <span class="text-mute2 text-lg">→</span>
+          <div class="w-[72px] h-[72px] rounded-[8px] border border-line relative overflow-hidden" style="background:repeating-conic-gradient(rgba(255,255,255,0.06) 0 25%, transparent 0 50%) 50% / 12px 12px">
+            <div class="absolute inset-3 rounded-[4px] ph-6 opacity-90"></div>
+          </div>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-4 mb-3 mono text-[11px]">
+            <span class="flex items-center gap-2"><span class="w-5 h-5 rounded-full grid place-items-center text-[9px] font-extrabold" style="background:#7a9eb522;color:#7a9eb5">P</span><span class="text-ink">@pho_24</span></span>
+            <span class="text-mute2">·</span>
+            <span class="text-red text-[10px] tracking-label uppercase">/bgremove</span>
+            <span class="text-mute2">·</span>
+            <span class="text-mute">#design-room</span>
+            <span class="text-mute2">·</span>
+            <span class="text-mute">1g trước</span>
+          </div>
+          <div class="text-[13px] text-mute leading-[1.55] mb-3">
+            <span class="text-mute2 mono text-[10px] uppercase tracking-label mr-2">prompt</span>
+            <span class="italic text-mute2">— no prompt · bg remove</span>
+          </div>
+          <div class="flex items-center gap-3 mono text-[10px] tracking-label uppercase flex-wrap">
+            <span class="px-2 py-1 rounded-full bg-ink/[0.05] border border-line">model · ideogram/remove-bg</span>
+            <span class="text-mute2">latency · 4.2s</span>
+            <span class="text-mute2">size · 1024×1280</span>
+            <span class="text-gold">cost · $0.02</span>
+          </div>
+        </div>
+        <div class="flex flex-col gap-1.5 flex-shrink-0">
+          <button class="mono h-7 px-2.5 rounded-[6px] border border-line text-mute hover:text-ink text-[9px] tracking-label uppercase">↗ discord</button>
+          <button class="mono h-7 px-2.5 rounded-[6px] border border-line text-mute hover:text-ink text-[9px] tracking-label uppercase">↧ output</button>
+          <button class="mono h-7 px-2.5 rounded-[6px] border border-line text-mute hover:text-ink text-[9px] tracking-label uppercase">⤢ view full</button>
+        </div>
+      </div>
+    </article>
+
+    <!-- last entry -->
+    <article class="rounded-[14px] border border-line bg-panel">
+      <div class="p-5 flex gap-5">
+        <div class="flex items-center gap-3 flex-shrink-0">
+          <div class="w-[72px] h-[72px] rounded-[8px] grid place-items-center border border-line" style="background:#0a0807">
+            <span class="mono text-[9px] text-mute2 tracking-label uppercase">no input</span>
+          </div>
+          <span class="text-mute2 text-lg">→</span>
+          <div class="w-[72px] h-[72px] rounded-[8px] ph-7 border border-line"></div>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-4 mb-3 mono text-[11px]">
+            <span class="flex items-center gap-2"><span class="w-5 h-5 rounded-full grid place-items-center text-[9px] font-extrabold" style="background:#E0454522;color:#E04545">T</span><span class="text-ink">@thanos_real</span></span>
+            <span class="text-mute2">·</span>
+            <span class="text-red text-[10px] tracking-label uppercase">/img</span>
+            <span class="text-mute2">·</span>
+            <span class="text-mute">#bot-spam</span>
+            <span class="text-mute2">·</span>
+            <span class="text-mute">2g trước</span>
+          </div>
+          <div class="text-[13px] text-mute leading-[1.55] mb-3">
+            <span class="text-mute2 mono text-[10px] uppercase tracking-label mr-2">prompt</span>
+            <span class="text-ink">"minimalist line drawing of a tea house, soft beige paper texture"</span>
+          </div>
+          <div class="flex items-center gap-3 mono text-[10px] tracking-label uppercase flex-wrap">
+            <span class="px-2 py-1 rounded-full bg-ink/[0.05] border border-line">model · nano-banana-pro</span>
+            <span class="text-mute2">latency · 18.7s</span>
+            <span class="text-mute2">size · 1024×1024</span>
+            <span class="text-gold">cost · $0.04</span>
+          </div>
+        </div>
+        <div class="flex flex-col gap-1.5 flex-shrink-0">
+          <button class="mono h-7 px-2.5 rounded-[6px] border border-line text-mute hover:text-ink text-[9px] tracking-label uppercase">↗ discord</button>
+          <button class="mono h-7 px-2.5 rounded-[6px] border border-line text-mute hover:text-ink text-[9px] tracking-label uppercase">↧ output</button>
+          <button class="mono h-7 px-2.5 rounded-[6px] border border-line text-mute hover:text-ink text-[9px] tracking-label uppercase">⤢ view full</button>
+        </div>
+      </div>
+    </article>
+
+  </div>
+
+  <!-- pagination -->
+  <div class="flex items-center justify-between mt-6 mb-10">
+    <div class="mono text-[10px] tracking-label uppercase text-mute">showing 1–6 · 145 entries</div>
+    <div class="flex items-center gap-1.5 mono text-[10px] tracking-label uppercase">
+      <button class="h-8 px-3 rounded-[8px] border border-line text-mute2">← prev</button>
+      <button class="h-8 w-8 rounded-[8px] text-ink" style="background:#E0454514;border:1px solid #E0454555;color:#E04545">1</button>
+      <button class="h-8 w-8 rounded-[8px] border border-line text-mute hover:text-ink">2</button>
+      <button class="h-8 w-8 rounded-[8px] border border-line text-mute hover:text-ink">3</button>
+      <span class="text-mute2">…</span>
+      <button class="h-8 w-8 rounded-[8px] border border-line text-mute hover:text-ink">24</button>
+      <button class="h-8 px-3 rounded-[8px] border border-line text-ink">next →</button>
+    </div>
+  </div>
+
+  <!-- footer -->
+  <footer class="grid grid-cols-3 items-center mono text-[10px] tracking-kicker text-mute pt-5 border-t border-line">
+    <span class="text-left">KATAS · V0.3.1 · UPTIME 7D 04H</span>
+    <span class="text-center flex items-center gap-2 justify-center"><span class="w-1.5 h-1.5 rounded-full bg-green dot-pulse"></span>STATUS · OK</span>
+    <span class="text-right">© SE77N</span>
+  </footer>
+</main>
+
+</body>
+</html>

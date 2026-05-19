@@ -1,0 +1,906 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>katas · mobile · se77n</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = { theme: { extend: {
+    colors: { bg:'#0d0a08', panel:'#15110d', panel2:'#1c1813', line:'rgba(255,255,255,0.08)', line2:'rgba(255,255,255,0.14)', ink:'#f5ede0', mute:'rgba(245,237,224,0.5)', mute2:'rgba(245,237,224,0.3)', red:'#E04545', green:'#5BA868', gold:'#D4A858', info:'#7a9eb5', warn:'#c9a653', err:'#c46868' },
+    fontFamily: { sans:['Geist','system-ui','sans-serif'], mono:['"JetBrains Mono"','ui-monospace','monospace'] },
+    letterSpacing: { kicker:'0.22em', label:'0.18em', tag:'0.12em' },
+  }}};
+</script>
+<style>
+  html, body { background:#0a0807; color:#f5ede0; font-family: Geist, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+  @keyframes pulse77 { 0%,100% { opacity:1; transform: scale(1); } 50% { opacity:.55; transform: scale(.82); } }
+  .dot-pulse { animation: pulse77 2s ease-in-out infinite; }
+  .glow77 { text-shadow: 0 0 6px #E04545cc, 0 0 18px #E0454566, 0 0 36px #E0454533; }
+  .grain { background-image: radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px); background-size: 3px 3px; }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 5px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
+
+  /* iPhone frame */
+  .phone {
+    width: 390px;
+    height: 844px;
+    border-radius: 56px;
+    background: #0d0a08;
+    border: 1px solid rgba(255,255,255,0.06);
+    padding: 12px;
+    box-shadow:
+      0 0 0 2px #1a1a1a,
+      0 0 0 14px #0a0a0a,
+      0 50px 80px -20px rgba(0,0,0,0.6),
+      0 0 0 15px rgba(255,255,255,0.04);
+    position: relative;
+    flex-shrink: 0;
+  }
+  .phone-screen {
+    width: 100%; height: 100%;
+    border-radius: 44px;
+    overflow: hidden;
+    background: #0d0a08;
+    position: relative;
+    isolation: isolate;
+  }
+  /* dynamic island */
+  .phone-island {
+    position: absolute;
+    top: 24px; left: 50%; transform: translateX(-50%);
+    width: 116px; height: 32px;
+    border-radius: 999px;
+    background: #000;
+    z-index: 60;
+  }
+  /* status bar */
+  .status-bar {
+    height: 50px;
+    padding: 18px 28px 0 28px;
+    display: flex; align-items: center; justify-content: space-between;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px; font-weight: 600;
+    color: #f5ede0;
+    flex-shrink: 0;
+  }
+  /* home indicator */
+  .home-indicator {
+    position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+    width: 134px; height: 5px; border-radius: 999px;
+    background: rgba(245,237,224,0.5);
+    z-index: 60;
+  }
+
+  /* phone scroll content */
+  .phone-content {
+    height: calc(100% - 50px - 80px); /* status + tabbar */
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
+  }
+  .phone-content::-webkit-scrollbar { display: none; }
+
+  /* phone tabbar bottom */
+  .tabbar {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    height: 80px;
+    padding: 8px 8px 24px 8px;
+    background: rgba(13,10,8,0.92);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-top: 1px solid rgba(255,255,255,0.08);
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 4px;
+    z-index: 50;
+  }
+  .tabbar a {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: rgba(245,237,224,0.5);
+    text-decoration: none;
+    border-radius: 10px;
+    padding: 6px 4px;
+  }
+  .tabbar a.active { color: #E04545; background: rgba(224,69,69,0.10); }
+  .tabbar a .icn { font-size: 18px; line-height: 1; }
+
+  /* phone label */
+  .phone-label {
+    text-align: center;
+    margin-top: 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase;
+    color: rgba(245,237,224,0.5);
+  }
+  .phone-label .num { color: #E04545; font-weight: 700; margin-right: 8px; }
+
+  /* ambient */
+  .ambient-row {
+    background-image:
+      radial-gradient(40% 30% at 20% 10%, #E0454515 0%, transparent 60%),
+      radial-gradient(40% 30% at 80% 90%, #5BA86810 0%, transparent 60%);
+  }
+
+  /* image placeholders */
+  .ph-a { background: linear-gradient(135deg,#2a3a5c,#6b7fa8 30%,#e0c891 65%,#c46868); }
+  .ph-b { background: linear-gradient(135deg,#5a4012,#D4A858); }
+  .ph-c { background: linear-gradient(135deg,#1f3a26,#5BA868 50%,#c9d4a8); }
+  .ph-d { background: linear-gradient(135deg,#3a1f1f,#7a2e2e 40%,#E04545); }
+  .ph-e { background: linear-gradient(135deg,#2a1a3a,#5a3a7a 40%,#c46868); }
+</style>
+</head>
+<body class="min-h-screen relative overflow-x-auto">
+
+<div aria-hidden class="fixed inset-0 z-0 pointer-events-none ambient-row"></div>
+<div aria-hidden class="fixed inset-0 z-0 pointer-events-none grain opacity-30"></div>
+
+<!-- HEADER -->
+<header class="relative z-10 max-w-[1640px] mx-auto px-10 pt-14 pb-10">
+  <div class="flex items-baseline gap-5 flex-wrap">
+    <div class="mono text-[10px] uppercase tracking-kicker text-mute">─── mobile spec · 6 screens · iPhone 14 / 390×844</div>
+  </div>
+  <div class="mt-3 flex items-end justify-between gap-6 flex-wrap">
+    <div>
+      <h1 class="mono text-[48px] leading-none font-extrabold tracking-[-0.04em] lowercase">
+        <span class="text-red glow77">katas</span><span class="text-mute font-extrabold"> / mobile</span><span class="text-red glow77">.</span>
+      </h1>
+      <p class="text-mute text-[14px] mt-3 max-w-[680px] leading-[1.6]">
+        bottom-tab nav · single-column dense layouts · all features từ desktop có thể access. swipe-down để filter, sheet patterns thay cho dropdown. minimum tap target 44px.
+      </p>
+    </div>
+    <div class="flex gap-2 mono text-[10px] tracking-label uppercase">
+      <a href="_index.html" class="px-4 h-9 rounded-[10px] border border-line text-mute hover:text-ink flex items-center">← all mockups</a>
+      <a href="index.html" class="px-4 h-9 rounded-[10px] border border-line text-mute hover:text-ink flex items-center">desktop landing</a>
+    </div>
+  </div>
+</header>
+
+<!-- horizontal scroll of phones -->
+<div class="relative z-10 overflow-x-auto pb-20">
+  <div class="flex gap-12 px-10 pb-6" style="width: max-content;">
+
+    <!-- ═════════ 01 · LANDING (signed out) ═════════ -->
+    <div>
+      <div class="phone">
+        <div class="phone-island"></div>
+        <div class="phone-screen">
+          <div class="status-bar">
+            <span>9:41</span>
+            <div class="flex items-center gap-1.5">
+              <svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><rect x="0" y="6" width="3" height="5" rx="1"/><rect x="4" y="4" width="3" height="7" rx="1"/><rect x="8" y="2" width="3" height="9" rx="1"/><rect x="12" y="0" width="3" height="11" rx="1"/></svg>
+              <span class="text-[12px]">5G</span>
+              <svg width="22" height="11" viewBox="0 0 22 11" fill="none"><rect x="0.5" y="0.5" width="18" height="10" rx="2.5" stroke="currentColor"/><rect x="2" y="2" width="13" height="7" rx="1" fill="currentColor"/><rect x="19" y="3.5" width="2" height="4" rx="0.5" fill="currentColor"/></svg>
+            </div>
+          </div>
+          <div class="phone-content">
+            <!-- top header -->
+            <div class="px-5 pt-2 pb-3 flex items-center justify-between">
+              <div class="flex items-center gap-2 leading-none">
+                <button class="w-9 h-9 rounded-[9px] border border-line grid place-items-center text-ink">
+                  <svg width="14" height="12" viewBox="0 0 14 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="1" y1="2" x2="13" y2="2"/><line x1="1" y1="6" x2="13" y2="6"/><line x1="1" y1="10" x2="9" y2="10"/></svg>
+                </button>
+                <div class="mono text-[18px] font-extrabold tracking-[-0.02em]">se<span class="text-red glow77">77</span>n<span class="text-mute font-normal">/kata</span></div>
+              </div>
+              <button class="mono h-9 px-3 rounded-[9px] text-[10px] tracking-label uppercase font-bold text-red" style="background:#E0454514;border:1px solid #E0454555">đăng nhập</button>
+            </div>
+
+            <!-- hero -->
+            <div class="px-5 pt-6 pb-4 relative">
+              <div aria-hidden class="absolute top-0 right-[-20px] pointer-events-none mono select-none" style="font-size:180px;font-weight:800;letter-spacing:-0.04em;line-height:1;color:transparent;-webkit-text-stroke:1px #E0454522;opacity:.6">007</div>
+              <div class="relative">
+                <div class="mono text-[9px] uppercase tracking-kicker text-mute mb-3 flex items-center gap-2">
+                  <span class="dot-pulse w-1.5 h-1.5 rounded-full bg-green"></span>
+                  online · 4 servers · v0.3.1
+                </div>
+                <h1 class="mono text-[64px] leading-[0.85] font-extrabold tracking-[-0.045em] lowercase">
+                  <span class="text-red glow77">katas</span><span class="text-red glow77">.</span>
+                </h1>
+                <p class="text-mute mt-4 text-[13px] leading-[1.55]">
+                  bot discord cho chat, ảnh, video, ops. <span class="text-ink">command surface trên mọi server.</span>
+                </p>
+              </div>
+            </div>
+
+            <!-- CTAs -->
+            <div class="px-5 pb-5 space-y-2">
+              <a class="mono flex items-center justify-center gap-2 h-12 rounded-[12px] text-[12px] tracking-label uppercase font-bold text-bg" style="background:#E04545">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.79 19.79 0 0 0-4.885-1.515c-.21.375-.444.865-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25A19.74 19.74 0 0 0 3.677 4.37C.533 9.046-.32 13.58.099 18.058a19.9 19.9 0 0 0 5.993 3.03c.462-.63.873-1.295 1.226-1.994a13.1 13.1 0 0 1-1.872-.892c.126-.094.252-.192.372-.291 3.928 1.793 8.18 1.793 12.061 0 .12.099.246.197.373.291a12.3 12.3 0 0 1-1.873.891c.36.698.772 1.363 1.225 1.993a19.84 19.84 0 0 0 6.002-3.03c.5-5.177-.838-9.674-3.549-13.66zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+                mời vào server
+              </a>
+              <a class="mono flex items-center justify-center gap-2 h-12 rounded-[12px] text-[12px] tracking-label uppercase font-medium text-ink border border-line2">
+                đăng nhập với discord <span class="text-mute">↗</span>
+              </a>
+            </div>
+
+            <!-- live stats card -->
+            <div class="mx-5 mb-4 rounded-[14px] border border-line bg-panel p-4">
+              <div class="flex items-center gap-2 mb-3">
+                <span class="dot-pulse w-1.5 h-1.5 rounded-full bg-green"></span>
+                <div class="mono text-[9px] uppercase tracking-kicker text-mute">live · 5p</div>
+                <div class="flex-1"></div>
+                <div class="mono text-[8px] text-mute2 tracking-label">12s ago</div>
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <div class="mono text-[9px] tracking-label uppercase text-mute2">servers</div>
+                  <div class="mono text-[22px] font-bold tracking-tight">4</div>
+                </div>
+                <div>
+                  <div class="mono text-[9px] tracking-label uppercase text-mute2">tin nhắn</div>
+                  <div class="mono text-[22px] font-bold tracking-tight">12.4<span class="text-mute text-[16px]">k</span></div>
+                </div>
+                <div>
+                  <div class="mono text-[9px] tracking-label uppercase text-mute2">media gen</div>
+                  <div class="mono text-[22px] font-bold tracking-tight">248</div>
+                </div>
+                <div>
+                  <div class="mono text-[9px] tracking-label uppercase text-mute2">cost · 30d</div>
+                  <div class="mono text-[22px] font-bold tracking-tight text-gold">$18.40</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- caps quick list -->
+            <div class="px-5 pb-6">
+              <div class="mono text-[9px] uppercase tracking-kicker text-mute mb-3">─── nó làm gì</div>
+              <div class="space-y-3 text-[13px]">
+                <div class="flex gap-3"><span class="mono text-red w-12 flex-shrink-0">chat</span><span class="text-mute">vision, function calling, multi-user</span></div>
+                <div class="flex gap-3"><span class="mono text-gold w-12 flex-shrink-0">image</span><span class="text-mute">tạo, sửa, xoá nền · nsfw safeguard</span></div>
+                <div class="flex gap-3"><span class="mono text-green w-12 flex-shrink-0">video</span><span class="text-mute">t2v · i2v · yt-dlp stream</span></div>
+                <div class="flex gap-3"><span class="mono w-12 flex-shrink-0" style="color:#7a9eb5">ops</span><span class="text-mute">role · emoji · audit · moderation</span></div>
+              </div>
+            </div>
+          </div>
+          <!-- no tabbar on signed-out landing -->
+          <div class="home-indicator"></div>
+        </div>
+      </div>
+      <div class="phone-label"><span class="num">01</span>landing · public</div>
+    </div>
+
+    <!-- ═════════ 02 · SERVERS LIST ═════════ -->
+    <div>
+      <div class="phone">
+        <div class="phone-island"></div>
+        <div class="phone-screen">
+          <div class="status-bar"><span>9:41</span><div class="flex items-center gap-1.5"><svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><rect x="0" y="6" width="3" height="5" rx="1"/><rect x="4" y="4" width="3" height="7" rx="1"/><rect x="8" y="2" width="3" height="9" rx="1"/><rect x="12" y="0" width="3" height="11" rx="1"/></svg><span class="text-[12px]">5G</span><svg width="22" height="11" viewBox="0 0 22 11" fill="none"><rect x="0.5" y="0.5" width="18" height="10" rx="2.5" stroke="currentColor"/><rect x="2" y="2" width="13" height="7" rx="1" fill="currentColor"/><rect x="19" y="3.5" width="2" height="4" rx="0.5" fill="currentColor"/></svg></div></div>
+
+          <!-- sticky top bar -->
+          <div class="px-5 pt-2 pb-3 flex items-center justify-between sticky top-0 z-10 backdrop-blur-md" style="background:rgba(13,10,8,0.8);border-bottom:1px solid rgba(255,255,255,0.06)">
+            <div class="flex items-center gap-2">
+              <button class="w-9 h-9 rounded-[9px] border border-line grid place-items-center"><svg width="14" height="12" viewBox="0 0 14 12" fill="none" stroke="#f5ede0" stroke-width="1.6" stroke-linecap="round"><line x1="1" y1="2" x2="13" y2="2"/><line x1="1" y1="6" x2="13" y2="6"/><line x1="1" y1="10" x2="9" y2="10"/></svg></button>
+              <div class="mono text-[14px] font-bold">servers</div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button class="w-9 h-9 rounded-[9px] border border-line grid place-items-center text-mute"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></button>
+              <div class="w-9 h-9 rounded-full grid place-items-center mono text-[12px] font-extrabold" style="background:#E0454522;color:#E04545">M</div>
+            </div>
+          </div>
+
+          <div class="phone-content">
+            <!-- title row -->
+            <div class="px-5 pt-4 pb-2">
+              <div class="mono text-[28px] font-extrabold tracking-[-0.035em] lowercase">servers<span class="text-red glow77">.</span></div>
+              <div class="mono text-[10px] text-mute mt-1">4 managed · 5 invite · 12 member</div>
+            </div>
+
+            <!-- section: managed -->
+            <div class="px-5 pt-4 pb-2">
+              <div class="mono text-[9px] uppercase tracking-kicker text-mute flex items-center gap-2">
+                <span class="text-mute2">───</span><span>managed · 4</span>
+                <span class="dot-pulse w-1.5 h-1.5 rounded-full bg-green"></span>
+              </div>
+            </div>
+            <div class="px-5 space-y-2">
+              <a class="flex items-center gap-3 p-3 rounded-[12px] border border-line bg-panel">
+                <div class="w-10 h-10 rounded-[8px] grid place-items-center flex-shrink-0 mono text-[13px] font-extrabold" style="background:linear-gradient(135deg,#E04545,#7a1e1e);color:#0d0a08">SA</div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-1.5"><span class="text-ink text-[14px] font-medium truncate">Server Alpha</span><span class="w-1.5 h-1.5 rounded-full bg-green dot-pulse flex-shrink-0"></span></div>
+                  <div class="mono text-[10px] text-mute mt-1">1,245 · 84/day · <span class="text-gold">$4.20</span></div>
+                </div>
+                <span class="text-red mono text-[14px]">→</span>
+              </a>
+              <a class="flex items-center gap-3 p-3 rounded-[12px] border border-line bg-panel">
+                <div class="w-10 h-10 rounded-[8px] grid place-items-center flex-shrink-0 mono text-[13px] font-extrabold" style="background:linear-gradient(135deg,#D4A858,#5a4012);color:#0d0a08">SB</div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-1.5"><span class="text-ink text-[14px] font-medium truncate">Sĩ tử bay color</span><span class="w-1.5 h-1.5 rounded-full bg-green dot-pulse flex-shrink-0"></span></div>
+                  <div class="mono text-[10px] text-mute mt-1">328 · 42/day · <span class="text-gold">$1.80</span></div>
+                </div>
+                <span class="text-red mono text-[14px]">→</span>
+              </a>
+              <a class="flex items-center gap-3 p-3 rounded-[12px] border border-line bg-panel">
+                <div class="w-10 h-10 rounded-[8px] grid place-items-center flex-shrink-0 mono text-[13px] font-extrabold" style="background:linear-gradient(135deg,#5BA868,#1f3a26);color:#0d0a08">DV</div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-1.5"><span class="text-ink text-[14px] font-medium truncate">dev · sandbox</span><span class="w-1.5 h-1.5 rounded-full flex-shrink-0" style="background:#c9a653"></span></div>
+                  <div class="mono text-[10px] text-mute mt-1">12 · <span class="text-warn">degraded · 2p</span></div>
+                </div>
+                <span class="text-red mono text-[14px]">→</span>
+              </a>
+              <a class="flex items-center gap-3 p-3 rounded-[12px] border border-line bg-panel">
+                <div class="w-10 h-10 rounded-[8px] grid place-items-center flex-shrink-0 mono text-[13px] font-extrabold" style="background:linear-gradient(135deg,#7a9eb5,#1f2f3a);color:#0d0a08">NT</div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-1.5"><span class="text-ink text-[14px] font-medium truncate">night terminal</span><span class="w-1.5 h-1.5 rounded-full bg-green dot-pulse flex-shrink-0"></span></div>
+                  <div class="mono text-[10px] text-mute mt-1">87 · 21/day · <span class="text-gold">$1.20</span></div>
+                </div>
+                <span class="text-red mono text-[14px]">→</span>
+              </a>
+            </div>
+
+            <!-- section: can invite -->
+            <div class="px-5 pt-6 pb-2">
+              <div class="mono text-[9px] uppercase tracking-kicker text-mute flex items-center gap-2">
+                <span class="text-mute2">───</span><span>có thể mời · 5</span>
+              </div>
+            </div>
+            <div class="px-5 space-y-2">
+              <a class="flex items-center gap-3 p-3 rounded-[12px] border border-line bg-panel">
+                <div class="w-9 h-9 rounded-[8px] grid place-items-center flex-shrink-0 mono text-[12px] font-extrabold" style="background:linear-gradient(135deg,#9bb4ff,#1f2f5a);color:#0d0a08">SX</div>
+                <div class="flex-1 min-w-0">
+                  <div class="text-ink text-[13px] font-medium truncate">Server X · creators</div>
+                  <div class="mono text-[10px] text-mute mt-0.5">2,400 thành viên</div>
+                </div>
+                <button class="mono h-8 px-2.5 rounded-[8px] text-[9px] tracking-label uppercase font-bold text-red flex-shrink-0" style="background:#E0454514;border:1px solid #E0454555">+ mời</button>
+              </a>
+              <a class="flex items-center gap-3 p-3 rounded-[12px] border border-line bg-panel">
+                <div class="w-9 h-9 rounded-[8px] grid place-items-center flex-shrink-0 mono text-[12px] font-extrabold" style="background:linear-gradient(135deg,#D4A858,#5a4012);color:#0d0a08">YT</div>
+                <div class="flex-1 min-w-0">
+                  <div class="text-ink text-[13px] font-medium truncate">Server Y · gaming</div>
+                  <div class="mono text-[10px] text-mute mt-0.5">512 thành viên</div>
+                </div>
+                <button class="mono h-8 px-2.5 rounded-[8px] text-[9px] tracking-label uppercase font-bold text-red flex-shrink-0" style="background:#E0454514;border:1px solid #E0454555">+ mời</button>
+              </a>
+              <button class="w-full mono text-[10px] tracking-label uppercase text-mute py-2">+ 3 servers · expand</button>
+            </div>
+
+            <!-- section: member only collapsed -->
+            <div class="px-5 pt-4 pb-2">
+              <div class="mono text-[9px] uppercase tracking-kicker text-mute flex items-center gap-2">
+                <span class="text-mute2">───</span><span>thành viên · 12</span>
+                <span class="text-red ml-auto">▸</span>
+              </div>
+            </div>
+
+            <div class="h-4"></div>
+          </div>
+
+          <div class="tabbar">
+            <a><span class="icn">⌂</span><span>home</span></a>
+            <a class="active"><span class="icn">⌬</span><span>servers</span></a>
+            <a><span class="icn">≡</span><span>logs</span></a>
+            <a><span class="icn">$</span><span>cost</span></a>
+            <a><span class="icn">☰</span><span>more</span></a>
+          </div>
+          <div class="home-indicator"></div>
+        </div>
+      </div>
+      <div class="phone-label"><span class="num">02</span>servers list</div>
+    </div>
+
+    <!-- ═════════ 03 · SERVER OVERVIEW ═════════ -->
+    <div>
+      <div class="phone">
+        <div class="phone-island"></div>
+        <div class="phone-screen">
+          <div class="status-bar"><span>9:41</span><div class="flex items-center gap-1.5"><svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><rect x="0" y="6" width="3" height="5" rx="1"/><rect x="4" y="4" width="3" height="7" rx="1"/><rect x="8" y="2" width="3" height="9" rx="1"/><rect x="12" y="0" width="3" height="11" rx="1"/></svg><span class="text-[12px]">5G</span><svg width="22" height="11" viewBox="0 0 22 11" fill="none"><rect x="0.5" y="0.5" width="18" height="10" rx="2.5" stroke="currentColor"/><rect x="2" y="2" width="13" height="7" rx="1" fill="currentColor"/><rect x="19" y="3.5" width="2" height="4" rx="0.5" fill="currentColor"/></svg></div></div>
+
+          <!-- top bar with back + server -->
+          <div class="px-4 pt-2 pb-3 flex items-center gap-2 sticky top-0 z-10 backdrop-blur-md" style="background:rgba(13,10,8,0.8);border-bottom:1px solid rgba(255,255,255,0.06)">
+            <button class="w-9 h-9 rounded-[9px] border border-line grid place-items-center mono text-[14px] text-ink">←</button>
+            <div class="w-9 h-9 rounded-[8px] grid place-items-center flex-shrink-0 mono text-[12px] font-extrabold" style="background:linear-gradient(135deg,#E04545,#7a1e1e);color:#0d0a08">SA</div>
+            <div class="flex-1 min-w-0">
+              <div class="text-ink text-[13px] font-medium leading-tight truncate">Server Alpha</div>
+              <div class="mono text-[9px] text-mute mt-0.5 flex items-center gap-1.5"><span class="w-1 h-1 rounded-full bg-green dot-pulse"></span>online · 7d 04h</div>
+            </div>
+            <button class="w-9 h-9 rounded-[9px] border border-line grid place-items-center text-mute mono text-[14px]">⋯</button>
+          </div>
+
+          <!-- tab pills -->
+          <div class="px-4 pt-3 pb-3 flex gap-1.5 overflow-x-auto sticky top-[60px] z-[9] backdrop-blur-md" style="background:rgba(13,10,8,0.8)">
+            <button class="mono text-[10px] tracking-label uppercase px-3 h-8 rounded-[8px] text-red flex-shrink-0" style="background:#E0454514;border:1px solid #E0454555">overview</button>
+            <button class="mono text-[10px] tracking-label uppercase px-3 h-8 rounded-[8px] border border-line text-mute flex-shrink-0">logs</button>
+            <button class="mono text-[10px] tracking-label uppercase px-3 h-8 rounded-[8px] border border-line text-mute flex-shrink-0">settings</button>
+            <button class="mono text-[10px] tracking-label uppercase px-3 h-8 rounded-[8px] border border-line text-mute flex-shrink-0">cost</button>
+            <button class="mono text-[10px] tracking-label uppercase px-3 h-8 rounded-[8px] border border-line text-mute flex-shrink-0">playground</button>
+          </div>
+
+          <div class="phone-content" style="height: calc(100% - 50px - 60px - 56px - 80px)">
+            <!-- KPIs 2x2 -->
+            <div class="px-4 pt-4 pb-2 grid grid-cols-2 gap-2">
+              <div class="rounded-[12px] border border-line bg-panel p-3">
+                <div class="flex items-baseline justify-between">
+                  <div class="mono text-[8px] uppercase tracking-label text-mute2">msgs · 24h</div>
+                  <div class="mono text-[8px] text-green">+12%</div>
+                </div>
+                <div class="mono text-[26px] font-bold tracking-tight mt-1 leading-none">84</div>
+              </div>
+              <div class="rounded-[12px] border border-line bg-panel p-3">
+                <div class="flex items-baseline justify-between">
+                  <div class="mono text-[8px] uppercase tracking-label text-mute2">image · 24h</div>
+                  <div class="mono text-[8px] text-mute2">±0%</div>
+                </div>
+                <div class="mono text-[26px] font-bold tracking-tight mt-1 leading-none">7</div>
+              </div>
+              <div class="rounded-[12px] border border-line bg-panel p-3">
+                <div class="flex items-baseline justify-between">
+                  <div class="mono text-[8px] uppercase tracking-label text-mute2">video · 24h</div>
+                  <div class="mono text-[8px]" style="color:#c46868">-50%</div>
+                </div>
+                <div class="mono text-[26px] font-bold tracking-tight mt-1 leading-none">1</div>
+              </div>
+              <div class="rounded-[12px] border border-line bg-panel p-3">
+                <div class="flex items-baseline justify-between">
+                  <div class="mono text-[8px] uppercase tracking-label text-mute2">cost · 30d</div>
+                  <div class="mono text-[8px] text-warn">+15%</div>
+                </div>
+                <div class="mono text-[20px] font-bold tracking-tight mt-1 leading-none text-gold">$4.20</div>
+              </div>
+            </div>
+
+            <!-- activity chart compact -->
+            <div class="px-4 pt-3">
+              <div class="rounded-[12px] border border-line bg-panel p-4">
+                <div class="flex items-baseline justify-between mb-3">
+                  <div class="mono text-[9px] uppercase tracking-kicker text-mute">activity · 24h</div>
+                  <span class="dot-pulse w-1.5 h-1.5 rounded-full bg-green"></span>
+                </div>
+                <div class="flex items-end gap-[3px] h-[80px]">
+                  <div class="flex-1 rounded-t-sm" style="height:18%;background:#E04545"></div>
+                  <div class="flex-1 rounded-t-sm" style="height:8%;background:#E04545"></div>
+                  <div class="flex-1 rounded-t-sm" style="height:14%;background:#E04545"></div>
+                  <div class="flex-1 rounded-t-sm" style="height:28%;background:#E04545"></div>
+                  <div class="flex-1 rounded-t-sm" style="height:42%;background:#E04545"></div>
+                  <div class="flex-1 rounded-t-sm" style="height:46%;background:#E04545"></div>
+                  <div class="flex-1 rounded-t-sm" style="height:62%;background:#E04545"></div>
+                  <div class="flex-1 rounded-t-sm" style="height:58%;background:#E04545"></div>
+                  <div class="flex-1 rounded-t-sm" style="height:72%;background:#E04545"></div>
+                  <div class="flex-1 rounded-t-sm" style="height:80%;background:#E04545"></div>
+                  <div class="flex-1 rounded-t-sm" style="height:88%;background:#E04545"></div>
+                  <div class="flex-1 rounded-t-sm" style="height:96%;background:#E04545"></div>
+                  <div class="flex-1 rounded-t-sm" style="height:84%;background:#E04545"></div>
+                  <div class="flex-1 rounded-t-sm" style="height:78%;background:#E04545"></div>
+                  <div class="flex-1 rounded-t-sm" style="height:64%;background:#E04545"></div>
+                  <div class="flex-1 rounded-t-sm" style="height:42%;background:#E04545"></div>
+                  <div class="flex-1 rounded-t-sm" style="height:38%;background:#E04545;box-shadow:0 0 6px #E04545aa"></div>
+                </div>
+                <div class="flex items-baseline justify-between mt-2 mono text-[8px] tracking-label uppercase text-mute2">
+                  <span>06:00</span><span>12:00</span><span>18:00</span><span class="text-red">now</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- recent activity -->
+            <div class="px-4 pt-4 pb-2">
+              <div class="mono text-[9px] uppercase tracking-kicker text-mute mb-2 flex items-center gap-2"><span>recent</span><span class="dot-pulse w-1.5 h-1.5 rounded-full bg-green"></span></div>
+              <div class="rounded-[12px] border border-line bg-panel divide-y divide-line/60">
+                <div class="p-3 flex items-start gap-2.5" style="background:#E0454508">
+                  <span class="w-6 h-6 rounded-full grid place-items-center mono text-[10px] font-extrabold flex-shrink-0" style="background:#E0454522;color:#E04545">A</span>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-baseline gap-2"><span class="text-ink text-[11px] font-medium">@lambo_ai</span><span class="text-red mono text-[8px] tracking-label uppercase">/img</span><span class="mono text-[8px] text-mute2 ml-auto">just now</span></div>
+                    <div class="text-mute text-[11px] mt-0.5 truncate">"cyberpunk pho cart neon"</div>
+                  </div>
+                </div>
+                <div class="p-3 flex items-start gap-2.5">
+                  <span class="w-6 h-6 rounded-full grid place-items-center mono text-[10px] font-extrabold flex-shrink-0" style="background:#5BA86822;color:#5BA868">N</span>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-baseline gap-2"><span class="text-ink text-[11px] font-medium">@nha.que</span><span class="text-green mono text-[8px] tracking-label uppercase">chat</span><span class="mono text-[8px] text-mute2 ml-auto">2p</span></div>
+                    <div class="text-mute text-[11px] mt-0.5 truncate">"ai có thể giúp viết unit test…"</div>
+                  </div>
+                </div>
+                <div class="p-3 flex items-start gap-2.5" style="background:#c4686810">
+                  <span class="w-6 h-6 rounded-full grid place-items-center mono text-[10px] font-extrabold flex-shrink-0" style="background:#c4686822;color:#c46868">?</span>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-baseline gap-2"><span class="text-ink text-[11px] font-medium">@throwaway</span><span class="mono text-[8px] tracking-label uppercase" style="color:#c46868">blocked</span><span class="mono text-[8px] text-mute2 ml-auto">24p</span></div>
+                    <div class="text-[11px] mt-0.5 italic" style="color:#c46868">nsfw safe ch · 0.84</div>
+                  </div>
+                </div>
+                <div class="p-3 flex items-start gap-2.5">
+                  <span class="w-6 h-6 rounded-full grid place-items-center mono text-[10px] font-extrabold flex-shrink-0" style="background:#D4A85822;color:#D4A858">K</span>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-baseline gap-2"><span class="text-ink text-[11px] font-medium">@kuro</span><span class="text-gold mono text-[8px] tracking-label uppercase">/search</span><span class="mono text-[8px] text-mute2 ml-auto">5p</span></div>
+                    <div class="text-mute text-[11px] mt-0.5 truncate">"claude 4.7 review"</div>
+                  </div>
+                </div>
+              </div>
+              <button class="w-full mono text-[10px] tracking-label uppercase text-red py-3">view all logs →</button>
+            </div>
+
+            <div class="h-4"></div>
+          </div>
+
+          <div class="tabbar">
+            <a><span class="icn">⌂</span><span>home</span></a>
+            <a><span class="icn">⌬</span><span>servers</span></a>
+            <a class="active"><span class="icn">≡</span><span>logs</span></a>
+            <a><span class="icn">$</span><span>cost</span></a>
+            <a><span class="icn">☰</span><span>more</span></a>
+          </div>
+          <div class="home-indicator"></div>
+        </div>
+      </div>
+      <div class="phone-label"><span class="num">03</span>server · overview</div>
+    </div>
+
+    <!-- ═════════ 04 · LOGS · IMAGE ═════════ -->
+    <div>
+      <div class="phone">
+        <div class="phone-island"></div>
+        <div class="phone-screen">
+          <div class="status-bar"><span>9:41</span><div class="flex items-center gap-1.5"><svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><rect x="0" y="6" width="3" height="5" rx="1"/><rect x="4" y="4" width="3" height="7" rx="1"/><rect x="8" y="2" width="3" height="9" rx="1"/><rect x="12" y="0" width="3" height="11" rx="1"/></svg><span class="text-[12px]">5G</span><svg width="22" height="11" viewBox="0 0 22 11" fill="none"><rect x="0.5" y="0.5" width="18" height="10" rx="2.5" stroke="currentColor"/><rect x="2" y="2" width="13" height="7" rx="1" fill="currentColor"/><rect x="19" y="3.5" width="2" height="4" rx="0.5" fill="currentColor"/></svg></div></div>
+
+          <!-- top bar -->
+          <div class="px-4 pt-2 pb-3 flex items-center gap-2 sticky top-0 z-10 backdrop-blur-md" style="background:rgba(13,10,8,0.8);border-bottom:1px solid rgba(255,255,255,0.06)">
+            <button class="w-9 h-9 rounded-[9px] border border-line grid place-items-center mono text-[14px] text-ink">←</button>
+            <div class="flex-1 min-w-0">
+              <div class="text-ink text-[13px] font-medium leading-tight">logs · image</div>
+              <div class="mono text-[9px] text-mute mt-0.5 flex items-center gap-1.5"><span class="w-1 h-1 rounded-full bg-green dot-pulse"></span>live · 145 trong tháng này</div>
+            </div>
+            <button class="w-9 h-9 rounded-[9px] border border-line grid place-items-center text-mute"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><line x1="4" y1="6" x2="20" y2="6"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="10" y1="18" x2="14" y2="18"/></svg></button>
+          </div>
+
+          <!-- log type pills -->
+          <div class="px-4 pt-3 pb-3 flex gap-1.5 overflow-x-auto sticky top-[60px] z-[9] backdrop-blur-md" style="background:rgba(13,10,8,0.8)">
+            <button class="mono text-[10px] tracking-label uppercase px-3 h-8 rounded-[8px] border border-line text-mute flex-shrink-0">chat <span class="text-mute2 ml-1">2.4k</span></button>
+            <button class="mono text-[10px] tracking-label uppercase px-3 h-8 rounded-[8px] text-red flex-shrink-0" style="background:#E0454514;border:1px solid #E0454555">image <span class="text-mute2 ml-1">145</span></button>
+            <button class="mono text-[10px] tracking-label uppercase px-3 h-8 rounded-[8px] border border-line text-mute flex-shrink-0">video <span class="text-mute2 ml-1">18</span></button>
+            <button class="mono text-[10px] tracking-label uppercase px-3 h-8 rounded-[8px] border border-line text-mute flex-shrink-0">cmd <span class="text-mute2 ml-1">412</span></button>
+          </div>
+
+          <div class="phone-content" style="height: calc(100% - 50px - 60px - 56px - 80px)">
+            <!-- entry: new (live) -->
+            <div class="px-4 pt-3 space-y-3">
+              <article class="rounded-[14px] border bg-panel overflow-hidden" style="border-color:#E0454544">
+                <div class="grid grid-cols-2 gap-px bg-line">
+                  <div class="aspect-square ph-a relative"><div class="absolute top-2 left-2 mono text-[8px] tracking-label uppercase text-bg/80 bg-bg/40 px-1.5 py-0.5 rounded">input</div></div>
+                  <div class="aspect-square ph-d relative"><div class="absolute top-2 left-2 mono text-[8px] tracking-label uppercase text-bg/80 bg-bg/40 px-1.5 py-0.5 rounded">output</div></div>
+                </div>
+                <div class="p-3">
+                  <div class="flex items-center gap-2 mb-2 mono text-[10px]">
+                    <span class="w-5 h-5 rounded-full grid place-items-center text-[9px] font-extrabold" style="background:#E0454522;color:#E04545">A</span>
+                    <span class="text-ink">@lambo_ai</span>
+                    <span class="text-red text-[9px] tracking-label uppercase ml-auto">/edit</span>
+                    <span class="dot-pulse w-1.5 h-1.5 rounded-full bg-red"></span>
+                  </div>
+                  <div class="text-ink text-[12px] leading-[1.5]">"make the sky purple at golden hour, add 2 zeppelins, keep skyline"</div>
+                  <div class="flex items-center gap-2 mt-2 mono text-[9px] tracking-label uppercase text-mute2 flex-wrap">
+                    <span>nano-banana</span><span>·</span><span>28.4s</span><span>·</span><span class="text-gold">$0.04</span>
+                  </div>
+                </div>
+              </article>
+
+              <!-- entry: /img single output -->
+              <article class="rounded-[14px] border border-line bg-panel overflow-hidden">
+                <div class="aspect-[4/3] ph-b"></div>
+                <div class="p-3">
+                  <div class="flex items-center gap-2 mb-2 mono text-[10px]">
+                    <span class="w-5 h-5 rounded-full grid place-items-center text-[9px] font-extrabold" style="background:#5BA86822;color:#5BA868">N</span>
+                    <span class="text-ink">@nha.que</span>
+                    <span class="text-red text-[9px] tracking-label uppercase ml-auto">/img</span>
+                  </div>
+                  <div class="text-ink text-[12px] leading-[1.5]">"vietnamese pho cart at midnight, neon signs, steam rising"</div>
+                  <div class="flex items-center gap-2 mt-2 mono text-[9px] tracking-label uppercase text-mute2 flex-wrap">
+                    <span>nano-banana</span><span>·</span><span>22.1s</span><span>·</span><span class="text-gold">$0.04</span><span class="ml-auto text-mute">14p</span>
+                  </div>
+                </div>
+              </article>
+
+              <!-- entry: fallback -->
+              <article class="rounded-[14px] border border-line bg-panel overflow-hidden">
+                <div class="grid grid-cols-2 gap-px bg-line">
+                  <div class="aspect-square ph-c"></div>
+                  <div class="aspect-square ph-e"></div>
+                </div>
+                <div class="p-3">
+                  <div class="flex items-center gap-2 mb-2 mono text-[10px] flex-wrap">
+                    <span class="w-5 h-5 rounded-full grid place-items-center text-[9px] font-extrabold" style="background:#D4A85822;color:#D4A858">K</span>
+                    <span class="text-ink">@kuro</span>
+                    <span class="mono text-[8px] tracking-label uppercase px-1.5 py-0.5 rounded-full" style="background:#c9a65318;border:1px solid #c9a65340;color:#c9a653">FALLBACK</span>
+                    <span class="text-red text-[9px] tracking-label uppercase ml-auto">/wfi2i</span>
+                  </div>
+                  <div class="text-ink text-[12px] leading-[1.5]">"turn this dog into baroque oil painting"</div>
+                  <div class="flex items-center gap-2 mt-2 mono text-[9px] tracking-label uppercase text-mute2 flex-wrap">
+                    <span>flux/dev → wan-2.6</span><span>·</span><span class="text-gold">$0.04</span><span class="ml-auto text-mute">38p</span>
+                  </div>
+                </div>
+              </article>
+
+              <!-- entry: nsfw block -->
+              <article class="rounded-[14px] border overflow-hidden" style="background:#c4686808;border-color:#c4686844">
+                <div class="aspect-[4/3] grid place-items-center" style="background:#0a0807">
+                  <div class="text-center">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#c46868" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 14.14 14.14"/></svg>
+                    <div class="mono text-[9px] tracking-label uppercase mt-2" style="color:#c46868">blocked · 0.84</div>
+                  </div>
+                </div>
+                <div class="p-3">
+                  <div class="flex items-center gap-2 mb-2 mono text-[10px]">
+                    <span class="w-5 h-5 rounded-full grid place-items-center text-[9px] font-extrabold" style="background:#c4686822;color:#c46868">?</span>
+                    <span class="text-ink">@throwaway_2</span>
+                    <span class="text-[9px] tracking-label uppercase ml-auto" style="color:#c46868">nsfw block</span>
+                  </div>
+                  <div class="text-[12px] italic" style="color:#c46868">[prompt hidden · classifier 0.84 in non-nsfw ch]</div>
+                </div>
+              </article>
+            </div>
+            <div class="h-4"></div>
+          </div>
+
+          <div class="tabbar">
+            <a><span class="icn">⌂</span><span>home</span></a>
+            <a><span class="icn">⌬</span><span>servers</span></a>
+            <a class="active"><span class="icn">≡</span><span>logs</span></a>
+            <a><span class="icn">$</span><span>cost</span></a>
+            <a><span class="icn">☰</span><span>more</span></a>
+          </div>
+          <div class="home-indicator"></div>
+        </div>
+      </div>
+      <div class="phone-label"><span class="num">04</span>logs · image</div>
+    </div>
+
+    <!-- ═════════ 05 · COST ═════════ -->
+    <div>
+      <div class="phone">
+        <div class="phone-island"></div>
+        <div class="phone-screen">
+          <div class="status-bar"><span>9:41</span><div class="flex items-center gap-1.5"><svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><rect x="0" y="6" width="3" height="5" rx="1"/><rect x="4" y="4" width="3" height="7" rx="1"/><rect x="8" y="2" width="3" height="9" rx="1"/><rect x="12" y="0" width="3" height="11" rx="1"/></svg><span class="text-[12px]">5G</span><svg width="22" height="11" viewBox="0 0 22 11" fill="none"><rect x="0.5" y="0.5" width="18" height="10" rx="2.5" stroke="currentColor"/><rect x="2" y="2" width="13" height="7" rx="1" fill="currentColor"/><rect x="19" y="3.5" width="2" height="4" rx="0.5" fill="currentColor"/></svg></div></div>
+
+          <div class="px-4 pt-2 pb-3 flex items-center gap-2 sticky top-0 z-10 backdrop-blur-md" style="background:rgba(13,10,8,0.8);border-bottom:1px solid rgba(255,255,255,0.06)">
+            <button class="w-9 h-9 rounded-[9px] border border-line grid place-items-center mono text-[14px] text-ink">←</button>
+            <div class="flex-1">
+              <div class="text-ink text-[13px] font-medium">cost · server alpha</div>
+              <div class="mono text-[9px] text-mute mt-0.5 flex items-center gap-1.5"><span class="w-1 h-1 rounded-full bg-green dot-pulse"></span>live · 6s sync</div>
+            </div>
+            <button class="w-9 h-9 rounded-[9px] border border-line grid place-items-center text-mute mono text-[11px] tracking-label">30d</button>
+          </div>
+
+          <div class="phone-content" style="height: calc(100% - 50px - 60px - 80px)">
+            <!-- hero -->
+            <div class="px-4 pt-4">
+              <div class="mono text-[10px] uppercase tracking-kicker text-mute mb-2">tổng · tháng này</div>
+              <div class="flex items-baseline gap-3">
+                <div class="mono text-[44px] font-bold tracking-[-0.03em] leading-none text-gold">$12.40</div>
+                <div class="mono text-[10px] text-warn">▲ 15%</div>
+              </div>
+              <div class="mono text-[10px] text-mute mt-2">dự đoán cuối tháng · <span class="text-ink">$18.60</span></div>
+              <div class="mt-3 h-1.5 rounded-full overflow-hidden bg-panel2">
+                <div class="h-full" style="width:50%;background:#D4A858"></div>
+              </div>
+              <div class="flex items-baseline justify-between mt-1 mono text-[8px] tracking-label uppercase text-mute2">
+                <span>$0</span><span>$12.40 / $25 · 50%</span><span>$25</span>
+              </div>
+            </div>
+
+            <!-- breakdown stacked -->
+            <div class="px-4 pt-5 grid grid-cols-3 gap-2">
+              <div class="rounded-[12px] border border-line bg-panel p-3 text-center">
+                <div class="mono text-[8px] uppercase tracking-label text-mute2">tokens</div>
+                <div class="mono text-[18px] font-bold tracking-tight mt-1">2.5M</div>
+                <div class="mono text-[8px] text-mute2 mt-0.5">in</div>
+              </div>
+              <div class="rounded-[12px] border border-line bg-panel p-3 text-center">
+                <div class="mono text-[8px] uppercase tracking-label text-mute2">images</div>
+                <div class="mono text-[18px] font-bold tracking-tight mt-1">145</div>
+                <div class="mono text-[8px] text-gold mt-0.5">$5.80</div>
+              </div>
+              <div class="rounded-[12px] border border-line bg-panel p-3 text-center">
+                <div class="mono text-[8px] uppercase tracking-label text-mute2">video</div>
+                <div class="mono text-[18px] font-bold tracking-tight mt-1">18</div>
+                <div class="mono text-[8px] text-gold mt-0.5">$2.80</div>
+              </div>
+            </div>
+
+            <!-- donut -->
+            <div class="px-4 pt-5">
+              <div class="rounded-[14px] border border-line bg-panel p-4">
+                <div class="mono text-[9px] uppercase tracking-kicker text-mute mb-3">by model · 30d</div>
+                <div class="grid grid-cols-[110px_1fr] gap-3 items-center">
+                  <div class="relative w-[110px] h-[110px]">
+                    <svg width="110" height="110" viewBox="0 0 42 42">
+                      <circle cx="21" cy="21" r="15.91" fill="transparent" stroke="rgba(255,255,255,0.05)" stroke-width="6"/>
+                      <circle cx="21" cy="21" r="15.91" fill="transparent" stroke="#E04545" stroke-width="6" stroke-dasharray="52 48" stroke-dashoffset="25" transform="rotate(-90 21 21)"/>
+                      <circle cx="21" cy="21" r="15.91" fill="transparent" stroke="#D4A858" stroke-width="6" stroke-dasharray="22 78" stroke-dashoffset="-27" transform="rotate(-90 21 21)"/>
+                      <circle cx="21" cy="21" r="15.91" fill="transparent" stroke="#5BA868" stroke-width="6" stroke-dasharray="17 83" stroke-dashoffset="-49" transform="rotate(-90 21 21)"/>
+                      <circle cx="21" cy="21" r="15.91" fill="transparent" stroke="#7a9eb5" stroke-width="6" stroke-dasharray="9 91" stroke-dashoffset="-66" transform="rotate(-90 21 21)"/>
+                    </svg>
+                    <div class="absolute inset-0 grid place-items-center text-center">
+                      <div><div class="mono text-[7px] tracking-label uppercase text-mute2">total</div><div class="mono text-[14px] font-bold mt-0.5">$12.40</div></div>
+                    </div>
+                  </div>
+                  <div class="space-y-1.5 mono text-[10px]">
+                    <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-sm" style="background:#E04545"></span><span class="text-ink truncate flex-1">gemini-3</span><span class="text-gold">$6.40</span></div>
+                    <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-sm" style="background:#D4A858"></span><span class="text-ink truncate flex-1">nano-banana</span><span class="text-gold">$2.73</span></div>
+                    <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-sm" style="background:#5BA868"></span><span class="text-ink truncate flex-1">seedance</span><span class="text-gold">$2.07</span></div>
+                    <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-sm" style="background:#7a9eb5"></span><span class="text-ink truncate flex-1">grok-4</span><span class="text-gold">$1.20</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- daily mini chart -->
+            <div class="px-4 pt-3">
+              <div class="rounded-[14px] border border-line bg-panel p-4">
+                <div class="mono text-[9px] uppercase tracking-kicker text-mute mb-3">daily · 30d</div>
+                <svg viewBox="0 0 300 80" preserveAspectRatio="none" class="w-full h-[60px]">
+                  <defs><linearGradient id="cm" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#D4A858" stop-opacity="0.4"/><stop offset="100%" stop-color="#D4A858" stop-opacity="0.02"/></linearGradient></defs>
+                  <path d="M0 68 L20 64 L40 60 L60 56 L80 50 L100 54 L120 46 L140 40 L160 36 L180 30 L200 32 L220 24 L240 22 L260 18 L280 16 L300 12 L300 80 L0 80 Z" fill="url(#cm)"/>
+                  <path d="M0 68 L20 64 L40 60 L60 56 L80 50 L100 54 L120 46 L140 40 L160 36 L180 30 L200 32 L220 24 L240 22 L260 18 L280 16 L300 12" fill="none" stroke="#D4A858" stroke-width="1.5"/>
+                  <circle cx="300" cy="12" r="3" fill="#D4A858" stroke="#0d0a08" stroke-width="2"/>
+                </svg>
+              </div>
+            </div>
+
+            <div class="h-4"></div>
+          </div>
+
+          <div class="tabbar">
+            <a><span class="icn">⌂</span><span>home</span></a>
+            <a><span class="icn">⌬</span><span>servers</span></a>
+            <a><span class="icn">≡</span><span>logs</span></a>
+            <a class="active"><span class="icn">$</span><span>cost</span></a>
+            <a><span class="icn">☰</span><span>more</span></a>
+          </div>
+          <div class="home-indicator"></div>
+        </div>
+      </div>
+      <div class="phone-label"><span class="num">05</span>cost</div>
+    </div>
+
+    <!-- ═════════ 06 · MENU DRAWER ═════════ -->
+    <div>
+      <div class="phone">
+        <div class="phone-island"></div>
+        <div class="phone-screen">
+          <div class="status-bar"><span>9:41</span><div class="flex items-center gap-1.5"><svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><rect x="0" y="6" width="3" height="5" rx="1"/><rect x="4" y="4" width="3" height="7" rx="1"/><rect x="8" y="2" width="3" height="9" rx="1"/><rect x="12" y="0" width="3" height="11" rx="1"/></svg><span class="text-[12px]">5G</span><svg width="22" height="11" viewBox="0 0 22 11" fill="none"><rect x="0.5" y="0.5" width="18" height="10" rx="2.5" stroke="currentColor"/><rect x="2" y="2" width="13" height="7" rx="1" fill="currentColor"/><rect x="19" y="3.5" width="2" height="4" rx="0.5" fill="currentColor"/></svg></div></div>
+
+          <!-- backdrop blur over dimmed servers screen behind -->
+          <div class="absolute inset-0" style="background:rgba(13,10,8,0.7);backdrop-filter:blur(8px);"></div>
+
+          <!-- drawer sheet -->
+          <div class="relative h-full flex flex-col">
+            <div class="flex-1"></div>
+            <div class="rounded-t-[24px] border-t border-line bg-panel pt-3 pb-6 px-4 max-h-[85%] overflow-y-auto" style="background:#15110d">
+              <!-- handle -->
+              <div class="mx-auto w-12 h-1.5 rounded-full bg-line2 mb-5"></div>
+
+              <!-- user header -->
+              <div class="flex items-center gap-3 p-3 rounded-[12px] border border-line bg-panel2 mb-4">
+                <div class="w-11 h-11 rounded-full grid place-items-center mono text-[16px] font-extrabold flex-shrink-0" style="background:#E0454522;color:#E04545">M</div>
+                <div class="flex-1 min-w-0">
+                  <div class="text-ink text-[14px] font-medium">m</div>
+                  <div class="mono text-[10px] text-mute2 truncate">397342895327150080 · owner</div>
+                </div>
+                <button class="mono text-[10px] tracking-label uppercase text-red">⊗</button>
+              </div>
+
+              <!-- nav -->
+              <div class="mono text-[9px] uppercase tracking-kicker text-mute2 mb-2 px-1">navigate</div>
+              <div class="space-y-1 mb-4">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-[10px] hover:bg-ink/[0.03]"><span class="text-red text-[16px] w-6 text-center">⌂</span><span class="text-ink text-[13px]">trang chủ</span><span class="ml-auto mono text-[9px] text-mute2 tracking-label uppercase">⌘ G H</span></a>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-[10px] hover:bg-ink/[0.03]"><span class="text-red text-[16px] w-6 text-center">⌬</span><span class="text-ink text-[13px]">tất cả servers</span><span class="ml-auto mono text-[9px] text-mute2 tracking-label uppercase">⌘ G S</span></a>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-[10px] hover:bg-ink/[0.03]"><span class="text-red text-[16px] w-6 text-center">⊙</span><span class="text-ink text-[13px]">lịch sử của tôi</span></a>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-[10px] hover:bg-ink/[0.03]"><span class="text-red text-[16px] w-6 text-center">▸</span><span class="text-ink text-[13px]">playground</span></a>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-[10px]" style="background:#E0454510"><span class="text-red text-[16px] w-6 text-center">◐</span><span class="text-ink text-[13px]">owner panel</span><span class="ml-auto mono text-[9px] text-red tracking-label uppercase">owner</span></a>
+              </div>
+
+              <!-- preferences -->
+              <div class="mono text-[9px] uppercase tracking-kicker text-mute2 mb-2 px-1">preferences</div>
+              <div class="space-y-1 mb-4">
+                <div class="flex items-center gap-3 px-3 py-2.5">
+                  <span class="text-mute text-[14px] w-6 text-center">🌐</span>
+                  <span class="text-ink text-[13px] flex-1">ngôn ngữ</span>
+                  <div class="flex items-center gap-0.5 p-0.5 rounded-[8px] border border-line bg-bg mono text-[9px] tracking-label uppercase">
+                    <span class="px-2 py-1 rounded-[6px] text-mute">EN</span>
+                    <span class="px-2 py-1 rounded-[6px] text-ink" style="background:#1c1813">VI</span>
+                  </div>
+                </div>
+                <div class="flex items-center gap-3 px-3 py-2.5">
+                  <span class="text-mute text-[14px] w-6 text-center">☾</span>
+                  <span class="text-ink text-[13px] flex-1">theme</span>
+                  <div class="flex items-center gap-0.5 p-0.5 rounded-[8px] border border-line bg-bg mono text-[9px] tracking-label uppercase">
+                    <span class="px-2 py-1 rounded-[6px] text-ink" style="background:#1c1813">dark</span>
+                    <span class="px-2 py-1 rounded-[6px] text-mute">light</span>
+                    <span class="px-2 py-1 rounded-[6px] text-mute">auto</span>
+                  </div>
+                </div>
+                <div class="flex items-center gap-3 px-3 py-2.5">
+                  <span class="text-mute text-[14px] w-6 text-center">▣</span>
+                  <span class="text-ink text-[13px] flex-1">live updates</span>
+                  <div class="w-10 h-6 rounded-full relative flex-shrink-0" style="background:#E0454555">
+                    <div class="absolute top-0.5 right-0.5 w-5 h-5 rounded-full bg-ink"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- danger -->
+              <div class="mt-3">
+                <button class="w-full mono text-[11px] tracking-label uppercase font-bold text-mute py-3 rounded-[10px] border border-line">đăng xuất</button>
+              </div>
+
+              <div class="mt-4 mono text-[9px] text-mute2 text-center tracking-kicker uppercase">katas · v0.3.1 · build 2026.05.18</div>
+            </div>
+          </div>
+          <div class="home-indicator"></div>
+        </div>
+      </div>
+      <div class="phone-label"><span class="num">06</span>menu · bottom sheet</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- spec notes -->
+<section class="relative z-10 max-w-[1640px] mx-auto px-10 pb-16">
+  <div class="mono text-[10px] uppercase tracking-kicker text-mute mb-4">─── mobile principles ───────────────────────────</div>
+  <div class="grid grid-cols-4 gap-3">
+    <div class="rounded-[14px] border border-line bg-panel p-5">
+      <div class="mono text-[10px] uppercase tracking-kicker text-red mb-2">tap target</div>
+      <div class="text-[13px] text-ink leading-[1.55]">Mọi nút ≥ 44×44px (status dot 44px hit-area dù visible 12px). Cards có tap-affordance border.</div>
+    </div>
+    <div class="rounded-[14px] border border-line bg-panel p-5">
+      <div class="mono text-[10px] uppercase tracking-kicker text-red mb-2">filter → sheet</div>
+      <div class="text-[13px] text-ink leading-[1.55]">Desktop dropdowns chuyển thành bottom sheets. Filter button trên top bar mở sheet với options.</div>
+    </div>
+    <div class="rounded-[14px] border border-line bg-panel p-5">
+      <div class="mono text-[10px] uppercase tracking-kicker text-red mb-2">bottom tab nav</div>
+      <div class="text-[13px] text-ink leading-[1.55]">5 tabs cố định: home / servers / logs / cost / more. "more" chứa playground, settings, đăng xuất.</div>
+    </div>
+    <div class="rounded-[14px] border border-line bg-panel p-5">
+      <div class="mono text-[10px] uppercase tracking-kicker text-red mb-2">image-forward logs</div>
+      <div class="text-[13px] text-ink leading-[1.55]">Image/video logs có thumbnail to full-width (4:3). NSFW block có placeholder X icon, prompt hidden.</div>
+    </div>
+    <div class="rounded-[14px] border border-line bg-panel p-5">
+      <div class="mono text-[10px] uppercase tracking-kicker text-gold mb-2">⌘K → fab</div>
+      <div class="text-[13px] text-ink leading-[1.55]">Command palette không khả dụng. Search bar visible trên list pages. Hamburger mở drawer nav.</div>
+    </div>
+    <div class="rounded-[14px] border border-line bg-panel p-5">
+      <div class="mono text-[10px] uppercase tracking-kicker text-gold mb-2">three.js · off</div>
+      <div class="text-[13px] text-ink leading-[1.55]">Ambient three.js disabled trên mobile (performance + battery). Chỉ giữ radial gradient + grain.</div>
+    </div>
+    <div class="rounded-[14px] border border-line bg-panel p-5">
+      <div class="mono text-[10px] uppercase tracking-kicker text-gold mb-2">density · 4px grid</div>
+      <div class="text-[13px] text-ink leading-[1.55]">KPI cards 2×2 thay vì 5×1. Charts compact heights (80-120px). Recent activity tối đa 4 items inline.</div>
+    </div>
+    <div class="rounded-[14px] border border-line bg-panel p-5">
+      <div class="mono text-[10px] uppercase tracking-kicker text-gold mb-2">live indicator</div>
+      <div class="text-[13px] text-ink leading-[1.55]">Pulse dot trong top bar khi WebSocket connected. Pause toggle trong long-running pages (logs).</div>
+    </div>
+  </div>
+
+  <div class="mt-10 grid grid-cols-2 gap-3">
+    <div class="rounded-[14px] border border-line bg-panel p-5">
+      <div class="mono text-[10px] uppercase tracking-kicker text-mute mb-3">feature parity check</div>
+      <div class="space-y-2 mono text-[12px]">
+        <div class="flex items-center gap-3"><span class="w-1.5 h-1.5 rounded-full bg-green flex-shrink-0"></span><span class="text-ink flex-1">overview · logs · cost · settings · playground</span><span class="text-green text-[10px] tracking-label uppercase">full</span></div>
+        <div class="flex items-center gap-3"><span class="w-1.5 h-1.5 rounded-full bg-green flex-shrink-0"></span><span class="text-ink flex-1">3-section servers list (managed / invite / member)</span><span class="text-green text-[10px] tracking-label uppercase">full</span></div>
+        <div class="flex items-center gap-3"><span class="w-1.5 h-1.5 rounded-full bg-green flex-shrink-0"></span><span class="text-ink flex-1">live activity stream + nsfw blocked rows</span><span class="text-green text-[10px] tracking-label uppercase">full</span></div>
+        <div class="flex items-center gap-3"><span class="w-1.5 h-1.5 rounded-full bg-warn flex-shrink-0"></span><span class="text-ink flex-1">cost donut + 30d chart</span><span class="text-warn text-[10px] tracking-label uppercase">compact</span></div>
+        <div class="flex items-center gap-3"><span class="w-1.5 h-1.5 rounded-full bg-warn flex-shrink-0"></span><span class="text-ink flex-1">command palette ⌘K</span><span class="text-warn text-[10px] tracking-label uppercase">drawer + search</span></div>
+        <div class="flex items-center gap-3"><span class="w-1.5 h-1.5 rounded-full bg-err flex-shrink-0"></span><span class="text-ink flex-1">three.js ambient</span><span class="text-err text-[10px] tracking-label uppercase">disabled</span></div>
+      </div>
+    </div>
+    <div class="rounded-[14px] border border-line bg-panel p-5">
+      <div class="mono text-[10px] uppercase tracking-kicker text-mute mb-3">implementation note · phase 15</div>
+      <div class="text-[12px] text-mute leading-[1.7]">
+        Trong Next.js 14, dùng <span class="mono text-ink">useMediaQuery('(max-width: 768px)')</span> như parent `MobileShell.jsx` để switch shell. Bottom tab bar dùng shadcn <span class="mono text-ink">&lt;Tabs&gt;</span> hoặc custom với <span class="mono text-ink">framer-motion</span> spring transitions. Bottom sheets dùng <span class="mono text-ink">vaul</span> (drawer lib chuyên cho mobile). Safe-area: <span class="mono text-ink">env(safe-area-inset-bottom)</span> trên tabbar padding.
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="relative z-10 grid grid-cols-3 items-center mono text-[10px] tracking-kicker text-mute max-w-[1640px] mx-auto px-10 py-6 border-t border-line">
+  <span class="text-left">KATAS MOBILE · 6 SCREENS</span>
+  <span class="text-center flex items-center gap-2 justify-center"><span class="w-1.5 h-1.5 rounded-full bg-green dot-pulse"></span>iPHONE 14 · 390×844</span>
+  <a href="_index.html" class="text-right text-red hover:underline">← INDEX</a>
+</footer>
+
+</body>
+</html>

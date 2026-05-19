@@ -19,6 +19,7 @@ const TechStackMonitor   = lazy(() => import('./featuresB.jsx').then((m) => ({ d
 const CryptoWatch        = lazy(() => import('./featuresB.jsx').then((m) => ({ default: m.CryptoWatch })));
 const TodoList           = lazy(() => import('./featuresB.jsx').then((m) => ({ default: m.TodoList })));
 const Feed               = lazy(() => import('./featuresB.jsx').then((m) => ({ default: m.Feed })));
+const KataDashboard      = lazy(() => import('./featuresB.jsx').then((m) => ({ default: m.KataDashboard })));
 
 const FEATURES = [
   { id: 'home',   label: 'Home',                  icon: '⌂',   accent: COLORS.text,  short: '00' },
@@ -30,6 +31,7 @@ const FEATURES = [
   { id: 'crypto', label: 'Currency',              icon: '$',   accent: COLORS.gold,  short: '06', desc: 'BTC · GOLD · TWD ⇄ VND' },
   { id: 'todo',   label: 'To-Do List',            icon: '✓',   accent: COLORS.green, short: '07', desc: 'Priorities · localStorage' },
   { id: 'feed',   label: 'History',               icon: '◧',   accent: COLORS.gold,  short: '08', desc: 'Private AI history', ownerOnly: true },
+  { id: 'kata',   label: 'KataS Dashboard',       icon: '⌨',   accent: COLORS.red,   short: '09', desc: 'Discord bot · ops · cost' },
 ];
 
 const EXPERIMENT_NUMBER = '007';
@@ -170,6 +172,7 @@ function AppDesktop() {
               {route === 'crypto' && <CryptoWatch />}
               {route === 'todo'   && <TodoList />}
               {route === 'feed'   && (authUser?.isHistoryOwner ? <Feed /> : <RouteFallback />)}
+              {route === 'kata'   && <KataDashboard />}
             </Suspense>
           </div>
         </div>
@@ -1206,8 +1209,8 @@ function HomeView({ nav, ambient, ambientOn }) {
             margin: '20px 0 0', maxWidth: 720,
             fontSize: 16, color: COLORS.muted, lineHeight: 1.6,
           }}>
-            A personal control surface — eight modules wired to one prompt.
-            AI, finance, travel, subscriptions, and tools, woven into a single command center.
+            A personal control surface — nine modules wired to one prompt.
+            AI, finance, travel, subscriptions, tools, and the KataS bot ops, woven into a single command center.
           </p>
           <div style={{ marginTop: 26, display: 'flex', gap: 10 }}>
             <Btn variant="solid" color={COLORS.red} onClick={() => nav('ai')}>{t('home.openAi')}</Btn>

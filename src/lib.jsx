@@ -21,6 +21,7 @@ const I18N = {
     'nav.crypto': 'Currency',
     'nav.todo':   'To-Do List',
     'nav.feed':   'History',
+    'nav.kata':   'KataS Dashboard',
 
     'feature.ai.desc':     'Chat · image · video',
     'feature.tools.desc':  'Public + private utilities',
@@ -30,6 +31,7 @@ const I18N = {
     'feature.crypto.desc': 'BTC · GOLD · TWD ⇄ VND',
     'feature.todo.desc':   'Priorities · localStorage',
     'feature.feed.desc':   'Private AI history',
+    'feature.kata.desc':   'Discord bot · ops · cost',
 
     'breadcrumb.home':    'HOME',
     'breadcrumb.escHome': '← ESC · HOME',
@@ -40,9 +42,9 @@ const I18N = {
 
     'home.online':     '● ONLINE · EXP',
     'home.allOnline':  '● ALL ONLINE',
-    'home.modules':    'MODULES · 08',
+    'home.modules':    'MODULES · 09',
     'home.dashboard':  'The dashboard',
-    'home.subtitle':   'A personal control surface — eight modules wired to one prompt. AI, finance, travel, subscriptions, and tools, woven into a single command center.',
+    'home.subtitle':   'A personal control surface — nine modules wired to one prompt. AI, finance, travel, subscriptions, tools, and the KataS bot ops, woven into a single command center.',
     'home.openAi':     '↗ Open AI Playground',
     'home.markets':    '$ Markets',
     'home.todo':       '✓ To-Do',
@@ -95,7 +97,7 @@ const I18N = {
     'auth.error':        'Sign-in failed',
     'auth.errorDismiss': 'Dismiss',
 
-    'mobile.heroHelp':      'one prompt, eight modules. type',
+    'mobile.heroHelp':      'one prompt, nine modules. type',
     'mobile.heroHelpTail':  'to switch intents.',
     'mobile.try.translate': 'translate text',
     'mobile.try.image':     'render an image',
@@ -119,6 +121,7 @@ const I18N = {
     'nav.crypto': 'Tiền tệ',
     'nav.todo':   'Việc cần làm',
     'nav.feed':   'Lịch sử',
+    'nav.kata':   'KataS Dashboard',
 
     'feature.ai.desc':     'Chat · ảnh · video',
     'feature.tools.desc':  'Tiện ích công khai + riêng tư',
@@ -128,6 +131,7 @@ const I18N = {
     'feature.crypto.desc': 'BTC · VÀNG · TWD ⇄ VND',
     'feature.todo.desc':   'Ưu tiên · localStorage',
     'feature.feed.desc':   'Bảng tin AI riêng tư',
+    'feature.kata.desc':   'Bot Discord · vận hành · chi phí',
 
     'breadcrumb.home':    'TRANG CHỦ',
     'breadcrumb.escHome': '← ESC · TRANG CHỦ',
@@ -138,9 +142,9 @@ const I18N = {
 
     'home.online':     '● ĐANG HOẠT ĐỘNG · EXP',
     'home.allOnline':  '● TẤT CẢ ONLINE',
-    'home.modules':    'MÔ-ĐUN · 08',
+    'home.modules':    'MÔ-ĐUN · 09',
     'home.dashboard':  'Bảng điều khiển',
-    'home.subtitle':   'Một trung tâm điều khiển cá nhân — tám mô-đun gắn vào một prompt. AI, tài chính, du lịch, subscription và công cụ, gói gọn trong một command center.',
+    'home.subtitle':   'Một trung tâm điều khiển cá nhân — chín mô-đun gắn vào một prompt. AI, tài chính, du lịch, subscription, công cụ, và bảng vận hành bot KataS, gói gọn trong một command center.',
     'home.openAi':     '↗ Mở Sân chơi AI',
     'home.markets':    '$ Thị trường',
     'home.todo':       '✓ Việc cần làm',
@@ -193,7 +197,7 @@ const I18N = {
     'auth.error':        'Đăng nhập thất bại',
     'auth.errorDismiss': 'Đóng',
 
-    'mobile.heroHelp':      'một prompt, tám mô-đun. gõ',
+    'mobile.heroHelp':      'một prompt, chín mô-đun. gõ',
     'mobile.heroHelpTail':  'để đổi chế độ.',
     'mobile.try.translate': 'dịch văn bản',
     'mobile.try.image':     'tạo ảnh',

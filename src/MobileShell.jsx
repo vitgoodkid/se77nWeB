@@ -22,6 +22,7 @@ const TechStackMonitor   = lazy(() => import('./featuresB.jsx').then((m) => ({ d
 const CryptoWatch        = lazy(() => import('./featuresB.jsx').then((m) => ({ default: m.CryptoWatch })));
 const TodoList           = lazy(() => import('./featuresB.jsx').then((m) => ({ default: m.TodoList })));
 const Feed               = lazy(() => import('./featuresB.jsx').then((m) => ({ default: m.Feed })));
+const KataDashboard      = lazy(() => import('./featuresB.jsx').then((m) => ({ default: m.KataDashboard })));
 
 const MODULES = [
   { id: 'ai',     short: '01', accent: COLORS.red,   icon: '✦', i18nLabel: 'nav.ai',     i18nDesc: 'feature.ai.desc' },
@@ -32,6 +33,7 @@ const MODULES = [
   { id: 'crypto', short: '06', accent: COLORS.gold,  icon: '$', i18nLabel: 'nav.crypto', i18nDesc: 'feature.crypto.desc' },
   { id: 'todo',   short: '07', accent: COLORS.green, icon: '✓', i18nLabel: 'nav.todo',   i18nDesc: 'feature.todo.desc' },
   { id: 'feed',   short: '08', accent: COLORS.gold,  icon: '◧', i18nLabel: 'nav.feed',   i18nDesc: 'feature.feed.desc', ownerOnly: true },
+  { id: 'kata',   short: '09', accent: COLORS.red,   icon: '⌨', i18nLabel: 'nav.kata',   i18nDesc: 'feature.kata.desc' },
 ];
 
 // Slash commands → either prefix the prompt for the chat agent (so the
@@ -51,6 +53,7 @@ const SLASH_COMMANDS = [
   { cmd: '/tools',     kind: 'nav', route: 'tools',  accent: COLORS.green, desc: 'Jump · toolbox' },
   { cmd: '/feed',      kind: 'nav', route: 'feed',   accent: COLORS.gold,  desc: 'Jump · feed' },
   { cmd: '/game',      kind: 'nav', route: 'game',   accent: COLORS.red,   desc: 'Jump · game' },
+  { cmd: '/kata',      kind: 'nav', route: 'kata',   accent: COLORS.red,   desc: 'Jump · KataS dashboard' },
 ];
 
 const SUGGESTIONS = [
@@ -819,7 +822,7 @@ export default function MobileShell() {
 
   const [route, setRoute] = useState(() => {
     const h = (typeof window !== 'undefined' ? window.location.hash : '').replace(/^#\//, '').split('/')[0];
-    return ['ai', 'tools', 'tv4', 'game', 'tech', 'crypto', 'todo', 'feed'].includes(h) ? h : 'ai';
+    return ['ai', 'tools', 'tv4', 'game', 'tech', 'crypto', 'todo', 'feed', 'kata'].includes(h) ? h : 'ai';
   });
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -847,7 +850,7 @@ export default function MobileShell() {
   useEffect(() => {
     const onHash = () => {
       const h = window.location.hash.replace(/^#\//, '').split('/')[0];
-      const next = ['ai', 'tools', 'tv4', 'game', 'tech', 'crypto', 'todo', 'feed'].includes(h) ? h : 'ai';
+      const next = ['ai', 'tools', 'tv4', 'game', 'tech', 'crypto', 'todo', 'feed', 'kata'].includes(h) ? h : 'ai';
       if (next !== route) setRoute(next);
     };
     window.addEventListener('hashchange', onHash);
@@ -1013,6 +1016,7 @@ export default function MobileShell() {
             {route === 'todo'   && <TodoList />}
             {route === 'feed'   && (user?.isHistoryOwner ? <Feed /> : <RouteFallback />)}
             {route === 'tv4'    && <TravelV4 />}
+            {route === 'kata'   && <KataDashboard />}
           </Suspense>
         </div>
       )}

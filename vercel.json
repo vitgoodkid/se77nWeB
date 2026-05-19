@@ -16,7 +16,9 @@
     { "source": "/s/:slug", "destination": "/api/toolbox?kind=short&slug=:slug&go=1" },
     { "source": "/p/:id", "destination": "/api/toolbox?kind=paste&id=:id&view=1" },
     { "source": "/thao/iuuuu", "destination": "/thao/index.html" },
-    { "source": "/thao/iuuuu/", "destination": "/thao/index.html" }
+    { "source": "/thao/iuuuu/", "destination": "/thao/index.html" },
+    { "source": "/kata", "destination": "/kata/index.html" },
+    { "source": "/kata/", "destination": "/kata/index.html" }
   ],
   "headers": [
     {

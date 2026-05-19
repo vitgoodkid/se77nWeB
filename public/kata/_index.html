@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>katas mockups · index</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = { theme: { extend: {
+    colors: { bg:'#0d0a08', panel:'#15110d', panel2:'#1c1813', line:'rgba(255,255,255,0.08)', line2:'rgba(255,255,255,0.14)', ink:'#f5ede0', mute:'rgba(245,237,224,0.5)', mute2:'rgba(245,237,224,0.3)', red:'#E04545', green:'#5BA868', gold:'#D4A858' },
+    fontFamily: { sans:['Geist','system-ui','sans-serif'], mono:['"JetBrains Mono"','ui-monospace','monospace'] },
+    letterSpacing: { kicker:'0.22em', label:'0.18em' },
+  }}};
+</script>
+<style>
+  html, body { background:#0d0a08; color:#f5ede0; font-family: Geist, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+  .glow77 { text-shadow: 0 0 6px #E04545cc, 0 0 18px #E0454566, 0 0 36px #E0454533; }
+  .grain { background-image: radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px); background-size: 3px 3px; }
+  .ambient { background-image: radial-gradient(60% 50% at 18% 12%, #E0454520 0%, transparent 65%), radial-gradient(50% 45% at 90% 88%, #5BA86820 0%, transparent 70%); }
+  .card:hover { border-color: rgba(255,255,255,0.18); transform: translateY(-2px); }
+  .card { transition: border-color 160ms, transform 160ms; }
+</style>
+</head>
+<body class="min-h-screen relative overflow-x-hidden">
+
+<div aria-hidden class="fixed inset-0 z-0 pointer-events-none ambient"></div>
+<div aria-hidden class="fixed inset-0 z-0 pointer-events-none grain opacity-40"></div>
+
+<main class="relative z-10 px-12 pt-20 pb-16">
+  <div class="mono text-[10px] uppercase tracking-kicker text-mute mb-3">MOCKUP INDEX · STATIC HTML · TAILWIND</div>
+  <div class="flex items-end gap-4 mb-4">
+    <div class="mono text-[44px] font-extrabold tracking-[-0.025em] leading-none">se<span class="text-red glow77">77</span>n<span class="text-mute font-normal"> / kata</span></div>
+  </div>
+  <p class="text-mute text-[14px] max-w-[600px] leading-relaxed mb-12">
+    visual mockups cho dashboard <span class="text-ink">katas</span> — module discord bot trong control surface se77n. design tokens kế thừa từ parent site (geist + jetbrains mono, palette warm-dark, accent red <span class="mono text-red">#E04545</span>). không có state / JS logic — sẽ rewrite trong phase 15 (next.js 14 + tailwind + shadcn).
+  </p>
+
+  <!-- pages grid -->
+  <div class="grid grid-cols-2 gap-4">
+
+    <a href="index.html" class="card rounded-[14px] border border-line bg-panel p-5 block">
+      <div class="flex items-baseline justify-between mb-2">
+        <div class="mono text-[10px] tracking-label uppercase text-red">01</div>
+        <div class="mono text-[10px] tracking-label uppercase text-mute2">/kata</div>
+      </div>
+      <div class="text-[20px] font-medium tracking-tight lowercase">landing · public</div>
+      <div class="text-mute text-[12px] mt-2 leading-[1.55]">signed-out hero, three.js ambient (icosahedron + torus), live stats card, capabilities, marquee ticker.</div>
+      <div class="mono text-[9px] tracking-label uppercase text-mute2 mt-4 flex items-center gap-2">
+        <span class="w-1.5 h-1.5 rounded-full bg-green"></span>three.js · ambient
+      </div>
+    </a>
+
+    <a href="servers.html" class="card rounded-[14px] border border-line bg-panel p-5 block">
+      <div class="flex items-baseline justify-between mb-2">
+        <div class="mono text-[10px] tracking-label uppercase text-red">02</div>
+        <div class="mono text-[10px] tracking-label uppercase text-mute2">/kata/dashboard/servers</div>
+      </div>
+      <div class="text-[20px] font-medium tracking-tight lowercase">servers list</div>
+      <div class="text-mute text-[12px] mt-2 leading-[1.55]">three sections: managed (4) · can invite (5) · member-only (12, collapsed). search + status dots + fallback badges.</div>
+      <div class="mono text-[9px] tracking-label uppercase text-mute2 mt-4 flex items-center gap-3">
+        <span class="px-2 py-0.5 rounded-full" style="background:#5BA86818;color:#5BA868">managed</span>
+        <span class="px-2 py-0.5 rounded-full" style="background:#E0454518;color:#E04545">invite</span>
+        <span class="px-2 py-0.5 rounded-full" style="background:rgba(255,255,255,0.04);color:rgba(245,237,224,0.4)">member</span>
+      </div>
+    </a>
+
+    <a href="overview.html" class="card rounded-[14px] border border-line bg-panel p-5 block">
+      <div class="flex items-baseline justify-between mb-2">
+        <div class="mono text-[10px] tracking-label uppercase text-red">03</div>
+        <div class="mono text-[10px] tracking-label uppercase text-mute2">/servers/[id]?tab=overview</div>
+      </div>
+      <div class="text-[20px] font-medium tracking-tight lowercase">server overview</div>
+      <div class="text-mute text-[12px] mt-2 leading-[1.55]">side nav + 5 KPI cards · 24h hourly bar chart · top users · live activity stream (incl. blocked NSFW row) · config snapshot.</div>
+      <div class="mono text-[9px] tracking-label uppercase text-mute2 mt-4 flex items-center gap-2">
+        <span class="w-1.5 h-1.5 rounded-full bg-green"></span>live · websocket
+      </div>
+    </a>
+
+    <a href="logs-image.html" class="card rounded-[14px] border border-line bg-panel p-5 block">
+      <div class="flex items-baseline justify-between mb-2">
+        <div class="mono text-[10px] tracking-label uppercase text-red">04</div>
+        <div class="mono text-[10px] tracking-label uppercase text-mute2">?tab=logs&sub=image</div>
+      </div>
+      <div class="text-[20px] font-medium tracking-tight lowercase">logs · image</div>
+      <div class="text-mute text-[12px] mt-2 leading-[1.55]">log-type tabs · filter bar · in→out thumbnails · fallback badge · NSFW blocked row (amber/red row tint) · pagination.</div>
+      <div class="mono text-[9px] tracking-label uppercase text-mute2 mt-4 flex items-center gap-3">
+        <span class="px-2 py-0.5 rounded-full" style="background:#c9a65318;color:#c9a653">fallback</span>
+        <span class="px-2 py-0.5 rounded-full" style="background:#c4686818;color:#c46868">blocked</span>
+      </div>
+    </a>
+
+    <a href="cost.html" class="card rounded-[14px] border border-line bg-panel p-5 block">
+      <div class="flex items-baseline justify-between mb-2">
+        <div class="mono text-[10px] tracking-label uppercase text-red">05</div>
+        <div class="mono text-[10px] tracking-label uppercase text-mute2">?tab=cost</div>
+      </div>
+      <div class="text-[20px] font-medium tracking-tight lowercase">cost · dark</div>
+      <div class="text-mute text-[12px] mt-2 leading-[1.55]">hero $12.40 + budget bar · 30d area chart · donut by model · top-user h-bar · 14d stacked tokens · breakdown table.</div>
+      <div class="mono text-[9px] tracking-label uppercase text-mute2 mt-4 flex items-center gap-2">
+        <span class="w-1.5 h-1.5 rounded-full bg-gold"></span>default theme
+      </div>
+    </a>
+
+    <a href="cost-light.html" class="card rounded-[14px] border bg-panel p-5 block relative overflow-hidden" style="border-color:#D4A85844">
+      <div class="absolute top-0 right-0 px-3 py-1 mono text-[9px] tracking-label uppercase font-bold" style="background:#D4A85822;color:#D4A858">light demo</div>
+      <div class="flex items-baseline justify-between mb-2 mt-2">
+        <div class="mono text-[10px] tracking-label uppercase text-gold">06</div>
+        <div class="mono text-[10px] tracking-label uppercase text-mute2">?tab=cost · ☀</div>
+      </div>
+      <div class="text-[20px] font-medium tracking-tight lowercase">cost · light variant</div>
+      <div class="text-mute text-[12px] mt-2 leading-[1.55]">same layout, inverted to warm-cream paper palette · token đối ứng <span class="mono text-ink">#f7f3ec / #1a1612 / #a67d2e</span>.</div>
+      <div class="mono text-[9px] tracking-label uppercase text-mute2 mt-4 flex items-center gap-2">
+        <span class="w-1.5 h-1.5 rounded-full bg-gold"></span>theme parity check
+      </div>
+    </a>
+
+    <a href="mobile.html" class="card rounded-[14px] border bg-panel p-5 block relative overflow-hidden col-span-2" style="border-color:#5BA86844">
+      <div class="absolute top-0 right-0 px-3 py-1 mono text-[9px] tracking-label uppercase font-bold" style="background:#5BA86822;color:#5BA868">mobile · new</div>
+      <div class="flex items-baseline justify-between mb-2 mt-2">
+        <div class="mono text-[10px] tracking-label uppercase text-green">07</div>
+        <div class="mono text-[10px] tracking-label uppercase text-mute2">/kata · iphone 14 · 390×844</div>
+      </div>
+      <div class="text-[20px] font-medium tracking-tight lowercase">mobile · 6 screens</div>
+      <div class="text-mute text-[12px] mt-2 leading-[1.55] max-w-[640px]">landing · servers · overview · logs · cost · menu drawer. bottom-tab navigation, sheet patterns, image-forward feed, full feature parity với desktop (trừ ⌘K + three.js).</div>
+      <div class="mono text-[9px] tracking-label uppercase text-mute2 mt-4 flex items-center gap-3 flex-wrap">
+        <span class="px-2 py-0.5 rounded-full" style="background:#E0454518;color:#E04545">tab nav</span>
+        <span class="px-2 py-0.5 rounded-full" style="background:#D4A85818;color:#D4A858">bottom sheet</span>
+        <span class="px-2 py-0.5 rounded-full" style="background:#5BA86818;color:#5BA868">touch ≥44px</span>
+        <span class="px-2 py-0.5 rounded-full" style="background:rgba(255,255,255,0.04);color:rgba(245,237,224,0.4)">safe-area</span>
+      </div>
+    </a>
+
+  </div>
+
+  <!-- design system summary -->
+  <section class="mt-12">
+    <div class="mono text-[10px] uppercase tracking-kicker text-mute mb-4">─── tokens applied ─────────────────────────────</div>
+    <div class="grid grid-cols-4 gap-2">
+      <div class="rounded-[10px] border border-line bg-panel p-4">
+        <div class="mono text-[9px] tracking-label uppercase text-mute2 mb-2">accent · primary</div>
+        <div class="flex items-center gap-3">
+          <span class="w-8 h-8 rounded" style="background:#E04545"></span>
+          <div class="mono text-[11px]"><div class="text-ink">#E04545</div><div class="text-mute2">parent red</div></div>
+        </div>
+      </div>
+      <div class="rounded-[10px] border border-line bg-panel p-4">
+        <div class="mono text-[9px] tracking-label uppercase text-mute2 mb-2">accent · gold</div>
+        <div class="flex items-center gap-3">
+          <span class="w-8 h-8 rounded" style="background:#D4A858"></span>
+          <div class="mono text-[11px]"><div class="text-ink">#D4A858</div><div class="text-mute2">cost · highlight</div></div>
+        </div>
+      </div>
+      <div class="rounded-[10px] border border-line bg-panel p-4">
+        <div class="mono text-[9px] tracking-label uppercase text-mute2 mb-2">status · ok</div>
+        <div class="flex items-center gap-3">
+          <span class="w-8 h-8 rounded" style="background:#5BA868"></span>
+          <div class="mono text-[11px]"><div class="text-ink">#5BA868</div><div class="text-mute2">live · success</div></div>
+        </div>
+      </div>
+      <div class="rounded-[10px] border border-line bg-panel p-4">
+        <div class="mono text-[9px] tracking-label uppercase text-mute2 mb-2">surface</div>
+        <div class="flex items-center gap-3">
+          <span class="w-8 h-8 rounded" style="background:#15110d;border:1px solid rgba(255,255,255,0.08)"></span>
+          <div class="mono text-[11px]"><div class="text-ink">#15110d</div><div class="text-mute2">panel · bg #0d0a08</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-4 grid grid-cols-2 gap-2">
+      <div class="rounded-[10px] border border-line bg-panel p-4">
+        <div class="mono text-[9px] tracking-label uppercase text-mute2 mb-3">type pairing · parent</div>
+        <div style="font-family:Geist" class="text-[24px] tracking-tight lowercase">geist · display & body</div>
+        <div class="mono text-[12px] text-mute mt-1 tracking-label uppercase">JETBRAINS MONO · LABELS & DATA</div>
+      </div>
+      <div class="rounded-[10px] border border-line bg-panel p-4">
+        <div class="mono text-[9px] tracking-label uppercase text-mute2 mb-3">override note</div>
+        <div class="text-mute text-[12px] leading-[1.6]">
+          DESIGN.md đề xuất accent <span class="mono text-ink">#d4a574</span> tan — đã override sang parent's <span class="mono text-red">#E04545</span> để KataS đồng nhất với "77" trong logo se77n.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="grid grid-cols-3 items-center mono text-[10px] tracking-kicker text-mute mt-14 pt-5 border-t border-line">
+    <span class="text-left">KATAS MOCKUPS · 6 PAGES</span>
+    <span class="text-center">PHASE 15 · NEXT.JS REWRITE</span>
+    <span class="text-right">© SE77N</span>
+  </footer>
+</main>
+
+</body>
+</html>
