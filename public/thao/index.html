@@ -544,7 +544,6 @@
     content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;
     box-shadow: inset -20px -28px 40px rgba(0,0,0,.35), inset 14px 16px 30px rgba(255,210,225,.25);
   }
-  .planet-slot image-slot{display:block;width:100%;height:100%}
   .planet-slot > img{display:block;width:100%;height:100%;object-fit:cover;border-radius:50%;user-select:none;-webkit-user-drag:none}
   .planet-slot.s1{top:6%;left:50%;transform:translateX(-50%);width:160px;height:160px}
   .planet-slot.s2{bottom:14%;left:8%;width:130px;height:130px;animation-delay:-2s}
@@ -718,20 +717,6 @@
   }
   @keyframes ekgDraw{to{stroke-dashoffset:0}}
   @keyframes ekgPulse{0%,100%{filter:drop-shadow(0 0 8px rgba(245,156,180,.9)) drop-shadow(0 0 18px rgba(245,156,180,.6))}50%{filter:drop-shadow(0 0 14px rgba(245,156,180,1)) drop-shadow(0 0 30px rgba(245,156,180,.9))}}
-  .ekg-heart-wrap{
-    position:absolute;inset:0;
-    display:flex;align-items:center;justify-content:center;
-    pointer-events:none;
-  }
-  .ekg-wrap svg.ekg-heart{
-    position:relative;inset:auto;left:auto;top:auto;right:auto;bottom:auto;
-    width:54px;height:54px;color:#f59cb4;
-    filter: drop-shadow(0 0 14px rgba(245,156,180,1));
-    transform:scale(0);
-    transition: transform .6s cubic-bezier(.2,.8,.2,1) 3.8s;
-  }
-  .ekg-wrap.draw svg.ekg-heart{transform:scale(1); animation: beatBig 1.2s ease-in-out 4.4s infinite}
-  @keyframes beatBig{0%,100%{transform:scale(1)}30%{transform:scale(1.22)}}
   .ekg-caption{
     margin-top:18px;font-family:'Dancing Script',cursive;
     font-size: clamp(26px, 3vw, 38px);
@@ -803,6 +788,112 @@
     text-shadow: 0 0 60px rgba(245,156,180,.18);
   }
   .year-float.on{opacity:1}
+
+  /* ============ MOBILE OPTIMIZATION ============ */
+  @media (max-width: 720px){
+    /* Cut expensive background effects */
+    .aurora{display:none}
+    .particle-canvas{display:none}
+    .nebula{filter:none}
+    .year-float{display:none}
+
+    /* Topbar tighter */
+    .topbar{padding:12px 14px;font-size:10px;letter-spacing:.22em}
+    .music{padding:6px 10px}
+
+    /* Hero */
+    .hero{padding:64px 18px 40px;min-height:90vh}
+    .moon{top:8%;right:6%;width:78px;height:78px}
+    .moon::after{inset:-18px}
+    .moon::before{top:-22px;width:6px;height:6px;transform-origin:3px 44px}
+    h1.hero-title{font-size:clamp(44px,12vw,72px);margin-bottom:18px}
+    .sub{font-size:14px;padding:0 6px}
+    .scroll-hint{margin-top:38px;font-size:9px}
+
+    /* Scenes share tighter padding */
+    .scene,.counter-scene,.memory-scene,.planets-scene,
+    .ekg-scene,.love-list-scene,.wish-scene,.finale{
+      padding:60px 18px 60px;
+    }
+    .letter-cosmos{padding:50px 20px 70px}
+    .stanza{margin-bottom:48px}
+    .stanza p{font-size:18px;line-height:1.65}
+    .stanza .glyph{font-size:18px}
+
+    /* Counter: 2-col already handled, slimmer cells */
+    .counter{gap:10px}
+    .counter-cell{padding:16px 10px 14px;border-radius:12px}
+    .counter-cell .num{font-size:30px}
+    .counter-cell .lbl{font-size:9px;letter-spacing:.28em}
+    .since-row{font-size:13px;gap:8px}
+
+    /* Constellation smaller */
+    .constellation-wrap{aspect-ratio:5/3}
+    .constellation-caption{font-size:15px;padding:0 12px}
+
+    /* Memory map: portrait-ish with smaller cards */
+    .memory-map{aspect-ratio:4/5;max-width:340px}
+    .mstar{--sz:18px}
+    .mstar .card{
+      width:min(220px, calc(100vw - 56px));
+      padding:12px 14px 14px;
+    }
+    .mstar .card .what{font-size:14px;line-height:1.4}
+    .mstar .card .when{font-size:8px;letter-spacing:.28em}
+
+    /* Photo planets compact */
+    .planets-wrap{width:min(360px,92vw)}
+    .planet-slot.s1{width:104px;height:104px}
+    .planet-slot.s2,.planet-slot.s3{width:84px;height:84px}
+    .planet-center .you{font-size:38px}
+    .planet-center .sub2{font-size:9px;letter-spacing:.3em}
+    .planets-scene p.intro{font-size:14px;margin-bottom:34px}
+
+    /* EKG smaller */
+    .ekg-wrap{aspect-ratio:8/3.4}
+    .ekg-caption{font-size:22px}
+
+    /* Cycler shorter */
+    .cycle-wrap{min-height:120px;padding:0 6px}
+    .cycle-line{font-size:22px;line-height:1.4}
+    .love-list-scene .sub3{font-size:14px;margin-bottom:26px}
+
+    /* Quote ticker slower + smaller */
+    .quote-strip{padding:30px 0}
+    .quote-track{font-size:16px;gap:54px;animation-duration:90s}
+
+    /* Wishes form stacks */
+    .wish-form{flex-direction:column;align-items:stretch;padding:0 8px}
+    .wish-form input{min-width:0;max-width:none;font-size:14px;padding:12px 16px}
+    .wish-form button{padding:12px 18px;font-size:10px}
+    .wish-list li{font-size:13px;padding:8px 12px}
+
+    /* Finale orbit smaller */
+    .orbit{width:min(280px,76vw);margin-bottom:32px}
+    .vow{font-size:26px;padding:0 8px}
+    .sig{font-size:32px;margin-top:14px}
+    .back{margin-top:34px}
+
+    /* Reduce cursor sparkle blast on touch (hover:none below also handles) */
+  }
+
+  /* Touch / no-hover devices: disable hover-only and cursor effects */
+  @media (hover: none), (pointer: coarse){
+    .trail{display:none}
+    .mstar:hover .core{transform:none}
+    .mstar:hover .ring{opacity:0}
+    .mstar:hover .card{opacity:0;pointer-events:none}
+  }
+
+  /* Respect reduced-motion */
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{
+      animation-duration:.001ms !important;
+      animation-iteration-count:1 !important;
+      transition-duration:.001ms !important;
+    }
+    .aurora,.particle-canvas,.star.small,.star.big{display:none}
+  }
 </style>
 </head>
 <body data-screen-label="V2 Cosmic">
@@ -1000,7 +1091,6 @@
         <div class="sub2">trung tâm của mọi quỹ đạo</div>
       </div>
     </div>
-    </div>
   </section>
 
   <!-- ===== EKG HEARTBEAT ===== -->
@@ -1030,7 +1120,6 @@
           L 1000 140
         "/>
       </svg>
-    </div>
     </div>
     <div class="ekg-caption">anh — ♥ — em</div>
   </section>
@@ -1068,6 +1157,12 @@
   </section>
 
 <script>
+  // ===== Device flags =====
+  const IS_TOUCH = matchMedia('(hover: none), (pointer: coarse)').matches;
+  const IS_SMALL = matchMedia('(max-width: 720px)').matches;
+  const REDUCED_MOTION = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const LITE = IS_SMALL || REDUCED_MOTION;
+
   // ===== CLOSE (postMessage to parent if in iframe; else go back) =====
   (function(){
     function close(e){
@@ -1085,7 +1180,7 @@
   // ===== STARFIELD =====
   (function(){
     const wrap = document.getElementById('stars');
-    const tot = 220;
+    const tot = LITE ? 70 : 220;
     for(let i=0;i<tot;i++){
       const s=document.createElement('div');
       const r = Math.random();
@@ -1120,8 +1215,10 @@
     });
     setTimeout(()=>s.remove(), 1400);
   }
-  setInterval(()=>{ if(Math.random()<0.4) shoot(); }, 4500);
-  setTimeout(shoot, 2400);
+  if(!REDUCED_MOTION){
+    setInterval(()=>{ if(Math.random() < (LITE ? 0.15 : 0.4)) shoot(); }, LITE ? 9000 : 4500);
+    setTimeout(shoot, 2400);
+  }
 
   // ===== Reveal observer =====
   const io = new IntersectionObserver((entries)=>{
@@ -1231,6 +1328,7 @@
 
   // ===== CURSOR SPARKLE TRAIL =====
   (function(){
+    if(IS_TOUCH || LITE) return;
     const COLORS = ['#ffd0e0','#f59cb4','#c47ad6','#fff','#e8b97a'];
     let last = 0;
     let lastX = 0, lastY = 0;
@@ -1266,7 +1364,7 @@
   // ===== CLICK-TO-WISH (heart burst) =====
   document.addEventListener('click', (e)=>{
     // ignore clicks on interactive elements (buttons/inputs/links/etc.)
-    if(e.target.closest('button, a, input, label, image-slot, .mstar, .music, .wish-form')) return;
+    if(e.target.closest('button, a, input, label, .mstar, .music, .wish-form')) return;
     const x = e.clientX, y = e.clientY;
     spawnBurst(x, y);
   });
@@ -1389,6 +1487,7 @@
 
   // ===== HERO 3D PARALLAX =====
   (function(){
+    if(IS_TOUCH || LITE) return;
     const hero = document.querySelector('.hero');
     if(!hero) return;
     const title = document.querySelector('.hero-title');
@@ -1416,6 +1515,7 @@
 
   // ===== PARTICLE CANVAS — connect stars to mouse =====
   (function(){
+    if(IS_TOUCH || LITE) return;
     const canvas = document.getElementById('pcanvas');
     if(!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -1586,6 +1686,7 @@
 
   // ===== YEAR FLOAT (changes by scroll position) =====
   (function(){
+    if(LITE) return;
     const float = document.getElementById('yearFloat');
     if(!float) return;
     const YEARS = ['2018','2019','2020','2024','2026','mãi mãi'];
