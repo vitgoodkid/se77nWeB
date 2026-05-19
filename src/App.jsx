@@ -96,6 +96,7 @@ function AppDesktop() {
   const phase = geo.phase;
 
   function nav(to) {
+    if (to === 'kata') { window.open('/kata', '_blank', 'noopener'); return; }
     if (to === route) return;
     setTransitioning(true);
     setTimeout(() => {
@@ -790,7 +791,10 @@ function NavRail({ route, nav }) {
       {visibleFeatures.map((f) => {
         const active = f.id === route;
         return (
-          <button key={f.id} onClick={() => nav(f.id)} title={f.label}
+          <button key={f.id} onClick={() => {
+            if (f.id === 'kata') window.open('/kata', '_blank', 'noopener');
+            else nav(f.id);
+          }} title={f.label}
             style={{
               width: 56, height: 56, borderRadius: 12,
               background: active ? f.accent + '1a' : 'transparent',
