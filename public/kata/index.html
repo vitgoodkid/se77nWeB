@@ -123,9 +123,9 @@
       <span class="w-3 h-3 rounded-full" style="background:conic-gradient(#E04545,#5BA868,#D4A858,#E04545); border:1px solid rgba(255,255,255,.1)"></span>
       <span>AUTO</span><span class="text-mute text-[9px]">▾</span>
     </button>
-    <button class="mono h-8 px-4 rounded-full uppercase tracking-label font-bold text-[11px] text-red" style="background:#E0454514; border:1px solid #E0454555">
+    <a id="kata-auth-chip" href="/api/auth/discord/start" class="mono h-8 px-4 rounded-full uppercase tracking-label font-bold text-[11px] text-red flex items-center gap-2" style="background:#E0454514; border:1px solid #E0454555">
       Đăng nhập
-    </button>
+    </a>
   </div>
 </header>
 
@@ -453,6 +453,55 @@
     <a href="servers.html" class="text-left md:text-right text-red hover:underline">→ DASHBOARD MOCK</a>
   </footer>
 </main>
+
+<script>
+// Phase 11 — landing wires:
+//   - swap "Đăng nhập" chip for the user chip when /api/auth/me returns a session
+//   - DASHBOARD tile #1 ("servers list") reflects real bot guild count
+(async () => {
+  try {
+    const r = await fetch('/api/auth/me', { credentials: 'same-origin' });
+    if (!r.ok) return;
+    const { user } = await r.json();
+    if (!user) return;
+
+    const chip = document.getElementById('kata-auth-chip');
+    if (chip) {
+      const initial = (user.displayName || user.username || '?').slice(0, 1).toUpperCase();
+      chip.removeAttribute('href');
+      chip.style.background = 'transparent';
+      chip.style.borderColor = 'rgba(255,255,255,0.08)';
+      chip.style.color = '#f5ede0';
+      chip.style.padding = '2px 12px 2px 2px';
+      chip.classList.remove('text-red');
+      chip.innerHTML = (user.avatarUrl
+        ? `<img src="${user.avatarUrl}" alt="" style="width:26px;height:26px;border-radius:9999px;object-fit:cover;border:1px solid rgba(255,255,255,0.08)" />`
+        : `<span style="width:26px;height:26px;border-radius:9999px;background:#E0454522;color:#E04545;display:grid;place-items:center;font-weight:800;font-size:11px">${initial}</span>`)
+        + `<span style="max-width:96px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-transform:none;letter-spacing:0.04em">${user.displayName || user.username || '—'}</span>`
+        + `<span style="color:rgba(245,237,224,0.5);font-size:9px">▾</span>`;
+      chip.style.display = 'flex';
+      chip.style.textTransform = 'none';
+      chip.style.letterSpacing = '0';
+    }
+
+    // Only Discord users can hit /api/kata/me — Google login won't have guilds scope.
+    if (user.provider !== 'discord') return;
+
+    const k = await fetch('/api/kata/me', { credentials: 'same-origin' });
+    if (!k.ok) return;
+    const data = await k.json();
+    const tile = document.querySelector('a[href="servers.html"] .t-card-desc + div');
+    // The active-count line lives 2 nodes down from .t-card-title; keep selectors loose.
+    const activeLine = document.querySelector('a[href="servers.html"] .mt-3.mono');
+    if (activeLine && data.counts) {
+      activeLine.innerHTML = `<span class="dot-pulse w-1 h-1 rounded-full bg-green inline-block"></span><span>${data.counts.managed} managed · ${data.counts.canInvite} có thể mời</span>`;
+    }
+  } catch (e) {
+    // Static landing — silent failure is fine, mocks remain visible.
+    console.warn('kata landing wire failed', e);
+  }
+})();
+</script>
 
 </body>
 </html>

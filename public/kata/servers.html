@@ -63,7 +63,7 @@
     <button class="mono h-8 px-3 rounded-full border border-line text-[10px] tracking-label font-bold flex items-center gap-2">
       <span class="w-3 h-3 rounded-full" style="background:conic-gradient(#E04545,#5BA868,#D4A858,#E04545);border:1px solid rgba(255,255,255,.1)"></span><span>AUTO</span><span class="text-mute text-[9px]">▾</span>
     </button>
-    <button class="h-8 pl-1 pr-3 rounded-full border border-line flex items-center gap-2 mono text-[11px]">
+    <button class="h-8 pl-1 pr-3 rounded-full border border-line flex items-center gap-2 mono text-[11px]" id="kata-user-chip">
       <span class="w-[26px] h-[26px] rounded-full grid place-items-center text-[11px] font-extrabold" style="background:#E0454522;color:#E04545">M</span>
       <span class="max-w-[96px] truncate">m</span>
       <span class="text-mute text-[9px]">▾</span>
@@ -78,14 +78,14 @@
     <div>
       <div class="mono text-[10px] uppercase tracking-kicker text-mute mb-2">SECTION · SERVERS</div>
       <h1 class="mono text-[40px] leading-none font-extrabold tracking-[-0.035em] lowercase">servers<span class="text-red glow77">.</span></h1>
-      <div class="mono text-[11px] text-mute mt-3">Bot có mặt trong <span class="text-ink">4</span> server · bạn có quyền admin <span class="text-ink">8</span> · thành viên ở <span class="text-ink">12</span></div>
+      <div id="kata-counts" class="mono text-[11px] text-mute mt-3">Đang tải…</div>
     </div>
     <div class="flex items-center gap-2">
       <div class="relative">
-        <input placeholder="tìm server…" class="mono bg-bg border border-line rounded-[10px] h-9 pl-9 pr-3 w-[280px] text-[12px] text-ink placeholder:text-mute2 focus:outline-none focus:border-red/60" />
+        <input id="kata-search" placeholder="tìm server…" class="mono bg-bg border border-line rounded-[10px] h-9 pl-9 pr-3 w-[280px] text-[12px] text-ink placeholder:text-mute2 focus:outline-none focus:border-red/60" />
         <svg class="absolute left-3 top-2.5 text-mute2" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
       </div>
-      <button class="mono h-9 px-3.5 rounded-[10px] border border-line text-mute hover:text-ink text-[10px] tracking-label uppercase">↻ refresh</button>
+      <button id="kata-refresh" class="mono h-9 px-3.5 rounded-[10px] border border-line text-mute hover:text-ink text-[10px] tracking-label uppercase">↻ refresh</button>
     </div>
   </div>
 
@@ -93,167 +93,24 @@
   <div class="mb-3 flex items-baseline gap-4">
     <div class="mono text-[10px] uppercase tracking-kicker text-mute flex items-center gap-3">
       <span class="text-mute2">───</span>
-      <span>managed · 4 servers</span>
+      <span id="kata-managed-label">managed</span>
       <span class="dot-pulse w-1.5 h-1.5 rounded-full bg-green"></span>
       <span class="text-mute2 normal-case tracking-tag">(admin · bot trong server)</span>
     </div>
   </div>
 
-  <div class="grid grid-cols-1 gap-3 mb-12">
-    <!-- card 1 -->
-    <a href="overview.html" class="server-card flex items-center gap-5 p-5 rounded-[14px] border border-line bg-panel">
-      <div class="w-12 h-12 rounded-[10px] grid place-items-center flex-shrink-0 mono text-[16px] font-extrabold" style="background:linear-gradient(135deg,#E04545,#7a1e1e);color:#0d0a08">SA</div>
-      <div class="flex-1 min-w-0">
-        <div class="flex items-baseline gap-3">
-          <div class="text-[17px] font-medium tracking-[-0.01em] text-ink">Server Alpha</div>
-          <div class="mono text-[9px] tracking-label uppercase text-mute2">397342895327150080</div>
-        </div>
-        <div class="mono text-[11px] text-mute mt-1.5 flex items-center gap-3">
-          <span>1,245 thành viên</span><span class="text-mute2">·</span>
-          <span>84 msg/ngày</span><span class="text-mute2">·</span>
-          <span class="text-gold">$4.20 tháng này</span><span class="text-mute2">·</span>
-          <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-green dot-pulse"></span><span>online</span></span>
-        </div>
-      </div>
-      <div class="hidden md:flex items-center gap-6 mono text-[10px] tracking-label uppercase text-mute2">
-        <div class="text-right"><div>chat 24h</div><div class="text-ink text-[14px] mt-0.5 font-bold">84</div></div>
-        <div class="text-right"><div>media 24h</div><div class="text-ink text-[14px] mt-0.5 font-bold">8</div></div>
-      </div>
-      <div class="mono text-[10px] tracking-label uppercase text-red flex items-center gap-1">manage <span>→</span></div>
-    </a>
-
-    <!-- card 2 -->
-    <a href="overview.html" class="server-card flex items-center gap-5 p-5 rounded-[14px] border border-line bg-panel">
-      <div class="w-12 h-12 rounded-[10px] grid place-items-center flex-shrink-0 mono text-[16px] font-extrabold" style="background:linear-gradient(135deg,#D4A858,#5a4012);color:#0d0a08">SB</div>
-      <div class="flex-1 min-w-0">
-        <div class="flex items-baseline gap-3">
-          <div class="text-[17px] font-medium tracking-[-0.01em] text-ink">Sĩ tử bay color</div>
-          <div class="mono text-[9px] tracking-label uppercase text-mute2">812547113938284544</div>
-        </div>
-        <div class="mono text-[11px] text-mute mt-1.5 flex items-center gap-3">
-          <span>328 thành viên</span><span class="text-mute2">·</span>
-          <span>42 msg/ngày</span><span class="text-mute2">·</span>
-          <span class="text-gold">$1.80 tháng này</span><span class="text-mute2">·</span>
-          <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-green dot-pulse"></span><span>online</span></span>
-        </div>
-      </div>
-      <div class="hidden md:flex items-center gap-6 mono text-[10px] tracking-label uppercase text-mute2">
-        <div class="text-right"><div>chat 24h</div><div class="text-ink text-[14px] mt-0.5 font-bold">42</div></div>
-        <div class="text-right"><div>media 24h</div><div class="text-ink text-[14px] mt-0.5 font-bold">3</div></div>
-      </div>
-      <div class="mono text-[10px] tracking-label uppercase text-red flex items-center gap-1">manage <span>→</span></div>
-    </a>
-
-    <!-- card 3 - degraded -->
-    <a href="overview.html" class="server-card flex items-center gap-5 p-5 rounded-[14px] border border-line bg-panel">
-      <div class="w-12 h-12 rounded-[10px] grid place-items-center flex-shrink-0 mono text-[16px] font-extrabold" style="background:linear-gradient(135deg,#5BA868,#1f3a26);color:#0d0a08">DV</div>
-      <div class="flex-1 min-w-0">
-        <div class="flex items-baseline gap-3">
-          <div class="text-[17px] font-medium tracking-[-0.01em] text-ink">dev · sandbox</div>
-          <div class="mono text-[9px] tracking-label uppercase text-mute2">1024385771112483008</div>
-          <span class="mono text-[9px] tracking-label uppercase px-2 py-0.5 rounded-full" style="background:#c9a65318;border:1px solid #c9a65340;color:#c9a653">FALLBACK · GPT-IMAGE-2</span>
-        </div>
-        <div class="mono text-[11px] text-mute mt-1.5 flex items-center gap-3">
-          <span>12 thành viên</span><span class="text-mute2">·</span>
-          <span>168 msg/ngày</span><span class="text-mute2">·</span>
-          <span class="text-gold">$5.20 tháng này</span><span class="text-mute2">·</span>
-          <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full" style="background:#c9a653"></span><span class="text-warn">degraded · 2p</span></span>
-        </div>
-      </div>
-      <div class="hidden md:flex items-center gap-6 mono text-[10px] tracking-label uppercase text-mute2">
-        <div class="text-right"><div>chat 24h</div><div class="text-ink text-[14px] mt-0.5 font-bold">168</div></div>
-        <div class="text-right"><div>media 24h</div><div class="text-ink text-[14px] mt-0.5 font-bold">24</div></div>
-      </div>
-      <div class="mono text-[10px] tracking-label uppercase text-red flex items-center gap-1">manage <span>→</span></div>
-    </a>
-
-    <!-- card 4 -->
-    <a href="overview.html" class="server-card flex items-center gap-5 p-5 rounded-[14px] border border-line bg-panel">
-      <div class="w-12 h-12 rounded-[10px] grid place-items-center flex-shrink-0 mono text-[16px] font-extrabold" style="background:linear-gradient(135deg,#7a9eb5,#1f2f3a);color:#0d0a08">NT</div>
-      <div class="flex-1 min-w-0">
-        <div class="flex items-baseline gap-3">
-          <div class="text-[17px] font-medium tracking-[-0.01em] text-ink">night terminal</div>
-          <div class="mono text-[9px] tracking-label uppercase text-mute2">693214857664910336</div>
-        </div>
-        <div class="mono text-[11px] text-mute mt-1.5 flex items-center gap-3">
-          <span>87 thành viên</span><span class="text-mute2">·</span>
-          <span>21 msg/ngày</span><span class="text-mute2">·</span>
-          <span class="text-gold">$1.20 tháng này</span><span class="text-mute2">·</span>
-          <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-green dot-pulse"></span><span>online</span></span>
-        </div>
-      </div>
-      <div class="hidden md:flex items-center gap-6 mono text-[10px] tracking-label uppercase text-mute2">
-        <div class="text-right"><div>chat 24h</div><div class="text-ink text-[14px] mt-0.5 font-bold">21</div></div>
-        <div class="text-right"><div>media 24h</div><div class="text-ink text-[14px] mt-0.5 font-bold">2</div></div>
-      </div>
-      <div class="mono text-[10px] tracking-label uppercase text-red flex items-center gap-1">manage <span>→</span></div>
-    </a>
-  </div>
+  <div id="kata-managed-list" class="grid grid-cols-1 gap-3 mb-12"></div>
 
   <!-- ════════ SECTION 2: CAN INVITE ════════ -->
   <div class="mb-3 flex items-baseline gap-4">
     <div class="mono text-[10px] uppercase tracking-kicker text-mute flex items-center gap-3">
       <span class="text-mute2">───</span>
-      <span>có thể mời · 5 servers</span>
+      <span id="kata-invite-label">có thể mời</span>
       <span class="text-mute2 normal-case tracking-tag">(admin · bot chưa vào)</span>
     </div>
   </div>
 
-  <div class="grid grid-cols-2 gap-3 mb-12">
-    <!-- invite 1 -->
-    <div class="server-card flex items-center gap-4 p-4 rounded-[14px] border border-line bg-panel">
-      <div class="w-10 h-10 rounded-[8px] grid place-items-center flex-shrink-0 mono text-[13px] font-extrabold" style="background:linear-gradient(135deg,#9bb4ff,#1f2f5a);color:#0d0a08">SX</div>
-      <div class="flex-1 min-w-0">
-        <div class="text-[14px] font-medium text-ink truncate">Server X · creators</div>
-        <div class="mono text-[10px] text-mute mt-0.5">2,400 thành viên</div>
-      </div>
-      <button class="mono h-8 px-3 rounded-[8px] uppercase tracking-label text-[10px] font-bold text-red flex items-center gap-1.5" style="background:#E0454514;border:1px solid #E0454555">+ mời bot</button>
-    </div>
-    <div class="server-card flex items-center gap-4 p-4 rounded-[14px] border border-line bg-panel">
-      <div class="w-10 h-10 rounded-[8px] grid place-items-center flex-shrink-0 mono text-[13px] font-extrabold" style="background:linear-gradient(135deg,#D4A858,#5a4012);color:#0d0a08">YT</div>
-      <div class="flex-1 min-w-0">
-        <div class="text-[14px] font-medium text-ink truncate">Server Y · gaming</div>
-        <div class="mono text-[10px] text-mute mt-0.5">512 thành viên</div>
-      </div>
-      <button class="mono h-8 px-3 rounded-[8px] uppercase tracking-label text-[10px] font-bold text-red flex items-center gap-1.5" style="background:#E0454514;border:1px solid #E0454555">+ mời bot</button>
-    </div>
-    <div class="server-card flex items-center gap-4 p-4 rounded-[14px] border border-line bg-panel">
-      <div class="w-10 h-10 rounded-[8px] grid place-items-center flex-shrink-0 mono text-[13px] font-extrabold" style="background:linear-gradient(135deg,#5BA868,#1f3a26);color:#0d0a08">ZN</div>
-      <div class="flex-1 min-w-0">
-        <div class="text-[14px] font-medium text-ink truncate">zenith · learn</div>
-        <div class="mono text-[10px] text-mute mt-0.5">189 thành viên</div>
-      </div>
-      <button class="mono h-8 px-3 rounded-[8px] uppercase tracking-label text-[10px] font-bold text-red flex items-center gap-1.5" style="background:#E0454514;border:1px solid #E0454555">+ mời bot</button>
-    </div>
-    <div class="server-card flex items-center gap-4 p-4 rounded-[14px] border border-line bg-panel">
-      <div class="w-10 h-10 rounded-[8px] grid place-items-center flex-shrink-0 mono text-[13px] font-extrabold" style="background:linear-gradient(135deg,#E04545,#5a1212);color:#0d0a08">PH</div>
-      <div class="flex-1 min-w-0">
-        <div class="text-[14px] font-medium text-ink truncate">phố cổ</div>
-        <div class="mono text-[10px] text-mute mt-0.5">3,108 thành viên</div>
-      </div>
-      <button class="mono h-8 px-3 rounded-[8px] uppercase tracking-label text-[10px] font-bold text-red flex items-center gap-1.5" style="background:#E0454514;border:1px solid #E0454555">+ mời bot</button>
-    </div>
-    <div class="server-card flex items-center gap-4 p-4 rounded-[14px] border border-line bg-panel">
-      <div class="w-10 h-10 rounded-[8px] grid place-items-center flex-shrink-0 mono text-[13px] font-extrabold" style="background:linear-gradient(135deg,#7a9eb5,#1f2f3a);color:#0d0a08">CN</div>
-      <div class="flex-1 min-w-0">
-        <div class="text-[14px] font-medium text-ink truncate">cinema night</div>
-        <div class="mono text-[10px] text-mute mt-0.5">76 thành viên</div>
-      </div>
-      <button class="mono h-8 px-3 rounded-[8px] uppercase tracking-label text-[10px] font-bold text-red flex items-center gap-1.5" style="background:#E0454514;border:1px solid #E0454555">+ mời bot</button>
-    </div>
-  </div>
-
-  <!-- ════════ SECTION 3: MEMBER ONLY (collapsed) ════════ -->
-  <div class="rounded-[14px] border border-line bg-panel/40">
-    <button class="w-full flex items-center justify-between px-5 py-4 text-left">
-      <div class="mono text-[10px] uppercase tracking-kicker text-mute flex items-center gap-3">
-        <span class="text-mute2">───</span>
-        <span>thành viên · 12 servers</span>
-        <span class="text-mute2 normal-case tracking-tag">(bạn là member · xem history riêng nếu bot có)</span>
-      </div>
-      <span class="mono text-[10px] uppercase tracking-label text-red flex items-center gap-1.5">▸ expand</span>
-    </button>
-  </div>
+  <div id="kata-invite-list" class="grid grid-cols-2 gap-3 mb-12"></div>
 
   <!-- footer -->
   <footer class="grid grid-cols-3 items-center mono text-[10px] tracking-kicker text-mute mt-14 pt-5 border-t border-line">
@@ -263,6 +120,182 @@
   </footer>
 
 </main>
+
+<script>
+// Phase 11 — servers list wired to /api/kata/me
+//
+// Auth gate: 401 → redirect to /api/auth/discord/start (forces re-login if
+// token pre-dates the guilds scope upgrade). 403 with reauth_required → same.
+//
+// Search filter is client-side over both managed + invite lists.
+
+const ACCENTS = ['#E04545','#D4A858','#5BA868','#7a9eb5','#9bb4ff','#c46868','#c9a653'];
+
+function avatarBlock(g, size) {
+  const px = size === 'lg' ? 12 : 10;
+  const fontPx = size === 'lg' ? 16 : 13;
+  const radius = size === 'lg' ? 10 : 8;
+  if (g.iconUrl) {
+    return `<img src="${g.iconUrl}" alt="" style="width:${px*4}px;height:${px*4}px;border-radius:${radius}px;object-fit:cover;flex-shrink:0;border:1px solid rgba(255,255,255,0.08)" />`;
+  }
+  // Two-char initial fallback. Pick a stable accent from guildId hash so the
+  // colour doesn't reshuffle on refresh.
+  const seed = [...g.id].reduce((a, c) => a + c.charCodeAt(0), 0);
+  const accent = ACCENTS[seed % ACCENTS.length];
+  const initials = g.name.replace(/[^A-Za-z0-9À-ỹ]/g, '').slice(0, 2).toUpperCase() || '??';
+  return `<div class="grid place-items-center flex-shrink-0 mono font-extrabold" style="width:${px*4}px;height:${px*4}px;border-radius:${radius}px;background:linear-gradient(135deg,${accent},${accent}55);color:#0d0a08;font-size:${fontPx}px">${initials}</div>`;
+}
+
+function managedCard(g) {
+  return `<a href="overview.html?guild=${encodeURIComponent(g.id)}" class="server-card flex items-center gap-5 p-5 rounded-[14px] border border-line bg-panel" data-name="${(g.name||'').toLowerCase()}">
+    ${avatarBlock(g, 'lg')}
+    <div class="flex-1 min-w-0">
+      <div class="flex items-baseline gap-3">
+        <div class="text-[17px] font-medium tracking-[-0.01em] text-ink truncate">${escapeHtml(g.name)}</div>
+        <div class="mono text-[9px] tracking-label uppercase text-mute2">${g.id}</div>
+        ${g.isOwner ? '<span class="mono text-[9px] tracking-label uppercase px-2 py-0.5 rounded-full" style="background:#D4A85818;border:1px solid #D4A85840;color:#D4A858">OWNER</span>' : ''}
+      </div>
+      <div class="mono text-[11px] text-mute mt-1.5 flex items-center gap-3">
+        <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-green dot-pulse"></span><span>online</span></span>
+      </div>
+    </div>
+    <div class="mono text-[10px] tracking-label uppercase text-red flex items-center gap-1">manage <span>→</span></div>
+  </a>`;
+}
+
+function inviteCard(g) {
+  // Discord bot invite — replace CLIENT_ID via window.KATA_BOT_CLIENT_ID (set
+  // below) so the link resolves to your bot's authorize page with admin perms.
+  const inviteUrl = window.KATA_BOT_CLIENT_ID
+    ? `https://discord.com/oauth2/authorize?client_id=${window.KATA_BOT_CLIENT_ID}&permissions=8&scope=bot+applications.commands&guild_id=${g.id}&disable_guild_select=true`
+    : '#';
+  return `<div class="server-card flex items-center gap-4 p-4 rounded-[14px] border border-line bg-panel" data-name="${(g.name||'').toLowerCase()}">
+    ${avatarBlock(g, 'sm')}
+    <div class="flex-1 min-w-0">
+      <div class="text-[14px] font-medium text-ink truncate">${escapeHtml(g.name)}</div>
+      <div class="mono text-[10px] text-mute mt-0.5">${g.isOwner ? 'owner' : 'admin'}</div>
+    </div>
+    <a href="${inviteUrl}" target="_blank" rel="noopener" class="mono h-8 px-3 rounded-[8px] uppercase tracking-label text-[10px] font-bold text-red flex items-center gap-1.5" style="background:#E0454514;border:1px solid #E0454555">+ mời bot</a>
+  </div>`;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+
+function emptyManaged() {
+  return `<div class="rounded-[14px] border border-line bg-panel/40 p-8 text-center">
+    <div class="mono text-[11px] text-mute">Bot chưa vào server nào bạn quản lý.</div>
+    <div class="mono text-[10px] text-mute2 mt-2">Mời bot từ danh sách bên dưới.</div>
+  </div>`;
+}
+
+function emptyInvite() {
+  return `<div class="col-span-2 rounded-[14px] border border-line bg-panel/40 p-6 text-center">
+    <div class="mono text-[11px] text-mute">Không có server nào để mời.</div>
+  </div>`;
+}
+
+async function loadKata() {
+  const counts = document.getElementById('kata-counts');
+  const managedList = document.getElementById('kata-managed-list');
+  const inviteList = document.getElementById('kata-invite-list');
+  const managedLabel = document.getElementById('kata-managed-label');
+  const inviteLabel = document.getElementById('kata-invite-label');
+
+  managedList.innerHTML = '';
+  inviteList.innerHTML = '';
+  counts.textContent = 'Đang tải…';
+
+  try {
+    const r = await fetch('/api/kata/me', { credentials: 'same-origin' });
+    if (r.status === 401) {
+      // Guest — show inline login panel instead of forcing redirect.
+      renderLoginRequired('Đăng nhập với Discord để xem các server bạn quản lý.');
+      return;
+    }
+    if (r.status === 403) {
+      const data = await r.json().catch(() => ({}));
+      if (data.error === 'reauth_required') {
+        renderLoginRequired('Phiên đăng nhập cũ chưa có quyền xem server. Đăng nhập lại để cấp quyền.');
+        return;
+      }
+      if (data.error === 'discord_required') {
+        renderLoginRequired('Cần đăng nhập bằng Discord (không phải Google) để xem server.');
+        return;
+      }
+      counts.innerHTML = `<span class="text-err">${escapeHtml(data.message || 'Forbidden')}</span>`;
+      return;
+    }
+    if (!r.ok) throw new Error('http ' + r.status);
+    const data = await r.json();
+
+    // User chip top-right
+    const chip = document.getElementById('kata-user-chip');
+    if (chip && data.user) {
+      const initial = (data.user.displayName || data.user.username || '?').slice(0, 1).toUpperCase();
+      chip.innerHTML = (data.user.avatarUrl
+        ? `<img src="${data.user.avatarUrl}" alt="" style="width:26px;height:26px;border-radius:9999px;object-fit:cover;border:1px solid rgba(255,255,255,0.08)" />`
+        : `<span class="w-[26px] h-[26px] rounded-full grid place-items-center text-[11px] font-extrabold" style="background:#E0454522;color:#E04545">${initial}</span>`)
+        + `<span class="max-w-[96px] truncate">${escapeHtml(data.user.displayName || data.user.username || '—')}</span>`
+        + `<span class="text-mute text-[9px]">▾</span>`;
+    }
+
+    counts.innerHTML = `Bot có mặt trong <span class="text-ink">${data.counts.botTotal}</span> server · bạn quản lý <span class="text-ink">${data.counts.managed}</span> · có thể mời <span class="text-ink">${data.counts.canInvite}</span>`;
+
+    managedLabel.textContent = `managed · ${data.managed.length} server${data.managed.length === 1 ? '' : 's'}`;
+    inviteLabel.textContent = `có thể mời · ${data.canInvite.length} server${data.canInvite.length === 1 ? '' : 's'}`;
+
+    managedList.innerHTML = data.managed.length ? data.managed.map(managedCard).join('') : emptyManaged();
+    inviteList.innerHTML = data.canInvite.length ? data.canInvite.map(inviteCard).join('') : emptyInvite();
+  } catch (e) {
+    console.error('kata load failed', e);
+    counts.innerHTML = `<span class="text-err">Lỗi tải dữ liệu — thử refresh.</span>`;
+  }
+}
+
+function renderLoginRequired(reason) {
+  const counts = document.getElementById('kata-counts');
+  const managedList = document.getElementById('kata-managed-list');
+  const inviteList = document.getElementById('kata-invite-list');
+  const managedLabel = document.getElementById('kata-managed-label');
+  const inviteLabel = document.getElementById('kata-invite-label');
+
+  if (counts) counts.innerHTML = `<span class="text-mute">Bạn chưa đăng nhập.</span>`;
+  if (managedLabel) managedLabel.textContent = 'managed';
+  if (inviteLabel) inviteLabel.textContent = 'có thể mời';
+  if (inviteList) inviteList.innerHTML = '';
+  if (!managedList) return;
+
+  managedList.innerHTML = `
+    <div class="rounded-[14px] border border-line bg-panel p-10 text-center" style="background:linear-gradient(180deg,rgba(224,69,69,0.04),transparent)">
+      <div class="mx-auto w-12 h-12 rounded-[12px] grid place-items-center mb-5" style="background:#5865F222;border:1px solid #5865F255">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="#5865F2"><path d="M20.317 4.37a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.865-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.74 19.74 0 0 0 3.677 4.37a.07.07 0 0 0-.032.028C.533 9.046-.32 13.58.099 18.058a.082.082 0 0 0 .031.056 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.873-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.1 13.1 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.126-.094.252-.192.372-.291a.074.074 0 0 1 .078-.01c3.928 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .079.01c.12.099.246.197.373.291a.077.077 0 0 1-.006.128 12.3 12.3 0 0 1-1.873.891.076.076 0 0 0-.04.107c.36.698.772 1.363 1.225 1.993a.076.076 0 0 0 .084.028 19.84 19.84 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.029zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+      </div>
+      <div class="text-[16px] font-medium text-ink mb-2">Cần đăng nhập</div>
+      <div class="mono text-[12px] text-mute mb-6 max-w-md mx-auto">${escapeHtml(reason)}</div>
+      <a href="/api/auth/discord/start" class="mono inline-flex items-center gap-2 h-10 px-5 rounded-[10px] uppercase tracking-label text-[11px] font-bold text-bg" style="background:#5865F2">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.865-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.74 19.74 0 0 0 3.677 4.37a.07.07 0 0 0-.032.028C.533 9.046-.32 13.58.099 18.058a.082.082 0 0 0 .031.056 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.873-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.1 13.1 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.126-.094.252-.192.372-.291a.074.074 0 0 1 .078-.01c3.928 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .079.01c.12.099.246.197.373.291a.077.077 0 0 1-.006.128 12.3 12.3 0 0 1-1.873.891.076.076 0 0 0-.04.107c.36.698.772 1.363 1.225 1.993a.076.076 0 0 0 .084.028 19.84 19.84 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.029zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+        Đăng nhập với Discord
+      </a>
+    </div>`;
+}
+
+document.getElementById('kata-refresh')?.addEventListener('click', loadKata);
+
+document.getElementById('kata-search')?.addEventListener('input', (e) => {
+  const q = e.target.value.trim().toLowerCase();
+  for (const el of document.querySelectorAll('[data-name]')) {
+    el.style.display = !q || el.dataset.name.includes(q) ? '' : 'none';
+  }
+});
+
+// Make this configurable per deploy — Vercel env or inline. Falls back to the
+// KataS production app id used in PLAN.md / Discord Developer Portal.
+window.KATA_BOT_CLIENT_ID = window.KATA_BOT_CLIENT_ID || '1505598795738644701';
+
+loadKata();
+</script>
 
 </body>
 </html>

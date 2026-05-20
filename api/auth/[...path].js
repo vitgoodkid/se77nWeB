@@ -1,6 +1,6 @@
 // Catch-all auth route for /api/auth/*.
-// Keeps the public OAuth URLs stable while staying under Vercel Hobby's
-// serverless function limit.
+// Also serves /api/kata/* via vercel.json rewrite to /api/auth/__kata__?kataPath=*
+// — keeps us under Vercel Hobby's 12-function cap by sharing one handler.
 import { ObjectId } from 'mongodb';
 import {
   signSession,
@@ -14,7 +14,7 @@ import {
   buildClearStateCookie,
   getBaseUrl,
 } from '../_lib/session.js';
-import { getUsers } from '../_lib/mongo.js';
+import { getUsers, getKataDb } from '../_lib/mongo.js';
 
 export const config = { maxDuration: 60 };
 
@@ -101,7 +101,10 @@ function handleOAuthStart(req, res, provider) {
   url.searchParams.set('client_id', clientId);
   url.searchParams.set('redirect_uri', redirectUri);
   url.searchParams.set('response_type', 'code');
-  url.searchParams.set('scope', isGoogle ? 'openid email profile' : 'identify email');
+  // Discord scope `guilds` is required by /kata to list servers the user can
+  // manage. Bumping the scope forces existing users to re-authorize on next
+  // login — Discord will prompt automatically.
+  url.searchParams.set('scope', isGoogle ? 'openid email profile' : 'identify email guilds');
   url.searchParams.set('state', state);
   if (isGoogle) {
     url.searchParams.set('access_type', 'online');
@@ -176,6 +179,17 @@ async function handleOAuthCallback(req, res, provider) {
             : (remoteUser.global_name || remoteUser.username || 'Discord user'),
           avatarUrl,
           lastLoginAt: now,
+          // Stash Discord OAuth token for /api/kata to call /users/@me/guilds.
+          // Cleared on Google login so Google users never expose a stale Discord token.
+          ...(isGoogle ? {
+            discordAccessToken: null,
+            discordTokenExpiresAt: null,
+          } : {
+            discordAccessToken: token.access_token,
+            discordTokenExpiresAt: token.expires_in
+              ? new Date(Date.now() + token.expires_in * 1000)
+              : null,
+          }),
         },
         $setOnInsert: {
           ...filter,
@@ -207,6 +221,11 @@ function getOAuthRedirectUri(req, provider) {
 export default async function handler(req, res) {
   const path = getPath(req);
 
+  // /api/kata/* — multiplexed via vercel.json rewrite (kataPath query param).
+  if (path === '__kata__' || (req.query && 'kataPath' in req.query)) {
+    return handleKata(req, res);
+  }
+
   if (path === 'me') return handleMe(req, res);
   if (path === 'logout') return handleLogout(req, res);
   if (path === 'google-start' || path === 'google/start') return handleOAuthStart(req, res, 'google');
@@ -215,4 +234,114 @@ export default async function handler(req, res) {
   if (path === 'discord-callback' || path === 'discord/callback') return handleOAuthCallback(req, res, 'discord');
 
   return res.status(404).json({ error: 'not_found' });
+}
+
+// ── /api/kata/* router ──────────────────────────────────────────
+//
+// Phase 11 surface (foundation only):
+//   GET /api/kata/me           → user profile + manageable guilds where bot is installed
+//
+// Phase 12+ will add: /api/kata/server/[id], /api/kata/server/[id]/config (PATCH), etc.
+
+const DISCORD_PERM_MANAGE_GUILD = 0x20n;
+
+async function handleKata(req, res) {
+  const raw = req.query?.kataPath;
+  const kataPath = (Array.isArray(raw) ? raw.join('/') : String(raw || ''))
+    .replace(/^\/+|\/+$/g, '');
+
+  if (kataPath === 'me') return handleKataMe(req, res);
+
+  return res.status(404).json({ error: 'not_found', path: kataPath });
+}
+
+async function handleKataMe(req, res) {
+  const session = readSession(req);
+  if (!session?.uid) return res.status(401).json({ error: 'unauthenticated' });
+
+  let userOid;
+  try { userOid = new ObjectId(session.uid); }
+  catch { return res.status(401).json({ error: 'bad_session' }); }
+
+  const users = await getUsers();
+  const user = await users.findOne({ _id: userOid });
+  if (!user) return res.status(401).json({ error: 'user_not_found' });
+  if (user.provider !== 'discord') {
+    return res.status(403).json({ error: 'discord_required', message: 'Sign in with Discord to use /kata' });
+  }
+  if (!user.discordAccessToken) {
+    // Old session pre-dating the guilds scope upgrade.
+    return res.status(403).json({ error: 'reauth_required', message: 'Please log out and sign in with Discord again' });
+  }
+
+  // Pull user's guild list from Discord. Discord returns up to 200 guilds in
+  // a single call; we don't paginate yet (assumption: a single user in 200+
+  // servers is rare and wouldn't be served well by this list view anyway).
+  let userGuilds;
+  try {
+    const r = await fetch('https://discord.com/api/v10/users/@me/guilds', {
+      headers: { Authorization: `Bearer ${user.discordAccessToken}` },
+    });
+    if (r.status === 401) {
+      return res.status(403).json({ error: 'reauth_required', message: 'Discord token expired — please sign in again' });
+    }
+    if (!r.ok) {
+      console.error('discord guilds fetch failed', r.status, await r.text().catch(() => ''));
+      return res.status(502).json({ error: 'discord_unavailable' });
+    }
+    userGuilds = await r.json();
+  } catch (e) {
+    console.error('discord guilds fetch error', e);
+    return res.status(502).json({ error: 'discord_unavailable' });
+  }
+
+  // Cross-reference with bot's known guilds (servers collection in the KataS
+  // bot database — written when the bot joins a guild).
+  const kataDb = await getKataDb();
+  const botGuildIds = new Set(
+    (await kataDb.collection('servers').find({ isActive: true }, { projection: { guildId: 1 } }).toArray())
+      .map((s) => s.guildId),
+  );
+
+  const owner = process.env.OWNER_DISCORD_ID?.trim() || '397342895327150080';
+  const isOwner = user.providerUserId === owner;
+
+  const managed = [];
+  const canInvite = [];
+  for (const g of userGuilds) {
+    // Discord returns permissions as a string in v10 (snowflake-safe).
+    let perms = 0n;
+    try { perms = BigInt(g.permissions || '0'); } catch { /* keep 0 */ }
+    const canManage = (perms & DISCORD_PERM_MANAGE_GUILD) !== 0n || g.owner === true || isOwner;
+    if (!canManage) continue;
+
+    const entry = {
+      id: g.id,
+      name: g.name,
+      iconUrl: g.icon
+        ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png?size=128`
+        : null,
+      isOwner: !!g.owner,
+    };
+    if (botGuildIds.has(g.id)) managed.push(entry);
+    else canInvite.push(entry);
+  }
+
+  return res.status(200).json({
+    user: {
+      id: user._id.toString(),
+      providerUserId: user.providerUserId,
+      displayName: user.displayName,
+      username: user.username,
+      avatarUrl: user.avatarUrl,
+      isOwner,
+    },
+    managed,
+    canInvite,
+    counts: {
+      managed: managed.length,
+      canInvite: canInvite.length,
+      botTotal: botGuildIds.size,
+    },
+  });
 }

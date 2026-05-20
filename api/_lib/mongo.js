@@ -3,6 +3,10 @@
 import { MongoClient } from 'mongodb';
 
 const DB_NAME = 'se77n';
+// KataS bot writes to a separate database in the same cluster (database path
+// `katas` in its MONGODB_URI). /api/kata/* reads/writes there directly so the
+// se77n.com auth + tv4 stack stays in its own namespace.
+const KATA_DB_NAME = process.env.KATA_DB_NAME?.trim() || 'katas';
 
 let cached = global.__se77nMongo;
 if (!cached) cached = global.__se77nMongo = { client: null, promise: null };
@@ -39,3 +43,10 @@ export async function getDb() {
 
 export async function getUsers() { return (await getDb()).collection('users'); }
 export async function getUserData() { return (await getDb()).collection('userData'); }
+
+// Read-only handle on the KataS bot database. Same MongoClient pool — only the
+// db namespace differs.
+export async function getKataDb() {
+  await getDb(); // ensure cached.client is initialized
+  return cached.client.db(KATA_DB_NAME);
+}

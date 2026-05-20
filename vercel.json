@@ -13,6 +13,7 @@
     { "source": "/api/auth/google/callback", "destination": "/api/auth/google-callback" },
     { "source": "/api/auth/discord/start", "destination": "/api/auth/discord-start" },
     { "source": "/api/auth/discord/callback", "destination": "/api/auth/discord-callback" },
+    { "source": "/api/kata/:path*", "destination": "/api/auth/__kata__?kataPath=:path*" },
     { "source": "/s/:slug", "destination": "/api/toolbox?kind=short&slug=:slug&go=1" },
     { "source": "/p/:id", "destination": "/api/toolbox?kind=paste&id=:id&view=1" },
     { "source": "/thao/iuuuu", "destination": "/thao/index.html" },
