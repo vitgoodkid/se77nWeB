@@ -89,28 +89,17 @@
     </div>
   </div>
 
-  <!-- ════════ SECTION 1: MANAGED ════════ -->
+  <!-- ════════ MANAGED SERVERS ════════ -->
   <div class="mb-3 flex items-baseline gap-4">
     <div class="mono text-[10px] uppercase tracking-kicker text-mute flex items-center gap-3">
       <span class="text-mute2">───</span>
       <span id="kata-managed-label">managed</span>
       <span class="dot-pulse w-1.5 h-1.5 rounded-full bg-green"></span>
-      <span class="text-mute2 normal-case tracking-tag">(admin · bot trong server)</span>
+      <span class="text-mute2 normal-case tracking-tag">(admin/owner · bot trong server)</span>
     </div>
   </div>
 
   <div id="kata-managed-list" class="grid grid-cols-1 gap-3 mb-12"></div>
-
-  <!-- ════════ SECTION 2: CAN INVITE ════════ -->
-  <div class="mb-3 flex items-baseline gap-4">
-    <div class="mono text-[10px] uppercase tracking-kicker text-mute flex items-center gap-3">
-      <span class="text-mute2">───</span>
-      <span id="kata-invite-label">có thể mời</span>
-      <span class="text-mute2 normal-case tracking-tag">(admin · bot chưa vào)</span>
-    </div>
-  </div>
-
-  <div id="kata-invite-list" class="grid grid-cols-2 gap-3 mb-12"></div>
 
   <!-- footer -->
   <footer class="grid grid-cols-3 items-center mono text-[10px] tracking-kicker text-mute mt-14 pt-5 border-t border-line">
@@ -147,13 +136,16 @@ function avatarBlock(g, size) {
 }
 
 function managedCard(g) {
+  const badge = g.botOwnerView
+    ? '<span class="mono text-[9px] tracking-label uppercase px-2 py-0.5 rounded-full" style="background:#7a9eb518;border:1px solid #7a9eb540;color:#7a9eb5">BOT OWNER VIEW</span>'
+    : (g.isOwner ? '<span class="mono text-[9px] tracking-label uppercase px-2 py-0.5 rounded-full" style="background:#D4A85818;border:1px solid #D4A85840;color:#D4A858">OWNER</span>' : '');
   return `<a href="overview.html?guild=${encodeURIComponent(g.id)}" class="server-card flex items-center gap-5 p-5 rounded-[14px] border border-line bg-panel" data-name="${(g.name||'').toLowerCase()}">
     ${avatarBlock(g, 'lg')}
     <div class="flex-1 min-w-0">
       <div class="flex items-baseline gap-3">
         <div class="text-[17px] font-medium tracking-[-0.01em] text-ink truncate">${escapeHtml(g.name)}</div>
         <div class="mono text-[9px] tracking-label uppercase text-mute2">${g.id}</div>
-        ${g.isOwner ? '<span class="mono text-[9px] tracking-label uppercase px-2 py-0.5 rounded-full" style="background:#D4A85818;border:1px solid #D4A85840;color:#D4A858">OWNER</span>' : ''}
+        ${badge}
       </div>
       <div class="mono text-[11px] text-mute mt-1.5 flex items-center gap-3">
         <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-green dot-pulse"></span><span>online</span></span>
@@ -163,54 +155,28 @@ function managedCard(g) {
   </a>`;
 }
 
-function inviteCard(g) {
-  // Discord bot invite — replace CLIENT_ID via window.KATA_BOT_CLIENT_ID (set
-  // below) so the link resolves to your bot's authorize page with admin perms.
-  const inviteUrl = window.KATA_BOT_CLIENT_ID
-    ? `https://discord.com/oauth2/authorize?client_id=${window.KATA_BOT_CLIENT_ID}&permissions=8&scope=bot+applications.commands&guild_id=${g.id}&disable_guild_select=true`
-    : '#';
-  return `<div class="server-card flex items-center gap-4 p-4 rounded-[14px] border border-line bg-panel" data-name="${(g.name||'').toLowerCase()}">
-    ${avatarBlock(g, 'sm')}
-    <div class="flex-1 min-w-0">
-      <div class="text-[14px] font-medium text-ink truncate">${escapeHtml(g.name)}</div>
-      <div class="mono text-[10px] text-mute mt-0.5">${g.isOwner ? 'owner' : 'admin'}</div>
-    </div>
-    <a href="${inviteUrl}" target="_blank" rel="noopener" class="mono h-8 px-3 rounded-[8px] uppercase tracking-label text-[10px] font-bold text-red flex items-center gap-1.5" style="background:#E0454514;border:1px solid #E0454555">+ mời bot</a>
-  </div>`;
-}
-
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 }
 
 function emptyManaged() {
   return `<div class="rounded-[14px] border border-line bg-panel/40 p-8 text-center">
-    <div class="mono text-[11px] text-mute">Bot chưa vào server nào bạn quản lý.</div>
-    <div class="mono text-[10px] text-mute2 mt-2">Mời bot từ danh sách bên dưới.</div>
-  </div>`;
-}
-
-function emptyInvite() {
-  return `<div class="col-span-2 rounded-[14px] border border-line bg-panel/40 p-6 text-center">
-    <div class="mono text-[11px] text-mute">Không có server nào để mời.</div>
+    <div class="mono text-[11px] text-mute">Bạn không có server nào để quản lý.</div>
+    <div class="mono text-[10px] text-mute2 mt-2">Cần là admin/owner của server có bot KataS đang ở.</div>
   </div>`;
 }
 
 async function loadKata() {
   const counts = document.getElementById('kata-counts');
   const managedList = document.getElementById('kata-managed-list');
-  const inviteList = document.getElementById('kata-invite-list');
   const managedLabel = document.getElementById('kata-managed-label');
-  const inviteLabel = document.getElementById('kata-invite-label');
 
   managedList.innerHTML = '';
-  inviteList.innerHTML = '';
   counts.textContent = 'Đang tải…';
 
   try {
     const r = await fetch('/api/kata/me', { credentials: 'same-origin' });
     if (r.status === 401) {
-      // Guest — show inline login panel instead of forcing redirect.
       renderLoginRequired('Đăng nhập với Discord để xem các server bạn quản lý.');
       return;
     }
@@ -230,7 +196,6 @@ async function loadKata() {
     if (!r.ok) throw new Error('http ' + r.status);
     const data = await r.json();
 
-    // User chip top-right
     const chip = document.getElementById('kata-user-chip');
     if (chip && data.user) {
       const initial = (data.user.displayName || data.user.username || '?').slice(0, 1).toUpperCase();
@@ -241,13 +206,15 @@ async function loadKata() {
         + `<span class="text-mute text-[9px]">▾</span>`;
     }
 
-    counts.innerHTML = `Bot có mặt trong <span class="text-ink">${data.counts.botTotal}</span> server · bạn quản lý <span class="text-ink">${data.counts.managed}</span> · có thể mời <span class="text-ink">${data.counts.canInvite}</span>`;
+    const ownerExtras = data.managed.filter((g) => g.botOwnerView).length;
+    const ownerNote = data.user?.isOwner && ownerExtras > 0
+      ? ` · <span class="text-info">${ownerExtras} bot-owner view</span>`
+      : '';
+    counts.innerHTML = `Bạn quản lý <span class="text-ink">${data.counts.managed}</span> server${ownerNote}`;
 
     managedLabel.textContent = `managed · ${data.managed.length} server${data.managed.length === 1 ? '' : 's'}`;
-    inviteLabel.textContent = `có thể mời · ${data.canInvite.length} server${data.canInvite.length === 1 ? '' : 's'}`;
 
     managedList.innerHTML = data.managed.length ? data.managed.map(managedCard).join('') : emptyManaged();
-    inviteList.innerHTML = data.canInvite.length ? data.canInvite.map(inviteCard).join('') : emptyInvite();
   } catch (e) {
     console.error('kata load failed', e);
     counts.innerHTML = `<span class="text-err">Lỗi tải dữ liệu — thử refresh.</span>`;
@@ -257,14 +224,10 @@ async function loadKata() {
 function renderLoginRequired(reason) {
   const counts = document.getElementById('kata-counts');
   const managedList = document.getElementById('kata-managed-list');
-  const inviteList = document.getElementById('kata-invite-list');
   const managedLabel = document.getElementById('kata-managed-label');
-  const inviteLabel = document.getElementById('kata-invite-label');
 
   if (counts) counts.innerHTML = `<span class="text-mute">Bạn chưa đăng nhập.</span>`;
   if (managedLabel) managedLabel.textContent = 'managed';
-  if (inviteLabel) inviteLabel.textContent = 'có thể mời';
-  if (inviteList) inviteList.innerHTML = '';
   if (!managedList) return;
 
   managedList.innerHTML = `

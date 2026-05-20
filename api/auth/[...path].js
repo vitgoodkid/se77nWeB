@@ -317,33 +317,52 @@ async function handleKataMe(req, res) {
   // Cross-reference with bot's known guilds (servers collection in the KataS
   // bot database — written when the bot joins a guild).
   const kataDb = await getKataDb();
-  const botGuildIds = new Set(
-    (await kataDb.collection('servers').find({ isActive: true }, { projection: { guildId: 1 } }).toArray())
-      .map((s) => s.guildId),
-  );
+  const botServers = await kataDb
+    .collection('servers')
+    .find({ isActive: true }, { projection: { guildId: 1, name: 1, iconUrl: 1, ownerId: 1 } })
+    .toArray();
+  const botGuildIds = new Set(botServers.map((s) => s.guildId));
 
   const owner = process.env.OWNER_DISCORD_ID?.trim() || '397342895327150080';
   const isOwner = user.providerUserId === owner;
 
+  // Surface only servers the user can actually manage (admin/owner) AND the
+  // bot is in. Anything they don't admin doesn't appear at all — no "có thể
+  // mời" rail. The bot owner additionally sees every server the bot is in,
+  // even ones they aren't a member of.
   const managed = [];
-  const canInvite = [];
+  const seenGuildIds = new Set();
+
   for (const g of userGuilds) {
-    // Discord returns permissions as a string in v10 (snowflake-safe).
     let perms = 0n;
     try { perms = BigInt(g.permissions || '0'); } catch { /* keep 0 */ }
-    const canManage = (perms & DISCORD_PERM_MANAGE_GUILD) !== 0n || g.owner === true || isOwner;
-    if (!canManage) continue;
+    const canManage = (perms & DISCORD_PERM_MANAGE_GUILD) !== 0n || g.owner === true;
+    if (!canManage && !isOwner) continue;
+    if (!botGuildIds.has(g.id)) continue;
 
-    const entry = {
+    seenGuildIds.add(g.id);
+    managed.push({
       id: g.id,
       name: g.name,
       iconUrl: g.icon
         ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png?size=128`
         : null,
       isOwner: !!g.owner,
-    };
-    if (botGuildIds.has(g.id)) managed.push(entry);
-    else canInvite.push(entry);
+      botOwnerView: false,
+    });
+  }
+
+  if (isOwner) {
+    for (const s of botServers) {
+      if (seenGuildIds.has(s.guildId)) continue;
+      managed.push({
+        id: s.guildId,
+        name: s.name || `Server ${s.guildId.slice(-4)}`,
+        iconUrl: s.iconUrl || null,
+        isOwner: false,
+        botOwnerView: true,
+      });
+    }
   }
 
   return res.status(200).json({
@@ -356,10 +375,8 @@ async function handleKataMe(req, res) {
       isOwner,
     },
     managed,
-    canInvite,
     counts: {
       managed: managed.length,
-      canInvite: canInvite.length,
       botTotal: botGuildIds.size,
     },
   });

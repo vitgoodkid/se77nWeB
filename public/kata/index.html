@@ -494,7 +494,7 @@
     // The active-count line lives 2 nodes down from .t-card-title; keep selectors loose.
     const activeLine = document.querySelector('a[href="servers.html"] .mt-3.mono');
     if (activeLine && data.counts) {
-      activeLine.innerHTML = `<span class="dot-pulse w-1 h-1 rounded-full bg-green inline-block"></span><span>${data.counts.managed} managed · ${data.counts.canInvite} có thể mời</span>`;
+      activeLine.innerHTML = `<span class="dot-pulse w-1 h-1 rounded-full bg-green inline-block"></span><span>${data.counts.managed} managed</span>`;
     }
   } catch (e) {
     // Static landing — silent failure is fine, mocks remain visible.
