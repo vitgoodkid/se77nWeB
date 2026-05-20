@@ -18,7 +18,7 @@
           panel: '#15110d',
           panel2:'#1c1813',
           line:  'rgba(255,255,255,0.08)',
-          line2: 'rgba(255,255,255,0.14)',
+          line2: 'rgba(255,255,255,0.15)',
           ink:   '#f5ede0',
           mute:  'rgba(245,237,224,0.5)',
           mute2: 'rgba(245,237,224,0.3)',
@@ -33,7 +33,7 @@
           sans: ['Geist', 'system-ui', 'sans-serif'],
           mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
         },
-        letterSpacing: { kicker: '0.22em', label: '0.18em', tag: '0.12em' },
+        letterSpacing: { kicker: '0.15em', label: '0.18em', tag: '0.12em' },
       },
     },
   };
@@ -41,6 +41,15 @@
 <style>
   html, body { background: #0d0a08; color: #f5ede0; font-family: Geist, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
   .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+
+  /* Typography scale — single source of truth */
+  .t-hero      { font-size: clamp(96px, 12vw, 120px); font-weight: 700; line-height: 0.9; letter-spacing: -0.045em; }
+  .t-tagline   { font-size: 18px; font-weight: 400; line-height: 1.55; opacity: 0.7; }
+  .t-section   { font-size: 13px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; opacity: 0.7; }
+  .t-card-title{ font-size: 16px; font-weight: 600; line-height: 1.3; }
+  .t-card-desc { font-size: 14px; line-height: 1.55; opacity: 0.65; }
+  .t-meta      { font-size: 11px; opacity: 0.5; }
+
   @keyframes pulse77 { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .55; transform: scale(.82); } }
   .dot-pulse { animation: pulse77 2s ease-in-out infinite; }
   @keyframes breath { 0%,100% { transform: scale(1); opacity:.65; } 50% { transform: scale(1.025); opacity:.85; } }
@@ -62,35 +71,30 @@
 </head>
 <body class="bg-bg text-ink min-h-screen overflow-x-hidden">
 
-<!-- ambient layers -->
+<!-- ambient layers (no constellation / no three.js — only gradient + grain) -->
 <div aria-hidden class="fixed inset-0 z-0 pointer-events-none ambient"></div>
 <div aria-hidden class="fixed inset-0 z-0 pointer-events-none grain opacity-50"></div>
-<canvas id="ambient3d" aria-hidden class="fixed inset-0 z-0 pointer-events-none" style="opacity:.08"></canvas>
 
 <!-- top bar -->
 <header class="fixed top-0 inset-x-0 h-16 z-50 flex items-center justify-between px-6 backdrop-blur-md border-b border-line" style="background:rgba(13,10,8,0.7)">
   <a href="index.html" class="flex flex-col items-start gap-1 leading-none">
     <div class="mono text-[28px] font-extrabold tracking-[-0.025em]">se<span class="text-red glow77">77</span>n<span class="text-mute font-normal"> / kata</span></div>
-    <div class="mono text-[9px] uppercase tracking-kicker text-mute">Experiment <span class="text-red font-bold glow77">007</span> · katas module</div>
+    <div class="mono t-meta uppercase tracking-kicker">Experiment <span class="text-red font-bold glow77 opacity-100">007</span> · katas module</div>
   </a>
 
   <div class="flex items-center gap-2.5">
-    <!-- ⌘K -->
     <button class="mono h-8 px-3 rounded-full border border-line text-mute hover:text-ink text-[10px] tracking-label flex items-center gap-2">
       <span>⌘K</span><span class="text-mute2">search</span>
     </button>
-    <!-- lang -->
     <button class="mono h-8 rounded-full border border-line px-1 text-[10px] tracking-label font-bold flex items-center">
       <span class="px-2 py-1 rounded-full text-mute">EN</span>
       <span class="text-mute2 text-[9px]">·</span>
       <span class="px-2 py-1 rounded-full bg-ink/10 text-ink">VI</span>
     </button>
-    <!-- theme -->
     <button class="mono h-8 px-3 rounded-full border border-line text-[10px] tracking-label font-bold flex items-center gap-2">
       <span class="w-3 h-3 rounded-full" style="background:conic-gradient(#E04545,#5BA868,#D4A858,#E04545); border:1px solid rgba(255,255,255,.1)"></span>
       <span>AUTO</span><span class="text-mute text-[9px]">▾</span>
     </button>
-    <!-- sign in CTA -->
     <button class="mono h-8 px-4 rounded-full uppercase tracking-label font-bold text-[11px] text-red" style="background:#E0454514; border:1px solid #E0454555">
       Đăng nhập
     </button>
@@ -98,26 +102,32 @@
 </header>
 
 <main class="relative z-10 pt-16">
-  <!-- hero + live stats: 2-col -->
-  <section class="relative mx-auto max-w-[1640px] px-10 pt-16 pb-12 grid grid-cols-[1.35fr_1fr] gap-12 items-end">
-    <!-- experiment watermark behind right column -->
-    <div aria-hidden class="absolute top-[-50px] right-[40px] pointer-events-none breath mono select-none z-0" style="font-size:340px;font-weight:800;letter-spacing:-0.04em;line-height:1;color:transparent;-webkit-text-stroke:1px #E0454522;opacity:.7">007</div>
 
-    <!-- LEFT — hero -->
-    <div class="relative z-10">
-      <div class="mono text-[10px] uppercase tracking-kicker text-mute mb-5 flex items-center gap-3">
-        <span class="dot-pulse w-1.5 h-1.5 rounded-full bg-green inline-block"></span>
-        ● online · 4 servers · katas v0.3.1 · uptime 7d 04h
+  <!-- ════════════════════════════════════════════════════════
+       HERO · 100vh, single column, focused
+       ════════════════════════════════════════════════════════ -->
+  <section class="relative mx-auto max-w-[1280px] px-10" style="min-height: calc(100vh - 64px); display: flex; flex-direction: column; justify-content: center;">
+    <!-- experiment watermark — branding, hero only, opacity 0.7 -->
+    <div aria-hidden class="absolute top-[-20px] right-[20px] pointer-events-none breath mono select-none z-0" style="font-size:clamp(220px,28vw,360px);font-weight:800;letter-spacing:-0.04em;line-height:1;color:transparent;-webkit-text-stroke:1px #E0454522;opacity:.7">007</div>
+
+    <div class="relative z-10 max-w-[760px]">
+      <!-- pre-title -->
+      <div class="mono t-meta uppercase tracking-kicker mb-6">
+        EXP 007 · KATAS MODULE
       </div>
 
-      <h1 class="mono text-[88px] leading-[0.9] font-extrabold tracking-[-0.045em] lowercase">
+      <!-- title -->
+      <h1 class="mono t-hero lowercase">
         <span class="text-red glow77">katas</span><span class="text-red glow77">.</span>
       </h1>
-      <p class="text-mute mt-5 text-[16px] max-w-[560px] leading-[1.6]">
-        bot discord cho chat, ảnh, video và ops. <span class="text-ink">command surface, không phải consumer app.</span> chạy yunwu · fal · sparkedhost.
+
+      <!-- tagline (1 sentence) -->
+      <p class="t-tagline mt-7 max-w-[600px]">
+        Bot Discord: chat, ảnh, video. Một dòng lệnh, mọi thứ chạy.
       </p>
 
-      <div class="mt-8 flex gap-3 flex-wrap">
+      <!-- CTAs -->
+      <div class="mt-10 flex gap-3 flex-wrap">
         <a href="#" class="mono inline-flex items-center gap-2 h-11 px-5 rounded-[10px] text-[12px] tracking-label uppercase font-bold text-bg" style="background:#E04545">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.865-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.74 19.74 0 0 0 3.677 4.37a.07.07 0 0 0-.032.028C.533 9.046-.32 13.58.099 18.058a.082.082 0 0 0 .031.056 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.873-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.1 13.1 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.126-.094.252-.192.372-.291a.074.074 0 0 1 .078-.01c3.928 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .079.01c.12.099.246.197.373.291a.077.077 0 0 1-.006.128 12.3 12.3 0 0 1-1.873.891.076.076 0 0 0-.04.107c.36.698.772 1.363 1.225 1.993a.076.076 0 0 0 .084.028 19.84 19.84 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.029zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
           mời vào server
@@ -126,61 +136,148 @@
           đăng nhập với discord <span class="text-mute">↗</span>
         </a>
       </div>
+    </div>
+  </section>
 
-      <!-- inline slash command preview -->
-      <div class="mt-10 max-w-[560px]">
-        <div class="mono text-[9px] uppercase tracking-kicker text-mute2 mb-3 flex items-center gap-2"><span>─── try it</span><span class="text-mute2/60">in any discord channel</span></div>
-        <div class="rounded-[12px] border border-line bg-panel/80 p-3 flex items-center gap-2 mono text-[13px]">
-          <span class="text-red font-bold">/img</span>
-          <span class="text-ink truncate flex-1">a vietnamese pho cart at midnight, neon, photorealistic</span>
-          <span class="text-mute2 text-[10px] tracking-label uppercase">enter ↵</span>
+  <!-- ════════════════════════════════════════════════════════
+       COMMAND PREVIEW · single line, between hero & capabilities
+       ════════════════════════════════════════════════════════ -->
+  <section class="relative mx-auto max-w-[1280px] px-10 pt-[60px] pb-[120px]">
+    <div class="max-w-[640px] mx-auto">
+      <div class="mono t-meta uppercase tracking-kicker mb-4 text-center">
+        try it in any discord channel
+      </div>
+      <div class="rounded-[10px] border border-line bg-panel/70 px-4 py-3 flex items-center gap-3 mono text-[13px]">
+        <span class="text-red font-bold">/img</span>
+        <span class="text-ink truncate flex-1">a vietnamese pho cart at midnight, neon, photorealistic</span>
+        <span class="t-meta tracking-label uppercase">enter ↵</span>
+      </div>
+      <div class="mt-3 flex items-center justify-between gap-2 mono text-[10px] tracking-label uppercase">
+        <div class="flex gap-1.5">
+          <span class="px-2.5 py-1 rounded-[6px] text-mute" style="border:1px solid rgba(255,255,255,0.15)">/chat</span>
+          <span class="px-2.5 py-1 rounded-[6px] text-mute" style="border:1px solid rgba(255,255,255,0.15)">/edit</span>
+          <span class="px-2.5 py-1 rounded-[6px] text-mute" style="border:1px solid rgba(255,255,255,0.15)">/t2v</span>
         </div>
-        <div class="mt-1.5 grid grid-cols-4 gap-1.5 mono text-[10px] tracking-label uppercase">
-          <span class="text-center py-1.5 rounded-[6px] text-red" style="background:#E0454510;border:1px solid #E0454522">/chat</span>
-          <span class="text-center py-1.5 rounded-[6px] text-red" style="background:#E0454510;border:1px solid #E0454522">/edit</span>
-          <span class="text-center py-1.5 rounded-[6px] text-red" style="background:#E0454510;border:1px solid #E0454522">/t2v</span>
-          <span class="text-center py-1.5 rounded-[6px] text-mute border border-line">+ 8</span>
+        <a href="#commands" class="text-red hover:underline normal-case tracking-normal text-[12px]">xem tất cả 12 lệnh →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════
+       CAPABILITIES · 4 cards, single tonal palette
+       ════════════════════════════════════════════════════════ -->
+  <section id="commands" class="relative mx-auto max-w-[1280px] px-10 pb-[120px]">
+    <div class="t-section mono mb-7">CAPABILITIES</div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+      <!-- chat -->
+      <div class="rounded-[14px] border border-line bg-panel p-5">
+        <div class="flex items-center justify-between mb-4">
+          <span class="inline-flex items-center justify-center w-7 h-7 rounded-md text-ink/70 text-[16px]" style="border:1px solid rgba(255,255,255,0.10)">∞</span>
+          <span class="mono t-meta tracking-label uppercase">rail · 01</span>
+        </div>
+        <div class="mono lowercase t-card-title text-ink mb-2">chat</div>
+        <div class="t-card-desc mb-4">Trò chuyện tự nhiên với vision, function calling, multi-user context.</div>
+        <div class="flex flex-wrap gap-1.5 mono text-[10px] tracking-label uppercase">
+          <span class="px-2 py-0.5 rounded-full text-mute" style="border:1px solid rgba(255,255,255,0.15); background:transparent">gemini-3-flash</span>
+          <span class="px-2 py-0.5 rounded-full text-mute" style="border:1px solid rgba(255,255,255,0.15); background:transparent">claude</span>
+          <span class="px-2 py-0.5 rounded-full text-mute" style="border:1px solid rgba(255,255,255,0.15); background:transparent">grok-4</span>
+        </div>
+      </div>
+
+      <!-- image -->
+      <div class="rounded-[14px] border border-line bg-panel p-5">
+        <div class="flex items-center justify-between mb-4">
+          <span class="inline-flex items-center justify-center w-7 h-7 rounded-md text-ink/70 text-[16px]" style="border:1px solid rgba(255,255,255,0.10)">◧</span>
+          <span class="mono t-meta tracking-label uppercase">rail · 02</span>
+        </div>
+        <div class="mono lowercase t-card-title text-ink mb-2">image</div>
+        <div class="t-card-desc mb-4">Tạo, sửa, xoá nền · nsfw safeguard với fallback chain.</div>
+        <div class="flex flex-wrap gap-1.5 mono text-[10px] tracking-label uppercase">
+          <span class="px-2 py-0.5 rounded-full text-mute" style="border:1px solid rgba(255,255,255,0.15); background:transparent">nano-banana</span>
+          <span class="px-2 py-0.5 rounded-full text-mute" style="border:1px solid rgba(255,255,255,0.15); background:transparent">gpt-image-2</span>
+          <span class="px-2 py-0.5 rounded-full text-mute" style="border:1px solid rgba(255,255,255,0.15); background:transparent">flux/dev</span>
+        </div>
+      </div>
+
+      <!-- video -->
+      <div class="rounded-[14px] border border-line bg-panel p-5">
+        <div class="flex items-center justify-between mb-4">
+          <span class="inline-flex items-center justify-center w-7 h-7 rounded-md text-ink/70 text-[16px]" style="border:1px solid rgba(255,255,255,0.10)">▷</span>
+          <span class="mono t-meta tracking-label uppercase">rail · 03</span>
+        </div>
+        <div class="mono lowercase t-card-title text-ink mb-2">video</div>
+        <div class="t-card-desc mb-4">Text/image → video, tải từ url qua yt-dlp với stream-mode.</div>
+        <div class="flex flex-wrap gap-1.5 mono text-[10px] tracking-label uppercase">
+          <span class="px-2 py-0.5 rounded-full text-mute" style="border:1px solid rgba(255,255,255,0.15); background:transparent">seedance-v2</span>
+          <span class="px-2 py-0.5 rounded-full text-mute" style="border:1px solid rgba(255,255,255,0.15); background:transparent">happy-horse</span>
+          <span class="px-2 py-0.5 rounded-full text-mute" style="border:1px solid rgba(255,255,255,0.15); background:transparent">yt-dlp</span>
+        </div>
+      </div>
+
+      <!-- ops -->
+      <div class="rounded-[14px] border border-line bg-panel p-5">
+        <div class="flex items-center justify-between mb-4">
+          <span class="inline-flex items-center justify-center w-7 h-7 rounded-md text-ink/70 text-[16px]" style="border:1px solid rgba(255,255,255,0.10)">⌬</span>
+          <span class="mono t-meta tracking-label uppercase">rail · 04 · admin</span>
+        </div>
+        <div class="mono lowercase t-card-title text-ink mb-2">ops</div>
+        <div class="t-card-desc mb-4">Role mgmt, emoji clone, audit log, member moderation.</div>
+        <div class="flex flex-wrap gap-1.5 mono text-[10px] tracking-label uppercase">
+          <span class="px-2 py-0.5 rounded-full text-mute" style="border:1px solid rgba(255,255,255,0.15); background:transparent">discord.js v14</span>
+          <span class="px-2 py-0.5 rounded-full text-mute" style="border:1px solid rgba(255,255,255,0.15); background:transparent">manage_guild</span>
         </div>
       </div>
     </div>
+  </section>
 
-    <!-- RIGHT — live telemetry stack -->
-    <div class="relative z-10 space-y-3">
-      <!-- live stats card -->
-      <div class="rounded-[14px] border border-line p-5 bg-panel">
-        <div class="flex items-center gap-2 mb-4">
-          <span class="dot-pulse w-2 h-2 rounded-full bg-green"></span>
-          <div class="mono text-[10px] uppercase tracking-kicker text-mute">live · 5m polling</div>
+  <!-- ════════════════════════════════════════════════════════
+       LIVE · ACTIVITY · stats + feed (moved from hero-right)
+       ════════════════════════════════════════════════════════ -->
+  <section class="relative mx-auto max-w-[1280px] px-10 pb-[120px]">
+    <div class="t-section mono mb-7 flex items-center gap-3">
+      <span class="dot-pulse w-1.5 h-1.5 rounded-full bg-green inline-block"></span>
+      <span>LIVE · ACTIVITY</span>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-[1.35fr_1fr] gap-3">
+
+      <!-- stats card -->
+      <div class="rounded-[14px] border border-line bg-panel p-6">
+        <div class="flex items-center gap-3 mb-5">
+          <div class="mono t-meta uppercase tracking-label">5m polling · synced 12s ago</div>
           <div class="flex-1"></div>
-          <div class="mono text-[9px] text-mute2 tracking-label">sync · 12s ago</div>
+          <div class="mono t-meta tracking-label">katas v0.3.1 · uptime 7d 04h</div>
         </div>
-        <div class="grid grid-cols-2 gap-x-5 gap-y-4">
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-x-5 gap-y-5">
           <div>
-            <div class="mono text-[9px] uppercase tracking-label text-mute2">servers</div>
+            <div class="mono t-meta uppercase tracking-label">servers</div>
             <div class="mono text-[32px] font-bold mt-1 tracking-tight leading-none">4</div>
-            <div class="mono text-[9px] text-green tracking-label uppercase mt-1.5">▲ +1 tuần này</div>
+            <div class="mono text-[10px] text-green tracking-label uppercase mt-1.5 opacity-80">▲ +1 tuần này</div>
           </div>
           <div>
-            <div class="mono text-[9px] uppercase tracking-label text-mute2">tin nhắn · 30d</div>
+            <div class="mono t-meta uppercase tracking-label">tin nhắn · 30d</div>
             <div class="mono text-[32px] font-bold mt-1 tracking-tight leading-none">12.4<span class="text-mute text-[22px]">k</span></div>
-            <div class="mono text-[9px] text-green tracking-label uppercase mt-1.5">▲ +18% vs 30d</div>
+            <div class="mono text-[10px] text-green tracking-label uppercase mt-1.5 opacity-80">▲ +18% vs 30d</div>
           </div>
           <div>
-            <div class="mono text-[9px] uppercase tracking-label text-mute2">media gen · 30d</div>
+            <div class="mono t-meta uppercase tracking-label">media gen · 30d</div>
             <div class="mono text-[32px] font-bold mt-1 tracking-tight leading-none">248</div>
-            <div class="mono text-[9px] text-mute tracking-label uppercase mt-1.5">163 img · 85 vid</div>
+            <div class="mono text-[10px] text-mute tracking-label uppercase mt-1.5">163 img · 85 vid</div>
           </div>
           <div>
-            <div class="mono text-[9px] uppercase tracking-label text-mute2">cost · 30d</div>
+            <div class="mono t-meta uppercase tracking-label">cost · 30d</div>
             <div class="mono text-[32px] font-bold mt-1 tracking-tight leading-none text-gold">$18.40</div>
-            <div class="mono text-[9px] text-warn tracking-label uppercase mt-1.5">▲ +15% vs T4</div>
+            <div class="mono text-[10px] text-warn tracking-label uppercase mt-1.5 opacity-80">▲ +15% vs T4</div>
           </div>
         </div>
-        <!-- mini 7d sparkline -->
-        <div class="mt-5 pt-4 border-t border-line">
-          <div class="mono text-[9px] uppercase tracking-label text-mute2 mb-2 flex items-baseline justify-between">
+
+        <!-- sparkline -->
+        <div class="mt-7 pt-5 border-t border-line">
+          <div class="mono t-meta uppercase tracking-label mb-2 flex items-baseline justify-between">
             <span>msgs · last 7d</span>
-            <span class="text-mute">peak · 2.1k thứ 5</span>
+            <span>peak · 2.1k thứ 5</span>
           </div>
           <svg viewBox="0 0 200 36" preserveAspectRatio="none" class="w-full h-9">
             <defs>
@@ -195,13 +292,13 @@
         </div>
       </div>
 
-      <!-- live activity sneak -->
-      <div class="rounded-[14px] border border-line p-4 bg-panel/60">
-        <div class="mono text-[9px] uppercase tracking-kicker text-mute mb-3 flex items-center gap-2">
+      <!-- right now feed -->
+      <div class="rounded-[14px] border border-line bg-panel/60 p-5">
+        <div class="mono t-meta uppercase tracking-kicker mb-4 flex items-center gap-2">
           <span class="dot-pulse w-1.5 h-1.5 rounded-full bg-red"></span>
           right now
         </div>
-        <div class="space-y-1.5 mono text-[11px]">
+        <div class="space-y-2 mono text-[11px]">
           <div class="flex items-center gap-2.5">
             <span class="text-red text-[9px] tracking-label uppercase w-[58px] flex-shrink-0">just now</span>
             <span class="text-red text-[9px] tracking-label uppercase">/img</span>
@@ -227,137 +324,75 @@
             <span class="text-mute2 text-[10px]">@nha</span>
           </div>
         </div>
-        <div class="mt-3 pt-3 border-t border-line/60 mono text-[9px] tracking-label uppercase text-mute2 text-center">
+        <div class="mt-4 pt-3 border-t border-line/60 mono t-meta tracking-label uppercase text-center">
           full stream · <span class="text-red">đăng nhập</span> để xem
         </div>
       </div>
     </div>
   </section>
 
-  <!-- capabilities — 4 cards row -->
-  <section class="relative mx-auto max-w-[1640px] px-10 pb-12">
-    <div class="mono text-[10px] uppercase tracking-kicker text-mute mb-5 flex items-baseline gap-3">
-      <span class="text-mute2">───</span><span>nó làm gì</span><span class="text-mute2 tracking-tag normal-case">· 4 capability rails</span>
-    </div>
-    <div class="grid grid-cols-4 gap-3">
-      <div class="rounded-[14px] border border-line bg-panel p-5 relative overflow-hidden">
-        <div class="absolute top-0 left-0 right-0 h-[2px] bg-red"></div>
-        <div class="flex items-baseline justify-between mb-4">
-          <div class="mono text-red lowercase text-[15px] font-medium">chat</div>
-          <div class="mono text-[9px] tracking-label uppercase text-mute2">rail · 01</div>
-        </div>
-        <div class="text-ink text-[13px] leading-[1.55] mb-3"><span class="text-mute">trò chuyện tự nhiên</span> với vision, function calling, multi-user context.</div>
-        <div class="flex flex-wrap gap-1.5 mono text-[9px] tracking-label uppercase">
-          <span class="px-2 py-1 rounded-full bg-ink/[0.05] border border-line text-mute">gemini-3-flash</span>
-          <span class="px-2 py-1 rounded-full bg-ink/[0.05] border border-line text-mute">claude</span>
-          <span class="px-2 py-1 rounded-full bg-ink/[0.05] border border-line text-mute">grok-4</span>
-        </div>
-      </div>
-      <div class="rounded-[14px] border border-line bg-panel p-5 relative overflow-hidden">
-        <div class="absolute top-0 left-0 right-0 h-[2px] bg-gold"></div>
-        <div class="flex items-baseline justify-between mb-4">
-          <div class="mono text-gold lowercase text-[15px] font-medium">image</div>
-          <div class="mono text-[9px] tracking-label uppercase text-mute2">rail · 02</div>
-        </div>
-        <div class="text-ink text-[13px] leading-[1.55] mb-3"><span class="text-mute">tạo, sửa, xoá nền</span> · nsfw safeguard với fallback chain.</div>
-        <div class="flex flex-wrap gap-1.5 mono text-[9px] tracking-label uppercase">
-          <span class="px-2 py-1 rounded-full bg-ink/[0.05] border border-line text-mute">nano-banana</span>
-          <span class="px-2 py-1 rounded-full bg-ink/[0.05] border border-line text-mute">gpt-image-2</span>
-          <span class="px-2 py-1 rounded-full bg-ink/[0.05] border border-line text-mute">flux/dev</span>
-        </div>
-      </div>
-      <div class="rounded-[14px] border border-line bg-panel p-5 relative overflow-hidden">
-        <div class="absolute top-0 left-0 right-0 h-[2px] bg-green"></div>
-        <div class="flex items-baseline justify-between mb-4">
-          <div class="mono text-green lowercase text-[15px] font-medium">video</div>
-          <div class="mono text-[9px] tracking-label uppercase text-mute2">rail · 03</div>
-        </div>
-        <div class="text-ink text-[13px] leading-[1.55] mb-3"><span class="text-mute">text/image → video</span>, tải từ url qua yt-dlp với stream-mode.</div>
-        <div class="flex flex-wrap gap-1.5 mono text-[9px] tracking-label uppercase">
-          <span class="px-2 py-1 rounded-full bg-ink/[0.05] border border-line text-mute">seedance-v2</span>
-          <span class="px-2 py-1 rounded-full bg-ink/[0.05] border border-line text-mute">happy-horse</span>
-          <span class="px-2 py-1 rounded-full bg-ink/[0.05] border border-line text-mute">yt-dlp</span>
-        </div>
-      </div>
-      <div class="rounded-[14px] border border-line bg-panel p-5 relative overflow-hidden">
-        <div class="absolute top-0 left-0 right-0 h-[2px]" style="background:#7a9eb5"></div>
-        <div class="flex items-baseline justify-between mb-4">
-          <div class="mono lowercase text-[15px] font-medium" style="color:#7a9eb5">ops</div>
-          <div class="mono text-[9px] tracking-label uppercase text-mute2">rail · 04 · admin</div>
-        </div>
-        <div class="text-ink text-[13px] leading-[1.55] mb-3"><span class="text-mute">role mgmt, emoji clone, audit log</span>, member moderation.</div>
-        <div class="flex flex-wrap gap-1.5 mono text-[9px] tracking-label uppercase">
-          <span class="px-2 py-1 rounded-full bg-ink/[0.05] border border-line text-mute">discord.js v14</span>
-          <span class="px-2 py-1 rounded-full bg-ink/[0.05] border border-line text-mute">manage_guild</span>
-        </div>
-      </div>
-    </div>
-  </section>
+  <!-- ════════════════════════════════════════════════════════
+       DASHBOARD · 4 cards with description, no .html paths
+       ════════════════════════════════════════════════════════ -->
+  <section class="relative mx-auto max-w-[1280px] px-10 pb-[120px]">
+    <div class="t-section mono mb-7">DASHBOARD</div>
 
-  <!-- pages nav -->
-  <section class="relative mx-auto max-w-[1640px] px-10 pb-12">
-    <div class="mono text-[10px] uppercase tracking-kicker text-mute mb-5 flex items-baseline gap-3">
-      <span class="text-mute2">───</span><span>dashboard pages</span><span class="text-mute2 tracking-tag normal-case">· 4 surfaces</span>
-    </div>
-    <div class="grid grid-cols-4 gap-3">
-      <a href="servers.html" class="group rounded-[12px] border border-line bg-panel/80 p-5 hover:border-green/40 hover:-translate-y-0.5 transition block">
-        <div class="flex items-center justify-between mb-3">
-          <span class="mono text-[10px] tracking-label uppercase text-green">02</span>
-          <span class="mono text-[10px] tracking-label uppercase text-mute2 group-hover:text-ink">↗</span>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+      <a href="servers.html" class="group rounded-[12px] border border-line bg-panel/80 p-5 hover:border-line2 hover:-translate-y-0.5 transition block">
+        <div class="flex items-center justify-between mb-4">
+          <span class="mono t-meta tracking-label uppercase">02</span>
+          <span class="mono t-meta tracking-label uppercase group-hover:text-ink">↗</span>
         </div>
-        <div class="text-[15px] font-medium lowercase tracking-tight text-ink">servers list</div>
-        <div class="mono text-[10px] text-mute mt-2">/kata/servers.html</div>
+        <div class="t-card-title lowercase text-ink">servers list</div>
+        <div class="t-card-desc mt-2">Danh sách server bot đang phục vụ.</div>
       </a>
-      <a href="overview.html" class="group rounded-[12px] border border-line bg-panel/80 p-5 hover:border-red/40 hover:-translate-y-0.5 transition block">
-        <div class="flex items-center justify-between mb-3">
-          <span class="mono text-[10px] tracking-label uppercase text-red">03</span>
-          <span class="mono text-[10px] tracking-label uppercase text-mute2 group-hover:text-ink">↗</span>
+
+      <a href="overview.html" class="group rounded-[12px] border border-line bg-panel/80 p-5 hover:border-line2 hover:-translate-y-0.5 transition block">
+        <div class="flex items-center justify-between mb-4">
+          <span class="mono t-meta tracking-label uppercase">03</span>
+          <span class="mono t-meta tracking-label uppercase group-hover:text-ink">↗</span>
         </div>
-        <div class="text-[15px] font-medium lowercase tracking-tight text-ink">server overview</div>
-        <div class="mono text-[10px] text-mute mt-2">/kata/overview.html</div>
+        <div class="t-card-title lowercase text-ink">server overview</div>
+        <div class="t-card-desc mt-2">Tổng quan hoạt động từng server.</div>
       </a>
-      <a href="logs-image.html" class="group rounded-[12px] border border-line bg-panel/80 p-5 hover:border-gold/40 hover:-translate-y-0.5 transition block">
-        <div class="flex items-center justify-between mb-3">
-          <span class="mono text-[10px] tracking-label uppercase text-gold">04</span>
-          <span class="mono text-[10px] tracking-label uppercase text-mute2 group-hover:text-ink">↗</span>
+
+      <a href="logs-image.html" class="group rounded-[12px] border border-line bg-panel/80 p-5 hover:border-line2 hover:-translate-y-0.5 transition block">
+        <div class="flex items-center justify-between mb-4">
+          <span class="mono t-meta tracking-label uppercase">04</span>
+          <span class="mono t-meta tracking-label uppercase group-hover:text-ink">↗</span>
         </div>
-        <div class="text-[15px] font-medium lowercase tracking-tight text-ink">logs · image</div>
-        <div class="mono text-[10px] text-mute mt-2">/kata/logs-image.html</div>
+        <div class="t-card-title lowercase text-ink">logs · image</div>
+        <div class="t-card-desc mt-2">Lịch sử ảnh đã tạo qua bot.</div>
       </a>
-      <a href="cost.html" class="group rounded-[12px] border border-line bg-panel/80 p-5 hover:border-gold/40 hover:-translate-y-0.5 transition block">
-        <div class="flex items-center justify-between mb-3">
-          <span class="mono text-[10px] tracking-label uppercase text-gold">05</span>
-          <span class="mono text-[10px] tracking-label uppercase text-mute2 group-hover:text-ink">↗</span>
+
+      <a href="cost.html" class="group rounded-[12px] border border-line bg-panel/80 p-5 hover:border-line2 hover:-translate-y-0.5 transition block">
+        <div class="flex items-center justify-between mb-4">
+          <span class="mono t-meta tracking-label uppercase">05</span>
+          <span class="mono t-meta tracking-label uppercase group-hover:text-ink">↗</span>
         </div>
-        <div class="text-[15px] font-medium lowercase tracking-tight text-ink">cost</div>
-        <div class="mono text-[10px] text-mute mt-2">/kata/cost.html</div>
+        <div class="t-card-title lowercase text-ink">cost</div>
+        <div class="t-card-desc mt-2">Chi phí api token theo tháng.</div>
       </a>
     </div>
   </section>
 
-  <!-- built on -->
-  <section class="relative mx-auto max-w-[1640px] px-10 pb-12">
-    <div class="grid grid-cols-[180px_1fr] gap-12 items-baseline">
-      <div class="mono text-[10px] uppercase tracking-kicker text-mute">─── built on</div>
-      <div class="mono text-[12px] text-mute tracking-[0.06em] leading-[2] flex flex-wrap gap-x-6">
+  <!-- ════════════════════════════════════════════════════════
+       RUNS ON · short tech stack near footer
+       ════════════════════════════════════════════════════════ -->
+  <section class="relative mx-auto max-w-[1280px] px-10 pb-[60px]">
+    <div class="grid grid-cols-1 md:grid-cols-[180px_1fr] gap-6 md:gap-12 items-baseline">
+      <div class="t-section mono">RUNS ON</div>
+      <div class="mono text-[13px] text-mute tracking-[0.04em] leading-[1.9] flex flex-wrap items-center gap-x-5 gap-y-1">
         <span><span class="text-ink">yunwu.ai</span> <span class="text-mute2">— ai gateway</span></span>
         <span class="text-mute2/40">·</span>
         <span><span class="text-ink">fal.ai</span> <span class="text-mute2">— media gen</span></span>
         <span class="text-mute2/40">·</span>
-        <span><span class="text-ink">sparkedhost</span> <span class="text-mute2">— 1gb bot host</span></span>
-        <span class="text-mute2/40">·</span>
-        <span><span class="text-ink">cloudflare r2</span> <span class="text-mute2">— media storage</span></span>
-        <span class="text-mute2/40">·</span>
-        <span><span class="text-ink">mongodb atlas</span> <span class="text-mute2">— logs · config</span></span>
-        <span class="text-mute2/40">·</span>
-        <span><span class="text-ink">upstash redis</span> <span class="text-mute2">— context · queue</span></span>
-        <span class="text-mute2/40">·</span>
-        <span><span class="text-ink">vercel</span> <span class="text-mute2">— dashboard</span></span>
+        <span><span class="text-ink">sparkedhost</span> <span class="text-mute2">— bot host</span></span>
       </div>
     </div>
   </section>
 
-  <!-- ticker -->
+  <!-- ticker (kept as-is, brand marquee before footer) -->
   <section class="relative z-10 my-6">
     <div class="overflow-hidden border-y border-line py-2.5" style="background:rgba(13,10,8,0.5); -webkit-mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent); mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent)">
       <div class="inline-flex gap-7 whitespace-nowrap ticker pl-7 mono text-[11px] tracking-label font-bold">
@@ -376,48 +411,12 @@
   </section>
 
   <!-- footer -->
-  <footer class="relative mx-auto max-w-[1640px] px-10 pb-16 pt-8 grid grid-cols-3 items-center mono text-[10px] tracking-kicker text-mute">
+  <footer class="relative mx-auto max-w-[1280px] px-10 pb-16 pt-8 grid grid-cols-1 md:grid-cols-3 items-center gap-2 mono t-meta tracking-kicker">
     <span class="text-left">A SE77N MODULE · 2026</span>
     <span class="text-center">BUILD · 2026.05.18</span>
-    <a href="servers.html" class="text-right text-red hover:underline">→ DASHBOARD MOCK</a>
+    <a href="servers.html" class="text-left md:text-right text-red hover:underline">→ DASHBOARD MOCK</a>
   </footer>
 </main>
-
-<!-- three.js ambient -->
-<script type="module">
-  import * as THREE from 'https://cdn.skypack.dev/three@0.156.1';
-  const canvas = document.getElementById('ambient3d');
-  if (canvas && !window.matchMedia('(prefers-reduced-motion: reduce)').matches && !window.matchMedia('(max-width: 768px)').matches) {
-    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
-    camera.position.z = 5;
-    const geo = new THREE.IcosahedronGeometry(1.6, 1);
-    const mat = new THREE.MeshBasicMaterial({ color: 0xd4a858, wireframe: true, transparent: true, opacity: 0.6 });
-    const mesh = new THREE.Mesh(geo, mat);
-    scene.add(mesh);
-    const geo2 = new THREE.TorusGeometry(2.4, 0.02, 8, 64);
-    const mat2 = new THREE.MeshBasicMaterial({ color: 0xE04545, wireframe: true, transparent: true, opacity: 0.5 });
-    const torus = new THREE.Mesh(geo2, mat2);
-    torus.rotation.x = 1.0;
-    scene.add(torus);
-    function resize() {
-      const w = window.innerWidth, h = window.innerHeight;
-      renderer.setSize(w, h, false);
-      camera.aspect = w / h; camera.updateProjectionMatrix();
-    }
-    resize(); window.addEventListener('resize', resize);
-    let t0 = performance.now();
-    (function loop(t) {
-      const dt = (t - t0) / 1000;
-      mesh.rotation.x = dt * 0.06; mesh.rotation.y = dt * 0.10;
-      torus.rotation.z = dt * 0.05; torus.rotation.y = dt * 0.07;
-      renderer.render(scene, camera);
-      requestAnimationFrame(loop);
-    })(t0);
-  }
-</script>
 
 </body>
 </html>
