@@ -15,6 +15,7 @@ import {
   getBaseUrl,
 } from '../_lib/session.js';
 import { getUsers, getKataDb } from '../_lib/mongo.js';
+import { publish as redisPublish } from '../_lib/redis.js';
 
 export const config = { maxDuration: 60 };
 
@@ -252,6 +253,20 @@ async function handleKata(req, res) {
 
   if (kataPath === 'me') return handleKataMe(req, res);
 
+  // /api/kata/server/:guildId  → GET overview + config
+  // /api/kata/server/:guildId/config (PATCH) → write config + redis publish
+  const serverMatch = kataPath.match(/^server\/([0-9]+)(?:\/(config))?$/);
+  if (serverMatch) {
+    const [, guildId, sub] = serverMatch;
+    if (sub === 'config' && req.method === 'PATCH') {
+      return handleKataServerConfigPatch(req, res, guildId);
+    }
+    if (!sub && req.method === 'GET') {
+      return handleKataServerGet(req, res, guildId);
+    }
+    return res.status(405).json({ error: 'method_not_allowed' });
+  }
+
   return res.status(404).json({ error: 'not_found', path: kataPath });
 }
 
@@ -344,4 +359,272 @@ async function handleKataMe(req, res) {
       botTotal: botGuildIds.size,
     },
   });
+}
+
+// ── Permission gate for per-server endpoints ────────────────────
+//
+// Returns { user, isAuthorized, reason? }. A guild is authorized when:
+//   1. The user signed in with Discord and we have a non-expired access token
+//   2. Their /users/@me/guilds list includes this guildId AND
+//      they have MANAGE_GUILD on it OR are guild owner OR are KataS bot owner
+//   3. The bot's `servers` collection has the guild marked active
+//
+// We re-check (2) on every request rather than trusting a cached session bit
+// because Discord roles/permissions change without our knowledge.
+
+async function authorizeGuildAccess(req, guildId) {
+  const session = readSession(req);
+  if (!session?.uid) return { error: 'unauthenticated', status: 401 };
+
+  let userOid;
+  try { userOid = new ObjectId(session.uid); }
+  catch { return { error: 'bad_session', status: 401 }; }
+
+  const users = await getUsers();
+  const user = await users.findOne({ _id: userOid });
+  if (!user) return { error: 'user_not_found', status: 401 };
+  if (user.provider !== 'discord') return { error: 'discord_required', status: 403 };
+  if (!user.discordAccessToken) return { error: 'reauth_required', status: 403 };
+
+  const owner = process.env.OWNER_DISCORD_ID?.trim() || '397342895327150080';
+  const isOwner = user.providerUserId === owner;
+
+  // Verify the bot is in this guild before doing anything else.
+  const kataDb = await getKataDb();
+  const serverDoc = await kataDb.collection('servers').findOne({ guildId });
+  if (!serverDoc || serverDoc.isActive === false) {
+    return { error: 'bot_not_in_guild', status: 404 };
+  }
+
+  // Owner override skips Discord round-trip; otherwise verify MANAGE_GUILD.
+  if (!isOwner) {
+    let userGuilds;
+    try {
+      const r = await fetch('https://discord.com/api/v10/users/@me/guilds', {
+        headers: { Authorization: `Bearer ${user.discordAccessToken}` },
+      });
+      if (r.status === 401) return { error: 'reauth_required', status: 403 };
+      if (!r.ok) return { error: 'discord_unavailable', status: 502 };
+      userGuilds = await r.json();
+    } catch {
+      return { error: 'discord_unavailable', status: 502 };
+    }
+
+    const target = userGuilds.find((g) => g.id === guildId);
+    if (!target) return { error: 'forbidden', status: 403 };
+    let perms = 0n;
+    try { perms = BigInt(target.permissions || '0'); } catch { /* keep 0 */ }
+    const canManage = (perms & DISCORD_PERM_MANAGE_GUILD) !== 0n || target.owner === true;
+    if (!canManage) return { error: 'forbidden', status: 403 };
+  }
+
+  return { user, isOwner, serverDoc, kataDb };
+}
+
+// ── GET /api/kata/server/:guildId ───────────────────────────────
+//
+// Returns: { guild, config, stats: { kpis, hourly, topUsers, recent } }
+// stats are scoped to last 24h for KPIs and hourly bars; top users + cost
+// are 30-day windows.
+
+async function handleKataServerGet(req, res, guildId) {
+  const auth = await authorizeGuildAccess(req, guildId);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+
+  const { kataDb, serverDoc } = auth;
+  const now = Date.now();
+  const day = 24 * 60 * 60 * 1000;
+  const since24h = new Date(now - day);
+  const since48h = new Date(now - 2 * day);
+  const since30d = new Date(now - 30 * day);
+
+  const [config, msg24h, msg48h, img24h, img48h, vid24h, vid48h, cmd24h, cmd48h, cost30d, hourly, topUsers, recent] = await Promise.all([
+    kataDb.collection('serverconfigs').findOne({ guildId }),
+    kataDb.collection('chatlogs').countDocuments({ guildId, role: 'user', createdAt: { $gte: since24h } }),
+    kataDb.collection('chatlogs').countDocuments({ guildId, role: 'user', createdAt: { $gte: since48h, $lt: since24h } }),
+    kataDb.collection('imagegens').countDocuments({ guildId, createdAt: { $gte: since24h } }),
+    kataDb.collection('imagegens').countDocuments({ guildId, createdAt: { $gte: since48h, $lt: since24h } }),
+    kataDb.collection('videogens').countDocuments({ guildId, createdAt: { $gte: since24h } }),
+    kataDb.collection('videogens').countDocuments({ guildId, createdAt: { $gte: since48h, $lt: since24h } }),
+    kataDb.collection('commandhistories').countDocuments({ guildId, createdAt: { $gte: since24h } }),
+    kataDb.collection('commandhistories').countDocuments({ guildId, createdAt: { $gte: since48h, $lt: since24h } }),
+    kataDb.collection('costentries').aggregate([
+      { $match: { guildId, timestamp: { $gte: since30d } } },
+      { $group: { _id: null, total: { $sum: '$costUSD' } } },
+    ]).toArray(),
+    // 24 hourly buckets — works on chatlogs (TTL 24h) so the count is stable.
+    kataDb.collection('chatlogs').aggregate([
+      { $match: { guildId, role: 'user', createdAt: { $gte: since24h } } },
+      { $group: { _id: { $hour: '$createdAt' }, count: { $sum: 1 } } },
+    ]).toArray(),
+    kataDb.collection('costentries').aggregate([
+      { $match: { guildId, timestamp: { $gte: since30d } } },
+      { $group: { _id: '$userId', cost: { $sum: '$costUSD' }, count: { $sum: 1 } } },
+      { $sort: { cost: -1 } },
+      { $limit: 5 },
+    ]).toArray(),
+    kataDb.collection('commandhistories').find(
+      { guildId },
+      { projection: { command: 1, userId: 1, input: 1, success: 1, costUSD: 1, errorMessage: 1, createdAt: 1 } },
+    ).sort({ createdAt: -1 }).limit(15).toArray(),
+  ]);
+
+  const cost30dTotal = cost30d[0]?.total ?? 0;
+
+  // Build a 24-slot hourly array, current hour first → previous hours back to 24h ago
+  const currentHour = new Date().getHours();
+  const hourMap = new Map(hourly.map((h) => [h._id, h.count]));
+  const hourBars = [];
+  for (let i = 23; i >= 0; i--) {
+    const hour = (currentHour - i + 24) % 24;
+    hourBars.push({ hour, count: hourMap.get(hour) ?? 0 });
+  }
+
+  // Compute deltas vs prior 24h window for KPI trend pills.
+  const delta = (cur, prev) => {
+    if (prev === 0) return cur > 0 ? 100 : 0;
+    return Math.round(((cur - prev) / prev) * 100);
+  };
+
+  return res.status(200).json({
+    guild: {
+      id: guildId,
+      name: serverDoc.name,
+      iconUrl: serverDoc.iconUrl ?? null,
+      ownerId: serverDoc.ownerId,
+      joinedAt: serverDoc.joinedAt,
+    },
+    config: config ? {
+      systemPrompt: config.systemPrompt ?? '',
+      chatModel: config.chatModel ?? 'gemini-3.1-flash-lite',
+      chatMode: config.chatMode ?? 'balanced',
+      imageModel: config.imageModel ?? 'fal-ai/nano-banana-pro',
+      videoModel: config.videoModel ?? 'bytedance/seedance-2.0/image-to-video',
+      rateLimitPerUser: config.rateLimitPerUser ?? 30,
+      nsfwThresholdNormal: config.nsfwThresholdNormal ?? 0.3,
+      nsfwThresholdNsfw: config.nsfwThresholdNsfw ?? 0.85,
+      allowedChannels: Array.isArray(config.allowedChannels) ? config.allowedChannels : [],
+      updatedAt: config.updatedAt,
+    } : null,
+    stats: {
+      kpis: {
+        msg24h: { value: msg24h, delta: delta(msg24h, msg48h) },
+        img24h: { value: img24h, delta: delta(img24h, img48h) },
+        vid24h: { value: vid24h, delta: delta(vid24h, vid48h) },
+        cmd24h: { value: cmd24h, delta: delta(cmd24h, cmd48h) },
+        cost30d: { value: cost30dTotal },
+      },
+      hourly: hourBars,
+      topUsers: topUsers.map((u) => ({ userId: u._id, cost: u.cost, count: u.count })),
+      recent: recent.map((r) => ({
+        command: r.command,
+        userId: r.userId,
+        input: (r.input || '').slice(0, 120),
+        success: r.success,
+        costUSD: r.costUSD ?? null,
+        errorMessage: r.errorMessage ?? null,
+        createdAt: r.createdAt,
+      })),
+    },
+  });
+}
+
+// ── PATCH /api/kata/server/:guildId/config ──────────────────────
+//
+// Validates payload, writes to serverconfigs (upsert), publishes
+// config:updated:{guildId} on Redis so the bot invalidates its cache.
+
+const ALLOWED_CHAT_MODES = new Set(['fast', 'balanced', 'deep']);
+const MAX_SYSPROMPT_LEN = 4000;
+const MAX_ALLOWED_CHANNELS = 50;
+
+async function handleKataServerConfigPatch(req, res, guildId) {
+  const auth = await authorizeGuildAccess(req, guildId);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+
+  let body = req.body;
+  if (typeof body === 'string') {
+    try { body = JSON.parse(body); } catch { return res.status(400).json({ error: 'invalid_json' }); }
+  }
+  if (!body || typeof body !== 'object') return res.status(400).json({ error: 'invalid_body' });
+
+  const update = {};
+  const errors = [];
+
+  if (body.systemPrompt !== undefined) {
+    if (typeof body.systemPrompt !== 'string') errors.push('systemPrompt must be string');
+    else if (body.systemPrompt.length > MAX_SYSPROMPT_LEN) errors.push(`systemPrompt > ${MAX_SYSPROMPT_LEN} chars`);
+    else update.systemPrompt = body.systemPrompt;
+  }
+  if (body.chatModel !== undefined) {
+    if (typeof body.chatModel !== 'string' || !body.chatModel.trim()) errors.push('chatModel must be non-empty string');
+    else update.chatModel = body.chatModel.trim();
+  }
+  if (body.chatMode !== undefined) {
+    if (!ALLOWED_CHAT_MODES.has(body.chatMode)) errors.push('chatMode must be fast|balanced|deep');
+    else update.chatMode = body.chatMode;
+  }
+  if (body.imageModel !== undefined) {
+    if (typeof body.imageModel !== 'string' || !body.imageModel.trim()) errors.push('imageModel must be non-empty string');
+    else update.imageModel = body.imageModel.trim();
+  }
+  if (body.videoModel !== undefined) {
+    if (typeof body.videoModel !== 'string' || !body.videoModel.trim()) errors.push('videoModel must be non-empty string');
+    else update.videoModel = body.videoModel.trim();
+  }
+  if (body.rateLimitPerUser !== undefined) {
+    const n = Number(body.rateLimitPerUser);
+    if (!Number.isFinite(n) || n < 1 || n > 1000) errors.push('rateLimitPerUser must be 1-1000');
+    else update.rateLimitPerUser = Math.round(n);
+  }
+  if (body.nsfwThresholdNormal !== undefined) {
+    const n = Number(body.nsfwThresholdNormal);
+    if (!Number.isFinite(n) || n < 0 || n > 1) errors.push('nsfwThresholdNormal must be 0-1');
+    else update.nsfwThresholdNormal = n;
+  }
+  if (body.nsfwThresholdNsfw !== undefined) {
+    const n = Number(body.nsfwThresholdNsfw);
+    if (!Number.isFinite(n) || n < 0 || n > 1) errors.push('nsfwThresholdNsfw must be 0-1');
+    else update.nsfwThresholdNsfw = n;
+  }
+  if (body.allowedChannels !== undefined) {
+    if (!Array.isArray(body.allowedChannels)) errors.push('allowedChannels must be array');
+    else if (body.allowedChannels.length > MAX_ALLOWED_CHANNELS) errors.push(`allowedChannels > ${MAX_ALLOWED_CHANNELS}`);
+    else if (!body.allowedChannels.every((c) => typeof c === 'string' && /^\d{15,21}$/.test(c))) errors.push('allowedChannels entries must be channel ids');
+    else update.allowedChannels = body.allowedChannels;
+  }
+
+  if (errors.length) return res.status(400).json({ error: 'validation_failed', details: errors });
+  if (Object.keys(update).length === 0) return res.status(400).json({ error: 'empty_update' });
+
+  const { kataDb } = auth;
+  update.updatedAt = new Date();
+
+  await kataDb.collection('serverconfigs').updateOne(
+    { guildId },
+    { $set: update, $setOnInsert: { guildId } },
+    { upsert: true },
+  );
+
+  // Best-effort Redis publish — bot also polls Mongo every 30s so a missed
+  // publish only delays propagation, doesn't drop the change.
+  try {
+    await redisPublish(`config:updated:${guildId}`, { guildId, ts: Date.now() });
+  } catch (e) {
+    console.warn('redis publish failed', e?.message || e);
+  }
+
+  // Audit trail
+  try {
+    await (await getKataDb()).collection('auditlogs').insertOne({
+      actorUserId: auth.user.providerUserId,
+      guildId,
+      action: 'config_update',
+      details: { fields: Object.keys(update).filter((k) => k !== 'updatedAt') },
+      createdAt: new Date(),
+    });
+  } catch { /* audit is best-effort */ }
+
+  const fresh = await kataDb.collection('serverconfigs').findOne({ guildId });
+  return res.status(200).json({ ok: true, config: fresh });
 }
