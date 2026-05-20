@@ -82,14 +82,14 @@
   </div>
 
   <nav class="px-3 py-4 mono text-[11px] tracking-label uppercase">
-    <a href="#" id="kata-tab-overview" class="flex items-center justify-between px-3 py-2 rounded-[8px] mb-1 text-red" style="background:#E0454510;border-left:2px solid #E04545">
+    <a id="kata-tab-overview" href="#" class="flex items-center justify-between px-3 py-2 rounded-[8px] mb-1 text-red" style="background:#E0454510;border-left:2px solid #E04545">
       <span>▸ overview</span><span class="text-[9px] text-mute2">#</span>
     </a>
     <a href="#" id="kata-tab-settings" class="flex items-center justify-between px-3 py-2 rounded-[8px] mb-1 text-mute hover:text-ink hover:bg-ink/[0.03]">
       <span>▸ settings</span>
     </a>
-    <a href="cost.html" class="flex items-center justify-between px-3 py-2 rounded-[8px] mt-2 mb-1 text-mute hover:text-ink hover:bg-ink/[0.03]">▸ cost</a>
-    <a href="logs-image.html" class="flex items-center justify-between px-3 py-2 rounded-[8px] mb-1 text-mute hover:text-ink hover:bg-ink/[0.03]">▸ logs</a>
+    <a id="kata-tab-cost" href="#" class="flex items-center justify-between px-3 py-2 rounded-[8px] mt-2 mb-1 text-mute hover:text-ink hover:bg-ink/[0.03]">▸ cost</a>
+    <a id="kata-tab-logs" href="#" class="flex items-center justify-between px-3 py-2 rounded-[8px] mb-1 text-mute hover:text-ink hover:bg-ink/[0.03]">▸ logs</a>
   </nav>
 
   <div class="px-5 py-4 border-t border-line">
@@ -575,6 +575,13 @@ function openSettings(focusSection){
 function closeSettings(){ document.getElementById('settings-drawer').classList.add('hidden'); }
 
 document.getElementById('kata-tab-settings').addEventListener('click', (e)=>{ e.preventDefault(); openSettings(); });
+const _gid = getGuildId();
+if (_gid){
+  const costLink = document.getElementById('kata-tab-cost');
+  if (costLink) costLink.href = 'cost.html?guild=' + encodeURIComponent(_gid);
+  const logsLink = document.getElementById('kata-tab-logs');
+  if (logsLink) logsLink.href = 'logs-image.html?guild=' + encodeURIComponent(_gid);
+}
 document.getElementById('settings-close').addEventListener('click', closeSettings);
 document.getElementById('settings-cancel').addEventListener('click', closeSettings);
 document.getElementById('settings-backdrop').addEventListener('click', closeSettings);

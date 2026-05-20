@@ -125,7 +125,7 @@
       <a href="index.html" class="text-mute hover:text-ink">se77n</a><span class="text-mute2">/</span>
       <a href="index.html" class="text-mute hover:text-ink">kata</a><span class="text-mute2">/</span>
       <a href="servers.html" class="text-mute hover:text-ink">servers</a><span class="text-mute2">/</span>
-      <a href="overview.html" class="text-mute hover:text-ink">server alpha</a><span class="text-mute2">/</span>
+      <a id="bc-guild" href="#" class="text-mute hover:text-ink">—</a><span class="text-mute2">/</span>
       <span class="text-ink">cost</span>
     </div>
     <span class="mono text-[10px] tracking-label uppercase text-green flex items-center gap-1.5 ml-2"><span class="dot-pulse w-1.5 h-1.5 rounded-full bg-green"></span>live · 6s</span>
@@ -140,9 +140,9 @@
       <span class="theme-icon w-3 h-3 rounded-full" style="background:conic-gradient(#E04545,#5BA868,#D4A858,#E04545);border:1px solid rgba(255,255,255,.1)"></span>
       <span class="theme-label">DARK</span>
     </button>
-    <button class="h-8 pl-1 pr-3 rounded-full border border-line flex items-center gap-2 mono text-[11px]">
-      <span class="w-[26px] h-[26px] rounded-full grid place-items-center text-[11px] font-extrabold" style="background:#E0454522;color:#E04545">M</span>
-      <span class="max-w-[96px] truncate">m</span>
+    <button id="kata-user-chip" class="h-8 pl-1 pr-3 rounded-full border border-line flex items-center gap-2 mono text-[11px]">
+      <span class="w-[26px] h-[26px] rounded-full grid place-items-center text-[11px] font-extrabold" style="background:#E0454522;color:#E04545">?</span>
+      <span class="max-w-[96px] truncate">guest</span>
       <span class="text-mute text-[9px]">▾</span>
     </button>
   </div>
@@ -151,27 +151,19 @@
 <!-- side nav -->
 <aside class="fixed top-16 left-0 bottom-0 w-[220px] z-40 border-r border-line backdrop-blur-md overflow-y-auto" style="background:rgb(var(--c-bg) / 0.6)">
   <div class="p-5 border-b border-line">
-    <div class="w-12 h-12 rounded-[10px] grid place-items-center mono text-[16px] font-extrabold mb-3" style="background:linear-gradient(135deg, rgb(var(--c-red)), rgb(var(--c-red) / 0.55));color:rgb(var(--c-bg))">SA</div>
-    <div class="text-[14px] font-medium tracking-tight text-ink">Server Alpha</div>
-    <div class="mono text-[10px] text-mute mt-1">1,245 thành viên</div>
-    <div class="mono text-[9px] text-mute2 mt-2 tracking-label uppercase flex items-center gap-1.5"><span class="dot-pulse w-1.5 h-1.5 rounded-full bg-green"></span>online · 7d 04h</div>
+    <div id="kata-guild-icon" class="w-12 h-12 rounded-[10px] grid place-items-center mono text-[16px] font-extrabold mb-3" style="background:linear-gradient(135deg, rgb(var(--c-red)), rgb(var(--c-red) / 0.55));color:rgb(var(--c-bg))">--</div>
+    <div id="kata-guild-name" class="text-[14px] font-medium tracking-tight text-ink">Đang tải…</div>
+    <div id="kata-guild-meta" class="mono text-[10px] text-mute mt-1">—</div>
+    <div class="mono text-[9px] text-mute2 mt-2 tracking-label uppercase flex items-center gap-1.5"><span class="dot-pulse w-1.5 h-1.5 rounded-full bg-green"></span>online</div>
   </div>
   <nav class="px-3 py-4 mono text-[11px] tracking-label uppercase">
-    <a href="overview.html" class="flex items-center justify-between px-3 py-2 rounded-[8px] mb-1 text-mute hover:text-ink hover:bg-ink/[0.03]">▸ overview</a>
+    <a id="nav-overview" href="#" class="flex items-center justify-between px-3 py-2 rounded-[8px] mb-1 text-mute hover:text-ink hover:bg-ink/[0.03]">▸ overview</a>
     <div class="px-3 py-2 mb-1 text-mute">▸ logs</div>
-    <a href="#" class="block px-3 py-1.5 ml-3 rounded-[8px] text-mute hover:text-ink hover:bg-ink/[0.03]">↳ chat</a>
-    <a href="logs-image.html" class="block px-3 py-1.5 ml-3 rounded-[8px] text-mute hover:text-ink hover:bg-ink/[0.03]">↳ image</a>
-    <a href="#" class="block px-3 py-1.5 ml-3 rounded-[8px] text-mute hover:text-ink hover:bg-ink/[0.03]">↳ video</a>
-    <a href="#" class="block px-3 py-1.5 ml-3 rounded-[8px] text-mute hover:text-ink hover:bg-ink/[0.03]">↳ commands</a>
-    <div class="px-3 py-2 mt-2 mb-1 text-mute">▸ settings</div>
-    <a href="#" class="block px-3 py-1.5 ml-3 rounded-[8px] text-mute hover:text-ink hover:bg-ink/[0.03]">↳ sysprompt</a>
-    <a href="#" class="block px-3 py-1.5 ml-3 rounded-[8px] text-mute hover:text-ink hover:bg-ink/[0.03]">↳ language</a>
-    <a href="#" class="block px-3 py-1.5 ml-3 rounded-[8px] text-mute hover:text-ink hover:bg-ink/[0.03]">↳ models</a>
-    <a href="#" class="block px-3 py-1.5 ml-3 rounded-[8px] text-mute hover:text-ink hover:bg-ink/[0.03]">↳ commands</a>
-    <a href="#" class="block px-3 py-1.5 ml-3 rounded-[8px] text-mute hover:text-ink hover:bg-ink/[0.03]">↳ moderation</a>
-    <a href="#" class="block px-3 py-1.5 ml-3 rounded-[8px] text-mute hover:text-ink hover:bg-ink/[0.03]">↳ channels</a>
-    <a href="cost.html" class="flex items-center justify-between px-3 py-2 rounded-[8px] mt-2 mb-1 text-red" style="background:#E0454510;border-left:2px solid #E04545">▸ cost</a>
-    <a href="#" class="flex items-center justify-between px-3 py-2 rounded-[8px] mb-1 text-mute hover:text-ink hover:bg-ink/[0.03]">▸ playground</a>
+    <a id="nav-logs-chat" href="#" class="block px-3 py-1.5 ml-3 rounded-[8px] text-mute hover:text-ink hover:bg-ink/[0.03]">↳ chat</a>
+    <a id="nav-logs-image" href="#" class="block px-3 py-1.5 ml-3 rounded-[8px] text-mute hover:text-ink hover:bg-ink/[0.03]">↳ image</a>
+    <a id="nav-logs-video" href="#" class="block px-3 py-1.5 ml-3 rounded-[8px] text-mute hover:text-ink hover:bg-ink/[0.03]">↳ video</a>
+    <a id="nav-logs-command" href="#" class="block px-3 py-1.5 ml-3 rounded-[8px] text-mute hover:text-ink hover:bg-ink/[0.03]">↳ commands</a>
+    <a href="#" class="flex items-center justify-between px-3 py-2 rounded-[8px] mt-2 mb-1 text-red" style="background:#E0454510;border-left:2px solid #E04545">▸ cost</a>
   </nav>
   <div class="px-5 py-4 border-t border-line">
     <a href="servers.html" class="mono text-[10px] tracking-label uppercase text-mute hover:text-ink flex items-center gap-2">← all servers</a>
@@ -191,54 +183,43 @@
       <h1 class="mono text-[36px] leading-none font-extrabold tracking-[-0.035em] lowercase">cost<span class="text-red glow77">.</span></h1>
     </div>
     <div class="flex items-center gap-2">
-      <div class="flex items-center gap-0.5 p-0.5 rounded-[10px] border border-line bg-bg mono text-[10px] tracking-label uppercase">
-        <button class="px-3 h-7 rounded-[8px] text-mute hover:text-ink">7d</button>
-        <button class="px-3 h-7 rounded-[8px] text-ink" style="background:rgb(var(--c-panel2))">30d</button>
-        <button class="px-3 h-7 rounded-[8px] text-mute hover:text-ink">90d</button>
-        <button class="px-3 h-7 rounded-[8px] text-mute hover:text-ink">ytd</button>
+      <div id="range-picker" class="flex items-center gap-0.5 p-0.5 rounded-[10px] border border-line bg-bg mono text-[10px] tracking-label uppercase">
+        <button data-range="7d" class="px-3 h-7 rounded-[8px] text-mute hover:text-ink">7d</button>
+        <button data-range="30d" class="px-3 h-7 rounded-[8px] text-ink" style="background:rgb(var(--c-panel2))">30d</button>
+        <button data-range="90d" class="px-3 h-7 rounded-[8px] text-mute hover:text-ink">90d</button>
       </div>
-      <button class="mono h-9 px-3.5 rounded-[10px] border border-line text-mute hover:text-ink text-[10px] tracking-label uppercase">↧ export csv</button>
-      <button type="button" class="theme-toggle-inline mono h-9 px-3.5 rounded-[10px] text-[10px] tracking-label uppercase font-bold text-gold inline-flex items-center gap-2" style="background:rgb(var(--c-gold) / 0.08);border:1px solid rgb(var(--c-gold) / 0.4)">
-        <span class="theme-icon-inline">☾</span><span class="theme-label-inline">đổi theme</span>
-      </button>
+      <button id="btn-refresh" class="mono h-9 px-3.5 rounded-[10px] border border-line text-mute hover:text-ink text-[10px] tracking-label uppercase">↻ refresh</button>
     </div>
   </div>
 
-  <!-- hero summary card -->
+  <!-- hero summary -->
   <section class="rounded-[14px] border border-line bg-panel p-7 mb-3">
     <div class="grid grid-cols-[1.4fr_1fr_1fr_1fr] gap-8 items-start">
       <div>
-        <div class="mono text-[10px] uppercase tracking-kicker text-mute mb-3">tổng · tháng này</div>
+        <div class="mono text-[10px] uppercase tracking-kicker text-mute mb-3"><span id="cost-range-label">tổng · 30 ngày</span></div>
         <div class="flex items-baseline gap-3">
-          <div class="mono text-[56px] font-bold tracking-[-0.03em] leading-none text-gold">$12.40</div>
-          <div class="mono text-[11px] text-warn flex items-center gap-1">▲ 15% vs T4</div>
+          <div id="cost-total" class="mono text-[56px] font-bold tracking-[-0.03em] leading-none text-gold">$0.00</div>
+          <div id="cost-delta" class="mono text-[11px] flex items-center gap-1 text-mute">—</div>
         </div>
-        <div class="mono text-[11px] text-mute mt-3">dự đoán cuối tháng · <span class="text-ink">$18.60</span> · trong ngân sách $25</div>
-        <!-- budget bar -->
-        <div class="mt-4 h-1.5 rounded-full overflow-hidden bg-panel2 max-w-[420px]">
-          <div class="h-full" style="width:50%;background:#D4A858"></div>
-        </div>
-        <div class="flex items-baseline justify-between mt-1.5 max-w-[420px] mono text-[9px] tracking-label uppercase text-mute2">
-          <span>$0</span><span>$12.40 / $25 · 50%</span><span>$25</span>
-        </div>
+        <div id="cost-prior-note" class="mono text-[11px] text-mute mt-3">—</div>
       </div>
       <div>
         <div class="mono text-[10px] uppercase tracking-kicker text-mute mb-3">tokens</div>
-        <div class="mono text-[24px] font-bold tracking-tight leading-none text-ink">2.5M<span class="text-mute2 text-[16px]"> in</span></div>
-        <div class="mono text-[24px] font-bold tracking-tight leading-none text-mute mt-2">480k<span class="text-mute2 text-[16px]"> out</span></div>
-        <div class="mono text-[10px] text-mute2 tracking-label uppercase mt-3">avg · $0.003 / msg</div>
+        <div id="kpi-tokens-in" class="mono text-[24px] font-bold tracking-tight leading-none text-ink">0<span class="text-mute2 text-[16px]"> in</span></div>
+        <div id="kpi-tokens-out" class="mono text-[24px] font-bold tracking-tight leading-none text-mute mt-2">0<span class="text-mute2 text-[16px]"> out</span></div>
+        <div id="kpi-tokens-avg" class="mono text-[10px] text-mute2 tracking-label uppercase mt-3">—</div>
       </div>
       <div>
         <div class="mono text-[10px] uppercase tracking-kicker text-mute mb-3">images</div>
-        <div class="mono text-[24px] font-bold tracking-tight leading-none text-ink">145<span class="text-mute2 text-[16px]"> gens</span></div>
-        <div class="mono text-[14px] tracking-tight text-gold mt-2">$5.80</div>
-        <div class="mono text-[10px] text-mute2 tracking-label uppercase mt-3">avg · $0.04 / gen</div>
+        <div id="kpi-images-count" class="mono text-[24px] font-bold tracking-tight leading-none text-ink">0<span class="text-mute2 text-[16px]"> gens</span></div>
+        <div id="kpi-images-cost" class="mono text-[14px] tracking-tight text-gold mt-2">$0.00</div>
+        <div id="kpi-images-avg" class="mono text-[10px] text-mute2 tracking-label uppercase mt-3">—</div>
       </div>
       <div>
         <div class="mono text-[10px] uppercase tracking-kicker text-mute mb-3">video</div>
-        <div class="mono text-[24px] font-bold tracking-tight leading-none text-ink">18<span class="text-mute2 text-[16px]"> gens</span></div>
-        <div class="mono text-[14px] tracking-tight text-gold mt-2">$2.80</div>
-        <div class="mono text-[10px] text-mute2 tracking-label uppercase mt-3">avg · 7.4s · $0.16</div>
+        <div id="kpi-video-count" class="mono text-[24px] font-bold tracking-tight leading-none text-ink">0<span class="text-mute2 text-[16px]"> gens</span></div>
+        <div id="kpi-video-cost" class="mono text-[14px] tracking-tight text-gold mt-2">$0.00</div>
+        <div id="kpi-video-avg" class="mono text-[10px] text-mute2 tracking-label uppercase mt-3">—</div>
       </div>
     </div>
   </section>
@@ -248,202 +229,45 @@
     <div class="flex items-baseline justify-between mb-5">
       <div class="mono text-[10px] uppercase tracking-kicker text-mute flex items-center gap-3">
         <span class="text-mute2">───</span>
-        <span>daily cost · last 30 days</span>
+        <span id="daily-cost-label">daily cost · 30 ngày</span>
       </div>
-      <div class="flex items-center gap-3 mono text-[10px] tracking-label uppercase">
-        <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-sm bg-gold"></span>cost</span>
-        <span class="text-mute2">·</span>
-        <span class="flex items-center gap-1.5"><span class="w-2 h-0.5 border-t border-dashed border-mute"></span>7d avg</span>
-      </div>
+      <div id="daily-cost-peak" class="mono text-[10px] tracking-label uppercase text-mute2">—</div>
     </div>
-    <div class="relative h-[200px]">
-      <!-- y axis labels -->
-      <div class="absolute inset-y-0 left-0 w-10 flex flex-col justify-between mono text-[9px] tracking-label uppercase text-mute2 text-right pr-2">
-        <span>$1.20</span><span>$0.80</span><span>$0.40</span><span>$0</span>
-      </div>
-      <!-- chart -->
-      <div class="absolute inset-y-0 left-12 right-0">
-        <!-- grid -->
-        <div class="absolute inset-0 flex flex-col justify-between">
-          <div class="border-t border-line"></div>
-          <div class="border-t border-line"></div>
-          <div class="border-t border-line"></div>
-          <div class="border-t border-line"></div>
-        </div>
-        <!-- svg line -->
-        <svg class="absolute inset-0 w-full h-full" viewBox="0 0 300 200" preserveAspectRatio="none">
-          <defs>
-            <linearGradient id="costGrad" x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" stop-color="#D4A858" stop-opacity="0.4"/>
-              <stop offset="100%" stop-color="#D4A858" stop-opacity="0.02"/>
-            </linearGradient>
-          </defs>
-          <path d="M0 168 L10 160 L20 172 L30 154 L40 148 L50 162 L60 144 L70 140 L80 130 L90 134 L100 122 L110 138 L120 118 L130 110 L140 124 L150 102 L160 88 L170 96 L180 80 L190 92 L200 74 L210 86 L220 66 L230 78 L240 58 L250 64 L260 52 L270 60 L280 48 L290 56 L300 42 L300 200 L0 200 Z"
-                fill="url(#costGrad)"/>
-          <path d="M0 168 L10 160 L20 172 L30 154 L40 148 L50 162 L60 144 L70 140 L80 130 L90 134 L100 122 L110 138 L120 118 L130 110 L140 124 L150 102 L160 88 L170 96 L180 80 L190 92 L200 74 L210 86 L220 66 L230 78 L240 58 L250 64 L260 52 L270 60 L280 48 L290 56 L300 42"
-                fill="none" stroke="#D4A858" stroke-width="1.5" stroke-linejoin="round"/>
-          <!-- avg dashed line -->
-          <path d="M0 120 L300 90" fill="none" style="stroke: var(--c-mute)" stroke-width="0.8" stroke-dasharray="3 3"/>
-          <!-- today marker -->
-          <circle cx="300" cy="42" r="3.5" fill="#D4A858" class="marker-stroke" stroke-width="2"/>
-        </svg>
-        <!-- x labels -->
-        <div class="absolute -bottom-5 inset-x-0 flex justify-between mono text-[9px] tracking-label uppercase text-mute2">
-          <span>30d ago</span><span>25d</span><span>20d</span><span>15d</span><span>10d</span><span>5d</span><span class="text-gold">today</span>
-        </div>
-      </div>
-    </div>
+    <div id="daily-cost-chart" class="relative h-[200px]"></div>
   </section>
 
   <!-- by model + top users -->
   <section class="grid grid-cols-[1.1fr_1fr] gap-3 mb-3">
-    <!-- by model (donut + legend) -->
     <div class="rounded-[14px] border border-line bg-panel p-6">
       <div class="flex items-baseline justify-between mb-5">
-        <div class="mono text-[10px] uppercase tracking-kicker text-mute">by model · 30d</div>
-        <div class="mono text-[10px] tracking-label uppercase text-mute2">$12.40 total</div>
+        <div class="mono text-[10px] uppercase tracking-kicker text-mute"><span id="bymodel-label">by model · 30d</span></div>
+        <div id="bymodel-total" class="mono text-[10px] tracking-label uppercase text-mute2">—</div>
       </div>
       <div class="grid grid-cols-[160px_1fr] gap-6 items-center">
-        <!-- donut -->
-        <div class="relative w-[160px] h-[160px]">
-          <svg width="160" height="160" viewBox="0 0 42 42">
-            <circle cx="21" cy="21" r="15.91" fill="transparent" style="stroke: var(--c-line)" stroke-width="6"/>
-            <!-- gemini-3-flash 52% -->
-            <circle cx="21" cy="21" r="15.91" fill="transparent" stroke="#E04545" stroke-width="6"
-                    stroke-dasharray="52 48" stroke-dashoffset="25" transform="rotate(-90 21 21)"/>
-            <!-- nano-banana-pro 22% (offset 52) -->
-            <circle cx="21" cy="21" r="15.91" fill="transparent" stroke="#D4A858" stroke-width="6"
-                    stroke-dasharray="22 78" stroke-dashoffset="-27" transform="rotate(-90 21 21)"/>
-            <!-- seedance-v2 17% -->
-            <circle cx="21" cy="21" r="15.91" fill="transparent" stroke="#5BA868" stroke-width="6"
-                    stroke-dasharray="17 83" stroke-dashoffset="-49" transform="rotate(-90 21 21)"/>
-            <!-- grok-4 9% -->
-            <circle cx="21" cy="21" r="15.91" fill="transparent" stroke="#7a9eb5" stroke-width="6"
-                    stroke-dasharray="9 91" stroke-dashoffset="-66" transform="rotate(-90 21 21)"/>
-          </svg>
-          <div class="absolute inset-0 grid place-items-center text-center">
-            <div>
-              <div class="mono text-[9px] tracking-label uppercase text-mute2">total</div>
-              <div class="mono text-[20px] font-bold tracking-tight text-ink mt-0.5">$12.40</div>
-              <div class="mono text-[9px] tracking-label uppercase text-mute mt-0.5">4 models</div>
-            </div>
-          </div>
-        </div>
-        <!-- legend -->
-        <div class="space-y-2.5">
-          <div class="flex items-center gap-3 mono text-[12px]">
-            <span class="w-2.5 h-2.5 rounded-sm" style="background:#E04545"></span>
-            <span class="text-ink flex-1">gemini-3-flash</span>
-            <span class="text-mute2">52%</span>
-            <span class="text-gold w-[60px] text-right">$6.40</span>
-          </div>
-          <div class="flex items-center gap-3 mono text-[12px]">
-            <span class="w-2.5 h-2.5 rounded-sm" style="background:#D4A858"></span>
-            <span class="text-ink flex-1">nano-banana-pro</span>
-            <span class="text-mute2">22%</span>
-            <span class="text-gold w-[60px] text-right">$2.73</span>
-          </div>
-          <div class="flex items-center gap-3 mono text-[12px]">
-            <span class="w-2.5 h-2.5 rounded-sm" style="background:#5BA868"></span>
-            <span class="text-ink flex-1">seedance-v2-t2v</span>
-            <span class="text-mute2">17%</span>
-            <span class="text-gold w-[60px] text-right">$2.07</span>
-          </div>
-          <div class="flex items-center gap-3 mono text-[12px]">
-            <span class="w-2.5 h-2.5 rounded-sm" style="background:#7a9eb5"></span>
-            <span class="text-ink flex-1">grok-4 (search)</span>
-            <span class="text-mute2">9%</span>
-            <span class="text-gold w-[60px] text-right">$1.20</span>
-          </div>
-          <div class="flex items-center gap-3 mono text-[12px] pt-2 border-t border-line">
-            <span class="w-2.5 h-2.5 rounded-sm" style="background:var(--c-line);border:1px solid var(--c-line2)"></span>
-            <span class="text-mute2 flex-1">gpt-image-2 (fallback)</span>
-            <span class="text-mute2">0%</span>
-            <span class="text-mute2 w-[60px] text-right">$0</span>
-          </div>
-        </div>
+        <div id="bymodel-donut" class="relative w-[160px] h-[160px]"></div>
+        <div id="bymodel-legend" class="space-y-2.5"></div>
       </div>
     </div>
 
-    <!-- top users bar chart -->
     <div class="rounded-[14px] border border-line bg-panel p-6">
       <div class="flex items-baseline justify-between mb-5">
         <div class="mono text-[10px] uppercase tracking-kicker text-mute">top users · cost</div>
-        <a href="#" class="mono text-[10px] tracking-label uppercase text-red hover:underline">all →</a>
       </div>
-      <div class="space-y-3">
-        <div class="flex items-center gap-3 mono text-[12px]">
-          <span class="w-[110px] text-ink truncate">@lambo_ai</span>
-          <div class="flex-1 h-5 rounded-[3px] bg-bg overflow-hidden"><div class="h-full bar-h-2" style="width:88%"></div></div>
-          <span class="text-gold w-[60px] text-right">$3.50</span>
-        </div>
-        <div class="flex items-center gap-3 mono text-[12px]">
-          <span class="w-[110px] text-ink truncate">@nha.que</span>
-          <div class="flex-1 h-5 rounded-[3px] bg-bg overflow-hidden"><div class="h-full bar-h" style="width:64%"></div></div>
-          <span class="text-gold w-[60px] text-right">$2.55</span>
-        </div>
-        <div class="flex items-center gap-3 mono text-[12px]">
-          <span class="w-[110px] text-ink truncate">@kuro</span>
-          <div class="flex-1 h-5 rounded-[3px] bg-bg overflow-hidden"><div class="h-full bar-h" style="width:48%"></div></div>
-          <span class="text-gold w-[60px] text-right">$1.92</span>
-        </div>
-        <div class="flex items-center gap-3 mono text-[12px]">
-          <span class="w-[110px] text-ink truncate">@pho_24</span>
-          <div class="flex-1 h-5 rounded-[3px] bg-bg overflow-hidden"><div class="h-full bar-h" style="width:32%"></div></div>
-          <span class="text-gold w-[60px] text-right">$1.28</span>
-        </div>
-        <div class="flex items-center gap-3 mono text-[12px]">
-          <span class="w-[110px] text-ink truncate">@thanos_real</span>
-          <div class="flex-1 h-5 rounded-[3px] bg-bg overflow-hidden"><div class="h-full bar-h" style="width:24%"></div></div>
-          <span class="text-gold w-[60px] text-right">$0.96</span>
-        </div>
-        <div class="flex items-center gap-3 mono text-[12px]">
-          <span class="w-[110px] text-ink truncate">@mai.dao</span>
-          <div class="flex-1 h-5 rounded-[3px] bg-bg overflow-hidden"><div class="h-full bar-h" style="width:18%"></div></div>
-          <span class="text-gold w-[60px] text-right">$0.72</span>
-        </div>
-        <div class="flex items-center gap-3 mono text-[12px]">
-          <span class="w-[110px] text-ink truncate">@bahn.nih</span>
-          <div class="flex-1 h-5 rounded-[3px] bg-bg overflow-hidden"><div class="h-full bar-h" style="width:12%"></div></div>
-          <span class="text-gold w-[60px] text-right">$0.48</span>
-        </div>
-        <div class="flex items-center gap-3 mono text-[12px]">
-          <span class="w-[110px] text-mute truncate">+ 22 users</span>
-          <div class="flex-1 h-5 rounded-[3px] bg-bg overflow-hidden"><div class="h-full bg-mute" style="width:25%;opacity:0.4"></div></div>
-          <span class="text-mute w-[60px] text-right">$0.99</span>
-        </div>
-      </div>
+      <div id="topusers-bars" class="space-y-3"></div>
     </div>
   </section>
 
-  <!-- daily tokens stacked bar -->
+  <!-- daily tokens stacked -->
   <section class="rounded-[14px] border border-line bg-panel p-6 mb-3">
     <div class="flex items-baseline justify-between mb-5">
-      <div class="mono text-[10px] uppercase tracking-kicker text-mute">daily tokens · last 14d · stacked in/out</div>
+      <div class="mono text-[10px] uppercase tracking-kicker text-mute"><span id="dailytokens-label">daily tokens · stacked in/out</span></div>
       <div class="flex items-center gap-3 mono text-[10px] tracking-label uppercase">
         <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-sm bg-red"></span>input</span>
         <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-sm" style="background:#7a2e2e"></span>output</span>
       </div>
     </div>
-    <div class="flex items-end gap-2 h-[140px]">
-      <div class="flex-1 flex flex-col-reverse rounded-t overflow-hidden"><div style="height:54%;background:#E04545"></div><div style="height:8%;background:#7a2e2e"></div></div>
-      <div class="flex-1 flex flex-col-reverse rounded-t overflow-hidden"><div style="height:62%;background:#E04545"></div><div style="height:12%;background:#7a2e2e"></div></div>
-      <div class="flex-1 flex flex-col-reverse rounded-t overflow-hidden"><div style="height:48%;background:#E04545"></div><div style="height:10%;background:#7a2e2e"></div></div>
-      <div class="flex-1 flex flex-col-reverse rounded-t overflow-hidden"><div style="height:70%;background:#E04545"></div><div style="height:14%;background:#7a2e2e"></div></div>
-      <div class="flex-1 flex flex-col-reverse rounded-t overflow-hidden"><div style="height:58%;background:#E04545"></div><div style="height:11%;background:#7a2e2e"></div></div>
-      <div class="flex-1 flex flex-col-reverse rounded-t overflow-hidden"><div style="height:42%;background:#E04545"></div><div style="height:8%;background:#7a2e2e"></div></div>
-      <div class="flex-1 flex flex-col-reverse rounded-t overflow-hidden"><div style="height:38%;background:#E04545"></div><div style="height:7%;background:#7a2e2e"></div></div>
-      <div class="flex-1 flex flex-col-reverse rounded-t overflow-hidden"><div style="height:64%;background:#E04545"></div><div style="height:12%;background:#7a2e2e"></div></div>
-      <div class="flex-1 flex flex-col-reverse rounded-t overflow-hidden"><div style="height:72%;background:#E04545"></div><div style="height:15%;background:#7a2e2e"></div></div>
-      <div class="flex-1 flex flex-col-reverse rounded-t overflow-hidden"><div style="height:80%;background:#E04545"></div><div style="height:18%;background:#7a2e2e"></div></div>
-      <div class="flex-1 flex flex-col-reverse rounded-t overflow-hidden"><div style="height:66%;background:#E04545"></div><div style="height:13%;background:#7a2e2e"></div></div>
-      <div class="flex-1 flex flex-col-reverse rounded-t overflow-hidden"><div style="height:88%;background:#E04545"></div><div style="height:18%;background:#7a2e2e"></div></div>
-      <div class="flex-1 flex flex-col-reverse rounded-t overflow-hidden"><div style="height:92%;background:#E04545"></div><div style="height:20%;background:#7a2e2e"></div></div>
-      <div class="flex-1 flex flex-col-reverse rounded-t overflow-hidden" style="outline:1px solid #E04545;outline-offset:1px"><div style="height:78%;background:#E04545"></div><div style="height:16%;background:#7a2e2e"></div></div>
-    </div>
-    <div class="flex items-baseline justify-between mt-2 mono text-[9px] tracking-label uppercase text-mute2">
-      <span>14d ago</span><span>10d</span><span>7d</span><span>3d</span><span class="text-red">today</span>
-    </div>
+    <div id="dailytokens-bars" class="flex items-end gap-1 h-[140px]"></div>
+    <div id="dailytokens-axis" class="flex items-baseline justify-between mt-2 mono text-[9px] tracking-label uppercase text-mute2"></div>
   </section>
 
   <!-- breakdown by command -->
@@ -461,114 +285,282 @@
           <th class="text-right font-normal py-2.5 px-6">total</th>
         </tr>
       </thead>
-      <tbody class="mono text-[12px]">
-        <tr class="border-b border-line hover:bg-ink/[0.02]">
-          <td class="py-3 px-6 flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-red"></span><span class="text-red">/chat</span><span class="text-mute2 text-[10px] tracking-label uppercase">· vision</span></td>
-          <td class="py-3 px-3 text-right text-ink">1,847</td>
-          <td class="py-3 px-3 text-right text-mute">$0.003</td>
-          <td class="py-3 px-3 text-right text-mute">1.2s</td>
-          <td class="py-3 px-6 text-right text-gold">$5.54</td>
-        </tr>
-        <tr class="border-b border-line hover:bg-ink/[0.02]">
-          <td class="py-3 px-6 flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-gold"></span><span class="text-red">/img</span></td>
-          <td class="py-3 px-3 text-right text-ink">87</td>
-          <td class="py-3 px-3 text-right text-mute">$0.04</td>
-          <td class="py-3 px-3 text-right text-mute">22.4s</td>
-          <td class="py-3 px-6 text-right text-gold">$3.48</td>
-        </tr>
-        <tr class="border-b border-line hover:bg-ink/[0.02]">
-          <td class="py-3 px-6 flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-gold"></span><span class="text-red">/edit</span></td>
-          <td class="py-3 px-3 text-right text-ink">52</td>
-          <td class="py-3 px-3 text-right text-mute">$0.04</td>
-          <td class="py-3 px-3 text-right text-mute">28.1s</td>
-          <td class="py-3 px-6 text-right text-gold">$2.08</td>
-        </tr>
-        <tr class="border-b border-line hover:bg-ink/[0.02]">
-          <td class="py-3 px-6 flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-green"></span><span class="text-red">/t2v</span></td>
-          <td class="py-3 px-3 text-right text-ink">12</td>
-          <td class="py-3 px-3 text-right text-mute">$0.16</td>
-          <td class="py-3 px-3 text-right text-mute">3m 12s</td>
-          <td class="py-3 px-6 text-right text-gold">$1.92</td>
-        </tr>
-        <tr class="border-b border-line hover:bg-ink/[0.02]">
-          <td class="py-3 px-6 flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full" style="background:#7a9eb5"></span><span class="text-red">/search</span></td>
-          <td class="py-3 px-3 text-right text-ink">95</td>
-          <td class="py-3 px-3 text-right text-mute">$0.013</td>
-          <td class="py-3 px-3 text-right text-mute">2.4s</td>
-          <td class="py-3 px-6 text-right text-gold">$1.20</td>
-        </tr>
-        <tr class="border-b border-line hover:bg-ink/[0.02]">
-          <td class="py-3 px-6 flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-green"></span><span class="text-red">/i2v</span></td>
-          <td class="py-3 px-3 text-right text-ink">6</td>
-          <td class="py-3 px-3 text-right text-mute">$0.14</td>
-          <td class="py-3 px-3 text-right text-mute">2m 48s</td>
-          <td class="py-3 px-6 text-right text-gold">$0.84</td>
-        </tr>
-        <tr class="border-b border-line hover:bg-ink/[0.02]">
-          <td class="py-3 px-6 flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-gold"></span><span class="text-red">/wfi2i</span></td>
-          <td class="py-3 px-3 text-right text-ink">18</td>
-          <td class="py-3 px-3 text-right text-mute">$0.04</td>
-          <td class="py-3 px-3 text-right text-mute">42.1s</td>
-          <td class="py-3 px-6 text-right text-gold">$0.72</td>
-        </tr>
-        <tr class="border-b border-line hover:bg-ink/[0.02]">
-          <td class="py-3 px-6 flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-gold"></span><span class="text-red">/bgremove</span></td>
-          <td class="py-3 px-3 text-right text-ink">14</td>
-          <td class="py-3 px-3 text-right text-mute">$0.02</td>
-          <td class="py-3 px-3 text-right text-mute">4.1s</td>
-          <td class="py-3 px-6 text-right text-gold">$0.28</td>
-        </tr>
-        <tr class="hover:bg-ink/[0.02]">
-          <td class="py-3 px-6 flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-mute"></span><span class="text-mute">/video (yt-dl)</span></td>
-          <td class="py-3 px-3 text-right text-ink">28</td>
-          <td class="py-3 px-3 text-right text-mute">$0</td>
-          <td class="py-3 px-3 text-right text-mute">14.2s</td>
-          <td class="py-3 px-6 text-right text-mute">$0</td>
-        </tr>
-      </tbody>
-      <tfoot>
-        <tr class="border-t border-line2 mono text-[12px] font-bold">
-          <td class="py-3 px-6 text-mute tracking-label uppercase text-[10px]">total · 9 commands</td>
-          <td class="py-3 px-3 text-right text-ink">2,159</td>
-          <td class="py-3 px-3 text-right text-mute">—</td>
-          <td class="py-3 px-3 text-right text-mute">—</td>
-          <td class="py-3 px-6 text-right text-gold text-[14px]">$16.06</td>
-        </tr>
-      </tfoot>
+      <tbody id="bycommand-rows" class="mono text-[12px]"></tbody>
+      <tfoot id="bycommand-foot"></tfoot>
     </table>
   </section>
 
   <!-- footer -->
   <footer class="grid grid-cols-3 items-center mono text-[10px] tracking-kicker text-mute pt-5 border-t border-line">
-    <span class="text-left">KATAS · V0.3.1 · UPTIME 7D 04H</span>
+    <span class="text-left">KATAS · V0.3.1</span>
     <span class="text-center flex items-center gap-2 justify-center"><span class="w-1.5 h-1.5 rounded-full bg-green dot-pulse"></span>STATUS · OK</span>
     <span class="text-right">© SE77N</span>
   </footer>
 </main>
 
+<!-- toast -->
+<div id="toast" class="fixed top-20 right-6 z-[110] pointer-events-none"></div>
+
 <script>
-  (function () {
-    function apply(theme) {
-      document.documentElement.dataset.theme = theme;
-      try { localStorage.setItem('kata.theme', theme); } catch (e) {}
-      var lbl = document.querySelector('.theme-label');
-      var lblInline = document.querySelector('.theme-label-inline');
-      var iconInline = document.querySelector('.theme-icon-inline');
-      if (lbl) lbl.textContent = theme.toUpperCase();
-      if (lblInline) lblInline.textContent = theme === 'light' ? 'sang dark' : 'sang light';
-      if (iconInline) iconInline.textContent = theme === 'light' ? '☀' : '☾';
-    }
-    function toggle() {
-      var cur = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
-      apply(cur === 'light' ? 'dark' : 'light');
-    }
-    apply(document.documentElement.dataset.theme === 'light' ? 'light' : 'dark');
-    var btn = document.getElementById('themeToggle');
-    if (btn) btn.addEventListener('click', toggle);
-    document.querySelectorAll('.theme-toggle-inline').forEach(function (el) {
-      el.addEventListener('click', toggle);
-    });
-  })();
+const ACCENTS = ['#E04545','#D4A858','#5BA868','#7a9eb5','#9bb4ff','#c46868','#c9a653','#FF6B9D'];
+function escapeHtml(s){return String(s ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function getGuildId(){ return new URL(window.location.href).searchParams.get('guild'); }
+function avatarSeed(id){ const s=[...String(id||'')].reduce((a,c)=>a+c.charCodeAt(0),0); return ACCENTS[s%ACCENTS.length]; }
+function fmtUsd(v){ const n = Number(v||0); return '$' + (n < 0.01 ? n.toFixed(4) : n.toFixed(2)); }
+function fmtCount(n){ if (n == null) return '0'; if (n >= 1e6) return (n/1e6).toFixed(1) + 'M'; if (n >= 1e3) return (n/1e3).toFixed(1) + 'k'; return String(n); }
+function showToast(msg, kind){
+  const colors={ok:'#5BA868',err:'#c46868',info:'#7a9eb5'}; const c=colors[kind||'ok']||colors.ok;
+  const el=document.createElement('div');
+  el.className='mono text-[12px] px-4 py-2.5 rounded-[10px] mb-2 pointer-events-auto';
+  el.style.cssText='background:'+c+'18;border:1px solid '+c+'55;color:'+c+';box-shadow:0 16px 40px -16px '+c+'99';
+  el.textContent=msg; document.getElementById('toast').appendChild(el);
+  setTimeout(function(){el.style.opacity='0';el.style.transition='opacity 200ms';setTimeout(function(){el.remove();},220);},3000);
+}
+
+let CURRENT_RANGE = '30d';
+
+function renderRangePicker(){
+  for (const btn of document.querySelectorAll('#range-picker [data-range]')){
+    const active = btn.dataset.range === CURRENT_RANGE;
+    btn.classList.toggle('text-ink', active);
+    btn.classList.toggle('text-mute', !active);
+    btn.style.background = active ? 'rgb(var(--c-panel2))' : 'transparent';
+  }
+  const labelMap = { '7d': '7 ngày', '30d': '30 ngày', '90d': '90 ngày' };
+  document.getElementById('cost-range-label').textContent = 'tổng · ' + labelMap[CURRENT_RANGE];
+  document.getElementById('daily-cost-label').textContent = 'daily cost · ' + labelMap[CURRENT_RANGE];
+  document.getElementById('bymodel-label').textContent = 'by model · ' + CURRENT_RANGE;
+  document.getElementById('dailytokens-label').textContent = 'daily tokens · ' + labelMap[CURRENT_RANGE] + ' · stacked in/out';
+}
+
+async function loadGuildBootstrap(){
+  const guildId = getGuildId();
+  if (!guildId){ window.location.href = 'servers.html'; return false; }
+
+  fetch('/api/auth/me', { credentials:'same-origin' }).then(r=>r.json()).then(({user}) => {
+    if (!user) return;
+    const chip = document.getElementById('kata-user-chip');
+    const initial = (user.displayName || user.username || '?').slice(0,1).toUpperCase();
+    const img = user.avatarUrl
+      ? '<img src="'+user.avatarUrl+'" alt="" style="width:26px;height:26px;border-radius:9999px;object-fit:cover;border:1px solid rgba(255,255,255,0.08)" />'
+      : '<span class="w-[26px] h-[26px] rounded-full grid place-items-center text-[11px] font-extrabold" style="background:#E0454522;color:#E04545">'+initial+'</span>';
+    chip.innerHTML = img + '<span class="max-w-[96px] truncate">'+escapeHtml(user.displayName || user.username || '—')+'</span><span class="text-mute text-[9px]">▾</span>';
+  }).catch(()=>{});
+
+  const navMap = [
+    ['nav-overview', 'overview.html'],
+    ['nav-logs-chat', 'logs-image.html?tab=chat'],
+    ['nav-logs-image', 'logs-image.html?tab=image'],
+    ['nav-logs-video', 'logs-image.html?tab=video'],
+    ['nav-logs-command', 'logs-image.html?tab=command'],
+  ];
+  for (const [id, sub] of navMap){
+    const el = document.getElementById(id);
+    if (el) el.href = sub + (sub.includes('?') ? '&' : '?') + 'guild=' + encodeURIComponent(guildId);
+  }
+  document.getElementById('bc-guild').href = 'overview.html?guild=' + encodeURIComponent(guildId);
+
+  let r;
+  try { r = await fetch('/api/kata/server/' + encodeURIComponent(guildId), { credentials:'same-origin' }); }
+  catch { showToast('Lỗi mạng', 'err'); return false; }
+  if (r.status === 401 || r.status === 403){
+    document.querySelector('main').innerHTML = '<div class="rounded-[14px] border border-line bg-panel p-10 text-center max-w-xl mx-auto mt-20"><div class="text-[16px] font-medium text-ink mb-3">Cần đăng nhập với Discord (admin của server).</div><a href="/api/auth/discord/start" class="mono inline-flex items-center gap-2 h-10 px-5 rounded-[10px] uppercase tracking-label text-[11px] font-bold text-bg mt-3" style="background:#5865F2">đăng nhập với Discord</a><a href="servers.html" class="mono inline-flex items-center gap-2 h-10 px-5 rounded-[10px] uppercase tracking-label text-[11px] text-mute hover:text-ink mt-3 ml-2 border border-line">← danh sách server</a></div>';
+    return false;
+  }
+  if (r.status === 404){ document.querySelector('main').innerHTML = '<div class="text-mute mt-20 text-center">Bot không có trong server này.</div>'; return false; }
+  if (!r.ok){ showToast('Lỗi tải (HTTP ' + r.status + ')', 'err'); return false; }
+
+  const data = await r.json();
+  document.getElementById('kata-guild-name').textContent = data.guild.name;
+  document.getElementById('bc-guild').textContent = data.guild.name;
+  document.getElementById('kata-guild-meta').textContent = 'id · ' + data.guild.id;
+  const guildIcon = document.getElementById('kata-guild-icon');
+  if (data.guild.iconUrl){
+    guildIcon.innerHTML = '<img src="'+data.guild.iconUrl+'" alt="" style="width:48px;height:48px;border-radius:10px;object-fit:cover" />';
+    guildIcon.style.background = 'transparent';
+  } else {
+    const initials = data.guild.name.replace(/[^A-Za-z0-9À-ỹ]/g,'').slice(0,2).toUpperCase() || '??';
+    guildIcon.textContent = initials;
+    const accent = avatarSeed(data.guild.id);
+    guildIcon.style.background = 'linear-gradient(135deg,'+accent+','+accent+'55)';
+  }
+  return true;
+}
+
+function renderHero(data){
+  document.getElementById('cost-total').textContent = fmtUsd(data.total);
+  const d = data.totalDelta;
+  const deltaEl = document.getElementById('cost-delta');
+  if (d === 0){ deltaEl.textContent = '±0%'; deltaEl.className = 'mono text-[11px] flex items-center gap-1 text-mute'; }
+  else if (d > 0){ deltaEl.textContent = '▲ ' + d + '% vs ' + data.range + ' trước'; deltaEl.className = 'mono text-[11px] flex items-center gap-1 text-warn'; }
+  else { deltaEl.textContent = '▼ ' + Math.abs(d) + '% vs ' + data.range + ' trước'; deltaEl.className = 'mono text-[11px] flex items-center gap-1 text-green'; }
+
+  const totalCalls = data.byCommand.reduce((a,b)=>a+b.count,0);
+  const avgPerMsg = totalCalls > 0 ? data.total / totalCalls : 0;
+  document.getElementById('cost-prior-note').textContent = totalCalls.toLocaleString('vi-VN') + ' commands · avg ' + fmtUsd(avgPerMsg) + ' / call';
+
+  document.getElementById('kpi-tokens-in').innerHTML = fmtCount(data.totals.tokensIn) + '<span class="text-mute2 text-[16px]"> in</span>';
+  document.getElementById('kpi-tokens-out').innerHTML = fmtCount(data.totals.tokensOut) + '<span class="text-mute2 text-[16px]"> out</span>';
+  const totalTokens = (data.totals.tokensIn || 0) + (data.totals.tokensOut || 0);
+  document.getElementById('kpi-tokens-avg').textContent = totalTokens > 0 ? 'tổng ' + fmtCount(totalTokens) + ' token' : '—';
+
+  const imgCost = data.byCommand.filter(c => /^\/(img|edit|bgremove|wfi2i)/.test(c.command || '')).reduce((a,b)=>a+b.cost,0);
+  document.getElementById('kpi-images-count').innerHTML = data.totals.images + '<span class="text-mute2 text-[16px]"> gens</span>';
+  document.getElementById('kpi-images-cost').textContent = fmtUsd(imgCost);
+  document.getElementById('kpi-images-avg').textContent = data.totals.images > 0 ? 'avg · ' + fmtUsd(imgCost / data.totals.images) + ' / gen' : '—';
+
+  const vidCost = data.byCommand.filter(c => /^\/(t2v|i2v)/.test(c.command || '')).reduce((a,b)=>a+b.cost,0);
+  document.getElementById('kpi-video-count').innerHTML = data.totals.videos + '<span class="text-mute2 text-[16px]"> gens</span>';
+  document.getElementById('kpi-video-cost').textContent = fmtUsd(vidCost);
+  document.getElementById('kpi-video-avg').textContent = data.totals.videos > 0 ? 'avg · ' + (data.totals.videoSec / data.totals.videos).toFixed(1) + 's · ' + fmtUsd(vidCost / data.totals.videos) : '—';
+}
+
+function renderDailyCost(data){
+  const series = data.dailyCost;
+  const wrap = document.getElementById('daily-cost-chart');
+  if (series.length === 0){ wrap.innerHTML = '<div class="text-mute2 mono text-[11px] py-10 text-center">Chưa có dữ liệu</div>'; return; }
+  const max = Math.max(0.0001, ...series.map(p=>p.cost));
+  const peak = series.reduce((a,b)=>b.cost>a.cost?b:a, series[0]);
+  document.getElementById('daily-cost-peak').textContent = peak.cost > 0 ? 'peak · ' + peak.date.slice(5) + ' · ' + fmtUsd(peak.cost) : 'không có chi phí';
+
+  const W = 300, H = 200, padTop = 8;
+  const stepX = series.length > 1 ? W / (series.length - 1) : W;
+  const yOf = (v) => H - padTop - (v / max) * (H - padTop - 12);
+
+  let path = '', area = '';
+  series.forEach((p, i) => {
+    const x = i * stepX;
+    const y = yOf(p.cost);
+    if (i === 0){ path += 'M' + x.toFixed(2) + ' ' + y.toFixed(2); area += 'M' + x.toFixed(2) + ' ' + H + ' L' + x.toFixed(2) + ' ' + y.toFixed(2); }
+    else { path += ' L' + x.toFixed(2) + ' ' + y.toFixed(2); area += ' L' + x.toFixed(2) + ' ' + y.toFixed(2); }
+  });
+  area += ' L' + ((series.length-1)*stepX) + ' ' + H + ' Z';
+
+  const yAxis = [max, max*0.66, max*0.33, 0].map(fmtUsd);
+  wrap.innerHTML = '<div class="absolute inset-y-0 left-0 w-12 flex flex-col justify-between mono text-[9px] tracking-label uppercase text-mute2 text-right pr-2">' +
+    yAxis.map(v=>'<span>'+v+'</span>').join('') +
+    '</div><div class="absolute inset-y-0 left-12 right-0"><div class="absolute inset-0 flex flex-col justify-between"><div class="border-t border-line"></div><div class="border-t border-line"></div><div class="border-t border-line"></div><div class="border-t border-line"></div></div>' +
+    '<svg class="absolute inset-0 w-full h-full" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none">' +
+    '<defs><linearGradient id="costGrad" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#D4A858" stop-opacity="0.4"/><stop offset="100%" stop-color="#D4A858" stop-opacity="0.02"/></linearGradient></defs>' +
+    '<path d="' + area + '" fill="url(#costGrad)"/>' +
+    '<path d="' + path + '" fill="none" stroke="#D4A858" stroke-width="1.5" stroke-linejoin="round"/>' +
+    '<circle cx="' + ((series.length-1)*stepX) + '" cy="' + yOf(series[series.length-1].cost) + '" r="3.5" fill="#D4A858"/></svg>' +
+    '<div class="absolute -bottom-5 inset-x-0 flex justify-between mono text-[9px] tracking-label uppercase text-mute2"><span>' + series[0].date.slice(5) + '</span><span>' + (series[Math.floor(series.length*0.5)] ? series[Math.floor(series.length*0.5)].date.slice(5) : '') + '</span><span class="text-gold">' + series[series.length-1].date.slice(5) + '</span></div></div>';
+}
+
+function renderByModel(data){
+  const total = data.byModel.reduce((a,b)=>a+b.cost,0);
+  const list = data.byModel.slice(0, 6);
+  document.getElementById('bymodel-total').textContent = fmtUsd(total) + ' total · ' + data.byModel.length + ' models';
+
+  let offset = 25;
+  let segments = '';
+  list.forEach((m, i) => {
+    const pct = total > 0 ? (m.cost / total) * 100 : 0;
+    if (pct < 0.1) return;
+    const color = ACCENTS[i % ACCENTS.length];
+    segments += '<circle cx="21" cy="21" r="15.91" fill="transparent" stroke="' + color + '" stroke-width="6" stroke-dasharray="' + pct.toFixed(2) + ' ' + (100-pct).toFixed(2) + '" stroke-dashoffset="' + offset + '" transform="rotate(-90 21 21)"/>';
+    offset -= pct;
+  });
+
+  document.getElementById('bymodel-donut').innerHTML = '<svg width="160" height="160" viewBox="0 0 42 42"><circle cx="21" cy="21" r="15.91" fill="transparent" style="stroke: var(--c-line)" stroke-width="6"/>' + segments + '</svg><div class="absolute inset-0 grid place-items-center text-center"><div><div class="mono text-[9px] tracking-label uppercase text-mute2">total</div><div class="mono text-[20px] font-bold tracking-tight text-ink mt-0.5">' + fmtUsd(total) + '</div><div class="mono text-[9px] tracking-label uppercase text-mute mt-0.5">' + data.byModel.length + ' models</div></div></div>';
+
+  const legend = list.length === 0
+    ? '<div class="mono text-[11px] text-mute2">Chưa có chi phí</div>'
+    : list.map((m, i) => {
+      const pct = total > 0 ? (m.cost / total) * 100 : 0;
+      const short = (m.model || '').split('/').slice(-2).join('/');
+      return '<div class="flex items-center gap-3 mono text-[12px]"><span class="w-2.5 h-2.5 rounded-sm" style="background:' + ACCENTS[i % ACCENTS.length] + '"></span><span class="text-ink flex-1 truncate" title="' + escapeHtml(m.service+' / '+m.model) + '">' + escapeHtml(short) + '</span><span class="text-mute2">' + pct.toFixed(0) + '%</span><span class="text-gold w-[60px] text-right">' + fmtUsd(m.cost) + '</span></div>';
+    }).join('');
+  document.getElementById('bymodel-legend').innerHTML = legend;
+}
+
+function renderTopUsers(data){
+  const max = Math.max(0.0001, ...data.topUsers.map(u=>u.cost));
+  const wrap = document.getElementById('topusers-bars');
+  if (data.topUsers.length === 0){ wrap.innerHTML = '<div class="text-mute2 mono text-[11px] py-6 text-center">Chưa có user phát sinh chi phí</div>'; return; }
+  wrap.innerHTML = data.topUsers.map((u) => {
+    const pct = (u.cost / max) * 100;
+    const accent = avatarSeed(u.userId);
+    const short = u.userId.slice(-6);
+    return '<div class="flex items-center gap-3 mono text-[12px]"><span class="w-[110px] text-mute truncate flex items-center gap-2"><span class="w-4 h-4 rounded-full grid place-items-center text-[8px] font-extrabold flex-shrink-0" style="background:' + accent + '22;color:' + accent + '">' + short.slice(0,1) + '</span>' + escapeHtml(short) + '</span><div class="flex-1 h-5 rounded-[3px] bg-bg overflow-hidden"><div class="h-full" style="width:' + pct.toFixed(1) + '%;background:' + accent + '"></div></div><span class="text-gold w-[60px] text-right">' + fmtUsd(u.cost) + '</span></div>';
+  }).join('');
+}
+
+function renderDailyTokens(data){
+  const series = data.dailyTokens.slice(-14);
+  const wrap = document.getElementById('dailytokens-bars');
+  const axis = document.getElementById('dailytokens-axis');
+  if (series.length === 0){ wrap.innerHTML = '<div class="text-mute2 mono text-[11px] py-6 text-center w-full">Chưa có dữ liệu token</div>'; axis.innerHTML = ''; return; }
+  const max = Math.max(1, ...series.map(p=>p.tokensIn + p.tokensOut));
+  wrap.innerHTML = series.map((p, i) => {
+    const inPct = (p.tokensIn / max) * 100;
+    const outPct = (p.tokensOut / max) * 100;
+    const isLast = i === series.length - 1;
+    const outline = isLast ? 'outline:1px solid #E04545;outline-offset:1px' : '';
+    return '<div class="flex-1 flex flex-col-reverse rounded-t overflow-hidden" style="' + outline + '" title="' + p.date + ' · in ' + fmtCount(p.tokensIn) + ' · out ' + fmtCount(p.tokensOut) + '"><div style="height:' + inPct.toFixed(1) + '%;background:#E04545"></div><div style="height:' + outPct.toFixed(1) + '%;background:#7a2e2e"></div></div>';
+  }).join('');
+  axis.innerHTML = '<span>' + series[0].date.slice(5) + '</span><span>' + series[Math.floor(series.length/2)].date.slice(5) + '</span><span class="text-red">' + series[series.length-1].date.slice(5) + '</span>';
+}
+
+function fmtLatency(ms){
+  if (ms == null) return '—';
+  if (ms < 1000) return ms + 'ms';
+  if (ms < 60000) return (ms/1000).toFixed(1) + 's';
+  const m = Math.floor(ms/60000); const s = Math.round((ms % 60000) / 1000);
+  return m + 'm ' + s + 's';
+}
+
+function renderByCommand(data){
+  const rows = data.byCommand;
+  const tbody = document.getElementById('bycommand-rows');
+  const tfoot = document.getElementById('bycommand-foot');
+  if (rows.length === 0){
+    tbody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-mute2">Chưa có lệnh nào chạy</td></tr>';
+    tfoot.innerHTML = '';
+    return;
+  }
+  const dotMap = (cmd) => /chat|mention/.test(cmd) ? 'bg-red' : /img|edit|bgremove|wfi2i/.test(cmd) ? 'bg-gold' : /t2v|i2v/.test(cmd) ? 'bg-green' : /search/.test(cmd) ? '' : 'bg-mute';
+  tbody.innerHTML = rows.map(r => {
+    const avg = r.count > 0 ? r.cost / r.count : 0;
+    const dot = dotMap(r.command);
+    const dotStyle = !dot ? 'style="background:#7a9eb5"' : '';
+    return '<tr class="border-b border-line hover:bg-ink/[0.02]"><td class="py-3 px-6"><div class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full ' + dot + '" ' + dotStyle + '></span><span class="text-red">' + escapeHtml(r.command || '—') + '</span></div></td><td class="py-3 px-3 text-right text-ink">' + r.count.toLocaleString('vi-VN') + '</td><td class="py-3 px-3 text-right text-mute">' + fmtUsd(avg) + '</td><td class="py-3 px-3 text-right text-mute">' + fmtLatency(r.latencyP50Ms) + '</td><td class="py-3 px-6 text-right text-gold">' + fmtUsd(r.cost) + '</td></tr>';
+  }).join('');
+  const totalCount = rows.reduce((a,b)=>a+b.count,0);
+  const totalCost = rows.reduce((a,b)=>a+b.cost,0);
+  tfoot.innerHTML = '<tr class="border-t border-line2 mono text-[12px] font-bold"><td class="py-3 px-6 text-mute tracking-label uppercase text-[10px]">total · ' + rows.length + ' commands</td><td class="py-3 px-3 text-right text-ink">' + totalCount.toLocaleString('vi-VN') + '</td><td class="py-3 px-3 text-right text-mute">—</td><td class="py-3 px-3 text-right text-mute">—</td><td class="py-3 px-6 text-right text-gold text-[14px]">' + fmtUsd(totalCost) + '</td></tr>';
+}
+
+async function loadCost(){
+  const guildId = getGuildId();
+  let r;
+  try { r = await fetch('/api/kata/server/' + encodeURIComponent(guildId) + '/cost?range=' + CURRENT_RANGE, { credentials:'same-origin' }); }
+  catch { showToast('Lỗi mạng', 'err'); return; }
+  if (!r.ok){ showToast('Lỗi tải (HTTP ' + r.status + ')', 'err'); return; }
+  const data = await r.json();
+  renderHero(data);
+  renderDailyCost(data);
+  renderByModel(data);
+  renderTopUsers(data);
+  renderDailyTokens(data);
+  renderByCommand(data);
+}
+
+document.getElementById('range-picker').addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-range]');
+  if (!btn || btn.dataset.range === CURRENT_RANGE) return;
+  CURRENT_RANGE = btn.dataset.range;
+  renderRangePicker();
+  loadCost();
+});
+document.getElementById('btn-refresh').addEventListener('click', () => loadCost());
+
+(async () => {
+  renderRangePicker();
+  const ok = await loadGuildBootstrap();
+  if (ok) await loadCost();
+})();
 </script>
 
 </body>
