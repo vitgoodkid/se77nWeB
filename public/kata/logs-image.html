@@ -59,8 +59,8 @@
       <a href="index.html" class="text-mute hover:text-ink">se77n</a><span class="text-mute2">/</span>
       <a href="index.html" class="text-mute hover:text-ink">kata</a><span class="text-mute2">/</span>
       <a href="servers.html" class="text-mute hover:text-ink">servers</a><span class="text-mute2">/</span>
-      <a href="overview.html" class="text-mute hover:text-ink">server alpha</a><span class="text-mute2">/</span>
-      <span class="text-ink">logs · image</span>
+      <a id="bc-guild" href="#" class="text-mute hover:text-ink">—</a><span class="text-mute2">/</span>
+      <span class="text-ink">logs · <span id="bc-tab">chat</span></span>
     </div>
     <span class="mono text-[10px] tracking-label uppercase text-green flex items-center gap-1.5 ml-2"><span class="dot-pulse w-1.5 h-1.5 rounded-full bg-green"></span>live · 4s</span>
   </div>
@@ -73,9 +73,9 @@
     <button class="mono h-8 px-3 rounded-full border border-line text-[10px] tracking-label font-bold flex items-center gap-2">
       <span class="w-3 h-3 rounded-full" style="background:conic-gradient(#E04545,#5BA868,#D4A858,#E04545);border:1px solid rgba(255,255,255,.1)"></span><span>AUTO</span><span class="text-mute text-[9px]">▾</span>
     </button>
-    <button class="h-8 pl-1 pr-3 rounded-full border border-line flex items-center gap-2 mono text-[11px]">
-      <span class="w-[26px] h-[26px] rounded-full grid place-items-center text-[11px] font-extrabold" style="background:#E0454522;color:#E04545">M</span>
-      <span class="max-w-[96px] truncate">m</span>
+    <button id="kata-user-chip" class="h-8 pl-1 pr-3 rounded-full border border-line flex items-center gap-2 mono text-[11px]">
+      <span class="w-[26px] h-[26px] rounded-full grid place-items-center text-[11px] font-extrabold" style="background:#E0454522;color:#E04545">?</span>
+      <span class="max-w-[96px] truncate">guest</span>
       <span class="text-mute text-[9px]">▾</span>
     </button>
   </div>
@@ -84,27 +84,19 @@
 <!-- side nav -->
 <aside class="fixed top-16 left-0 bottom-0 w-[220px] z-40 border-r border-line backdrop-blur-md overflow-y-auto" style="background:rgba(13,10,8,0.6)">
   <div class="p-5 border-b border-line">
-    <div class="w-12 h-12 rounded-[10px] grid place-items-center mono text-[16px] font-extrabold mb-3" style="background:linear-gradient(135deg,#E04545,#7a1e1e);color:#0d0a08">SA</div>
-    <div class="text-[14px] font-medium tracking-tight text-ink">Server Alpha</div>
-    <div class="mono text-[10px] text-mute mt-1">1,245 thành viên</div>
-    <div class="mono text-[9px] text-mute2 mt-2 tracking-label uppercase flex items-center gap-1.5"><span class="dot-pulse w-1.5 h-1.5 rounded-full bg-green"></span>online · 7d 04h</div>
+    <div id="kata-guild-icon" class="w-12 h-12 rounded-[10px] grid place-items-center mono text-[16px] font-extrabold mb-3" style="background:linear-gradient(135deg,#E04545,#7a1e1e);color:#0d0a08">--</div>
+    <div id="kata-guild-name" class="text-[14px] font-medium tracking-tight text-ink">Đang tải…</div>
+    <div id="kata-guild-meta" class="mono text-[10px] text-mute mt-1">—</div>
+    <div class="mono text-[9px] text-mute2 mt-2 tracking-label uppercase flex items-center gap-1.5"><span class="dot-pulse w-1.5 h-1.5 rounded-full bg-green"></span>online</div>
   </div>
   <nav class="px-3 py-4 mono text-[11px] tracking-label uppercase">
-    <a href="overview.html" class="flex items-center justify-between px-3 py-2 rounded-[8px] mb-1 text-mute hover:text-ink hover:bg-ink/[0.03]">▸ overview</a>
+    <a id="nav-overview" href="#" class="flex items-center justify-between px-3 py-2 rounded-[8px] mb-1 text-mute hover:text-ink hover:bg-ink/[0.03]">▸ overview</a>
     <div class="px-3 py-2 mb-1 text-ink">▸ logs</div>
-    <a href="#" class="block px-3 py-1.5 ml-3 rounded-[8px] text-mute hover:text-ink hover:bg-ink/[0.03]">↳ chat</a>
-    <a href="logs-image.html" class="block px-3 py-1.5 ml-3 rounded-[8px] text-red" style="background:#E0454510;border-left:2px solid #E04545">↳ image</a>
-    <a href="#" class="block px-3 py-1.5 ml-3 rounded-[8px] text-mute hover:text-ink hover:bg-ink/[0.03]">↳ video</a>
-    <a href="#" class="block px-3 py-1.5 ml-3 rounded-[8px] text-mute hover:text-ink hover:bg-ink/[0.03]">↳ commands</a>
-    <div class="px-3 py-2 mt-2 mb-1 text-mute">▸ settings</div>
-    <a href="#" class="block px-3 py-1.5 ml-3 rounded-[8px] text-mute hover:text-ink hover:bg-ink/[0.03]">↳ sysprompt</a>
-    <a href="#" class="block px-3 py-1.5 ml-3 rounded-[8px] text-mute hover:text-ink hover:bg-ink/[0.03]">↳ language</a>
-    <a href="#" class="block px-3 py-1.5 ml-3 rounded-[8px] text-mute hover:text-ink hover:bg-ink/[0.03]">↳ models</a>
-    <a href="#" class="block px-3 py-1.5 ml-3 rounded-[8px] text-mute hover:text-ink hover:bg-ink/[0.03]">↳ commands</a>
-    <a href="#" class="block px-3 py-1.5 ml-3 rounded-[8px] text-mute hover:text-ink hover:bg-ink/[0.03]">↳ moderation</a>
-    <a href="#" class="block px-3 py-1.5 ml-3 rounded-[8px] text-mute hover:text-ink hover:bg-ink/[0.03]">↳ channels</a>
-    <a href="cost.html" class="flex items-center justify-between px-3 py-2 rounded-[8px] mt-2 mb-1 text-mute hover:text-ink hover:bg-ink/[0.03]">▸ cost</a>
-    <a href="#" class="flex items-center justify-between px-3 py-2 rounded-[8px] mb-1 text-mute hover:text-ink hover:bg-ink/[0.03]">▸ playground</a>
+    <a data-tab="chat" class="block px-3 py-1.5 ml-3 rounded-[8px] text-mute hover:text-ink hover:bg-ink/[0.03] cursor-pointer">↳ chat</a>
+    <a data-tab="image" class="block px-3 py-1.5 ml-3 rounded-[8px] text-mute hover:text-ink hover:bg-ink/[0.03] cursor-pointer">↳ image</a>
+    <a data-tab="video" class="block px-3 py-1.5 ml-3 rounded-[8px] text-mute hover:text-ink hover:bg-ink/[0.03] cursor-pointer">↳ video</a>
+    <a data-tab="command" class="block px-3 py-1.5 ml-3 rounded-[8px] text-mute hover:text-ink hover:bg-ink/[0.03] cursor-pointer">↳ commands</a>
+    <a id="nav-cost" href="#" class="flex items-center justify-between px-3 py-2 rounded-[8px] mt-2 mb-1 text-mute hover:text-ink hover:bg-ink/[0.03]">▸ cost</a>
   </nav>
   <div class="px-5 py-4 border-t border-line">
     <a href="servers.html" class="mono text-[10px] tracking-label uppercase text-mute hover:text-ink flex items-center gap-2">← all servers</a>
@@ -119,319 +111,393 @@
     <div>
       <div class="mono text-[10px] uppercase tracking-kicker text-mute mb-2 flex items-center gap-3">
         <span class="dot-pulse w-1.5 h-1.5 rounded-full bg-green"></span>
-        TAB · LOGS / IMAGE · LIVE · 4S
+        <span id="page-tag">TAB · LOGS / —</span>
       </div>
-      <h1 class="mono text-[36px] leading-none font-extrabold tracking-[-0.035em] lowercase">logs<span class="text-red font-extrabold"> · image</span><span class="text-red glow77">.</span></h1>
-      <div class="mono text-[11px] text-mute mt-3">vĩnh viễn · 1,248 entries · <span class="text-ink">145 trong tháng này</span></div>
+      <h1 class="mono text-[36px] leading-none font-extrabold tracking-[-0.035em] lowercase">logs<span id="page-tab-label" class="text-red font-extrabold"> · —</span><span class="text-red glow77">.</span></h1>
+      <div id="page-counts" class="mono text-[11px] text-mute mt-3">—</div>
     </div>
     <div class="flex items-center gap-2">
-      <div class="flex items-center gap-0.5 p-0.5 rounded-[10px] border border-line bg-bg mono text-[10px] tracking-label uppercase">
-        <button class="px-3 h-7 rounded-[8px] text-ink" style="background:#1c1813">● live</button>
-        <button class="px-3 h-7 rounded-[8px] text-mute hover:text-ink">○ paused</button>
-      </div>
-      <button class="mono h-9 px-3.5 rounded-[10px] border border-line text-mute hover:text-ink text-[10px] tracking-label uppercase">↧ export csv</button>
+      <button id="btn-refresh" class="mono h-9 px-3.5 rounded-[10px] border border-line text-mute hover:text-ink text-[10px] tracking-label uppercase">↻ refresh</button>
     </div>
   </div>
 
   <!-- log type tabs -->
   <div class="flex items-center gap-1 mb-5 border-b border-line">
-    <a href="#" class="mono text-[11px] tracking-label uppercase px-4 pb-3 pt-2 text-mute hover:text-ink">chat <span class="text-mute2 ml-1.5">2.4k</span></a>
-    <a href="logs-image.html" class="mono text-[11px] tracking-label uppercase px-4 pb-3 pt-2 text-red font-bold relative">image <span class="text-mute2 ml-1.5">145</span>
-      <span class="absolute left-2 right-2 bottom-[-1px] h-[2px] bg-red"></span>
-    </a>
-    <a href="#" class="mono text-[11px] tracking-label uppercase px-4 pb-3 pt-2 text-mute hover:text-ink">video <span class="text-mute2 ml-1.5">18</span></a>
-    <a href="#" class="mono text-[11px] tracking-label uppercase px-4 pb-3 pt-2 text-mute hover:text-ink">commands <span class="text-mute2 ml-1.5">412</span></a>
+    <button data-tab="chat" class="kata-tab mono text-[11px] tracking-label uppercase px-4 pb-3 pt-2 text-mute hover:text-ink relative">chat</button>
+    <button data-tab="image" class="kata-tab mono text-[11px] tracking-label uppercase px-4 pb-3 pt-2 text-mute hover:text-ink relative">image</button>
+    <button data-tab="video" class="kata-tab mono text-[11px] tracking-label uppercase px-4 pb-3 pt-2 text-mute hover:text-ink relative">video</button>
+    <button data-tab="command" class="kata-tab mono text-[11px] tracking-label uppercase px-4 pb-3 pt-2 text-mute hover:text-ink relative">commands</button>
   </div>
 
   <!-- filters -->
   <div class="flex items-center gap-2 mb-6 flex-wrap">
     <div class="mono text-[10px] tracking-label uppercase text-mute2 mr-1">filter</div>
-    <button class="mono h-8 px-3 rounded-[8px] border border-line text-ink hover:border-line2 text-[11px] flex items-center gap-2"><span class="text-mute2 text-[10px] tracking-label uppercase">user</span><span>@all</span><span class="text-mute2">▾</span></button>
-    <button class="mono h-8 px-3 rounded-[8px] border border-line text-ink hover:border-line2 text-[11px] flex items-center gap-2"><span class="text-mute2 text-[10px] tracking-label uppercase">channel</span><span>#all</span><span class="text-mute2">▾</span></button>
-    <button class="mono h-8 px-3 rounded-[8px] border border-line text-ink hover:border-line2 text-[11px] flex items-center gap-2"><span class="text-mute2 text-[10px] tracking-label uppercase">command</span><span>/all</span><span class="text-mute2">▾</span></button>
-    <button class="mono h-8 px-3 rounded-[8px] border border-line text-ink hover:border-line2 text-[11px] flex items-center gap-2"><span class="text-mute2 text-[10px] tracking-label uppercase">model</span><span>nano-banana-pro</span><span class="text-mute2">▾</span></button>
-    <button class="mono h-8 px-3 rounded-[8px] border border-line text-ink hover:border-line2 text-[11px] flex items-center gap-2"><span class="text-mute2 text-[10px] tracking-label uppercase">date</span><span>30d</span><span class="text-mute2">▾</span></button>
-    <div class="relative">
-      <input placeholder="search prompt…" class="mono bg-bg border border-line rounded-[8px] h-8 pl-8 pr-3 w-[200px] text-[11px] text-ink placeholder:text-mute2 focus:outline-none focus:border-red/60" />
-      <svg class="absolute left-2.5 top-2 text-mute2" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-    </div>
-    <div class="flex-1"></div>
-    <button class="mono h-8 px-3 rounded-[8px] text-[10px] tracking-label uppercase text-red hover:underline">clear all</button>
+    <input id="f-userId" placeholder="user id" class="mono bg-bg border border-line rounded-[8px] h-8 px-3 w-[180px] text-[11px] text-ink placeholder:text-mute2 focus:outline-none focus:border-red/60" />
+    <input id="f-channelId" placeholder="channel id" class="mono bg-bg border border-line rounded-[8px] h-8 px-3 w-[180px] text-[11px] text-ink placeholder:text-mute2 focus:outline-none focus:border-red/60" />
+    <input id="f-command" placeholder="/command" class="mono bg-bg border border-line rounded-[8px] h-8 px-3 w-[140px] text-[11px] text-ink placeholder:text-mute2 focus:outline-none focus:border-red/60" />
+    <button id="btn-apply" class="mono h-8 px-3 rounded-[8px] text-[10px] tracking-label uppercase font-bold text-bg" style="background:#E04545">apply</button>
+    <button id="btn-clear" class="mono h-8 px-3 rounded-[8px] text-[10px] tracking-label uppercase text-red hover:underline">clear all</button>
   </div>
 
   <!-- log entries -->
-  <div class="space-y-2.5">
+  <div id="log-list" class="space-y-2.5"></div>
 
-    <!-- new (live) entry -->
-    <article class="rounded-[14px] border bg-panel relative overflow-hidden" style="border-color:#E0454544">
-      <div class="absolute inset-y-0 left-0 w-[3px]" style="background:#E04545"></div>
-      <div class="absolute top-3 right-3 mono text-[9px] tracking-label uppercase text-red flex items-center gap-1.5"><span class="dot-pulse w-1.5 h-1.5 rounded-full bg-red"></span>new</div>
-      <div class="p-5 flex gap-5">
-        <!-- thumbs in/out -->
-        <div class="flex items-center gap-3 flex-shrink-0">
-          <div class="text-center">
-            <div class="w-[72px] h-[72px] rounded-[8px] ph-1 border border-line"></div>
-            <div class="mono text-[8px] tracking-label uppercase text-mute2 mt-1.5">input</div>
-          </div>
-          <span class="text-mute2 text-lg">→</span>
-          <div class="text-center">
-            <div class="w-[72px] h-[72px] rounded-[8px] ph-2 border border-line"></div>
-            <div class="mono text-[8px] tracking-label uppercase text-mute2 mt-1.5">output</div>
-          </div>
-        </div>
-        <!-- meta + prompt -->
-        <div class="flex-1 min-w-0">
-          <div class="flex items-center gap-4 mb-3 mono text-[11px]">
-            <span class="flex items-center gap-2"><span class="w-5 h-5 rounded-full grid place-items-center text-[9px] font-extrabold" style="background:#E0454522;color:#E04545">A</span><span class="text-ink">@lambo_ai</span></span>
-            <span class="text-mute2">·</span>
-            <span class="text-red text-[10px] tracking-label uppercase">/edit</span>
-            <span class="text-mute2">·</span>
-            <span class="text-mute">#ai-chat</span>
-            <span class="text-mute2">·</span>
-            <span class="text-mute">just now</span>
-          </div>
-          <div class="text-[13px] text-mute leading-[1.55] mb-3">
-            <span class="text-mute2 mono text-[10px] uppercase tracking-label mr-2">prompt</span>
-            <span class="text-ink">"make the sky purple at golden hour, add 2 zeppelins in background, keep the city skyline and lighting exactly the same"</span>
-          </div>
-          <div class="flex items-center gap-3 mono text-[10px] tracking-label uppercase flex-wrap">
-            <span class="px-2 py-1 rounded-full bg-ink/[0.05] border border-line">model · nano-banana-pro/edit</span>
-            <span class="text-mute2">fallback · none</span>
-            <span class="text-mute2">latency · 28.4s</span>
-            <span class="text-mute2">size · 1024×1024</span>
-            <span class="text-gold">cost · $0.04</span>
-          </div>
-        </div>
-        <!-- actions -->
-        <div class="flex flex-col gap-1.5 flex-shrink-0">
-          <button class="mono h-7 px-2.5 rounded-[6px] border border-line text-mute hover:text-ink text-[9px] tracking-label uppercase">↗ discord</button>
-          <button class="mono h-7 px-2.5 rounded-[6px] border border-line text-mute hover:text-ink text-[9px] tracking-label uppercase">↧ output</button>
-          <button class="mono h-7 px-2.5 rounded-[6px] border border-line text-mute hover:text-ink text-[9px] tracking-label uppercase">⤢ view full</button>
-        </div>
-      </div>
-    </article>
-
-    <!-- regular entries -->
-    <article class="rounded-[14px] border border-line bg-panel">
-      <div class="p-5 flex gap-5">
-        <div class="flex items-center gap-3 flex-shrink-0">
-          <div class="w-[72px] h-[72px] rounded-[8px] grid place-items-center border border-line" style="background:#0a0807">
-            <span class="mono text-[9px] text-mute2 tracking-label uppercase">no input</span>
-          </div>
-          <span class="text-mute2 text-lg">→</span>
-          <div class="w-[72px] h-[72px] rounded-[8px] ph-3 border border-line"></div>
-        </div>
-        <div class="flex-1 min-w-0">
-          <div class="flex items-center gap-4 mb-3 mono text-[11px]">
-            <span class="flex items-center gap-2"><span class="w-5 h-5 rounded-full grid place-items-center text-[9px] font-extrabold" style="background:#5BA86822;color:#5BA868">N</span><span class="text-ink">@nha.que</span></span>
-            <span class="text-mute2">·</span>
-            <span class="text-red text-[10px] tracking-label uppercase">/img</span>
-            <span class="text-mute2">·</span>
-            <span class="text-mute">#bot-spam</span>
-            <span class="text-mute2">·</span>
-            <span class="text-mute">14p trước</span>
-          </div>
-          <div class="text-[13px] text-mute leading-[1.55] mb-3">
-            <span class="text-mute2 mono text-[10px] uppercase tracking-label mr-2">prompt</span>
-            <span class="text-ink">"a cyberpunk vietnamese pho cart at midnight, neon signs, steam rising, photorealistic 35mm"</span>
-          </div>
-          <div class="flex items-center gap-3 mono text-[10px] tracking-label uppercase flex-wrap">
-            <span class="px-2 py-1 rounded-full bg-ink/[0.05] border border-line">model · nano-banana-pro</span>
-            <span class="text-mute2">latency · 22.1s</span>
-            <span class="text-mute2">size · 1024×1024</span>
-            <span class="text-gold">cost · $0.04</span>
-          </div>
-        </div>
-        <div class="flex flex-col gap-1.5 flex-shrink-0">
-          <button class="mono h-7 px-2.5 rounded-[6px] border border-line text-mute hover:text-ink text-[9px] tracking-label uppercase">↗ discord</button>
-          <button class="mono h-7 px-2.5 rounded-[6px] border border-line text-mute hover:text-ink text-[9px] tracking-label uppercase">↧ output</button>
-          <button class="mono h-7 px-2.5 rounded-[6px] border border-line text-mute hover:text-ink text-[9px] tracking-label uppercase">⤢ view full</button>
-        </div>
-      </div>
-    </article>
-
-    <!-- fallback used -->
-    <article class="rounded-[14px] border border-line bg-panel">
-      <div class="p-5 flex gap-5">
-        <div class="flex items-center gap-3 flex-shrink-0">
-          <div class="w-[72px] h-[72px] rounded-[8px] ph-4 border border-line"></div>
-          <span class="text-mute2 text-lg">→</span>
-          <div class="w-[72px] h-[72px] rounded-[8px] ph-5 border border-line"></div>
-        </div>
-        <div class="flex-1 min-w-0">
-          <div class="flex items-center gap-4 mb-3 mono text-[11px]">
-            <span class="flex items-center gap-2"><span class="w-5 h-5 rounded-full grid place-items-center text-[9px] font-extrabold" style="background:#D4A85822;color:#D4A858">K</span><span class="text-ink">@kuro</span></span>
-            <span class="text-mute2">·</span>
-            <span class="text-red text-[10px] tracking-label uppercase">/wfi2i</span>
-            <span class="text-mute2">·</span>
-            <span class="text-mute">#general</span>
-            <span class="text-mute2">·</span>
-            <span class="text-mute">38p trước</span>
-            <span class="mono text-[9px] tracking-label uppercase px-2 py-0.5 rounded-full" style="background:#c9a65318;border:1px solid #c9a65340;color:#c9a653">FALLBACK · WAN-2.6</span>
-          </div>
-          <div class="text-[13px] text-mute leading-[1.55] mb-3">
-            <span class="text-mute2 mono text-[10px] uppercase tracking-label mr-2">prompt</span>
-            <span class="text-ink">"turn this dog into a baroque oil painting, dramatic chiaroscuro lighting"</span>
-          </div>
-          <div class="flex items-center gap-3 mono text-[10px] tracking-label uppercase flex-wrap">
-            <span class="px-2 py-1 rounded-full bg-ink/[0.05] border border-line">model · flux/dev → wan-2.6</span>
-            <span class="text-warn">fallback · timeout 60s</span>
-            <span class="text-mute2">latency · 47.8s</span>
-            <span class="text-mute2">size · 1024×1024</span>
-            <span class="text-gold">cost · $0.04</span>
-          </div>
-        </div>
-        <div class="flex flex-col gap-1.5 flex-shrink-0">
-          <button class="mono h-7 px-2.5 rounded-[6px] border border-line text-mute hover:text-ink text-[9px] tracking-label uppercase">↗ discord</button>
-          <button class="mono h-7 px-2.5 rounded-[6px] border border-line text-mute hover:text-ink text-[9px] tracking-label uppercase">↧ output</button>
-          <button class="mono h-7 px-2.5 rounded-[6px] border border-line text-mute hover:text-ink text-[9px] tracking-label uppercase">⤢ view full</button>
-        </div>
-      </div>
-    </article>
-
-    <!-- nsfw blocked -->
-    <article class="rounded-[14px] border bg-panel relative overflow-hidden" style="background:#c4686808;border-color:#c4686844">
-      <div class="absolute inset-y-0 left-0 w-[3px]" style="background:#c46868"></div>
-      <div class="p-5 flex gap-5">
-        <div class="flex items-center gap-3 flex-shrink-0">
-          <div class="w-[72px] h-[72px] rounded-[8px] grid place-items-center border" style="background:#0a0807;border-color:#c4686844">
-            <span class="mono text-[9px] text-mute2 tracking-label uppercase">no input</span>
-          </div>
-          <span class="text-mute2 text-lg">→</span>
-          <div class="w-[72px] h-[72px] rounded-[8px] grid place-items-center border" style="background:#0a0807;border-color:#c4686844">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c46868" stroke-width="1.6"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 14.14 14.14"/></svg>
-          </div>
-        </div>
-        <div class="flex-1 min-w-0">
-          <div class="flex items-center gap-4 mb-3 mono text-[11px]">
-            <span class="flex items-center gap-2"><span class="w-5 h-5 rounded-full grid place-items-center text-[9px] font-extrabold" style="background:#c4686822;color:#c46868">?</span><span class="text-ink">@throwaway_2</span></span>
-            <span class="text-mute2">·</span>
-            <span class="text-[10px] tracking-label uppercase" style="color:#c46868">/img · blocked</span>
-            <span class="text-mute2">·</span>
-            <span class="text-mute">#general (safe ch)</span>
-            <span class="text-mute2">·</span>
-            <span class="text-mute">24p trước</span>
-            <span class="mono text-[9px] tracking-label uppercase px-2 py-0.5 rounded-full" style="background:#c4686818;border:1px solid #c4686844;color:#c46868">BLOCKED · NSFW 0.84</span>
-          </div>
-          <div class="text-[13px] leading-[1.55] mb-3" style="color:rgba(245,237,224,0.45)">
-            <span class="text-mute2 mono text-[10px] uppercase tracking-label mr-2">prompt</span>
-            <span class="italic" style="color:#c46868">[prompt hidden · classifier score 0.84 in non-nsfw channel]</span>
-          </div>
-          <div class="flex items-center gap-3 mono text-[10px] tracking-label uppercase flex-wrap">
-            <span class="text-mute2">model · nano-banana-pro</span>
-            <span class="text-mute2">action · pre-check block</span>
-            <span class="text-mute2">classifier · flash-lite</span>
-            <span class="text-mute2">user warn count · 2/5</span>
-          </div>
-        </div>
-        <div class="flex flex-col gap-1.5 flex-shrink-0">
-          <button class="mono h-7 px-2.5 rounded-[6px] border text-[9px] tracking-label uppercase" style="border-color:#c4686844;color:#c46868">⚠ details</button>
-          <button class="mono h-7 px-2.5 rounded-[6px] border border-line text-mute hover:text-ink text-[9px] tracking-label uppercase">↗ user</button>
-        </div>
-      </div>
-    </article>
-
-    <!-- bg remove -->
-    <article class="rounded-[14px] border border-line bg-panel">
-      <div class="p-5 flex gap-5">
-        <div class="flex items-center gap-3 flex-shrink-0">
-          <div class="w-[72px] h-[72px] rounded-[8px] ph-6 border border-line"></div>
-          <span class="text-mute2 text-lg">→</span>
-          <div class="w-[72px] h-[72px] rounded-[8px] border border-line relative overflow-hidden" style="background:repeating-conic-gradient(rgba(255,255,255,0.06) 0 25%, transparent 0 50%) 50% / 12px 12px">
-            <div class="absolute inset-3 rounded-[4px] ph-6 opacity-90"></div>
-          </div>
-        </div>
-        <div class="flex-1 min-w-0">
-          <div class="flex items-center gap-4 mb-3 mono text-[11px]">
-            <span class="flex items-center gap-2"><span class="w-5 h-5 rounded-full grid place-items-center text-[9px] font-extrabold" style="background:#7a9eb522;color:#7a9eb5">P</span><span class="text-ink">@pho_24</span></span>
-            <span class="text-mute2">·</span>
-            <span class="text-red text-[10px] tracking-label uppercase">/bgremove</span>
-            <span class="text-mute2">·</span>
-            <span class="text-mute">#design-room</span>
-            <span class="text-mute2">·</span>
-            <span class="text-mute">1g trước</span>
-          </div>
-          <div class="text-[13px] text-mute leading-[1.55] mb-3">
-            <span class="text-mute2 mono text-[10px] uppercase tracking-label mr-2">prompt</span>
-            <span class="italic text-mute2">— no prompt · bg remove</span>
-          </div>
-          <div class="flex items-center gap-3 mono text-[10px] tracking-label uppercase flex-wrap">
-            <span class="px-2 py-1 rounded-full bg-ink/[0.05] border border-line">model · ideogram/remove-bg</span>
-            <span class="text-mute2">latency · 4.2s</span>
-            <span class="text-mute2">size · 1024×1280</span>
-            <span class="text-gold">cost · $0.02</span>
-          </div>
-        </div>
-        <div class="flex flex-col gap-1.5 flex-shrink-0">
-          <button class="mono h-7 px-2.5 rounded-[6px] border border-line text-mute hover:text-ink text-[9px] tracking-label uppercase">↗ discord</button>
-          <button class="mono h-7 px-2.5 rounded-[6px] border border-line text-mute hover:text-ink text-[9px] tracking-label uppercase">↧ output</button>
-          <button class="mono h-7 px-2.5 rounded-[6px] border border-line text-mute hover:text-ink text-[9px] tracking-label uppercase">⤢ view full</button>
-        </div>
-      </div>
-    </article>
-
-    <!-- last entry -->
-    <article class="rounded-[14px] border border-line bg-panel">
-      <div class="p-5 flex gap-5">
-        <div class="flex items-center gap-3 flex-shrink-0">
-          <div class="w-[72px] h-[72px] rounded-[8px] grid place-items-center border border-line" style="background:#0a0807">
-            <span class="mono text-[9px] text-mute2 tracking-label uppercase">no input</span>
-          </div>
-          <span class="text-mute2 text-lg">→</span>
-          <div class="w-[72px] h-[72px] rounded-[8px] ph-7 border border-line"></div>
-        </div>
-        <div class="flex-1 min-w-0">
-          <div class="flex items-center gap-4 mb-3 mono text-[11px]">
-            <span class="flex items-center gap-2"><span class="w-5 h-5 rounded-full grid place-items-center text-[9px] font-extrabold" style="background:#E0454522;color:#E04545">T</span><span class="text-ink">@thanos_real</span></span>
-            <span class="text-mute2">·</span>
-            <span class="text-red text-[10px] tracking-label uppercase">/img</span>
-            <span class="text-mute2">·</span>
-            <span class="text-mute">#bot-spam</span>
-            <span class="text-mute2">·</span>
-            <span class="text-mute">2g trước</span>
-          </div>
-          <div class="text-[13px] text-mute leading-[1.55] mb-3">
-            <span class="text-mute2 mono text-[10px] uppercase tracking-label mr-2">prompt</span>
-            <span class="text-ink">"minimalist line drawing of a tea house, soft beige paper texture"</span>
-          </div>
-          <div class="flex items-center gap-3 mono text-[10px] tracking-label uppercase flex-wrap">
-            <span class="px-2 py-1 rounded-full bg-ink/[0.05] border border-line">model · nano-banana-pro</span>
-            <span class="text-mute2">latency · 18.7s</span>
-            <span class="text-mute2">size · 1024×1024</span>
-            <span class="text-gold">cost · $0.04</span>
-          </div>
-        </div>
-        <div class="flex flex-col gap-1.5 flex-shrink-0">
-          <button class="mono h-7 px-2.5 rounded-[6px] border border-line text-mute hover:text-ink text-[9px] tracking-label uppercase">↗ discord</button>
-          <button class="mono h-7 px-2.5 rounded-[6px] border border-line text-mute hover:text-ink text-[9px] tracking-label uppercase">↧ output</button>
-          <button class="mono h-7 px-2.5 rounded-[6px] border border-line text-mute hover:text-ink text-[9px] tracking-label uppercase">⤢ view full</button>
-        </div>
-      </div>
-    </article>
-
-  </div>
-
-  <!-- pagination -->
-  <div class="flex items-center justify-between mt-6 mb-10">
-    <div class="mono text-[10px] tracking-label uppercase text-mute">showing 1–6 · 145 entries</div>
-    <div class="flex items-center gap-1.5 mono text-[10px] tracking-label uppercase">
-      <button class="h-8 px-3 rounded-[8px] border border-line text-mute2">← prev</button>
-      <button class="h-8 w-8 rounded-[8px] text-ink" style="background:#E0454514;border:1px solid #E0454555;color:#E04545">1</button>
-      <button class="h-8 w-8 rounded-[8px] border border-line text-mute hover:text-ink">2</button>
-      <button class="h-8 w-8 rounded-[8px] border border-line text-mute hover:text-ink">3</button>
-      <span class="text-mute2">…</span>
-      <button class="h-8 w-8 rounded-[8px] border border-line text-mute hover:text-ink">24</button>
-      <button class="h-8 px-3 rounded-[8px] border border-line text-ink">next →</button>
-    </div>
+  <!-- load-more -->
+  <div class="flex items-center justify-center mt-6 mb-10">
+    <button id="btn-more" class="mono h-9 px-5 rounded-[10px] border border-line text-mute hover:text-ink text-[10px] tracking-label uppercase hidden">load more ↓</button>
+    <div id="empty-state" class="hidden mono text-[11px] text-mute2">— hết —</div>
   </div>
 
   <!-- footer -->
   <footer class="grid grid-cols-3 items-center mono text-[10px] tracking-kicker text-mute pt-5 border-t border-line">
-    <span class="text-left">KATAS · V0.3.1 · UPTIME 7D 04H</span>
+    <span class="text-left">KATAS · V0.3.1</span>
     <span class="text-center flex items-center gap-2 justify-center"><span class="w-1.5 h-1.5 rounded-full bg-green dot-pulse"></span>STATUS · OK</span>
     <span class="text-right">© SE77N</span>
   </footer>
 </main>
 
+<!-- toast -->
+<div id="toast" class="fixed top-20 right-6 z-[110] pointer-events-none"></div>
+
+<script>
+const ACCENTS = ['#E04545','#D4A858','#5BA868','#7a9eb5','#9bb4ff','#c46868','#c9a653'];
+function escapeHtml(s){return String(s ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function getGuildId(){ return new URL(window.location.href).searchParams.get('guild'); }
+function getInitialTab(){ return new URL(window.location.href).searchParams.get('tab') || 'chat'; }
+function avatarSeed(id){ const s=[...String(id||'')].reduce((a,c)=>a+c.charCodeAt(0),0); return ACCENTS[s%ACCENTS.length]; }
+function relTime(d){
+  const t = new Date(d).getTime(); const s = Math.max(1, Math.round((Date.now() - t) / 1000));
+  if (s < 60) return s + 's trước';
+  if (s < 3600) return Math.floor(s/60) + 'p trước';
+  if (s < 86400) return Math.floor(s/3600) + 'g trước';
+  return Math.floor(s/86400) + 'd trước';
+}
+function showToast(msg, kind='ok'){
+  const colors={ok:'#5BA868',err:'#c46868',info:'#7a9eb5'}; const c=colors[kind]||colors.ok;
+  const el=document.createElement('div');
+  el.className='mono text-[12px] px-4 py-2.5 rounded-[10px] mb-2 pointer-events-auto';
+  el.style.cssText=`background:${c}18;border:1px solid ${c}55;color:${c};box-shadow:0 16px 40px -16px ${c}99`;
+  el.textContent=msg; document.getElementById('toast').appendChild(el);
+  setTimeout(()=>{el.style.opacity='0';el.style.transition='opacity 200ms';setTimeout(()=>el.remove(),220);},3000);
+}
+
+const TAB_LABELS = {
+  chat: { vi: 'chat', tagline: 'TIN NHẮN · TTL 24H' },
+  image: { vi: 'image', tagline: 'ẢNH · VĨNH VIỄN' },
+  video: { vi: 'video', tagline: 'VIDEO · VĨNH VIỄN' },
+  command: { vi: 'commands', tagline: 'COMMAND HISTORY · TẤT CẢ' },
+};
+
+let CURRENT_TAB = getInitialTab();
+let CURRENT_CURSOR = null;
+let CURRENT_GUILD_DATA = null;
+
+function renderTabsActive(){
+  for (const btn of document.querySelectorAll('.kata-tab')){
+    const active = btn.dataset.tab === CURRENT_TAB;
+    btn.classList.toggle('text-red', active);
+    btn.classList.toggle('font-bold', active);
+    btn.classList.toggle('text-mute', !active);
+    let underline = btn.querySelector('.tab-underline');
+    if (active && !underline){
+      underline = document.createElement('span');
+      underline.className = 'tab-underline absolute left-2 right-2 bottom-[-1px] h-[2px] bg-red';
+      btn.appendChild(underline);
+    } else if (!active && underline){
+      underline.remove();
+    }
+  }
+  for (const a of document.querySelectorAll('aside [data-tab]')){
+    const active = a.dataset.tab === CURRENT_TAB;
+    a.classList.toggle('text-red', active);
+    a.classList.toggle('text-mute', !active);
+    a.style.background = active ? '#E0454510' : 'transparent';
+    a.style.borderLeft = active ? '2px solid #E04545' : 'none';
+  }
+  document.getElementById('page-tab-label').textContent = ' · ' + TAB_LABELS[CURRENT_TAB].vi;
+  document.getElementById('page-tag').textContent = `TAB · LOGS / ${TAB_LABELS[CURRENT_TAB].vi.toUpperCase()} · ${TAB_LABELS[CURRENT_TAB].tagline}`;
+  document.getElementById('bc-tab').textContent = TAB_LABELS[CURRENT_TAB].vi;
+  document.title = `logs · ${TAB_LABELS[CURRENT_TAB].vi} · katas`;
+}
+
+function rowChat(e){
+  const accent = avatarSeed(e.userId); const short = e.userId.slice(-4);
+  const isAssistant = e.role === 'assistant';
+  return `<article class="rounded-[14px] border border-line bg-panel p-4">
+    <div class="flex items-center gap-3 mb-2 mono text-[11px]">
+      <span class="flex items-center gap-2"><span class="w-5 h-5 rounded-full grid place-items-center text-[9px] font-extrabold" style="background:${accent}22;color:${accent}">${short.slice(0,1)}</span><span class="text-mute">${short}</span></span>
+      <span class="text-mute2">·</span>
+      <span class="text-${isAssistant?'gold':'red'} text-[10px] tracking-label uppercase">${isAssistant?'bot':'user'}</span>
+      <span class="text-mute2">·</span>
+      <span class="text-mute">#${e.channelId.slice(-6)}</span>
+      <span class="text-mute2">·</span>
+      <span class="text-mute">${relTime(e.createdAt)}</span>
+      ${e.modelUsed ? `<span class="text-mute2">·</span><span class="mono text-[9px] tracking-label uppercase text-mute2">${escapeHtml(e.modelUsed)}</span>` : ''}
+    </div>
+    <div class="text-[13px] text-ink leading-[1.55] whitespace-pre-wrap break-words">${escapeHtml(e.content)}${e.contentTruncated?'<span class="text-mute2"> …</span>':''}</div>
+    <div class="flex items-center gap-3 mono text-[10px] tracking-label uppercase mt-3 flex-wrap text-mute2">
+      ${e.tokensIn != null ? `<span>in · ${e.tokensIn}</span>` : ''}
+      ${e.tokensOut != null ? `<span>out · ${e.tokensOut}</span>` : ''}
+      ${e.costUSD != null ? `<span class="text-gold">cost · $${e.costUSD.toFixed(4)}</span>` : ''}
+    </div>
+  </article>`;
+}
+
+function rowImage(e){
+  const accent = avatarSeed(e.userId); const short = e.userId.slice(-4);
+  const inputUrl = e.inputImageUrl;
+  const outputUrl = e.outputUrl;
+  const fallback = Array.isArray(e.fallbackChain) ? e.fallbackChain.find(f => f.status === 'fallback') : null;
+  return `<article class="rounded-[14px] border border-line bg-panel">
+    <div class="p-5 flex gap-5">
+      <div class="flex items-center gap-3 flex-shrink-0">
+        ${inputUrl
+          ? `<a href="${escapeHtml(inputUrl)}" target="_blank" rel="noopener"><img src="${escapeHtml(inputUrl)}" loading="lazy" alt="input" class="w-[72px] h-[72px] rounded-[8px] object-cover border border-line" /></a>`
+          : `<div class="w-[72px] h-[72px] rounded-[8px] grid place-items-center border border-line" style="background:#0a0807"><span class="mono text-[9px] text-mute2 tracking-label uppercase">no input</span></div>`
+        }
+        <span class="text-mute2 text-lg">→</span>
+        ${outputUrl
+          ? `<a href="${escapeHtml(outputUrl)}" target="_blank" rel="noopener"><img src="${escapeHtml(outputUrl)}" loading="lazy" alt="output" class="w-[72px] h-[72px] rounded-[8px] object-cover border border-line" /></a>`
+          : `<div class="w-[72px] h-[72px] rounded-[8px] border border-line" style="background:#0a0807"></div>`
+        }
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-4 mb-3 mono text-[11px] flex-wrap">
+          <span class="flex items-center gap-2"><span class="w-5 h-5 rounded-full grid place-items-center text-[9px] font-extrabold" style="background:${accent}22;color:${accent}">${short.slice(0,1)}</span><span class="text-mute">${short}</span></span>
+          <span class="text-mute2">·</span>
+          <span class="text-red text-[10px] tracking-label uppercase">${escapeHtml(e.command)}</span>
+          <span class="text-mute2">·</span>
+          <span class="text-mute">#${e.channelId.slice(-6)}</span>
+          <span class="text-mute2">·</span>
+          <span class="text-mute">${relTime(e.createdAt)}</span>
+          ${fallback ? `<span class="mono text-[9px] tracking-label uppercase px-2 py-0.5 rounded-full" style="background:#c9a65318;border:1px solid #c9a65340;color:#c9a653">FALLBACK · ${escapeHtml(fallback.model.split('/').pop())}</span>` : ''}
+        </div>
+        <div class="text-[13px] text-mute leading-[1.55] mb-3">
+          ${e.prompt ? `<span class="text-mute2 mono text-[10px] uppercase tracking-label mr-2">prompt</span><span class="text-ink">${escapeHtml(e.prompt)}</span>` : `<span class="italic text-mute2">— no prompt</span>`}
+        </div>
+        <div class="flex items-center gap-3 mono text-[10px] tracking-label uppercase flex-wrap">
+          ${e.modelUsed ? `<span class="px-2 py-1 rounded-full bg-ink/[0.05] border border-line">model · ${escapeHtml(e.modelUsed.split('/').slice(-2).join('/'))}</span>` : ''}
+          ${e.costUSD != null ? `<span class="text-gold">cost · $${e.costUSD.toFixed(4)}</span>` : ''}
+        </div>
+      </div>
+      ${outputUrl ? `<div class="flex flex-col gap-1.5 flex-shrink-0"><a href="${escapeHtml(outputUrl)}" target="_blank" rel="noopener" class="mono h-7 px-2.5 rounded-[6px] border border-line text-mute hover:text-ink text-[9px] tracking-label uppercase grid place-items-center">↗ open</a></div>` : ''}
+    </div>
+  </article>`;
+}
+
+function rowVideo(e){
+  const accent = avatarSeed(e.userId); const short = e.userId.slice(-4);
+  const outputUrl = e.outputUrl;
+  return `<article class="rounded-[14px] border border-line bg-panel">
+    <div class="p-5 flex gap-5">
+      <div class="flex items-center gap-3 flex-shrink-0">
+        ${outputUrl
+          ? `<a href="${escapeHtml(outputUrl)}" target="_blank" rel="noopener" class="block w-[120px] h-[72px] rounded-[8px] border border-line overflow-hidden grid place-items-center" style="background:#0a0807"><span class="mono text-[10px] text-red tracking-label uppercase">▸ open mp4</span></a>`
+          : `<div class="w-[120px] h-[72px] rounded-[8px] border border-line grid place-items-center" style="background:#0a0807"><span class="mono text-[9px] text-mute2 tracking-label uppercase">no output</span></div>`
+        }
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-4 mb-3 mono text-[11px] flex-wrap">
+          <span class="flex items-center gap-2"><span class="w-5 h-5 rounded-full grid place-items-center text-[9px] font-extrabold" style="background:${accent}22;color:${accent}">${short.slice(0,1)}</span><span class="text-mute">${short}</span></span>
+          <span class="text-mute2">·</span>
+          <span class="text-red text-[10px] tracking-label uppercase">${escapeHtml(e.command)}</span>
+          <span class="text-mute2">·</span>
+          <span class="text-mute">#${e.channelId.slice(-6)}</span>
+          <span class="text-mute2">·</span>
+          <span class="text-mute">${relTime(e.createdAt)}</span>
+        </div>
+        <div class="text-[13px] text-mute leading-[1.55] mb-3">
+          ${e.prompt ? `<span class="text-mute2 mono text-[10px] uppercase tracking-label mr-2">prompt</span><span class="text-ink">${escapeHtml(e.prompt)}</span>` : `<span class="italic text-mute2">— no prompt</span>`}
+        </div>
+        <div class="flex items-center gap-3 mono text-[10px] tracking-label uppercase flex-wrap">
+          ${e.modelUsed ? `<span class="px-2 py-1 rounded-full bg-ink/[0.05] border border-line">model · ${escapeHtml(e.modelUsed.split('/').slice(-2).join('/'))}</span>` : ''}
+          ${e.durationSec != null ? `<span class="text-mute2">duration · ${e.durationSec}s</span>` : ''}
+          ${e.costUSD != null ? `<span class="text-gold">cost · $${e.costUSD.toFixed(4)}</span>` : ''}
+        </div>
+      </div>
+    </div>
+  </article>`;
+}
+
+function rowCommand(e){
+  const accent = avatarSeed(e.userId); const short = e.userId.slice(-4);
+  const failed = e.success === false;
+  const wrapStyle = failed ? 'background:#c4686808;border-color:#c4686844' : '';
+  return `<article class="rounded-[14px] border bg-panel" style="border-color:rgba(255,255,255,0.08);${wrapStyle}">
+    <div class="p-4">
+      <div class="flex items-center gap-4 mb-2 mono text-[11px] flex-wrap">
+        <span class="flex items-center gap-2"><span class="w-5 h-5 rounded-full grid place-items-center text-[9px] font-extrabold" style="background:${accent}22;color:${accent}">${short.slice(0,1)}</span><span class="text-mute">${short}</span></span>
+        <span class="text-mute2">·</span>
+        <span class="text-${failed?'err':'red'} text-[10px] tracking-label uppercase">${escapeHtml(e.command)}${failed?' · fail':''}</span>
+        <span class="text-mute2">·</span>
+        <span class="text-mute">#${e.channelId.slice(-6)}</span>
+        <span class="text-mute2">·</span>
+        <span class="text-mute">${relTime(e.createdAt)}</span>
+        ${failed ? `<span class="mono text-[9px] tracking-label uppercase px-2 py-0.5 rounded-full" style="background:#c4686818;border:1px solid #c4686844;color:#c46868">FAIL</span>` : ''}
+      </div>
+      <div class="text-[13px] text-mute leading-[1.55] mb-2">
+        <span class="text-mute2 mono text-[10px] uppercase tracking-label mr-2">input</span>
+        <span class="text-ink">${escapeHtml((e.input||'').slice(0, 400))}</span>
+      </div>
+      ${failed && e.errorMessage ? `<div class="text-[12px] mono mt-1" style="color:#c46868">${escapeHtml(e.errorMessage)}</div>` : ''}
+      <div class="flex items-center gap-3 mono text-[10px] tracking-label uppercase mt-2 flex-wrap text-mute2">
+        ${e.modelUsed ? `<span>model · ${escapeHtml(e.modelUsed)}</span>` : ''}
+        ${e.latencyMs != null ? `<span>latency · ${(e.latencyMs/1000).toFixed(1)}s</span>` : ''}
+        ${e.costUSD != null ? `<span class="text-gold">cost · $${e.costUSD.toFixed(4)}</span>` : ''}
+      </div>
+    </div>
+  </article>`;
+}
+
+const ROW_RENDERERS = { chat: rowChat, image: rowImage, video: rowVideo, command: rowCommand };
+
+async function loadGuildBootstrap(){
+  const guildId = getGuildId();
+  if (!guildId){ window.location.href = 'servers.html'; return false; }
+
+  // user chip
+  fetch('/api/auth/me', { credentials:'same-origin' }).then(r=>r.json()).then(({user}) => {
+    if (!user) return;
+    const chip = document.getElementById('kata-user-chip');
+    const initial = (user.displayName || user.username || '?').slice(0,1).toUpperCase();
+    chip.innerHTML = (user.avatarUrl
+      ? `<img src="${user.avatarUrl}" alt="" style="width:26px;height:26px;border-radius:9999px;object-fit:cover;border:1px solid rgba(255,255,255,0.08)" />`
+      : `<span class="w-[26px] h-[26px] rounded-full grid place-items-center text-[11px] font-extrabold" style="background:#E0454522;color:#E04545">${initial}</span>`)
+      + `<span class="max-w-[96px] truncate">${escapeHtml(user.displayName || user.username || '—')}</span>`
+      + `<span class="text-mute text-[9px]">▾</span>`;
+  }).catch(()=>{});
+
+  document.getElementById('nav-overview').href = `overview.html?guild=${encodeURIComponent(guildId)}`;
+  document.getElementById('nav-cost').href = `cost.html?guild=${encodeURIComponent(guildId)}`;
+  document.getElementById('bc-guild').href = `overview.html?guild=${encodeURIComponent(guildId)}`;
+
+  // Pull guild meta from /api/kata/server/:id (also serves as auth probe)
+  let r;
+  try {
+    r = await fetch(`/api/kata/server/${encodeURIComponent(guildId)}`, { credentials:'same-origin' });
+  } catch {
+    showToast('Lỗi mạng', 'err'); return false;
+  }
+  if (r.status === 401 || r.status === 403){
+    document.querySelector('main').innerHTML = `
+      <div class="rounded-[14px] border border-line bg-panel p-10 text-center max-w-xl mx-auto mt-20">
+        <div class="text-[16px] font-medium text-ink mb-3">Cần đăng nhập với Discord (admin của server).</div>
+        <a href="/api/auth/discord/start" class="mono inline-flex items-center gap-2 h-10 px-5 rounded-[10px] uppercase tracking-label text-[11px] font-bold text-bg mt-3" style="background:#5865F2">đăng nhập với Discord</a>
+        <a href="servers.html" class="mono inline-flex items-center gap-2 h-10 px-5 rounded-[10px] uppercase tracking-label text-[11px] text-mute hover:text-ink mt-3 ml-2 border border-line">← danh sách server</a>
+      </div>`;
+    return false;
+  }
+  if (r.status === 404){
+    document.querySelector('main').innerHTML = `<div class="text-mute mt-20 text-center">Bot không có trong server này.</div>`;
+    return false;
+  }
+  if (!r.ok){ showToast(`Lỗi tải (HTTP ${r.status})`, 'err'); return false; }
+
+  const data = await r.json();
+  CURRENT_GUILD_DATA = data.guild;
+  document.getElementById('kata-guild-name').textContent = data.guild.name;
+  document.getElementById('bc-guild').textContent = data.guild.name;
+  document.getElementById('kata-guild-meta').textContent = `id · ${data.guild.id}`;
+  const guildIcon = document.getElementById('kata-guild-icon');
+  if (data.guild.iconUrl){
+    guildIcon.innerHTML = `<img src="${data.guild.iconUrl}" alt="" style="width:48px;height:48px;border-radius:10px;object-fit:cover" />`;
+    guildIcon.style.background = 'transparent';
+  } else {
+    const initials = data.guild.name.replace(/[^A-Za-z0-9À-ỹ]/g,'').slice(0,2).toUpperCase() || '??';
+    guildIcon.textContent = initials;
+    const accent = avatarSeed(data.guild.id);
+    guildIcon.style.background = `linear-gradient(135deg,${accent},${accent}55)`;
+  }
+  return true;
+}
+
+async function loadLogs({ append = false } = {}){
+  const guildId = getGuildId();
+  if (!append){
+    document.getElementById('log-list').innerHTML = '';
+    CURRENT_CURSOR = null;
+    document.getElementById('empty-state').classList.add('hidden');
+  }
+  const params = new URLSearchParams({ type: CURRENT_TAB, limit: '20' });
+  if (CURRENT_CURSOR) params.set('cursor', CURRENT_CURSOR);
+  const userId = document.getElementById('f-userId').value.trim();
+  const channelId = document.getElementById('f-channelId').value.trim();
+  const command = document.getElementById('f-command').value.trim();
+  if (userId) params.set('userId', userId);
+  if (channelId) params.set('channelId', channelId);
+  if (command) params.set('command', command);
+
+  const btnMore = document.getElementById('btn-more');
+  btnMore.classList.add('hidden');
+  if (!append){
+    document.getElementById('log-list').innerHTML = `<div class="mono text-[11px] text-mute2 py-10 text-center">Đang tải…</div>`;
+  }
+
+  let r;
+  try { r = await fetch(`/api/kata/server/${encodeURIComponent(guildId)}/logs?${params}`, { credentials:'same-origin' }); }
+  catch { showToast('Lỗi mạng', 'err'); return; }
+  if (!r.ok){
+    document.getElementById('log-list').innerHTML = `<div class="text-err mono text-[12px] py-10 text-center">Lỗi tải (HTTP ${r.status})</div>`;
+    return;
+  }
+  const data = await r.json();
+  if (!append){
+    document.getElementById('log-list').innerHTML = '';
+    if (data.total != null){
+      document.getElementById('page-counts').textContent = `${data.total.toLocaleString('vi-VN')} entries`;
+    } else {
+      document.getElementById('page-counts').textContent = '';
+    }
+  }
+  if (data.items.length === 0 && !append){
+    document.getElementById('log-list').innerHTML = `<div class="rounded-[14px] border border-line bg-panel/40 p-10 text-center"><div class="mono text-[11px] text-mute">Chưa có entry nào.</div></div>`;
+  } else {
+    const renderer = ROW_RENDERERS[CURRENT_TAB];
+    document.getElementById('log-list').insertAdjacentHTML('beforeend', data.items.map(renderer).join(''));
+  }
+
+  CURRENT_CURSOR = data.nextCursor;
+  if (CURRENT_CURSOR){
+    btnMore.classList.remove('hidden');
+  } else {
+    document.getElementById('empty-state').classList.remove('hidden');
+  }
+}
+
+function switchTab(tab){
+  if (!TAB_LABELS[tab] || tab === CURRENT_TAB) return;
+  CURRENT_TAB = tab;
+  const url = new URL(window.location.href);
+  url.searchParams.set('tab', tab);
+  window.history.replaceState(null, '', url);
+  renderTabsActive();
+  loadLogs();
+}
+
+document.addEventListener('click', (e) => {
+  const tabBtn = e.target.closest('[data-tab]');
+  if (tabBtn && tabBtn.dataset.tab){ switchTab(tabBtn.dataset.tab); return; }
+});
+document.getElementById('btn-more').addEventListener('click', () => loadLogs({ append: true }));
+document.getElementById('btn-refresh').addEventListener('click', () => loadLogs());
+document.getElementById('btn-apply').addEventListener('click', () => loadLogs());
+document.getElementById('btn-clear').addEventListener('click', () => {
+  document.getElementById('f-userId').value = '';
+  document.getElementById('f-channelId').value = '';
+  document.getElementById('f-command').value = '';
+  loadLogs();
+});
+for (const id of ['f-userId','f-channelId','f-command']){
+  document.getElementById(id).addEventListener('keydown', (e) => { if (e.key === 'Enter') loadLogs(); });
+}
+
+(async () => {
+  renderTabsActive();
+  const ok = await loadGuildBootstrap();
+  if (ok) await loadLogs();
+})();
+</script>
+
 </body>
+
 </html>

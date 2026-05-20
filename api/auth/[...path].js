@@ -255,11 +255,15 @@ async function handleKata(req, res) {
 
   // /api/kata/server/:guildId  → GET overview + config
   // /api/kata/server/:guildId/config (PATCH) → write config + redis publish
-  const serverMatch = kataPath.match(/^server\/([0-9]+)(?:\/(config))?$/);
+  // /api/kata/server/:guildId/logs?type=… (GET) → paginated logs
+  const serverMatch = kataPath.match(/^server\/([0-9]+)(?:\/(config|logs))?$/);
   if (serverMatch) {
     const [, guildId, sub] = serverMatch;
     if (sub === 'config' && req.method === 'PATCH') {
       return handleKataServerConfigPatch(req, res, guildId);
+    }
+    if (sub === 'logs' && req.method === 'GET') {
+      return handleKataServerLogs(req, res, guildId);
     }
     if (!sub && req.method === 'GET') {
       return handleKataServerGet(req, res, guildId);
@@ -627,4 +631,111 @@ async function handleKataServerConfigPatch(req, res, guildId) {
 
   const fresh = await kataDb.collection('serverconfigs').findOne({ guildId });
   return res.status(200).json({ ok: true, config: fresh });
+}
+
+// ── GET /api/kata/server/:guildId/logs ──────────────────────────
+//
+// Query: ?type=chat|image|video|command  &cursor=<ISO date>  &limit=20
+// Sort: createdAt desc. Cursor pagination (Date-based) — cheaper than skip
+// once entries grow, and works with the existing { guildId, createdAt } index.
+
+const LOG_TYPES = {
+  chat: {
+    coll: 'chatlogs',
+    timeField: 'createdAt',
+    project: { _id: 0, channelId: 1, userId: 1, role: 1, content: 1, modelUsed: 1, tokensIn: 1, tokensOut: 1, costUSD: 1, attachments: 1, createdAt: 1 },
+  },
+  image: {
+    coll: 'imagegens',
+    timeField: 'createdAt',
+    project: { _id: 0, channelId: 1, userId: 1, command: 1, prompt: 1, inputImageUrl: 1, outputUrl: 1, modelUsed: 1, fallbackChain: 1, costUSD: 1, createdAt: 1 },
+  },
+  video: {
+    coll: 'videogens',
+    timeField: 'createdAt',
+    project: { _id: 0, channelId: 1, userId: 1, command: 1, prompt: 1, inputUrl: 1, outputUrl: 1, modelUsed: 1, costUSD: 1, durationSec: 1, createdAt: 1 },
+  },
+  command: {
+    coll: 'commandhistories',
+    timeField: 'createdAt',
+    project: { _id: 0, channelId: 1, userId: 1, command: 1, input: 1, success: 1, errorMessage: 1, modelUsed: 1, costUSD: 1, latencyMs: 1, createdAt: 1 },
+  },
+};
+
+const MAX_LOG_LIMIT = 50;
+const DEFAULT_LOG_LIMIT = 20;
+
+async function handleKataServerLogs(req, res, guildId) {
+  const auth = await authorizeGuildAccess(req, guildId);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+
+  const type = String(req.query?.type || 'chat').toLowerCase();
+  const spec = LOG_TYPES[type];
+  if (!spec) return res.status(400).json({ error: 'invalid_type', allowed: Object.keys(LOG_TYPES) });
+
+  const limit = Math.min(MAX_LOG_LIMIT, Math.max(1, parseInt(req.query?.limit, 10) || DEFAULT_LOG_LIMIT));
+  const cursorRaw = req.query?.cursor;
+  const filter = { guildId };
+  if (cursorRaw) {
+    const cursorDate = new Date(String(cursorRaw));
+    if (!isNaN(cursorDate.getTime())) {
+      filter[spec.timeField] = { $lt: cursorDate };
+    }
+  }
+
+  // Optional filters
+  if (req.query?.userId && /^\d{15,21}$/.test(req.query.userId)) {
+    filter.userId = req.query.userId;
+  }
+  if (req.query?.channelId && /^\d{15,21}$/.test(req.query.channelId)) {
+    filter.channelId = req.query.channelId;
+  }
+  if (req.query?.command && /^\/?[a-z0-9_-]{1,32}$/i.test(req.query.command)) {
+    filter.command = req.query.command.startsWith('/') ? req.query.command : `/${req.query.command}`;
+  }
+  // Chat is special — show user-side only by default. Bot replies double the
+  // log volume without adding info to a glance.
+  if (type === 'chat' && req.query?.role !== 'all') {
+    filter.role = 'user';
+  }
+
+  const { kataDb } = auth;
+  const items = await kataDb
+    .collection(spec.coll)
+    .find(filter, { projection: spec.project })
+    .sort({ [spec.timeField]: -1 })
+    .limit(limit + 1)
+    .toArray();
+
+  const hasMore = items.length > limit;
+  const trimmed = hasMore ? items.slice(0, limit) : items;
+  const nextCursor = hasMore ? trimmed[trimmed.length - 1][spec.timeField].toISOString() : null;
+
+  // Total count is expensive on large collections — only return when no cursor
+  // (first page) so the UI can show "X total" once.
+  let total = null;
+  if (!cursorRaw) {
+    try {
+      total = await kataDb.collection(spec.coll).countDocuments({ guildId, ...(filter.role ? { role: filter.role } : {}) });
+    } catch {
+      total = null;
+    }
+  }
+
+  // Trim user-visible content for chat (could be huge). Other types are
+  // already structured with short prompts.
+  const sanitized = trimmed.map((row) => {
+    if (type === 'chat' && typeof row.content === 'string' && row.content.length > 600) {
+      return { ...row, content: row.content.slice(0, 600), contentTruncated: true };
+    }
+    return row;
+  });
+
+  return res.status(200).json({
+    type,
+    items: sanitized,
+    nextCursor,
+    total,
+    limit,
+  });
 }
