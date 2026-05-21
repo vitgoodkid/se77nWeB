@@ -84,11 +84,30 @@ export async function falSubmitAndPoll(model, input, { maxWaitMs = 55_000, pollM
 }
 
 // ── Common output extractors for fal models ────────────────────
+// fal queue sometimes wraps output in { data: {...} } and sometimes returns
+// it flat. Some models also nest under output/result. Check every shape we've
+// seen so a schema bump on fal's side doesn't silently break the UI.
 export function pickImageUrl(result) {
-  return result?.images?.[0]?.url || result?.image?.url || result?.url || null;
+  if (!result) return null;
+  const d = result.data || result.output || result.result || result;
+  return d?.images?.[0]?.url
+    || d?.image?.url
+    || d?.url
+    || result?.images?.[0]?.url
+    || result?.image?.url
+    || result?.url
+    || null;
 }
 export function pickVideoUrl(result) {
-  return result?.video?.url || result?.videos?.[0]?.url || result?.url || null;
+  if (!result) return null;
+  const d = result.data || result.output || result.result || result;
+  return d?.video?.url
+    || d?.videos?.[0]?.url
+    || d?.url
+    || result?.video?.url
+    || result?.videos?.[0]?.url
+    || result?.url
+    || null;
 }
 
 // ── Strip code fences from JSON returned by chat models ────────
