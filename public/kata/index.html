@@ -216,7 +216,7 @@
             </div>
             <div class="t-card-title lowercase text-ink">server overview</div>
             <div class="t-card-desc mt-1.5 flex-1">Tổng quan hoạt động từng server.</div>
-            <div class="mt-3 mono t-meta uppercase tracking-label">12.4k msg · 30d</div>
+            <div id="tile-overview-meta" class="mt-3 mono t-meta uppercase tracking-label">— msg · 30d</div>
           </a>
 
           <a href="logs-image.html" class="tile group">
@@ -226,7 +226,7 @@
             </div>
             <div class="t-card-title lowercase text-ink">logs · image</div>
             <div class="t-card-desc mt-1.5 flex-1">Lịch sử ảnh đã tạo qua bot.</div>
-            <div class="mt-3 mono t-meta uppercase tracking-label">163 img · 30d</div>
+            <div id="tile-logs-meta" class="mt-3 mono t-meta uppercase tracking-label">— img · 30d</div>
           </a>
 
           <a href="cost.html" class="tile group">
@@ -236,7 +236,7 @@
             </div>
             <div class="t-card-title lowercase text-ink">cost</div>
             <div class="t-card-desc mt-1.5 flex-1">Chi phí api token theo tháng.</div>
-            <div class="mt-3 mono text-[11px] tracking-label uppercase text-gold opacity-90">$18.40 · 30d</div>
+            <div id="tile-cost-meta" class="mt-3 mono text-[11px] tracking-label uppercase text-gold opacity-90">— · 30d</div>
           </a>
         </div>
       </div>
@@ -334,23 +334,23 @@
         <div class="grid grid-cols-2 md:grid-cols-4 gap-x-5 gap-y-5">
           <div>
             <div class="mono t-meta uppercase tracking-label">servers</div>
-            <div class="mono text-[32px] font-bold mt-1 tracking-tight leading-none">4</div>
-            <div class="mono text-[10px] text-green tracking-label uppercase mt-1.5 opacity-80">▲ +1 tuần này</div>
+            <div id="stat-servers-value" class="mono text-[32px] font-bold mt-1 tracking-tight leading-none">—</div>
+            <div id="stat-servers-delta" class="mono text-[10px] text-mute tracking-label uppercase mt-1.5 opacity-80">—</div>
           </div>
           <div>
             <div class="mono t-meta uppercase tracking-label">tin nhắn · 30d</div>
-            <div class="mono text-[32px] font-bold mt-1 tracking-tight leading-none">12.4<span class="text-mute text-[22px]">k</span></div>
-            <div class="mono text-[10px] text-green tracking-label uppercase mt-1.5 opacity-80">▲ +18% vs 30d</div>
+            <div id="stat-msgs-value" class="mono text-[32px] font-bold mt-1 tracking-tight leading-none">—</div>
+            <div id="stat-msgs-delta" class="mono text-[10px] text-mute tracking-label uppercase mt-1.5 opacity-80">—</div>
           </div>
           <div>
             <div class="mono t-meta uppercase tracking-label">media gen · 30d</div>
-            <div class="mono text-[32px] font-bold mt-1 tracking-tight leading-none">248</div>
-            <div class="mono text-[10px] text-mute tracking-label uppercase mt-1.5">163 img · 85 vid</div>
+            <div id="stat-media-value" class="mono text-[32px] font-bold mt-1 tracking-tight leading-none">—</div>
+            <div id="stat-media-delta" class="mono text-[10px] text-mute tracking-label uppercase mt-1.5">—</div>
           </div>
           <div>
             <div class="mono t-meta uppercase tracking-label">cost · 30d</div>
-            <div class="mono text-[32px] font-bold mt-1 tracking-tight leading-none text-gold">$18.40</div>
-            <div class="mono text-[10px] text-warn tracking-label uppercase mt-1.5 opacity-80">▲ +15% vs T4</div>
+            <div id="stat-cost-value" class="mono text-[32px] font-bold mt-1 tracking-tight leading-none text-gold">—</div>
+            <div id="stat-cost-delta" class="mono text-[10px] text-mute tracking-label uppercase mt-1.5 opacity-80">—</div>
           </div>
         </div>
 
@@ -358,17 +358,17 @@
         <div class="mt-7 pt-5 border-t border-line">
           <div class="mono t-meta uppercase tracking-label mb-2 flex items-baseline justify-between">
             <span>msgs · last 7d</span>
-            <span>peak · 2.1k thứ 5</span>
+            <span id="spark-peak">—</span>
           </div>
-          <svg viewBox="0 0 200 36" preserveAspectRatio="none" class="w-full h-9">
+          <svg id="spark-svg" viewBox="0 0 200 36" preserveAspectRatio="none" class="w-full h-9">
             <defs>
               <linearGradient id="hg" x1="0" x2="0" y1="0" y2="1">
                 <stop offset="0%" stop-color="#E04545" stop-opacity="0.4"/>
                 <stop offset="100%" stop-color="#E04545" stop-opacity="0.02"/>
               </linearGradient>
             </defs>
-            <path d="M0 28 L28 24 L57 18 L86 22 L114 10 L143 14 L172 6 L200 12 L200 36 L0 36 Z" fill="url(#hg)"/>
-            <path d="M0 28 L28 24 L57 18 L86 22 L114 10 L143 14 L172 6 L200 12" fill="none" stroke="#E04545" stroke-width="1.4" stroke-linejoin="round"/>
+            <path id="spark-fill" d="M0 36 L200 36 Z" fill="url(#hg)"/>
+            <path id="spark-line" d="M0 36 L200 36" fill="none" stroke="#E04545" stroke-width="1.4" stroke-linejoin="round"/>
           </svg>
         </div>
       </div>
@@ -379,34 +379,11 @@
           <span class="dot-pulse w-1.5 h-1.5 rounded-full bg-red"></span>
           right now
         </div>
-        <div class="space-y-2 mono text-[11px]">
-          <div class="flex items-center gap-2.5">
-            <span class="text-red text-[9px] tracking-label uppercase w-[58px] flex-shrink-0">just now</span>
-            <span class="text-red text-[9px] tracking-label uppercase">/img</span>
-            <span class="text-mute truncate flex-1">"cyberpunk pho cart"</span>
-            <span class="text-mute2 text-[10px]">@an</span>
-          </div>
-          <div class="flex items-center gap-2.5">
-            <span class="text-mute2 text-[9px] tracking-label uppercase w-[58px] flex-shrink-0">2p</span>
-            <span class="text-green text-[9px] tracking-label uppercase">chat</span>
-            <span class="text-mute truncate flex-1">"ai có thể giúp viết unit test…"</span>
-            <span class="text-mute2 text-[10px]">@nha</span>
-          </div>
-          <div class="flex items-center gap-2.5">
-            <span class="text-mute2 text-[9px] tracking-label uppercase w-[58px] flex-shrink-0">5p</span>
-            <span class="text-gold text-[9px] tracking-label uppercase">/search</span>
-            <span class="text-mute truncate flex-1">"claude 4.7 review"</span>
-            <span class="text-mute2 text-[10px]">@kuro</span>
-          </div>
-          <div class="flex items-center gap-2.5">
-            <span class="text-mute2 text-[9px] tracking-label uppercase w-[58px] flex-shrink-0">12p</span>
-            <span class="text-red text-[9px] tracking-label uppercase">/t2v</span>
-            <span class="text-mute truncate flex-1">"neon tokyo night walk"</span>
-            <span class="text-mute2 text-[10px]">@nha</span>
-          </div>
+        <div id="activity-feed" class="space-y-2 mono text-[11px]">
+          <div class="text-mute2 mono text-[11px]">— đăng nhập để xem hoạt động</div>
         </div>
         <div class="mt-4 pt-3 border-t border-line/60 mono t-meta tracking-label uppercase text-center">
-          full stream · <span class="text-red">đăng nhập</span> để xem
+          full stream · <a href="me-history.html" class="text-red hover:underline">my history</a>
         </div>
       </div>
     </div>
@@ -431,17 +408,8 @@
   <!-- ticker (kept as-is, brand marquee before footer) -->
   <section class="relative z-10 my-6">
     <div class="overflow-hidden border-y border-line py-2.5" style="background:rgba(13,10,8,0.5); -webkit-mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent); mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent)">
-      <div class="inline-flex gap-7 whitespace-nowrap ticker pl-7 mono text-[11px] tracking-label font-bold">
-        <span class="text-red flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-red"></span>SERVER ALPHA · 84 MSG/24H</span>
-        <span class="text-gold flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-gold"></span>COST MTD · $12.40</span>
-        <span class="text-green flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-green"></span>NANO-BANANA-PRO · ONLINE</span>
-        <span class="text-red flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-red"></span>SEEDANCE V2 · 2 IN QUEUE</span>
-        <span class="text-mute flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-mute"></span>UPTIME · 7D 04H 12M</span>
-        <span class="text-red flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-red"></span>SERVER ALPHA · 84 MSG/24H</span>
-        <span class="text-gold flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-gold"></span>COST MTD · $12.40</span>
-        <span class="text-green flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-green"></span>NANO-BANANA-PRO · ONLINE</span>
-        <span class="text-red flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-red"></span>SEEDANCE V2 · 2 IN QUEUE</span>
-        <span class="text-mute flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-mute"></span>UPTIME · 7D 04H 12M</span>
+      <div id="kata-ticker" class="inline-flex gap-7 whitespace-nowrap ticker pl-7 mono text-[11px] tracking-label font-bold text-mute">
+        <span class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-mute"></span>KATAS · DASHBOARD LOADING…</span>
       </div>
     </div>
   </section>
@@ -490,17 +458,189 @@
     const k = await fetch('/api/kata/me', { credentials: 'same-origin' });
     if (!k.ok) return;
     const data = await k.json();
-    const tile = document.querySelector('a[href="servers.html"] .t-card-desc + div');
-    // The active-count line lives 2 nodes down from .t-card-title; keep selectors loose.
     const activeLine = document.querySelector('a[href="servers.html"] .mt-3.mono');
     if (activeLine && data.counts) {
       activeLine.innerHTML = `<span class="dot-pulse w-1 h-1 rounded-full bg-green inline-block"></span><span>${data.counts.managed} managed</span>`;
     }
+
+    paintLandingStats(data);
+    paintTicker(data);
   } catch (e) {
-    // Static landing — silent failure is fine, mocks remain visible.
+    // Static landing — silent failure is fine, placeholders remain visible.
     console.warn('kata landing wire failed', e);
   }
 })();
+
+function fmtNum(n) {
+  if (n == null) return '—';
+  if (n >= 10_000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+  return String(n);
+}
+function fmtNumK(n) {
+  if (n == null) return '—';
+  if (n >= 10_000) {
+    const k = (n / 1000).toFixed(1).replace(/\.0$/, '');
+    return `${k}<span class="text-mute text-[22px]">k</span>`;
+  }
+  return String(n);
+}
+function fmtUSD(n) { return n == null ? '—' : `$${Number(n).toFixed(2)}`; }
+function deltaArrow(n) {
+  if (n === 0 || n == null) return '<span class="text-mute">·</span>';
+  return n > 0 ? '<span class="text-green">▲</span>' : '<span class="text-red">▼</span>';
+}
+function deltaClass(n) {
+  if (n === 0 || n == null) return 'text-mute';
+  return n > 0 ? 'text-green' : 'text-red';
+}
+function fmtAgo(d) {
+  if (!d) return '—';
+  const diff = (Date.now() - new Date(d).getTime()) / 1000;
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return `${Math.floor(diff/60)}p`;
+  if (diff < 86400) return `${Math.floor(diff/3600)}h`;
+  return `${Math.floor(diff/86400)}d`;
+}
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+function commandColor(cmd) {
+  const c = String(cmd ?? '').toLowerCase();
+  if (c.startsWith('/img') || c.startsWith('/edit') || c.startsWith('/wfi2i') || c.startsWith('/bgremove')) return 'text-red';
+  if (c.startsWith('/t2v') || c.startsWith('/i2v') || c.startsWith('/video')) return 'text-red';
+  if (c.startsWith('/search')) return 'text-gold';
+  if (c.startsWith('/chat') || c === 'mention') return 'text-green';
+  return 'text-mute';
+}
+
+function paintLandingStats(data) {
+  const summary = data.summary;
+  const managedCount = data?.counts?.managed ?? 0;
+
+  // Tiles 03 / 04 / 05 (overview / logs / cost) below the hero grid
+  const tileOverview = document.getElementById('tile-overview-meta');
+  const tileLogs = document.getElementById('tile-logs-meta');
+  const tileCost = document.getElementById('tile-cost-meta');
+  if (tileOverview) tileOverview.textContent = `${fmtNum(summary?.msgs30d)} msg · 30d`;
+  if (tileLogs) {
+    const img = summary?.images30d ?? null;
+    const vid = summary?.videos30d ?? null;
+    tileLogs.textContent = `${fmtNum(img)} img · ${fmtNum(vid)} vid · 30d`;
+  }
+  if (tileCost) tileCost.textContent = `${fmtUSD(summary?.cost30d ?? 0)} · 30d`;
+
+  // Hero stats card
+  const sv = document.getElementById('stat-servers-value');
+  const sd = document.getElementById('stat-servers-delta');
+  if (sv) sv.textContent = String(managedCount);
+  if (sd) sd.innerHTML = data?.user?.isOwner
+    ? `<span class="text-info">owner · ${data.counts.botTotal} total</span>`
+    : `${managedCount} managed`;
+
+  const mv = document.getElementById('stat-msgs-value');
+  const md = document.getElementById('stat-msgs-delta');
+  if (mv) mv.innerHTML = fmtNumK(summary?.msgs30d);
+  if (md) md.innerHTML = summary
+    ? `${deltaArrow(summary.msgsDelta)} <span class="${deltaClass(summary.msgsDelta)}">${summary.msgsDelta > 0 ? '+' : ''}${summary.msgsDelta}% vs 30d trước</span>`
+    : '—';
+
+  const mediaV = document.getElementById('stat-media-value');
+  const mediaD = document.getElementById('stat-media-delta');
+  if (mediaV) mediaV.textContent = fmtNum((summary?.images30d ?? 0) + (summary?.videos30d ?? 0));
+  if (mediaD) mediaD.textContent = summary
+    ? `${summary.images30d ?? 0} img · ${summary.videos30d ?? 0} vid`
+    : '—';
+
+  const cv = document.getElementById('stat-cost-value');
+  const cd = document.getElementById('stat-cost-delta');
+  if (cv) cv.textContent = fmtUSD(summary?.cost30d ?? 0);
+  if (cd) cd.innerHTML = summary
+    ? `${deltaArrow(summary.costDelta)} <span class="${deltaClass(summary.costDelta)}">${summary.costDelta > 0 ? '+' : ''}${summary.costDelta}% vs T trước</span>`
+    : '—';
+
+  // Sparkline — 7d msg counts. SVG viewBox 200×36, stroke clamp top→6, bottom→32.
+  const spark = summary?.sparkline;
+  const peakEl = document.getElementById('spark-peak');
+  if (spark && spark.length > 0) {
+    const max = Math.max(1, ...spark.map((p) => p.msgs));
+    const w = 200, h = 36;
+    const step = w / Math.max(1, spark.length - 1);
+    const pts = spark.map((p, i) => {
+      const x = i * step;
+      const y = 32 - (p.msgs / max) * 26;
+      return `${x.toFixed(1)} ${y.toFixed(1)}`;
+    });
+    const linePath = 'M' + pts.join(' L');
+    const fillPath = `${linePath} L${w} ${h} L0 ${h} Z`;
+    const lineEl = document.getElementById('spark-line');
+    const fillEl = document.getElementById('spark-fill');
+    if (lineEl) lineEl.setAttribute('d', linePath);
+    if (fillEl) fillEl.setAttribute('d', fillPath);
+    if (peakEl && summary.peak?.date) {
+      const d = new Date(summary.peak.date + 'T00:00:00');
+      const dow = ['CN','T2','T3','T4','T5','T6','T7'][d.getDay()];
+      peakEl.textContent = summary.peak.msgs > 0
+        ? `peak · ${fmtNum(summary.peak.msgs)} ${dow}`
+        : 'peak · —';
+    }
+  } else if (peakEl) {
+    peakEl.textContent = '—';
+  }
+
+  // Activity feed
+  const feed = document.getElementById('activity-feed');
+  if (!feed) return;
+  const items = data.recentActivity ?? [];
+  if (items.length === 0) {
+    feed.innerHTML = '<div class="text-mute2 mono text-[11px]">— chưa có hoạt động trong các server bạn quản lý</div>';
+    return;
+  }
+  feed.innerHTML = items.map((r) => {
+    const cmd = r.command || '?';
+    const color = commandColor(cmd);
+    const who = r.userId ? `@${r.userId.slice(-4)}` : '';
+    const ago = fmtAgo(r.createdAt);
+    const isFirst = items.indexOf(r) === 0;
+    return `<div class="flex items-center gap-2.5">
+      <span class="${isFirst ? 'text-red' : 'text-mute2'} text-[9px] tracking-label uppercase w-[58px] flex-shrink-0">${escapeHtml(ago)}</span>
+      <span class="${color} text-[9px] tracking-label uppercase">${escapeHtml(cmd)}</span>
+      <span class="text-mute truncate flex-1">${escapeHtml(r.input ? '"' + r.input.slice(0, 80) + '"' : '')}</span>
+      <span class="text-mute2 text-[10px]">${escapeHtml(who)}</span>
+    </div>`;
+  }).join('');
+}
+
+function paintTicker(data) {
+  const ticker = document.getElementById('kata-ticker');
+  if (!ticker) return;
+  const segments = [];
+  const summary = data.summary;
+  const managedCount = data?.counts?.managed ?? 0;
+  if (managedCount > 0) {
+    segments.push({ color: 'red', label: `${managedCount} SERVER${managedCount === 1 ? '' : 'S'} · MANAGED` });
+  }
+  if (summary) {
+    if (summary.msgs30d > 0) {
+      segments.push({ color: 'green', label: `MSG · ${(summary.msgs30d).toLocaleString()} / 30D` });
+    }
+    segments.push({ color: 'gold', label: `COST · $${Number(summary.cost30d).toFixed(2)} / 30D` });
+    if ((summary.images30d ?? 0) + (summary.videos30d ?? 0) > 0) {
+      segments.push({ color: 'red', label: `MEDIA · ${summary.images30d} IMG · ${summary.videos30d} VID` });
+    }
+    if (summary.peak?.msgs > 0 && summary.peak?.date) {
+      const d = new Date(summary.peak.date + 'T00:00:00');
+      const dow = ['CN','T2','T3','T4','T5','T6','T7'][d.getDay()];
+      segments.push({ color: 'mute', label: `PEAK · ${summary.peak.msgs} MSG ${dow}` });
+    }
+  } else {
+    segments.push({ color: 'mute', label: 'KATAS · WAITING FOR ACTIVITY' });
+  }
+  // Duplicate segments so the marquee fills the row.
+  const doubled = [...segments, ...segments];
+  ticker.innerHTML = doubled.map((s) =>
+    `<span class="text-${s.color} flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-${s.color}"></span>${escapeHtml(s.label)}</span>`
+  ).join('');
+}
 </script>
 
 </body>

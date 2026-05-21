@@ -375,6 +375,88 @@ async function handleKataMe(req, res) {
     }
   }
 
+  // 30-day rollup across the user's managed guilds. Used by the landing page
+  // hero tiles + sparkline + activity feed so /kata stops showing "12.4k msg
+  // · $18.40" demo numbers. Owner with no managed guilds gets numbers across
+  // the whole bot fleet.
+  const managedGuildIds = managed.map((g) => g.id);
+  let summary = null;
+  let recentActivity = [];
+  if (managedGuildIds.length > 0) {
+    const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const sincePrior = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000);
+    const sevenDay = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const filterCur = { guildId: { $in: managedGuildIds }, timestamp: { $gte: since } };
+    const filterPrior = { guildId: { $in: managedGuildIds }, timestamp: { $gte: sincePrior, $lt: since } };
+    const chatFilter = { guildId: { $in: managedGuildIds }, role: 'user' };
+
+    const [costAgg, costPrior, msgs30d, msgsPrior, img30d, vid30d, daily, recent] = await Promise.all([
+      kataDb.collection('costentries').aggregate([
+        { $match: filterCur },
+        { $group: { _id: null, total: { $sum: '$costUSD' } } },
+      ]).toArray(),
+      kataDb.collection('costentries').aggregate([
+        { $match: filterPrior },
+        { $group: { _id: null, total: { $sum: '$costUSD' } } },
+      ]).toArray(),
+      kataDb.collection('chatlogs').countDocuments({ ...chatFilter, createdAt: { $gte: since } }),
+      kataDb.collection('chatlogs').countDocuments({ ...chatFilter, createdAt: { $gte: sincePrior, $lt: since } }),
+      kataDb.collection('imagegens').countDocuments({ guildId: { $in: managedGuildIds }, createdAt: { $gte: since } }),
+      kataDb.collection('videogens').countDocuments({ guildId: { $in: managedGuildIds }, createdAt: { $gte: since } }),
+      // Daily user-msg counts for the 7-day sparkline. Using chatlogs role=user
+      // because cost entries don't reflect free chat turns.
+      kataDb.collection('chatlogs').aggregate([
+        { $match: { ...chatFilter, createdAt: { $gte: sevenDay } } },
+        { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }, msgs: { $sum: 1 } } },
+        { $sort: { _id: 1 } },
+      ]).toArray(),
+      // Recent activity feed across managed guilds. We pull from
+      // commandhistories so each row already has command+input+success+
+      // createdAt. 6 latest is enough for the "right now" panel.
+      kataDb.collection('commandhistories')
+        .find(
+          { guildId: { $in: managedGuildIds } },
+          { projection: { command: 1, input: 1, userId: 1, success: 1, createdAt: 1 } },
+        )
+        .sort({ createdAt: -1 })
+        .limit(6)
+        .toArray(),
+    ]);
+
+    const cost30d = Number(costAgg[0]?.total ?? 0);
+    const costPrev = Number(costPrior[0]?.total ?? 0);
+    const costDelta = costPrev === 0 ? (cost30d > 0 ? 100 : 0) : Math.round(((cost30d - costPrev) / costPrev) * 100);
+    const msgsDelta = msgsPrior === 0 ? (msgs30d > 0 ? 100 : 0) : Math.round(((msgs30d - msgsPrior) / msgsPrior) * 100);
+
+    // Backfill 7d sparkline so the SVG path stays stable even on quiet days.
+    const dailyMap = new Map(daily.map((r) => [r._id, r.msgs]));
+    const sparkline = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
+      const id = d.toISOString().slice(0, 10);
+      sparkline.push({ date: id, msgs: Number(dailyMap.get(id) ?? 0) });
+    }
+    const peak = sparkline.reduce((m, p) => (p.msgs > m.msgs ? p : m), { date: null, msgs: 0 });
+
+    summary = {
+      cost30d,
+      costDelta,
+      msgs30d,
+      msgsDelta,
+      images30d: img30d,
+      videos30d: vid30d,
+      sparkline,
+      peak,
+    };
+    recentActivity = recent.map((r) => ({
+      command: r.command ?? '?',
+      input: typeof r.input === 'string' ? r.input.slice(0, 120) : '',
+      userId: r.userId ?? null,
+      success: r.success !== false,
+      createdAt: r.createdAt,
+    }));
+  }
+
   return res.status(200).json({
     user: {
       id: user._id.toString(),
@@ -389,6 +471,8 @@ async function handleKataMe(req, res) {
       managed: managed.length,
       botTotal: botGuildIds.size,
     },
+    summary,
+    recentActivity,
   });
 }
 
