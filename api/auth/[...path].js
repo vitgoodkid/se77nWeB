@@ -15,7 +15,7 @@ import {
   getBaseUrl,
 } from '../_lib/session.js';
 import { getUsers, getKataDb } from '../_lib/mongo.js';
-import { publish as redisPublish } from '../_lib/redis.js';
+import { publish as redisPublish, cached } from '../_lib/redis.js';
 
 export const config = { maxDuration: 60 };
 
@@ -773,6 +773,11 @@ async function handleKataServerLogs(req, res, guildId) {
 
 const COST_RANGES = { '7d': 7, '30d': 30, '90d': 90 };
 const DEFAULT_COST_RANGE = '30d';
+// Cost aggregations are 11 Mongo pipelines; on a 90d range the heavier ones
+// scan tens of thousands of rows. Dashboard refreshes / tab switches hit this
+// endpoint a lot, so cache for 5 minutes — fresh enough for ops-style use,
+// 60-90× cheaper than recomputing every refresh.
+const COST_CACHE_TTL_SECONDS = 5 * 60;
 
 async function handleKataServerCost(req, res, guildId) {
   const auth = await authorizeGuildAccess(req, guildId);
@@ -780,143 +785,158 @@ async function handleKataServerCost(req, res, guildId) {
 
   const range = COST_RANGES[req.query?.range] ? req.query.range : DEFAULT_COST_RANGE;
   const days = COST_RANGES[range];
-  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-  const sincePrior = new Date(Date.now() - 2 * days * 24 * 60 * 60 * 1000);
+  // Anchor cache key to the start of the current 5-min window so all calls
+  // within a window share the same key. Prevents the case where wall-clock
+  // ms in the key would force a fresh recompute on every request.
+  const windowSlot = Math.floor(Date.now() / (COST_CACHE_TTL_SECONDS * 1000));
+  const cacheKey = `kata:cost:${guildId}:${range}:${windowSlot}`;
 
   const { kataDb } = auth;
-  const cost = kataDb.collection('costentries');
-  const cmd = kataDb.collection('commandhistories');
-  const chat = kataDb.collection('chatlogs');
-  const img = kataDb.collection('imagegens');
-  const vid = kataDb.collection('videogens');
 
-  const [
-    totalAgg,
-    totalsCurrent,
-    totalsPrior,
-    byModel,
-    byCommand,
-    topUsers,
-    dailyCost,
-    dailyTokens,
-    imageCount,
-    videoCount,
-    cmdLatencies,
-  ] = await Promise.all([
-    cost.aggregate([
-      { $match: { guildId, timestamp: { $gte: since } } },
-      { $group: {
-        _id: null,
-        total: { $sum: '$costUSD' },
-        tokensIn: { $sum: '$tokensIn' },
-        tokensOut: { $sum: '$tokensOut' },
-        images: { $sum: '$imagesGen' },
-        videoSec: { $sum: '$videoDurationSec' },
-      } },
-    ]).toArray(),
-    // Window total (same as totalAgg.total but explicit for delta calc readability)
-    cost.aggregate([
-      { $match: { guildId, timestamp: { $gte: since } } },
-      { $group: { _id: null, total: { $sum: '$costUSD' } } },
-    ]).toArray(),
-    cost.aggregate([
-      { $match: { guildId, timestamp: { $gte: sincePrior, $lt: since } } },
-      { $group: { _id: null, total: { $sum: '$costUSD' } } },
-    ]).toArray(),
-    cost.aggregate([
-      { $match: { guildId, timestamp: { $gte: since } } },
-      { $group: { _id: { service: '$service', model: '$model' }, cost: { $sum: '$costUSD' }, count: { $sum: 1 } } },
-      { $sort: { cost: -1 } },
-      { $limit: 10 },
-    ]).toArray(),
-    cost.aggregate([
-      { $match: { guildId, timestamp: { $gte: since } } },
-      { $group: { _id: '$command', cost: { $sum: '$costUSD' }, count: { $sum: 1 } } },
-      { $sort: { cost: -1 } },
-    ]).toArray(),
-    cost.aggregate([
-      { $match: { guildId, timestamp: { $gte: since } } },
-      { $group: { _id: '$userId', cost: { $sum: '$costUSD' }, count: { $sum: 1 } } },
-      { $sort: { cost: -1 } },
-      { $limit: 10 },
-    ]).toArray(),
-    cost.aggregate([
-      { $match: { guildId, timestamp: { $gte: since } } },
-      { $group: {
-        _id: { $dateToString: { format: '%Y-%m-%d', date: '$timestamp' } },
-        cost: { $sum: '$costUSD' },
-      } },
-      { $sort: { _id: 1 } },
-    ]).toArray(),
-    chat.aggregate([
-      { $match: { guildId, createdAt: { $gte: since } } },
-      { $group: {
-        _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
-        tokensIn: { $sum: '$tokensIn' },
-        tokensOut: { $sum: '$tokensOut' },
-      } },
-      { $sort: { _id: 1 } },
-    ]).toArray(),
-    img.countDocuments({ guildId, createdAt: { $gte: since } }),
-    vid.countDocuments({ guildId, createdAt: { $gte: since } }),
-    // Latency p50 per command via $bucket would need a 2-stage pipeline;
-    // a simple sort+pick-middle on each command beats $bucketAuto for small N.
-    cmd.aggregate([
-      { $match: { guildId, createdAt: { $gte: since }, success: true, latencyMs: { $exists: true, $ne: null } } },
-      { $group: { _id: '$command', latencies: { $push: '$latencyMs' } } },
-    ]).toArray(),
-  ]);
+  const { value, hit } = await cached(cacheKey, COST_CACHE_TTL_SECONDS, async () => {
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+    const sincePrior = new Date(Date.now() - 2 * days * 24 * 60 * 60 * 1000);
 
-  const totals = totalAgg[0] || { total: 0, tokensIn: 0, tokensOut: 0, images: 0, videoSec: 0 };
-  const total = Number(totalsCurrent[0]?.total ?? 0);
-  const priorTotal = Number(totalsPrior[0]?.total ?? 0);
-  const totalDelta = priorTotal === 0 ? (total > 0 ? 100 : 0) : Math.round(((total - priorTotal) / priorTotal) * 100);
+    const cost = kataDb.collection('costentries');
+    const cmd = kataDb.collection('commandhistories');
+    const chat = kataDb.collection('chatlogs');
+    const img = kataDb.collection('imagegens');
+    const vid = kataDb.collection('videogens');
 
-  // Backfill missing days with 0 so the line chart has a stable x-axis.
-  function fillSeries(rows, key) {
-    const map = new Map(rows.map((r) => [r._id, r]));
-    const out = [];
-    for (let i = days - 1; i >= 0; i--) {
-      const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
-      const id = d.toISOString().slice(0, 10);
-      const row = map.get(id);
-      if (key === 'tokens') {
-        out.push({ date: id, tokensIn: row?.tokensIn ?? 0, tokensOut: row?.tokensOut ?? 0 });
-      } else {
-        out.push({ date: id, cost: Number(row?.cost ?? 0) });
+    const [
+      totalAgg,
+      totalsCurrent,
+      totalsPrior,
+      byModel,
+      byCommand,
+      topUsers,
+      dailyCost,
+      dailyTokens,
+      imageCount,
+      videoCount,
+      cmdLatencies,
+    ] = await Promise.all([
+      cost.aggregate([
+        { $match: { guildId, timestamp: { $gte: since } } },
+        { $group: {
+          _id: null,
+          total: { $sum: '$costUSD' },
+          tokensIn: { $sum: '$tokensIn' },
+          tokensOut: { $sum: '$tokensOut' },
+          images: { $sum: '$imagesGen' },
+          videoSec: { $sum: '$videoDurationSec' },
+        } },
+      ]).toArray(),
+      // Window total (same as totalAgg.total but explicit for delta calc readability)
+      cost.aggregate([
+        { $match: { guildId, timestamp: { $gte: since } } },
+        { $group: { _id: null, total: { $sum: '$costUSD' } } },
+      ]).toArray(),
+      cost.aggregate([
+        { $match: { guildId, timestamp: { $gte: sincePrior, $lt: since } } },
+        { $group: { _id: null, total: { $sum: '$costUSD' } } },
+      ]).toArray(),
+      cost.aggregate([
+        { $match: { guildId, timestamp: { $gte: since } } },
+        { $group: { _id: { service: '$service', model: '$model' }, cost: { $sum: '$costUSD' }, count: { $sum: 1 } } },
+        { $sort: { cost: -1 } },
+        { $limit: 10 },
+      ]).toArray(),
+      cost.aggregate([
+        { $match: { guildId, timestamp: { $gte: since } } },
+        { $group: { _id: '$command', cost: { $sum: '$costUSD' }, count: { $sum: 1 } } },
+        { $sort: { cost: -1 } },
+      ]).toArray(),
+      cost.aggregate([
+        { $match: { guildId, timestamp: { $gte: since } } },
+        { $group: { _id: '$userId', cost: { $sum: '$costUSD' }, count: { $sum: 1 } } },
+        { $sort: { cost: -1 } },
+        { $limit: 10 },
+      ]).toArray(),
+      cost.aggregate([
+        { $match: { guildId, timestamp: { $gte: since } } },
+        { $group: {
+          _id: { $dateToString: { format: '%Y-%m-%d', date: '$timestamp' } },
+          cost: { $sum: '$costUSD' },
+        } },
+        { $sort: { _id: 1 } },
+      ]).toArray(),
+      chat.aggregate([
+        { $match: { guildId, createdAt: { $gte: since } } },
+        { $group: {
+          _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+          tokensIn: { $sum: '$tokensIn' },
+          tokensOut: { $sum: '$tokensOut' },
+        } },
+        { $sort: { _id: 1 } },
+      ]).toArray(),
+      img.countDocuments({ guildId, createdAt: { $gte: since } }),
+      vid.countDocuments({ guildId, createdAt: { $gte: since } }),
+      // Latency p50 per command via $bucket would need a 2-stage pipeline;
+      // a simple sort+pick-middle on each command beats $bucketAuto for small N.
+      cmd.aggregate([
+        { $match: { guildId, createdAt: { $gte: since }, success: true, latencyMs: { $exists: true, $ne: null } } },
+        { $group: { _id: '$command', latencies: { $push: '$latencyMs' } } },
+      ]).toArray(),
+    ]);
+
+    const totals = totalAgg[0] || { total: 0, tokensIn: 0, tokensOut: 0, images: 0, videoSec: 0 };
+    const total = Number(totalsCurrent[0]?.total ?? 0);
+    const priorTotal = Number(totalsPrior[0]?.total ?? 0);
+    const totalDelta = priorTotal === 0 ? (total > 0 ? 100 : 0) : Math.round(((total - priorTotal) / priorTotal) * 100);
+
+    // Backfill missing days with 0 so the line chart has a stable x-axis.
+    function fillSeries(rows, key) {
+      const map = new Map(rows.map((r) => [r._id, r]));
+      const out = [];
+      for (let i = days - 1; i >= 0; i--) {
+        const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
+        const id = d.toISOString().slice(0, 10);
+        const row = map.get(id);
+        if (key === 'tokens') {
+          out.push({ date: id, tokensIn: row?.tokensIn ?? 0, tokensOut: row?.tokensOut ?? 0 });
+        } else {
+          out.push({ date: id, cost: Number(row?.cost ?? 0) });
+        }
       }
+      return out;
     }
-    return out;
-  }
 
-  // p50 latency per command
-  const latencyMap = {};
-  for (const row of cmdLatencies) {
-    const sorted = row.latencies.slice().sort((a, b) => a - b);
-    latencyMap[row._id] = sorted[Math.floor(sorted.length / 2)] ?? null;
-  }
+    // p50 latency per command
+    const latencyMap = {};
+    for (const row of cmdLatencies) {
+      const sorted = row.latencies.slice().sort((a, b) => a - b);
+      latencyMap[row._id] = sorted[Math.floor(sorted.length / 2)] ?? null;
+    }
 
-  return res.status(200).json({
-    range,
-    days,
-    total,
-    totalDelta,
-    totals: {
-      tokensIn: totals.tokensIn ?? 0,
-      tokensOut: totals.tokensOut ?? 0,
-      images: imageCount,
-      videos: videoCount,
-      videoSec: totals.videoSec ?? 0,
-    },
-    byModel: byModel.map((m) => ({ service: m._id.service, model: m._id.model, cost: Number(m.cost), count: m.count })),
-    byCommand: byCommand.map((c) => ({
-      command: c._id,
-      cost: Number(c.cost),
-      count: c.count,
-      latencyP50Ms: latencyMap[c._id] ?? null,
-    })),
-    topUsers: topUsers.map((u) => ({ userId: u._id, cost: Number(u.cost), count: u.count })),
-    dailyCost: fillSeries(dailyCost, 'cost'),
-    dailyTokens: fillSeries(dailyTokens, 'tokens'),
+    return {
+      range,
+      days,
+      total,
+      totalDelta,
+      totals: {
+        tokensIn: totals.tokensIn ?? 0,
+        tokensOut: totals.tokensOut ?? 0,
+        images: imageCount,
+        videos: videoCount,
+        videoSec: totals.videoSec ?? 0,
+      },
+      byModel: byModel.map((m) => ({ service: m._id.service, model: m._id.model, cost: Number(m.cost), count: m.count })),
+      byCommand: byCommand.map((c) => ({
+        command: c._id,
+        cost: Number(c.cost),
+        count: c.count,
+        latencyP50Ms: latencyMap[c._id] ?? null,
+      })),
+      topUsers: topUsers.map((u) => ({ userId: u._id, cost: Number(u.cost), count: u.count })),
+      dailyCost: fillSeries(dailyCost, 'cost'),
+      dailyTokens: fillSeries(dailyTokens, 'tokens'),
+    };
   });
+
+  // Surface cache state so the dashboard can show "fresh / cached 3m ago"
+  // and so we can verify the cache is actually working in production logs.
+  res.setHeader('X-Kata-Cache', hit ? 'HIT' : 'MISS');
+  res.setHeader('Cache-Control', 'private, max-age=0, must-revalidate');
+  return res.status(200).json(value);
 }
