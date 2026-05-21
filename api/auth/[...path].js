@@ -252,6 +252,7 @@ async function handleKata(req, res) {
     .replace(/^\/+|\/+$/g, '');
 
   if (kataPath === 'me') return handleKataMe(req, res);
+  if (kataPath === 'me/history') return handleKataMeHistory(req, res);
 
   // /api/kata/server/:guildId  → GET overview + config
   // /api/kata/server/:guildId/config (PATCH) → write config + redis publish
@@ -685,6 +686,95 @@ const LOG_TYPES = {
 
 const MAX_LOG_LIMIT = 50;
 const DEFAULT_LOG_LIMIT = 20;
+
+// ── GET /api/kata/me/history ───────────────────────────────────
+//
+// Cross-server lịch sử của chính user đang đăng nhập. Mỗi item kèm
+// guildName + iconUrl để dashboard render label cho biết command đã chạy
+// ở server nào. Auth: chỉ cần Discord session — KHÔNG cần MANAGE_GUILD,
+// vì user chỉ xem dữ liệu của chính mình.
+async function handleKataMeHistory(req, res) {
+  const session = readSession(req);
+  if (!session?.uid) return res.status(401).json({ error: 'unauthenticated' });
+
+  let userOid;
+  try { userOid = new ObjectId(session.uid); }
+  catch { return res.status(401).json({ error: 'bad_session' }); }
+
+  const users = await getUsers();
+  const user = await users.findOne({ _id: userOid });
+  if (!user) return res.status(401).json({ error: 'user_not_found' });
+  if (user.provider !== 'discord' || !user.providerUserId) {
+    return res.status(403).json({ error: 'discord_required' });
+  }
+
+  const type = String(req.query?.type || 'chat').toLowerCase();
+  const spec = LOG_TYPES[type];
+  if (!spec) return res.status(400).json({ error: 'invalid_type', allowed: Object.keys(LOG_TYPES) });
+
+  const limit = Math.min(MAX_LOG_LIMIT, Math.max(1, parseInt(req.query?.limit, 10) || DEFAULT_LOG_LIMIT));
+  const cursorRaw = req.query?.cursor;
+
+  const filter = { userId: user.providerUserId };
+  if (cursorRaw) {
+    const cursorDate = new Date(String(cursorRaw));
+    if (!isNaN(cursorDate.getTime())) {
+      filter[spec.timeField] = { $lt: cursorDate };
+    }
+  }
+  // Chat: hide assistant rows by default (the user only cares what THEY said).
+  if (type === 'chat' && req.query?.role !== 'all') {
+    filter.role = 'user';
+  }
+
+  const kataDb = await getKataDb();
+  // Pull rows + the matching guild metadata (name/icon) in one shot. We
+  // include guildId in the projection so the UI can deep-link to the
+  // server's dashboard if the user is also an admin there.
+  const items = await kataDb
+    .collection(spec.coll)
+    .find(filter, { projection: { ...spec.project, guildId: 1 } })
+    .sort({ [spec.timeField]: -1 })
+    .limit(limit + 1)
+    .toArray();
+
+  const hasMore = items.length > limit;
+  const trimmed = hasMore ? items.slice(0, limit) : items;
+  const nextCursor = hasMore ? trimmed[trimmed.length - 1][spec.timeField].toISOString() : null;
+
+  // Hydrate guild meta once per unique guildId (cheap — usually <10 distinct
+  // guilds in a page of 20 rows).
+  const guildIds = [...new Set(trimmed.map((r) => r.guildId).filter(Boolean))];
+  let guildMeta = {};
+  if (guildIds.length > 0) {
+    const servers = await kataDb
+      .collection('servers')
+      .find({ guildId: { $in: guildIds } }, { projection: { guildId: 1, name: 1, iconUrl: 1 } })
+      .toArray();
+    guildMeta = Object.fromEntries(servers.map((s) => [s.guildId, { name: s.name, iconUrl: s.iconUrl ?? null }]));
+  }
+
+  let total = null;
+  if (!cursorRaw) {
+    try {
+      total = await kataDb.collection(spec.coll).countDocuments({
+        userId: user.providerUserId,
+        ...(filter.role ? { role: filter.role } : {}),
+      });
+    } catch { /* total is best-effort */ }
+  }
+
+  return res.status(200).json({
+    type,
+    items: trimmed.map((r) => ({
+      ...r,
+      guild: guildMeta[r.guildId] ?? { name: r.guildId, iconUrl: null },
+    })),
+    nextCursor,
+    hasMore,
+    total,
+  });
+}
 
 async function handleKataServerLogs(req, res, guildId) {
   const auth = await authorizeGuildAccess(req, guildId);
