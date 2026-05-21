@@ -98,6 +98,8 @@
 </style>
 </head>
 <body class="bg-bg text-ink min-h-screen overflow-x-hidden">
+<script src="_strings.js"></script>
+<script src="_shell.js"></script>
 
 <!-- ambient layers (no constellation / no three.js — only gradient + grain) -->
 <div aria-hidden class="fixed inset-0 z-0 pointer-events-none ambient"></div>
@@ -110,23 +112,7 @@
     <div class="mono t-meta uppercase tracking-kicker">Experiment <span class="text-red font-bold glow77 opacity-100">007</span> · katas module</div>
   </a>
 
-  <div class="flex items-center gap-2.5">
-    <button class="mono h-8 px-3 rounded-full border border-line text-mute hover:text-ink text-[10px] tracking-label flex items-center gap-2">
-      <span>⌘K</span><span class="text-mute2">search</span>
-    </button>
-    <button class="mono h-8 rounded-full border border-line px-1 text-[10px] tracking-label font-bold flex items-center">
-      <span class="px-2 py-1 rounded-full text-mute">EN</span>
-      <span class="text-mute2 text-[9px]">·</span>
-      <span class="px-2 py-1 rounded-full bg-ink/10 text-ink">VI</span>
-    </button>
-    <button class="mono h-8 px-3 rounded-full border border-line text-[10px] tracking-label font-bold flex items-center gap-2">
-      <span class="w-3 h-3 rounded-full" style="background:conic-gradient(#E04545,#5BA868,#D4A858,#E04545); border:1px solid rgba(255,255,255,.1)"></span>
-      <span>AUTO</span><span class="text-mute text-[9px]">▾</span>
-    </button>
-    <a id="kata-auth-chip" href="/api/auth/discord/start" class="mono h-8 px-4 rounded-full uppercase tracking-label font-bold text-[11px] text-red flex items-center gap-2" style="background:#E0454514; border:1px solid #E0454555">
-      Đăng nhập
-    </a>
-  </div>
+  <div id="kata-header-actions" class="flex items-center gap-2.5"></div>
 </header>
 
 <main class="relative z-10 pt-16">
@@ -201,8 +187,8 @@
               <span class="mono t-meta tracking-label uppercase">02</span>
               <span class="mono t-meta tracking-label uppercase arrow">↗</span>
             </div>
-            <div class="t-card-title lowercase text-ink">servers list</div>
-            <div class="t-card-desc mt-1.5 flex-1">Danh sách server bot đang phục vụ.</div>
+            <div class="t-card-title lowercase text-ink" data-i18n="index.tile.servers">servers list</div>
+            <div class="t-card-desc mt-1.5 flex-1" data-i18n="index.tile.servers.desc">Danh sách server bot đang phục vụ.</div>
             <div class="mt-3 mono t-meta uppercase tracking-label flex items-center gap-2">
               <span class="dot-pulse w-1 h-1 rounded-full bg-green inline-block"></span>
               <span>4 active</span>
@@ -214,8 +200,8 @@
               <span class="mono t-meta tracking-label uppercase">03</span>
               <span class="mono t-meta tracking-label uppercase arrow">↗</span>
             </div>
-            <div class="t-card-title lowercase text-ink">server overview</div>
-            <div class="t-card-desc mt-1.5 flex-1">Tổng quan hoạt động từng server.</div>
+            <div class="t-card-title lowercase text-ink" data-i18n="index.tile.overview">server overview</div>
+            <div class="t-card-desc mt-1.5 flex-1" data-i18n="index.tile.overview.desc">Tổng quan hoạt động từng server.</div>
             <div id="tile-overview-meta" class="mt-3 mono t-meta uppercase tracking-label">— msg · 30d</div>
           </a>
 
@@ -224,8 +210,8 @@
               <span class="mono t-meta tracking-label uppercase">04</span>
               <span class="mono t-meta tracking-label uppercase arrow">↗</span>
             </div>
-            <div class="t-card-title lowercase text-ink">logs · image</div>
-            <div class="t-card-desc mt-1.5 flex-1">Lịch sử ảnh đã tạo qua bot.</div>
+            <div class="t-card-title lowercase text-ink" data-i18n="index.tile.logs">logs · image</div>
+            <div class="t-card-desc mt-1.5 flex-1" data-i18n="index.tile.logs.desc">Lịch sử ảnh đã tạo qua bot.</div>
             <div id="tile-logs-meta" class="mt-3 mono t-meta uppercase tracking-label">— img · 30d</div>
           </a>
 
@@ -234,8 +220,8 @@
               <span class="mono t-meta tracking-label uppercase">05</span>
               <span class="mono t-meta tracking-label uppercase arrow">↗</span>
             </div>
-            <div class="t-card-title lowercase text-ink">cost</div>
-            <div class="t-card-desc mt-1.5 flex-1">Chi phí api token theo tháng.</div>
+            <div class="t-card-title lowercase text-ink" data-i18n="index.tile.cost">cost</div>
+            <div class="t-card-desc mt-1.5 flex-1" data-i18n="index.tile.cost.desc">Chi phí api token theo tháng.</div>
             <div id="tile-cost-meta" class="mt-3 mono text-[11px] tracking-label uppercase text-gold opacity-90">— · 30d</div>
           </a>
         </div>
@@ -333,22 +319,22 @@
 
         <div class="grid grid-cols-2 md:grid-cols-4 gap-x-5 gap-y-5">
           <div>
-            <div class="mono t-meta uppercase tracking-label">servers</div>
+            <div class="mono t-meta uppercase tracking-label" data-i18n="index.stat.servers">servers</div>
             <div id="stat-servers-value" class="mono text-[32px] font-bold mt-1 tracking-tight leading-none">—</div>
             <div id="stat-servers-delta" class="mono text-[10px] text-mute tracking-label uppercase mt-1.5 opacity-80">—</div>
           </div>
           <div>
-            <div class="mono t-meta uppercase tracking-label">tin nhắn · 30d</div>
+            <div class="mono t-meta uppercase tracking-label" data-i18n="index.stat.msgs">tin nhắn · 30d</div>
             <div id="stat-msgs-value" class="mono text-[32px] font-bold mt-1 tracking-tight leading-none">—</div>
             <div id="stat-msgs-delta" class="mono text-[10px] text-mute tracking-label uppercase mt-1.5 opacity-80">—</div>
           </div>
           <div>
-            <div class="mono t-meta uppercase tracking-label">media gen · 30d</div>
+            <div class="mono t-meta uppercase tracking-label" data-i18n="index.stat.media">media gen · 30d</div>
             <div id="stat-media-value" class="mono text-[32px] font-bold mt-1 tracking-tight leading-none">—</div>
             <div id="stat-media-delta" class="mono text-[10px] text-mute tracking-label uppercase mt-1.5">—</div>
           </div>
           <div>
-            <div class="mono t-meta uppercase tracking-label">cost · 30d</div>
+            <div class="mono t-meta uppercase tracking-label" data-i18n="index.stat.cost">cost · 30d</div>
             <div id="stat-cost-value" class="mono text-[32px] font-bold mt-1 tracking-tight leading-none text-gold">—</div>
             <div id="stat-cost-delta" class="mono text-[10px] text-mute tracking-label uppercase mt-1.5 opacity-80">—</div>
           </div>
@@ -357,7 +343,7 @@
         <!-- sparkline -->
         <div class="mt-7 pt-5 border-t border-line">
           <div class="mono t-meta uppercase tracking-label mb-2 flex items-baseline justify-between">
-            <span>msgs · last 7d</span>
+            <span data-i18n="index.spark.title">msgs · last 7d</span>
             <span id="spark-peak">—</span>
           </div>
           <svg id="spark-svg" viewBox="0 0 200 36" preserveAspectRatio="none" class="w-full h-9">
@@ -377,13 +363,13 @@
       <div class="rounded-[14px] border border-line bg-panel/60 p-5">
         <div class="mono t-meta uppercase tracking-kicker mb-4 flex items-center gap-2">
           <span class="dot-pulse w-1.5 h-1.5 rounded-full bg-red"></span>
-          right now
+          <span data-i18n="index.right-now">right now</span>
         </div>
         <div id="activity-feed" class="space-y-2 mono text-[11px]">
-          <div class="text-mute2 mono text-[11px]">— đăng nhập để xem hoạt động</div>
+          <div class="text-mute2 mono text-[11px]" data-i18n="index.activity-empty">— đăng nhập để xem hoạt động</div>
         </div>
         <div class="mt-4 pt-3 border-t border-line/60 mono t-meta tracking-label uppercase text-center">
-          full stream · <a href="me-history.html" class="text-red hover:underline">my history</a>
+          <span data-i18n="index.full-stream">full stream</span> · <a href="me-history.html" class="text-red hover:underline" data-i18n="bc.history">my history</a>
         </div>
       </div>
     </div>
@@ -423,34 +409,22 @@
 </main>
 
 <script>
-// Phase 11 — landing wires:
-//   - swap "Đăng nhập" chip for the user chip when /api/auth/me returns a session
+// Phase 11+ — landing wires:
 //   - DASHBOARD tile #1 ("servers list") reflects real bot guild count
+//   - hero stats card, sparkline, activity feed, ticker driven by /api/kata/me
+// (auth chip is rendered by _shell.js; user metadata comes from
+//  window.__kataMe cached by shell to avoid a duplicate /api/auth/me hit)
 (async () => {
   try {
-    const r = await fetch('/api/auth/me', { credentials: 'same-origin' });
-    if (!r.ok) return;
-    const { user } = await r.json();
-    if (!user) return;
-
-    const chip = document.getElementById('kata-auth-chip');
-    if (chip) {
-      const initial = (user.displayName || user.username || '?').slice(0, 1).toUpperCase();
-      chip.removeAttribute('href');
-      chip.style.background = 'transparent';
-      chip.style.borderColor = 'rgba(255,255,255,0.08)';
-      chip.style.color = '#f5ede0';
-      chip.style.padding = '2px 12px 2px 2px';
-      chip.classList.remove('text-red');
-      chip.innerHTML = (user.avatarUrl
-        ? `<img src="${user.avatarUrl}" alt="" style="width:26px;height:26px;border-radius:9999px;object-fit:cover;border:1px solid rgba(255,255,255,0.08)" />`
-        : `<span style="width:26px;height:26px;border-radius:9999px;background:#E0454522;color:#E04545;display:grid;place-items:center;font-weight:800;font-size:11px">${initial}</span>`)
-        + `<span style="max-width:96px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-transform:none;letter-spacing:0.04em">${user.displayName || user.username || '—'}</span>`
-        + `<span style="color:rgba(245,237,224,0.5);font-size:9px">▾</span>`;
-      chip.style.display = 'flex';
-      chip.style.textTransform = 'none';
-      chip.style.letterSpacing = '0';
+    let auth = window.__kataMe;
+    if (!auth) {
+      const r = await fetch('/api/auth/me', { credentials: 'same-origin' });
+      if (!r.ok) return;
+      auth = await r.json();
+      window.__kataMe = auth;
     }
+    const user = auth?.user;
+    if (!user) return;
 
     // Only Discord users can hit /api/kata/me — Google login won't have guilds scope.
     if (user.provider !== 'discord') return;

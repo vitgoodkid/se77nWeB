@@ -37,6 +37,8 @@
 </style>
 </head>
 <body class="bg-bg text-ink min-h-screen overflow-x-hidden">
+<script src="_strings.js"></script>
+<script src="_shell.js"></script>
 
 <div aria-hidden class="fixed inset-0 z-0 pointer-events-none ambient"></div>
 <div aria-hidden class="fixed inset-0 z-0 pointer-events-none grain opacity-40"></div>
@@ -53,12 +55,7 @@
       <span class="text-ink">admin · <span id="bc-tab">servers</span></span>
     </div>
   </div>
-  <div class="flex items-center gap-2.5">
-    <button id="kata-user-chip" class="h-8 pl-1 pr-3 rounded-full border border-line flex items-center gap-2 mono text-[11px]">
-      <span id="kata-user-avatar" class="w-[26px] h-[26px] rounded-full grid place-items-center text-[11px] font-extrabold" style="background:#D4A85822;color:#D4A858">?</span>
-      <span id="kata-user-name" class="max-w-[120px] truncate">guest</span>
-    </button>
-  </div>
+  <div id="kata-header-actions" class="flex items-center gap-2.5"></div>
 </header>
 
 <aside class="fixed top-16 left-0 bottom-0 w-[220px] z-40 border-r border-line backdrop-blur-md overflow-y-auto" style="background:rgba(13,10,8,0.6)">
@@ -435,19 +432,8 @@ document.querySelectorAll('[data-tab]').forEach(a => {
   });
 });
 
-async function bootUserChip() {
-  try {
-    const r = await fetch('/api/auth/me', { credentials: 'include' });
-    if (!r.ok) return;
-    const data = await r.json();
-    if (data?.user?.username) {
-      document.getElementById('kata-user-name').textContent = data.user.username;
-      document.getElementById('kata-user-avatar').textContent = data.user.username.slice(0,1).toUpperCase();
-    }
-  } catch {}
-}
+// User chip is rendered + hydrated by _shell.js — no per-page boot needed.
 
-bootUserChip();
 setTabUI();
 renderers[currentTab]();
 </script>

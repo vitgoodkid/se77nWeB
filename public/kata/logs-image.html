@@ -44,6 +44,8 @@
 </style>
 </head>
 <body class="bg-bg text-ink min-h-screen overflow-x-hidden">
+<script src="_strings.js"></script>
+<script src="_shell.js"></script>
 
 <div aria-hidden class="fixed inset-0 z-0 pointer-events-none ambient"></div>
 <div aria-hidden class="fixed inset-0 z-0 pointer-events-none grain opacity-40"></div>
@@ -65,20 +67,7 @@
     <span class="mono text-[10px] tracking-label uppercase text-green flex items-center gap-1.5 ml-2"><span class="dot-pulse w-1.5 h-1.5 rounded-full bg-green"></span>live · 4s</span>
   </div>
 
-  <div class="flex items-center gap-2.5">
-    <button class="mono h-8 px-3 rounded-full border border-line text-mute hover:text-ink text-[10px] tracking-label flex items-center gap-2"><span>⌘K</span></button>
-    <button class="mono h-8 rounded-full border border-line px-1 text-[10px] tracking-label font-bold flex items-center">
-      <span class="px-2 py-1 rounded-full text-mute">EN</span><span class="text-mute2 text-[9px]">·</span><span class="px-2 py-1 rounded-full bg-ink/10 text-ink">VI</span>
-    </button>
-    <button class="mono h-8 px-3 rounded-full border border-line text-[10px] tracking-label font-bold flex items-center gap-2">
-      <span class="w-3 h-3 rounded-full" style="background:conic-gradient(#E04545,#5BA868,#D4A858,#E04545);border:1px solid rgba(255,255,255,.1)"></span><span>AUTO</span><span class="text-mute text-[9px]">▾</span>
-    </button>
-    <button id="kata-user-chip" class="h-8 pl-1 pr-3 rounded-full border border-line flex items-center gap-2 mono text-[11px]">
-      <span class="w-[26px] h-[26px] rounded-full grid place-items-center text-[11px] font-extrabold" style="background:#E0454522;color:#E04545">?</span>
-      <span class="max-w-[96px] truncate">guest</span>
-      <span class="text-mute text-[9px]">▾</span>
-    </button>
-  </div>
+  <div id="kata-header-actions" class="flex items-center gap-2.5"></div>
 </header>
 
 <!-- side nav -->
