@@ -184,7 +184,7 @@
         <div class="grid grid-cols-2 gap-3">
           <a href="servers.html" class="tile group">
             <div class="flex items-start justify-between mb-3">
-              <span class="mono t-meta tracking-label uppercase">02</span>
+              <span class="mono t-meta tracking-label uppercase">&nbsp;</span>
               <span class="mono t-meta tracking-label uppercase arrow">↗</span>
             </div>
             <div class="t-card-title lowercase text-ink" data-i18n="index.tile.servers">servers list</div>
@@ -195,19 +195,19 @@
             </div>
           </a>
 
-          <a href="overview.html" class="tile group">
+          <a id="tile-admin" href="admin.html" class="tile group hidden">
             <div class="flex items-start justify-between mb-3">
-              <span class="mono t-meta tracking-label uppercase">03</span>
+              <span class="mono t-meta tracking-label uppercase text-gold">owner</span>
               <span class="mono t-meta tracking-label uppercase arrow">↗</span>
             </div>
-            <div class="t-card-title lowercase text-ink" data-i18n="index.tile.overview">server overview</div>
-            <div class="t-card-desc mt-1.5 flex-1" data-i18n="index.tile.overview.desc">Tổng quan hoạt động từng server.</div>
-            <div id="tile-overview-meta" class="mt-3 mono t-meta uppercase tracking-label">— msg · 30d</div>
+            <div class="t-card-title lowercase text-ink" data-i18n="index.tile.admin">admin console</div>
+            <div class="t-card-desc mt-1.5 flex-1" data-i18n="index.tile.admin.desc">Cấu hình toàn bộ bot, sysprompt và model dùng cho mọi server.</div>
+            <div class="mt-3 mono t-meta uppercase tracking-label text-gold">global · settings</div>
           </a>
 
           <a href="logs-image.html" class="tile group">
             <div class="flex items-start justify-between mb-3">
-              <span class="mono t-meta tracking-label uppercase">04</span>
+              <span class="mono t-meta tracking-label uppercase">&nbsp;</span>
               <span class="mono t-meta tracking-label uppercase arrow">↗</span>
             </div>
             <div class="t-card-title lowercase text-ink" data-i18n="index.tile.logs">logs · image</div>
@@ -217,7 +217,7 @@
 
           <a href="cost.html" class="tile group">
             <div class="flex items-start justify-between mb-3">
-              <span class="mono t-meta tracking-label uppercase">05</span>
+              <span class="mono t-meta tracking-label uppercase">&nbsp;</span>
               <span class="mono t-meta tracking-label uppercase arrow">↗</span>
             </div>
             <div class="t-card-title lowercase text-ink" data-i18n="index.tile.cost">cost</div>
@@ -491,17 +491,22 @@ function paintLandingStats(data) {
   const summary = data.summary;
   const managedCount = data?.counts?.managed ?? 0;
 
-  // Tiles 03 / 04 / 05 (overview / logs / cost) below the hero grid
-  const tileOverview = document.getElementById('tile-overview-meta');
+  // Tile metadata strings (logs + cost). Admin tile is owner-only and
+  // surfaced via tile-admin reveal in paintTiles below.
   const tileLogs = document.getElementById('tile-logs-meta');
   const tileCost = document.getElementById('tile-cost-meta');
-  if (tileOverview) tileOverview.textContent = `${fmtNum(summary?.msgs30d)} msg · 30d`;
   if (tileLogs) {
     const img = summary?.images30d ?? null;
     const vid = summary?.videos30d ?? null;
     tileLogs.textContent = `${fmtNum(img)} img · ${fmtNum(vid)} vid · 30d`;
   }
   if (tileCost) tileCost.textContent = `${fmtUSD(summary?.cost30d ?? 0)} · 30d`;
+
+  // Owner-only admin tile reveal
+  if (data?.user?.isOwner) {
+    const adminTile = document.getElementById('tile-admin');
+    if (adminTile) adminTile.classList.remove('hidden');
+  }
 
   // Hero stats card
   const sv = document.getElementById('stat-servers-value');
