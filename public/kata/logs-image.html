@@ -60,7 +60,7 @@
     <div class="flex items-center gap-2 ml-3 mono text-[10px] tracking-label uppercase">
       <a href="index.html" class="text-mute hover:text-ink">se77n</a><span class="text-mute2">/</span>
       <a href="index.html" class="text-mute hover:text-ink">kata</a><span class="text-mute2">/</span>
-      <a href="servers.html" class="text-mute hover:text-ink">servers</a><span class="text-mute2">/</span>
+      <a href="servers.html" class="text-mute hover:text-ink" data-i18n="bc.servers">servers</a><span class="text-mute2">/</span>
       <a id="bc-guild" href="#" class="text-mute hover:text-ink">—</a><span class="text-mute2">/</span>
       <span class="text-ink">logs · <span id="bc-tab">chat</span></span>
     </div>
@@ -81,14 +81,14 @@
   <nav class="px-3 py-4 mono text-[11px] tracking-label uppercase">
     <a id="nav-overview" href="#" class="flex items-center justify-between px-3 py-2 rounded-[8px] mb-1 text-mute hover:text-ink hover:bg-ink/[0.03]">▸ overview</a>
     <div class="px-3 py-2 mb-1 text-ink">▸ logs</div>
-    <a data-tab="chat" class="block px-3 py-1.5 ml-3 rounded-[8px] text-mute hover:text-ink hover:bg-ink/[0.03] cursor-pointer">↳ chat</a>
-    <a data-tab="image" class="block px-3 py-1.5 ml-3 rounded-[8px] text-mute hover:text-ink hover:bg-ink/[0.03] cursor-pointer">↳ image</a>
-    <a data-tab="video" class="block px-3 py-1.5 ml-3 rounded-[8px] text-mute hover:text-ink hover:bg-ink/[0.03] cursor-pointer">↳ video</a>
-    <a data-tab="command" class="block px-3 py-1.5 ml-3 rounded-[8px] text-mute hover:text-ink hover:bg-ink/[0.03] cursor-pointer">↳ commands</a>
+    <a data-tab="chat" class="block px-3 py-1.5 ml-3 rounded-[8px] text-mute hover:text-ink hover:bg-ink/[0.03] cursor-pointer"><span data-i18n="logs.tab.chat">↳ chat</span></a>
+    <a data-tab="image" class="block px-3 py-1.5 ml-3 rounded-[8px] text-mute hover:text-ink hover:bg-ink/[0.03] cursor-pointer"><span data-i18n="logs.tab.image">↳ image</span></a>
+    <a data-tab="video" class="block px-3 py-1.5 ml-3 rounded-[8px] text-mute hover:text-ink hover:bg-ink/[0.03] cursor-pointer"><span data-i18n="logs.tab.video">↳ video</span></a>
+    <a data-tab="command" class="block px-3 py-1.5 ml-3 rounded-[8px] text-mute hover:text-ink hover:bg-ink/[0.03] cursor-pointer"><span data-i18n="logs.tab.command">↳ commands</span></a>
     <a id="nav-cost" href="#" class="flex items-center justify-between px-3 py-2 rounded-[8px] mt-2 mb-1 text-mute hover:text-ink hover:bg-ink/[0.03]">▸ cost</a>
   </nav>
   <div class="px-5 py-4 border-t border-line">
-    <a href="servers.html" class="mono text-[10px] tracking-label uppercase text-mute hover:text-ink flex items-center gap-2">← all servers</a>
+    <a href="servers.html" class="mono text-[10px] tracking-label uppercase text-mute hover:text-ink flex items-center gap-2" data-i18n="btn.back-servers">← all servers</a>
   </div>
 </aside>
 
@@ -106,16 +106,16 @@
       <div id="page-counts" class="mono text-[11px] text-mute mt-3">—</div>
     </div>
     <div class="flex items-center gap-2">
-      <button id="btn-refresh" class="mono h-9 px-3.5 rounded-[10px] border border-line text-mute hover:text-ink text-[10px] tracking-label uppercase">↻ refresh</button>
+      <button id="btn-refresh" class="mono h-9 px-3.5 rounded-[10px] border border-line text-mute hover:text-ink text-[10px] tracking-label uppercase" data-i18n="btn.refresh">↻ refresh</button>
     </div>
   </div>
 
   <!-- log type tabs -->
   <div class="flex items-center gap-1 mb-5 border-b border-line">
-    <button data-tab="chat" class="kata-tab mono text-[11px] tracking-label uppercase px-4 pb-3 pt-2 text-mute hover:text-ink relative">chat</button>
-    <button data-tab="image" class="kata-tab mono text-[11px] tracking-label uppercase px-4 pb-3 pt-2 text-mute hover:text-ink relative">image</button>
-    <button data-tab="video" class="kata-tab mono text-[11px] tracking-label uppercase px-4 pb-3 pt-2 text-mute hover:text-ink relative">video</button>
-    <button data-tab="command" class="kata-tab mono text-[11px] tracking-label uppercase px-4 pb-3 pt-2 text-mute hover:text-ink relative">commands</button>
+    <button data-tab="chat" class="kata-tab mono text-[11px] tracking-label uppercase px-4 pb-3 pt-2 text-mute hover:text-ink relative" data-i18n="logs.tab.chat">chat</button>
+    <button data-tab="image" class="kata-tab mono text-[11px] tracking-label uppercase px-4 pb-3 pt-2 text-mute hover:text-ink relative" data-i18n="logs.tab.image">image</button>
+    <button data-tab="video" class="kata-tab mono text-[11px] tracking-label uppercase px-4 pb-3 pt-2 text-mute hover:text-ink relative" data-i18n="logs.tab.video">video</button>
+    <button data-tab="command" class="kata-tab mono text-[11px] tracking-label uppercase px-4 pb-3 pt-2 text-mute hover:text-ink relative" data-i18n="logs.tab.command">commands</button>
   </div>
 
   <!-- filters -->
@@ -134,7 +134,7 @@
   <!-- load-more -->
   <div class="flex items-center justify-center mt-6 mb-10">
     <button id="btn-more" class="mono h-9 px-5 rounded-[10px] border border-line text-mute hover:text-ink text-[10px] tracking-label uppercase hidden">load more ↓</button>
-    <div id="empty-state" class="hidden mono text-[11px] text-mute2">— hết —</div>
+    <div id="empty-state" class="hidden mono text-[11px] text-mute2" data-i18n="empty.end-of-list">— hết —</div>
   </div>
 
   <!-- footer -->

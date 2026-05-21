@@ -51,7 +51,7 @@
     <div class="flex items-center gap-2 ml-3 mono text-[10px] tracking-label uppercase">
       <a href="index.html" class="text-mute hover:text-ink">se77n</a><span class="text-mute2">/</span>
       <a href="index.html" class="text-mute hover:text-ink">kata</a><span class="text-mute2">/</span>
-      <a href="servers.html" class="text-mute hover:text-ink">servers</a><span class="text-mute2">/</span>
+      <a href="servers.html" class="text-mute hover:text-ink" data-i18n="bc.servers">servers</a><span class="text-mute2">/</span>
       <span id="kata-breadcrumb-name" class="text-ink">—</span>
     </div>
     <!-- live indicator -->
@@ -82,7 +82,7 @@
   </nav>
 
   <div class="px-5 py-4 border-t border-line">
-    <a href="servers.html" class="mono text-[10px] tracking-label uppercase text-mute hover:text-ink flex items-center gap-2">← all servers</a>
+    <a href="servers.html" class="mono text-[10px] tracking-label uppercase text-mute hover:text-ink flex items-center gap-2" data-i18n="btn.back-servers">← all servers</a>
   </div>
 </aside>
 
@@ -106,7 +106,7 @@
         <button class="px-3 h-7 rounded-[8px] text-mute hover:text-ink">30d</button>
         <button class="px-3 h-7 rounded-[8px] text-mute hover:text-ink">90d</button>
       </div>
-      <button class="mono h-9 px-3.5 rounded-[10px] border border-line text-mute hover:text-ink text-[10px] tracking-label uppercase">↻ refresh</button>
+      <button class="mono h-9 px-3.5 rounded-[10px] border border-line text-mute hover:text-ink text-[10px] tracking-label uppercase" data-i18n="btn.refresh">↻ refresh</button>
       <button class="mono h-9 px-3.5 rounded-[10px] text-[10px] tracking-label uppercase font-bold text-red" style="background:#E0454514;border:1px solid #E0454555">▸ playground</button>
     </div>
   </div>
@@ -115,35 +115,35 @@
   <div class="grid grid-cols-5 gap-3 mb-8">
     <div class="kpi rounded-[14px] border border-line bg-panel p-5 transition-colors">
       <div class="flex items-baseline justify-between">
-        <div class="mono text-[10px] uppercase tracking-label text-mute">tin nhắn · 24h</div>
+        <div class="mono text-[10px] uppercase tracking-label text-mute" data-i18n="overview.kpi.msg">tin nhắn · 24h</div>
         <div id="kpi-msg-delta" class="mono text-[10px] text-mute">—</div>
       </div>
       <div id="kpi-msg-value" class="mono text-[36px] font-bold tracking-tight mt-3 leading-none">—</div>
     </div>
     <div class="kpi rounded-[14px] border border-line bg-panel p-5 transition-colors">
       <div class="flex items-baseline justify-between">
-        <div class="mono text-[10px] uppercase tracking-label text-mute">ảnh · 24h</div>
+        <div class="mono text-[10px] uppercase tracking-label text-mute" data-i18n="overview.kpi.img">ảnh · 24h</div>
         <div id="kpi-img-delta" class="mono text-[10px] text-mute">—</div>
       </div>
       <div id="kpi-img-value" class="mono text-[36px] font-bold tracking-tight mt-3 leading-none">—</div>
     </div>
     <div class="kpi rounded-[14px] border border-line bg-panel p-5 transition-colors">
       <div class="flex items-baseline justify-between">
-        <div class="mono text-[10px] uppercase tracking-label text-mute">video · 24h</div>
+        <div class="mono text-[10px] uppercase tracking-label text-mute" data-i18n="overview.kpi.vid">video · 24h</div>
         <div id="kpi-vid-delta" class="mono text-[10px] text-mute">—</div>
       </div>
       <div id="kpi-vid-value" class="mono text-[36px] font-bold tracking-tight mt-3 leading-none">—</div>
     </div>
     <div class="kpi rounded-[14px] border border-line bg-panel p-5 transition-colors">
       <div class="flex items-baseline justify-between">
-        <div class="mono text-[10px] uppercase tracking-label text-mute">commands · 24h</div>
+        <div class="mono text-[10px] uppercase tracking-label text-mute" data-i18n="overview.kpi.cmd">commands · 24h</div>
         <div id="kpi-cmd-delta" class="mono text-[10px] text-mute">—</div>
       </div>
       <div id="kpi-cmd-value" class="mono text-[36px] font-bold tracking-tight mt-3 leading-none">—</div>
     </div>
     <div class="kpi rounded-[14px] border border-line bg-panel p-5 transition-colors">
       <div class="flex items-baseline justify-between">
-        <div class="mono text-[10px] uppercase tracking-label text-mute">cost · 30d</div>
+        <div class="mono text-[10px] uppercase tracking-label text-mute" data-i18n="overview.kpi.cost30d">cost · 30d</div>
       </div>
       <div id="kpi-cost-value" class="mono text-[36px] font-bold tracking-tight mt-3 leading-none text-gold">—</div>
     </div>
@@ -312,8 +312,8 @@
       <div class="sticky bottom-0 -mx-6 -mb-6 px-6 py-4 border-t border-line backdrop-blur-md flex items-center justify-between gap-3" style="background:rgba(21,17,13,0.92)">
         <div id="settings-status" class="mono text-[11px] text-mute2"></div>
         <div class="flex items-center gap-2">
-          <button type="button" id="settings-cancel" class="mono h-9 px-4 rounded-[10px] border border-line text-mute hover:text-ink text-[10px] tracking-label uppercase">huỷ</button>
-          <button type="submit" id="settings-save" class="mono h-9 px-5 rounded-[10px] text-[10px] tracking-label uppercase font-bold text-bg" style="background:#E04545">▸ lưu</button>
+          <button type="button" id="settings-cancel" class="mono h-9 px-4 rounded-[10px] border border-line text-mute hover:text-ink text-[10px] tracking-label uppercase" data-i18n="btn.cancel">huỷ</button>
+          <button type="submit" id="settings-save" class="mono h-9 px-5 rounded-[10px] text-[10px] tracking-label uppercase font-bold text-bg" style="background:#E04545" data-i18n="btn.save">▸ lưu</button>
         </div>
       </div>
     </form>

@@ -61,18 +61,18 @@
 <aside class="fixed top-16 left-0 bottom-0 w-[220px] z-40 border-r border-line backdrop-blur-md overflow-y-auto" style="background:rgba(13,10,8,0.6)">
   <div class="p-5 border-b border-line">
     <div class="mono text-[10px] tracking-label uppercase text-gold">owner</div>
-    <div class="text-[14px] font-medium tracking-tight text-ink mt-1">admin console</div>
-    <div class="mono text-[10px] text-mute mt-1">global view</div>
+    <div class="text-[14px] font-medium tracking-tight text-ink mt-1" data-i18n="admin.subtitle">admin console</div>
+    <div class="mono text-[10px] text-mute mt-1" data-i18n="admin.subtitle.desc">global view</div>
   </div>
   <nav class="px-3 py-4 mono text-[11px] tracking-label uppercase">
-    <a data-tab="servers" class="block px-3 py-2 rounded-[8px] text-mute hover:text-ink cursor-pointer mb-1">▸ all servers</a>
-    <a data-tab="logs" class="block px-3 py-2 rounded-[8px] text-mute hover:text-ink cursor-pointer mb-1">▸ global logs</a>
-    <a data-tab="cost" class="block px-3 py-2 rounded-[8px] text-mute hover:text-ink cursor-pointer mb-1">▸ global cost</a>
-    <a data-tab="models" class="block px-3 py-2 rounded-[8px] text-mute hover:text-ink cursor-pointer mb-1">▸ models</a>
-    <a data-tab="health" class="block px-3 py-2 rounded-[8px] text-mute hover:text-ink cursor-pointer mb-1">▸ health</a>
+    <a data-tab="servers" class="block px-3 py-2 rounded-[8px] text-mute hover:text-ink cursor-pointer mb-1"><span data-i18n="admin.tab.servers">▸ all servers</span></a>
+    <a data-tab="logs" class="block px-3 py-2 rounded-[8px] text-mute hover:text-ink cursor-pointer mb-1"><span data-i18n="admin.tab.logs">▸ global logs</span></a>
+    <a data-tab="cost" class="block px-3 py-2 rounded-[8px] text-mute hover:text-ink cursor-pointer mb-1"><span data-i18n="admin.tab.cost">▸ global cost</span></a>
+    <a data-tab="models" class="block px-3 py-2 rounded-[8px] text-mute hover:text-ink cursor-pointer mb-1"><span data-i18n="admin.tab.models">▸ models</span></a>
+    <a data-tab="health" class="block px-3 py-2 rounded-[8px] text-mute hover:text-ink cursor-pointer mb-1"><span data-i18n="admin.tab.health">▸ health</span></a>
   </nav>
   <div class="px-5 py-4 border-t border-line">
-    <a href="servers.html" class="mono text-[10px] tracking-label uppercase text-mute hover:text-ink">← my servers</a>
+    <a href="servers.html" class="mono text-[10px] tracking-label uppercase text-mute hover:text-ink" data-i18n="btn.back-my-servers">← my servers</a>
   </div>
 </aside>
 
@@ -88,9 +88,9 @@
   </div>
 
   <div id="auth-warning" class="hidden mb-6 p-5 border border-line rounded-[12px] bg-panel">
-    <div class="mono text-[10px] uppercase tracking-kicker text-red mb-2">không thể tải</div>
+    <div class="mono text-[10px] uppercase tracking-kicker text-red mb-2" data-i18n="err.generic">không thể tải</div>
     <div id="auth-warning-msg" class="text-[14px] text-mute">—</div>
-    <a id="auth-login-btn" href="/api/auth/discord/start" class="hidden mt-4 inline-block mono h-9 px-4 rounded-full border border-line text-[11px] tracking-label uppercase hover:bg-ink/5">đăng nhập discord</a>
+    <a id="auth-login-btn" href="/api/auth/discord/start" class="hidden mt-4 inline-block mono h-9 px-4 rounded-full border border-line text-[11px] tracking-label uppercase hover:bg-ink/5" data-i18n="kata.login">đăng nhập discord</a>
   </div>
 
   <div id="content"></div>
