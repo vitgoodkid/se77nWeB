@@ -24,8 +24,8 @@ function pickModel(engine, hasImage) {
       : (process.env.FAL_IMAGE_NANO_T2I_MODEL || 'fal-ai/nano-banana-pro');
   }
   return hasImage
-    ? (process.env.FAL_IMAGE_MODEL || 'openai/gpt-image-2/edit')
-    : (process.env.FAL_IMAGE_T2I_MODEL || 'openai/gpt-image-2');
+    ? (process.env.FAL_IMAGE_MODEL || 'fal-ai/openai/gpt-image-2/edit')
+    : (process.env.FAL_IMAGE_T2I_MODEL || 'fal-ai/openai/gpt-image-2');
 }
 
 export default async function handler(req, res) {

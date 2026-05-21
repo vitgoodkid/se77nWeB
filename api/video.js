@@ -36,8 +36,8 @@ export default async function handler(req, res) {
   } = req.body || {};
   if (!prompt) return res.status(400).json({ error: 'prompt required' });
 
-  const t2v = process.env.FAL_VIDEO_T2V_MODEL || 'bytedance/seedance-2.0/text-to-video';
-  const i2v = process.env.FAL_VIDEO_I2V_MODEL || 'bytedance/seedance-2.0/image-to-video';
+  const t2v = process.env.FAL_VIDEO_T2V_MODEL || 'fal-ai/bytedance/seedance-2.0/text-to-video';
+  const i2v = process.env.FAL_VIDEO_I2V_MODEL || 'fal-ai/bytedance/seedance-2.0/image-to-video';
   const model = image ? i2v : t2v;
 
   const input = { prompt };
