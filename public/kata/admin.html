@@ -70,6 +70,7 @@
     <a data-tab="cost" class="block px-3 py-2 rounded-[8px] text-mute hover:text-ink cursor-pointer mb-1"><span data-i18n="admin.tab.cost">▸ global cost</span></a>
     <a data-tab="models" class="block px-3 py-2 rounded-[8px] text-mute hover:text-ink cursor-pointer mb-1"><span data-i18n="admin.tab.models">▸ models</span></a>
     <a data-tab="health" class="block px-3 py-2 rounded-[8px] text-mute hover:text-ink cursor-pointer mb-1"><span data-i18n="admin.tab.health">▸ health</span></a>
+    <a data-tab="settings" class="block px-3 py-2 rounded-[8px] text-mute hover:text-ink cursor-pointer mb-1"><span data-i18n="admin.tab.settings">▸ global settings</span></a>
   </nav>
   <div class="px-5 py-4 border-t border-line">
     <a href="servers.html" class="mono text-[10px] tracking-label uppercase text-mute hover:text-ink" data-i18n="btn.back-my-servers">← my servers</a>
@@ -97,7 +98,7 @@
 </main>
 
 <script>
-const TABS = ['servers','logs','cost','models','health'];
+const TABS = ['servers','logs','cost','models','health','settings'];
 const params = new URLSearchParams(location.search);
 let currentTab = TABS.includes(params.get('tab')) ? params.get('tab') : 'servers';
 
@@ -412,7 +413,143 @@ async function renderHealth() {
     <div class="space-y-2">${instances || '<div class="row mono text-[11px] text-mute">no heartbeat docs</div>'}</div>`;
 }
 
-const renderers = { servers: renderServers, logs: renderLogs, cost: renderCost, models: renderModels, health: renderHealth };
+// ── settings (global config) ────────────────────────────────────
+const SETTINGS_FIELDS = [
+  { key: 'systemPrompt', type: 'textarea', label: 'system prompt', placeholder: '(empty — bot uses no extra prompt)', max: 4000 },
+  { key: 'chatModel', type: 'text', label: 'chat model', placeholder: 'gemini-3.1-flash-lite' },
+  { key: 'chatMode', type: 'select', label: 'chat mode', options: ['fast', 'balanced', 'deep'] },
+  { key: 'imageModel', type: 'text', label: 'image model', placeholder: 'fal-ai/nano-banana-pro' },
+  { key: 'videoModel', type: 'text', label: 'video model', placeholder: 'bytedance/seedance-2.0/image-to-video' },
+  { key: 'rateLimitPerUser', type: 'number', label: 'rate limit / user (mentions/h)', min: 1, max: 1000 },
+  { key: 'nsfwThresholdNormal', type: 'number', label: 'NSFW threshold (normal channels)', min: 0, max: 1, step: 0.05 },
+  { key: 'nsfwThresholdNsfw', type: 'number', label: 'NSFW threshold (NSFW channels)', min: 0, max: 1, step: 0.05 },
+  { key: 'allowedChannels', type: 'textarea', label: 'allowed channels (snowflake, one per line)', placeholder: '(empty = allow all)' },
+];
+
+function fieldValue(stored, codeDefault) {
+  if (stored !== undefined && stored !== null) return { value: stored, source: 'global' };
+  return { value: codeDefault, source: 'code' };
+}
+
+async function renderSettings() {
+  elContent.innerHTML = '<div class="mono text-[11px] text-mute">loading…</div>';
+  elActions.innerHTML = '';
+  const data = await fetchJson('/api/kata/admin/global-config');
+  if (!data) return;
+  clearAuthWarn();
+  elCounts.textContent = 'global defaults · cascades to every guild without explicit override';
+
+  const cfg = data.config || {};
+  const codeDef = data.codeDefaults || {};
+
+  const rows = SETTINGS_FIELDS.map((f) => {
+    const stored = cfg[f.key];
+    const { value, source } = fieldValue(stored, codeDef[f.key]);
+    const tag = source === 'global'
+      ? '<span class="mono text-[9px] tracking-label uppercase px-2 py-0.5 rounded-full" style="background:#D4A85822;border:1px solid #D4A85844;color:#D4A858">SET</span>'
+      : '<span class="mono text-[9px] tracking-label uppercase px-2 py-0.5 rounded-full" style="background:rgba(245,237,224,0.05);border:1px solid rgba(245,237,224,0.10);color:rgba(245,237,224,0.5)">CODE</span>';
+    let inputHtml = '';
+    if (f.type === 'textarea') {
+      const v = f.key === 'allowedChannels'
+        ? (Array.isArray(value) ? value.join('\n') : '')
+        : (value ?? '');
+      inputHtml = `<textarea data-field="${f.key}" rows="${f.key === 'systemPrompt' ? 6 : 3}" class="mono text-[12px] w-full bg-bg border border-line rounded-[8px] px-3 py-2 text-ink focus:outline-none focus:border-line2" placeholder="${escapeHtml(f.placeholder || '')}">${escapeHtml(v)}</textarea>`;
+    } else if (f.type === 'select') {
+      inputHtml = `<select data-field="${f.key}" class="mono text-[12px] bg-bg border border-line rounded-[8px] px-3 py-2 text-ink focus:outline-none focus:border-line2">${f.options.map((o) => `<option value="${o}" ${value === o ? 'selected' : ''}>${o}</option>`).join('')}</select>`;
+    } else if (f.type === 'number') {
+      inputHtml = `<input type="number" data-field="${f.key}" value="${value ?? ''}" min="${f.min ?? ''}" max="${f.max ?? ''}" step="${f.step ?? 1}" class="mono text-[12px] w-32 bg-bg border border-line rounded-[8px] px-3 py-2 text-ink focus:outline-none focus:border-line2" />`;
+    } else {
+      inputHtml = `<input type="text" data-field="${f.key}" value="${escapeHtml(value ?? '')}" placeholder="${escapeHtml(f.placeholder || '')}" class="mono text-[12px] w-full bg-bg border border-line rounded-[8px] px-3 py-2 text-ink focus:outline-none focus:border-line2" />`;
+    }
+    const resetBtn = source === 'global'
+      ? `<button data-reset="${f.key}" class="mono text-[10px] tracking-label uppercase text-mute hover:text-ink ml-2" title="Reset to code default">reset</button>`
+      : '';
+    return `<div class="row">
+      <div class="flex items-center justify-between gap-3 mb-2">
+        <div class="mono text-[11px] tracking-label uppercase text-ink">${escapeHtml(f.label)}${resetBtn}</div>
+        ${tag}
+      </div>
+      ${inputHtml}
+    </div>`;
+  }).join('');
+
+  elContent.innerHTML = `
+    <div class="mb-4 mono text-[11px] text-mute">
+      Bất cứ field nào để chế độ <span class="text-ink">CODE</span> sẽ dùng default cứng trong bot. Đặt giá trị ở đây để áp cho mọi guild — guild nào muốn khác thì admin guild đó override trong overview drawer.
+    </div>
+    <div class="space-y-3">${rows}</div>
+    <div class="flex gap-3 mt-6">
+      <button id="settings-save" class="mono h-10 px-6 rounded-[10px] text-[11px] tracking-label uppercase font-bold text-bg" style="background:var(--accent)">save</button>
+      <button id="settings-reload" class="mono h-10 px-6 rounded-[10px] border border-line text-[11px] tracking-label uppercase text-mute hover:text-ink">reload</button>
+      <span id="settings-status" class="mono text-[11px] text-mute self-center"></span>
+    </div>
+  `;
+
+  document.getElementById('settings-reload').addEventListener('click', renderSettings);
+  document.querySelectorAll('[data-reset]').forEach((b) => {
+    b.addEventListener('click', async () => {
+      const key = b.getAttribute('data-reset');
+      await saveSettings({ [key]: null });
+      renderSettings();
+    });
+  });
+  document.getElementById('settings-save').addEventListener('click', async () => {
+    const payload = collectSettingsPayload(cfg);
+    if (Object.keys(payload).length === 0) {
+      document.getElementById('settings-status').textContent = '(không có thay đổi)';
+      return;
+    }
+    await saveSettings(payload);
+    renderSettings();
+  });
+}
+
+function collectSettingsPayload(currentCfg) {
+  const out = {};
+  for (const f of SETTINGS_FIELDS) {
+    const el = document.querySelector(`[data-field="${f.key}"]`);
+    if (!el) continue;
+    let v;
+    if (f.type === 'number') {
+      const n = Number(el.value);
+      v = el.value === '' ? null : (Number.isFinite(n) ? n : null);
+    } else if (f.type === 'select') {
+      v = el.value;
+    } else if (f.type === 'textarea' && f.key === 'allowedChannels') {
+      const lines = el.value.split('\n').map((s) => s.trim()).filter(Boolean);
+      v = lines.length === 0 ? null : lines;
+    } else {
+      v = el.value === '' ? null : el.value;
+    }
+    const cur = currentCfg[f.key];
+    const same = JSON.stringify(v) === JSON.stringify(cur ?? null);
+    if (!same) out[f.key] = v;
+  }
+  return out;
+}
+
+async function saveSettings(payload) {
+  const status = document.getElementById('settings-status');
+  if (status) status.textContent = 'saving…';
+  try {
+    const r = await fetch('/api/kata/admin/global-config', {
+      method: 'PATCH',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) {
+      if (status) status.textContent = '⚠ ' + (data.error || `error ${r.status}`);
+      return;
+    }
+    if (status) status.textContent = '✓ saved · bot đang reload config';
+  } catch (e) {
+    if (status) status.textContent = '⚠ network error';
+  }
+}
+
+const renderers = { servers: renderServers, logs: renderLogs, cost: renderCost, models: renderModels, health: renderHealth, settings: renderSettings };
 
 function switchTab(tab) {
   if (!TABS.includes(tab)) return;

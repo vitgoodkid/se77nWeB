@@ -258,6 +258,9 @@ async function handleKata(req, res) {
   if (adminMatch && req.method === 'GET') {
     return handleKataAdmin(req, res, adminMatch[1]);
   }
+  if (kataPath === 'admin/global-config' && req.method === 'PATCH') {
+    return handleKataAdminGlobalConfigPatch(req, res);
+  }
 
   // /api/kata/server/:guildId  → GET overview + config
   // /api/kata/server/:guildId/config (PATCH) → write config + redis publish
@@ -1183,7 +1186,7 @@ async function handleKataServerCost(req, res, guildId) {
 // /api/kata/admin/<section>  — owner-only aggregate endpoints
 // ────────────────────────────────────────────────────────────────
 
-const ADMIN_SECTIONS = new Set(['servers', 'logs', 'cost', 'models', 'health']);
+const ADMIN_SECTIONS = new Set(['servers', 'logs', 'cost', 'models', 'health', 'global-config']);
 const ADMIN_CACHE_TTL_SECONDS = 5 * 60;
 
 async function requireOwner(req) {
@@ -1223,6 +1226,7 @@ async function handleKataAdmin(req, res, section) {
     case 'cost':     return adminCost(req, res, kataDb);
     case 'models':   return adminModels(req, res, kataDb);
     case 'health':   return adminHealth(req, res, kataDb);
+    case 'global-config': return adminGlobalConfigGet(req, res, kataDb);
   }
 }
 
@@ -1483,4 +1487,150 @@ async function adminHealth(req, res, kataDb) {
     },
     checkedAt: new Date().toISOString(),
   });
+}
+
+// ── /admin/global-config ──────────────────────────────────────
+//
+// GET  → returns the single GlobalConfig doc (scope='_global'). Fields
+//         the owner hasn't set are simply absent so the dashboard can
+//         show "(inherited from code default)" as placeholder text.
+// PATCH → owner sets / unsets fields. Sending a field as `null` clears
+//         it (drops back to code default). Validation reuses the per-
+//         guild rules since the field shape is identical.
+
+const GLOBAL_SCOPE = '_global';
+
+async function adminGlobalConfigGet(req, res, kataDb) {
+  const doc = await kataDb.collection('globalconfigs').findOne({ scope: GLOBAL_SCOPE });
+  return res.status(200).json({
+    config: doc ?? { scope: GLOBAL_SCOPE },
+    codeDefaults: {
+      systemPrompt: '',
+      chatModel: 'gemini-3.1-flash-lite',
+      chatMode: 'balanced',
+      imageModel: 'fal-ai/nano-banana-pro',
+      videoModel: 'bytedance/seedance-2.0/image-to-video',
+      rateLimitPerUser: 30,
+      nsfwThresholdNormal: 0.3,
+      nsfwThresholdNsfw: 0.85,
+      allowedChannels: [],
+    },
+  });
+}
+
+async function handleKataAdminGlobalConfigPatch(req, res) {
+  const auth = await requireOwner(req);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error, message: auth.message });
+
+  let body = req.body;
+  if (typeof body === 'string') {
+    try { body = JSON.parse(body); } catch { return res.status(400).json({ error: 'invalid_json' }); }
+  }
+  if (!body || typeof body !== 'object') return res.status(400).json({ error: 'invalid_body' });
+
+  // Build $set / $unset from the input. null → unset (drop back to code
+  // default); undefined → leave alone; value → validate then set.
+  const set = {};
+  const unset = {};
+  const errors = [];
+
+  function take(field, validate) {
+    if (!(field in body)) return;
+    const v = body[field];
+    if (v === null) {
+      unset[field] = '';
+      return;
+    }
+    const result = validate(v);
+    if (result.error) errors.push(result.error);
+    else set[field] = result.value;
+  }
+
+  take('systemPrompt', (v) =>
+    typeof v !== 'string'
+      ? { error: 'systemPrompt must be string' }
+      : v.length > MAX_SYSPROMPT_LEN
+        ? { error: `systemPrompt > ${MAX_SYSPROMPT_LEN} chars` }
+        : { value: v },
+  );
+  take('chatModel', (v) =>
+    typeof v !== 'string' || !v.trim()
+      ? { error: 'chatModel must be non-empty string' }
+      : { value: v.trim() },
+  );
+  take('chatMode', (v) =>
+    !ALLOWED_CHAT_MODES.has(v)
+      ? { error: 'chatMode must be fast|balanced|deep' }
+      : { value: v },
+  );
+  take('imageModel', (v) =>
+    typeof v !== 'string' || !v.trim()
+      ? { error: 'imageModel must be non-empty string' }
+      : { value: v.trim() },
+  );
+  take('videoModel', (v) =>
+    typeof v !== 'string' || !v.trim()
+      ? { error: 'videoModel must be non-empty string' }
+      : { value: v.trim() },
+  );
+  take('rateLimitPerUser', (v) => {
+    const n = Number(v);
+    return !Number.isFinite(n) || n < 1 || n > 1000
+      ? { error: 'rateLimitPerUser must be 1-1000' }
+      : { value: Math.round(n) };
+  });
+  take('nsfwThresholdNormal', (v) => {
+    const n = Number(v);
+    return !Number.isFinite(n) || n < 0 || n > 1
+      ? { error: 'nsfwThresholdNormal must be 0-1' }
+      : { value: n };
+  });
+  take('nsfwThresholdNsfw', (v) => {
+    const n = Number(v);
+    return !Number.isFinite(n) || n < 0 || n > 1
+      ? { error: 'nsfwThresholdNsfw must be 0-1' }
+      : { value: n };
+  });
+  take('allowedChannels', (v) => {
+    if (!Array.isArray(v)) return { error: 'allowedChannels must be array' };
+    if (v.length > MAX_ALLOWED_CHANNELS) return { error: `allowedChannels > ${MAX_ALLOWED_CHANNELS}` };
+    if (!v.every((c) => typeof c === 'string' && /^\d{15,21}$/.test(c))) return { error: 'allowedChannels entries must be channel ids' };
+    return { value: v };
+  });
+
+  if (errors.length) return res.status(400).json({ error: 'validation_failed', details: errors });
+  if (Object.keys(set).length === 0 && Object.keys(unset).length === 0) {
+    return res.status(400).json({ error: 'empty_update' });
+  }
+
+  set.updatedAt = new Date();
+
+  const kataDb = await getKataDb();
+  const update = { $set: { ...set, scope: GLOBAL_SCOPE } };
+  if (Object.keys(unset).length > 0) update.$unset = unset;
+  await kataDb.collection('globalconfigs').updateOne({ scope: GLOBAL_SCOPE }, update, { upsert: true });
+
+  // Fan-out: the bot subscribes to config:updated:_global and treats it as
+  // a cascade — every per-guild merged result is invalidated.
+  try {
+    await redisPublish(`config:updated:${GLOBAL_SCOPE}`, { scope: GLOBAL_SCOPE, ts: Date.now() });
+  } catch (e) {
+    console.warn('redis publish failed (global config)', e?.message || e);
+  }
+
+  // Audit log — same collection as per-guild changes, no guildId.
+  try {
+    await kataDb.collection('auditlogs').insertOne({
+      actorUserId: auth.user.providerUserId,
+      action: 'global_config_update',
+      details: {
+        set: Object.keys(set).filter((k) => k !== 'updatedAt'),
+        unset: Object.keys(unset),
+      },
+      createdAt: new Date(),
+    });
+  } catch { /* audit is best-effort */ }
+
+  const fresh = await kataDb.collection('globalconfigs').findOne({ scope: GLOBAL_SCOPE });
+  return res.status(200).json({ ok: true, config: fresh });
 }
