@@ -352,7 +352,18 @@ export function AIPlayground() {
             </div>
           )}
           {messages.map((m, i) => (
-            <Message key={i} role={m.role} content={m.content} image={m.image} video={m.video} />
+            <Message
+              key={i}
+              role={m.role}
+              content={m.content}
+              image={m.image}
+              video={m.video}
+              onReplyImage={
+                preset.kind === 'image' && m.role === 'assistant' && m.image
+                  ? () => setImgRef({ name: 'reply.jpg', dataUrl: m.image })
+                  : null
+              }
+            />
           ))}
           {busy && <Message role="assistant" content="…" typing kind={preset.kind} />}
         </div>
@@ -607,7 +618,7 @@ function PillGroup({ label, value, onChange, options }) {
   );
 }
 
-function Message({ role, content, image, video, typing, kind }) {
+function Message({ role, content, image, video, typing, kind, onReplyImage }) {
   const isUser = role === 'user';
   return (
     <div style={{
@@ -634,6 +645,21 @@ function Message({ role, content, image, video, typing, kind }) {
           <video src={video} controls style={{ display: 'block', maxWidth: '100%', borderRadius: 8, marginBottom: content ? 8 : 0 }} />
         )}
         {typing ? <TypingDots kind={kind} /> : content}
+        {onReplyImage && (
+          <div style={{ marginTop: 8, display: 'flex', justifyContent: 'flex-end' }}>
+            <button
+              onClick={onReplyImage}
+              className="mono"
+              style={{
+                fontSize: 10, letterSpacing: '0.15em',
+                padding: '4px 10px', borderRadius: 999,
+                background: 'transparent',
+                border: `1px solid ${COLORS.gold}66`,
+                color: COLORS.gold, cursor: 'pointer',
+              }}
+            >↺ REPLY · EDIT</button>
+          </div>
+        )}
       </div>
     </div>
   );
