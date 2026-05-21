@@ -54,6 +54,7 @@
       <span class="text-ink">servers</span>
     </div>
     <a href="me-history.html" class="mono text-[10px] tracking-label uppercase text-mute hover:text-ink ml-4 px-2 py-1 rounded border border-line">my history →</a>
+    <a id="admin-link" href="admin.html" class="hidden mono text-[10px] tracking-label uppercase text-gold hover:text-ink ml-1 px-2 py-1 rounded border border-line">admin →</a>
   </div>
 
   <div class="flex items-center gap-2.5">
@@ -212,6 +213,12 @@ async function loadKata() {
       ? ` · <span class="text-info">${ownerExtras} bot-owner view</span>`
       : '';
     counts.innerHTML = `Bạn quản lý <span class="text-ink">${data.counts.managed}</span> server${ownerNote}`;
+
+    // Reveal the admin → link in the header for the bot owner only.
+    if (data.user?.isOwner) {
+      const adminLink = document.getElementById('admin-link');
+      if (adminLink) adminLink.classList.remove('hidden');
+    }
 
     managedLabel.textContent = `managed · ${data.managed.length} server${data.managed.length === 1 ? '' : 's'}`;
 

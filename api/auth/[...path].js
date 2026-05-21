@@ -15,7 +15,7 @@ import {
   getBaseUrl,
 } from '../_lib/session.js';
 import { getUsers, getKataDb } from '../_lib/mongo.js';
-import { publish as redisPublish, cached } from '../_lib/redis.js';
+import { publish as redisPublish, cached, ping as redisPing } from '../_lib/redis.js';
 
 export const config = { maxDuration: 60 };
 
@@ -253,6 +253,11 @@ async function handleKata(req, res) {
 
   if (kataPath === 'me') return handleKataMe(req, res);
   if (kataPath === 'me/history') return handleKataMeHistory(req, res);
+  // /api/kata/admin/<section> — owner-only aggregate dashboards
+  const adminMatch = kataPath.match(/^admin\/([a-z-]+)$/);
+  if (adminMatch && req.method === 'GET') {
+    return handleKataAdmin(req, res, adminMatch[1]);
+  }
 
   // /api/kata/server/:guildId  → GET overview + config
   // /api/kata/server/:guildId/config (PATCH) → write config + redis publish
@@ -1029,4 +1034,310 @@ async function handleKataServerCost(req, res, guildId) {
   res.setHeader('X-Kata-Cache', hit ? 'HIT' : 'MISS');
   res.setHeader('Cache-Control', 'private, max-age=0, must-revalidate');
   return res.status(200).json(value);
+}
+
+// ────────────────────────────────────────────────────────────────
+// /api/kata/admin/<section>  — owner-only aggregate endpoints
+// ────────────────────────────────────────────────────────────────
+
+const ADMIN_SECTIONS = new Set(['servers', 'logs', 'cost', 'models', 'health']);
+const ADMIN_CACHE_TTL_SECONDS = 5 * 60;
+
+async function requireOwner(req) {
+  const session = readSession(req);
+  if (!session?.uid) return { error: 'unauthenticated', status: 401 };
+
+  let userOid;
+  try { userOid = new ObjectId(session.uid); }
+  catch { return { error: 'bad_session', status: 401 }; }
+
+  const users = await getUsers();
+  const user = await users.findOne({ _id: userOid });
+  if (!user) return { error: 'user_not_found', status: 401 };
+  if (user.provider !== 'discord' || !user.providerUserId) {
+    return { error: 'discord_required', status: 403 };
+  }
+
+  const ownerId = process.env.OWNER_DISCORD_ID?.trim() || '397342895327150080';
+  if (user.providerUserId !== ownerId) {
+    return { error: 'forbidden', status: 403, message: 'Owner only' };
+  }
+  return { user, ownerId };
+}
+
+async function handleKataAdmin(req, res, section) {
+  if (!ADMIN_SECTIONS.has(section)) {
+    return res.status(404).json({ error: 'unknown_section', allowed: [...ADMIN_SECTIONS] });
+  }
+  const auth = await requireOwner(req);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error, message: auth.message });
+
+  const kataDb = await getKataDb();
+
+  switch (section) {
+    case 'servers':  return adminServers(req, res, kataDb);
+    case 'logs':     return adminLogs(req, res, kataDb);
+    case 'cost':     return adminCost(req, res, kataDb);
+    case 'models':   return adminModels(req, res, kataDb);
+    case 'health':   return adminHealth(req, res, kataDb);
+  }
+}
+
+// ── /admin/servers ─────────────────────────────────────────────
+// Every guild the bot is in, plus per-guild 30d totals so the owner can
+// spot servers that are racking up cost.
+async function adminServers(req, res, kataDb) {
+  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const [servers, costByGuild, msgByGuild] = await Promise.all([
+    kataDb.collection('servers')
+      .find({}, { projection: { guildId: 1, name: 1, iconUrl: 1, ownerId: 1, isActive: 1, joinedAt: 1, memberCount: 1 } })
+      .sort({ joinedAt: -1 })
+      .toArray(),
+    kataDb.collection('costentries').aggregate([
+      { $match: { timestamp: { $gte: since } } },
+      { $group: { _id: '$guildId', cost: { $sum: '$costUSD' }, count: { $sum: 1 } } },
+    ]).toArray(),
+    kataDb.collection('chatlogs').aggregate([
+      { $match: { createdAt: { $gte: since }, role: 'user' } },
+      { $group: { _id: '$guildId', msgs: { $sum: 1 } } },
+    ]).toArray(),
+  ]);
+
+  const costMap = Object.fromEntries(costByGuild.map((r) => [r._id, r]));
+  const msgMap = Object.fromEntries(msgByGuild.map((r) => [r._id, r.msgs]));
+
+  return res.status(200).json({
+    servers: servers.map((s) => ({
+      guildId: s.guildId,
+      name: s.name,
+      iconUrl: s.iconUrl ?? null,
+      ownerId: s.ownerId ?? null,
+      isActive: s.isActive !== false,
+      joinedAt: s.joinedAt ?? null,
+      memberCount: s.memberCount ?? null,
+      cost30d: Number(costMap[s.guildId]?.cost ?? 0),
+      events30d: Number(costMap[s.guildId]?.count ?? 0),
+      msgs30d: Number(msgMap[s.guildId] ?? 0),
+    })),
+  });
+}
+
+// ── /admin/logs ────────────────────────────────────────────────
+// Like the per-server logs page but unscoped — last N events across all
+// guilds, joined with guild name/icon.
+async function adminLogs(req, res, kataDb) {
+  const type = String(req.query?.type || 'chat').toLowerCase();
+  const spec = LOG_TYPES[type];
+  if (!spec) return res.status(400).json({ error: 'invalid_type', allowed: Object.keys(LOG_TYPES) });
+
+  const limit = Math.min(MAX_LOG_LIMIT, Math.max(1, parseInt(req.query?.limit, 10) || DEFAULT_LOG_LIMIT));
+  const cursorRaw = req.query?.cursor;
+
+  const filter = {};
+  if (cursorRaw) {
+    const cursorDate = new Date(String(cursorRaw));
+    if (!isNaN(cursorDate.getTime())) filter[spec.timeField] = { $lt: cursorDate };
+  }
+  if (type === 'chat' && req.query?.role !== 'all') filter.role = 'user';
+
+  const items = await kataDb.collection(spec.coll)
+    .find(filter, { projection: { ...spec.project, guildId: 1 } })
+    .sort({ [spec.timeField]: -1 })
+    .limit(limit + 1)
+    .toArray();
+
+  const hasMore = items.length > limit;
+  const trimmed = hasMore ? items.slice(0, limit) : items;
+  const nextCursor = hasMore ? trimmed[trimmed.length - 1][spec.timeField].toISOString() : null;
+
+  const guildIds = [...new Set(trimmed.map((r) => r.guildId).filter(Boolean))];
+  let guildMeta = {};
+  if (guildIds.length > 0) {
+    const servers = await kataDb.collection('servers')
+      .find({ guildId: { $in: guildIds } }, { projection: { guildId: 1, name: 1, iconUrl: 1 } })
+      .toArray();
+    guildMeta = Object.fromEntries(servers.map((s) => [s.guildId, { name: s.name, iconUrl: s.iconUrl ?? null }]));
+  }
+
+  return res.status(200).json({
+    type,
+    items: trimmed.map((r) => ({
+      ...r,
+      guild: guildMeta[r.guildId] ?? { name: r.guildId, iconUrl: null },
+    })),
+    nextCursor,
+    hasMore,
+  });
+}
+
+// ── /admin/cost ────────────────────────────────────────────────
+// Global cost across every guild. 5-minute Redis cache.
+async function adminCost(req, res, kataDb) {
+  const range = COST_RANGES[req.query?.range] ? req.query.range : DEFAULT_COST_RANGE;
+  const days = COST_RANGES[range];
+  const windowSlot = Math.floor(Date.now() / (ADMIN_CACHE_TTL_SECONDS * 1000));
+  const key = `kata:admin:cost:${range}:${windowSlot}`;
+
+  const { value, hit } = await cached(key, ADMIN_CACHE_TTL_SECONDS, async () => {
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+    const sincePrior = new Date(Date.now() - 2 * days * 24 * 60 * 60 * 1000);
+    const cost = kataDb.collection('costentries');
+
+    const [totalsCurrent, totalsPrior, byService, byCommand, byGuild, dailyCost] = await Promise.all([
+      cost.aggregate([
+        { $match: { timestamp: { $gte: since } } },
+        { $group: { _id: null, total: { $sum: '$costUSD' }, events: { $sum: 1 } } },
+      ]).toArray(),
+      cost.aggregate([
+        { $match: { timestamp: { $gte: sincePrior, $lt: since } } },
+        { $group: { _id: null, total: { $sum: '$costUSD' } } },
+      ]).toArray(),
+      cost.aggregate([
+        { $match: { timestamp: { $gte: since } } },
+        { $group: { _id: '$service', cost: { $sum: '$costUSD' }, count: { $sum: 1 } } },
+        { $sort: { cost: -1 } },
+      ]).toArray(),
+      cost.aggregate([
+        { $match: { timestamp: { $gte: since } } },
+        { $group: { _id: '$command', cost: { $sum: '$costUSD' }, count: { $sum: 1 } } },
+        { $sort: { cost: -1 } },
+        { $limit: 20 },
+      ]).toArray(),
+      cost.aggregate([
+        { $match: { timestamp: { $gte: since } } },
+        { $group: { _id: '$guildId', cost: { $sum: '$costUSD' }, count: { $sum: 1 } } },
+        { $sort: { cost: -1 } },
+        { $limit: 15 },
+      ]).toArray(),
+      cost.aggregate([
+        { $match: { timestamp: { $gte: since } } },
+        { $group: {
+          _id: { $dateToString: { format: '%Y-%m-%d', date: '$timestamp' } },
+          cost: { $sum: '$costUSD' },
+        } },
+        { $sort: { _id: 1 } },
+      ]).toArray(),
+    ]);
+
+    const total = Number(totalsCurrent[0]?.total ?? 0);
+    const priorTotal = Number(totalsPrior[0]?.total ?? 0);
+    const totalDelta = priorTotal === 0 ? (total > 0 ? 100 : 0) : Math.round(((total - priorTotal) / priorTotal) * 100);
+
+    const guildIds = byGuild.map((g) => g._id).filter(Boolean);
+    const guildMeta = {};
+    if (guildIds.length > 0) {
+      const servers = await kataDb.collection('servers')
+        .find({ guildId: { $in: guildIds } }, { projection: { guildId: 1, name: 1, iconUrl: 1 } })
+        .toArray();
+      for (const s of servers) guildMeta[s.guildId] = { name: s.name, iconUrl: s.iconUrl ?? null };
+    }
+
+    const dailyMap = new Map(dailyCost.map((r) => [r._id, r.cost]));
+    const daily = [];
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
+      const id = d.toISOString().slice(0, 10);
+      daily.push({ date: id, cost: Number(dailyMap.get(id) ?? 0) });
+    }
+
+    return {
+      range,
+      total,
+      totalDelta,
+      events: Number(totalsCurrent[0]?.events ?? 0),
+      byService: byService.map((s) => ({ service: s._id, cost: Number(s.cost), count: s.count })),
+      byCommand: byCommand.map((c) => ({ command: c._id, cost: Number(c.cost), count: c.count })),
+      byGuild: byGuild.map((g) => ({
+        guildId: g._id,
+        name: guildMeta[g._id]?.name ?? g._id,
+        iconUrl: guildMeta[g._id]?.iconUrl ?? null,
+        cost: Number(g.cost),
+        count: g.count,
+      })),
+      daily,
+    };
+  });
+
+  res.setHeader('X-Kata-Cache', hit ? 'HIT' : 'MISS');
+  return res.status(200).json(value);
+}
+
+// ── /admin/models ──────────────────────────────────────────────
+// Read-only snapshot: which models are actually being called and at what
+// volume / cost. We don't expose chain editing — chains live in the bot
+// source so the dashboard view is purely observational.
+async function adminModels(req, res, kataDb) {
+  const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const cost = kataDb.collection('costentries');
+
+  const rows = await cost.aggregate([
+    { $match: { timestamp: { $gte: since } } },
+    { $group: {
+      _id: { service: '$service', model: '$model' },
+      cost: { $sum: '$costUSD' },
+      count: { $sum: 1 },
+      lastUsed: { $max: '$timestamp' },
+    } },
+    { $sort: { cost: -1 } },
+  ]).toArray();
+
+  return res.status(200).json({
+    rangeDays: 7,
+    models: rows.map((r) => ({
+      service: r._id.service,
+      model: r._id.model,
+      cost: Number(r.cost),
+      count: r.count,
+      lastUsed: r.lastUsed,
+    })),
+  });
+}
+
+// ── /admin/health ──────────────────────────────────────────────
+// Liveness across the stack:
+//   - Mongo: ping the kata db
+//   - Redis: PING
+//   - Bot: read botheartbeats — any row whose lastSeen is within 2 min is
+//     considered alive
+async function adminHealth(req, res, kataDb) {
+  const startedMongo = Date.now();
+  let mongo;
+  try {
+    await kataDb.command({ ping: 1 });
+    mongo = { ok: true, latencyMs: Date.now() - startedMongo };
+  } catch (err) {
+    mongo = { ok: false, latencyMs: Date.now() - startedMongo, error: err.message };
+  }
+
+  const redis = await redisPing();
+
+  const heartbeats = await kataDb.collection('botheartbeats')
+    .find({}, { projection: { instanceId: 1, lastSeen: 1, startedAt: 1, pid: 1, version: 1, guildCount: 1, queueDepth: 1, memMB: 1, nodeVersion: 1, extras: 1 } })
+    .sort({ lastSeen: -1 })
+    .toArray();
+
+  const aliveCutoff = Date.now() - 2 * 60 * 1000;
+  const annotated = heartbeats.map((h) => ({
+    instanceId: h.instanceId,
+    lastSeen: h.lastSeen,
+    startedAt: h.startedAt,
+    pid: h.pid ?? null,
+    version: h.version ?? null,
+    guildCount: h.guildCount ?? 0,
+    queueDepth: h.queueDepth ?? 0,
+    memMB: h.memMB ?? null,
+    nodeVersion: h.nodeVersion ?? null,
+    isShuttingDown: !!h.extras?.isShuttingDown,
+    alive: h.lastSeen?.getTime?.() >= aliveCutoff,
+  }));
+
+  return res.status(200).json({
+    mongo,
+    redis,
+    bot: {
+      instances: annotated,
+      anyAlive: annotated.some((h) => h.alive && !h.isShuttingDown),
+    },
+    checkedAt: new Date().toISOString(),
+  });
 }

@@ -37,6 +37,29 @@ export async function publish(channel, payload) {
 }
 
 /**
+ * One-shot Redis PING for the admin health page. Returns latency in ms on
+ * success, or `{ error }` on failure. Never throws — the dashboard should
+ * be able to render even when Redis is down.
+ */
+export async function ping() {
+  let client;
+  const startedAt = Date.now();
+  try {
+    client = makeClient();
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+  try {
+    const r = await client.ping();
+    return { ok: r === 'PONG', latencyMs: Date.now() - startedAt };
+  } catch (err) {
+    return { ok: false, error: err.message, latencyMs: Date.now() - startedAt };
+  } finally {
+    try { await client.quit(); } catch { /* ignore */ }
+  }
+}
+
+/**
  * Cache wrapper for expensive serverless aggregations. Returns the cached
  * value if present, otherwise runs `producer`, stores the result with TTL,
  * and returns it. Cache failures degrade to running the producer directly —

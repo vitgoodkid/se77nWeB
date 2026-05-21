@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<base href="/kata/" />
+<title>admin · katas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = { theme: { extend: {
+    colors: { bg:'#0d0a08', panel:'#15110d', panel2:'#1c1813', line:'rgba(255,255,255,0.08)', line2:'rgba(255,255,255,0.14)', ink:'#f5ede0', mute:'rgba(245,237,224,0.5)', mute2:'rgba(245,237,224,0.3)', red:'#E04545', green:'#5BA868', gold:'#D4A858' },
+    fontFamily: { sans:['Geist','system-ui','sans-serif'], mono:['"JetBrains Mono"','ui-monospace','monospace'] },
+    letterSpacing: { kicker:'0.22em', label:'0.18em', tag:'0.12em' },
+  }}};
+</script>
+<style>
+  html, body { background: #0d0a08; color: #f5ede0; font-family: Geist, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+  .glow77 { text-shadow: 0 0 6px #E04545cc, 0 0 18px #E0454566, 0 0 36px #E0454533; }
+  @keyframes pulse77 { 0%,100% { opacity:1; transform: scale(1); } 50% { opacity:.55; transform: scale(.82); } }
+  .dot-pulse { animation: pulse77 2s ease-in-out infinite; }
+  .ambient { background-image:
+      radial-gradient(60% 50% at 18% 12%, #E0454520 0%, transparent 65%),
+      radial-gradient(50% 45% at 90% 88%, #5BA86820 0%, transparent 70%); }
+  .grain { background-image: radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px); background-size: 3px 3px; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
+  .tab-active { color: #f5ede0 !important; background: rgba(245,237,224,0.05); }
+  .row { transition: background 120ms ease; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 16px; background: rgba(21,17,13,0.4); }
+  .row:hover { background: rgba(245,237,224,0.03); }
+  .stat-pos { color: #E04545; }
+  .stat-neg { color: #5BA868; }
+  .truncate-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+</style>
+</head>
+<body class="bg-bg text-ink min-h-screen overflow-x-hidden">
+
+<div aria-hidden class="fixed inset-0 z-0 pointer-events-none ambient"></div>
+<div aria-hidden class="fixed inset-0 z-0 pointer-events-none grain opacity-40"></div>
+
+<header class="fixed top-0 inset-x-0 h-16 z-50 flex items-center justify-between px-6 backdrop-blur-md border-b border-line" style="background:rgba(13,10,8,0.7)">
+  <div class="flex items-center gap-5">
+    <a href="index.html" class="flex flex-col items-start gap-1 leading-none">
+      <div class="mono text-[24px] font-extrabold tracking-[-0.025em]">se<span class="text-red glow77">77</span>n<span class="text-mute font-normal"> / kata</span></div>
+      <div class="mono text-[9px] uppercase tracking-kicker text-mute">Experiment <span class="text-red font-bold">007</span> · admin</div>
+    </a>
+    <div class="flex items-center gap-2 ml-3 mono text-[10px] tracking-label uppercase">
+      <a href="index.html" class="text-mute hover:text-ink">se77n</a><span class="text-mute2">/</span>
+      <a href="index.html" class="text-mute hover:text-ink">kata</a><span class="text-mute2">/</span>
+      <span class="text-ink">admin · <span id="bc-tab">servers</span></span>
+    </div>
+  </div>
+  <div class="flex items-center gap-2.5">
+    <button id="kata-user-chip" class="h-8 pl-1 pr-3 rounded-full border border-line flex items-center gap-2 mono text-[11px]">
+      <span id="kata-user-avatar" class="w-[26px] h-[26px] rounded-full grid place-items-center text-[11px] font-extrabold" style="background:#D4A85822;color:#D4A858">?</span>
+      <span id="kata-user-name" class="max-w-[120px] truncate">guest</span>
+    </button>
+  </div>
+</header>
+
+<aside class="fixed top-16 left-0 bottom-0 w-[220px] z-40 border-r border-line backdrop-blur-md overflow-y-auto" style="background:rgba(13,10,8,0.6)">
+  <div class="p-5 border-b border-line">
+    <div class="mono text-[10px] tracking-label uppercase text-gold">owner</div>
+    <div class="text-[14px] font-medium tracking-tight text-ink mt-1">admin console</div>
+    <div class="mono text-[10px] text-mute mt-1">global view</div>
+  </div>
+  <nav class="px-3 py-4 mono text-[11px] tracking-label uppercase">
+    <a data-tab="servers" class="block px-3 py-2 rounded-[8px] text-mute hover:text-ink cursor-pointer mb-1">▸ all servers</a>
+    <a data-tab="logs" class="block px-3 py-2 rounded-[8px] text-mute hover:text-ink cursor-pointer mb-1">▸ global logs</a>
+    <a data-tab="cost" class="block px-3 py-2 rounded-[8px] text-mute hover:text-ink cursor-pointer mb-1">▸ global cost</a>
+    <a data-tab="models" class="block px-3 py-2 rounded-[8px] text-mute hover:text-ink cursor-pointer mb-1">▸ models</a>
+    <a data-tab="health" class="block px-3 py-2 rounded-[8px] text-mute hover:text-ink cursor-pointer mb-1">▸ health</a>
+  </nav>
+  <div class="px-5 py-4 border-t border-line">
+    <a href="servers.html" class="mono text-[10px] tracking-label uppercase text-mute hover:text-ink">← my servers</a>
+  </div>
+</aside>
+
+<main class="relative z-10 pt-20 pb-16 pl-[244px] pr-8">
+
+  <div class="flex items-end justify-between gap-6 mb-6">
+    <div>
+      <div class="mono text-[10px] uppercase tracking-kicker text-gold mb-2">OWNER · ADMIN / <span id="page-tag">SERVERS</span></div>
+      <h1 class="mono text-[36px] leading-none font-extrabold tracking-[-0.035em] lowercase">admin<span id="page-tab-label" class="text-red font-extrabold"> · servers</span><span class="text-red glow77">.</span></h1>
+      <div id="page-counts" class="mono text-[11px] text-mute mt-3">—</div>
+    </div>
+    <div id="page-actions" class="flex items-center gap-2"></div>
+  </div>
+
+  <div id="auth-warning" class="hidden mb-6 p-5 border border-line rounded-[12px] bg-panel">
+    <div class="mono text-[10px] uppercase tracking-kicker text-red mb-2">không thể tải</div>
+    <div id="auth-warning-msg" class="text-[14px] text-mute">—</div>
+    <a id="auth-login-btn" href="/api/auth/discord/start" class="hidden mt-4 inline-block mono h-9 px-4 rounded-full border border-line text-[11px] tracking-label uppercase hover:bg-ink/5">đăng nhập discord</a>
+  </div>
+
+  <div id="content"></div>
+</main>
+
+<script>
+const TABS = ['servers','logs','cost','models','health'];
+const params = new URLSearchParams(location.search);
+let currentTab = TABS.includes(params.get('tab')) ? params.get('tab') : 'servers';
+
+const elTag = document.getElementById('page-tag');
+const elLabel = document.getElementById('page-tab-label');
+const elBcTab = document.getElementById('bc-tab');
+const elCounts = document.getElementById('page-counts');
+const elContent = document.getElementById('content');
+const elActions = document.getElementById('page-actions');
+const elAuthWarn = document.getElementById('auth-warning');
+const elAuthMsg = document.getElementById('auth-warning-msg');
+const elAuthLogin = document.getElementById('auth-login-btn');
+
+function setTabUI() {
+  document.querySelectorAll('[data-tab]').forEach(a => {
+    a.classList.toggle('tab-active', a.dataset.tab === currentTab);
+  });
+  elTag.textContent = currentTab.toUpperCase();
+  elLabel.textContent = ` · ${currentTab}`;
+  elBcTab.textContent = currentTab;
+}
+
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+
+function fmtTime(d) {
+  if (!d) return '—';
+  const date = new Date(d);
+  const diff = (Date.now() - date.getTime()) / 1000;
+  if (diff < 60) return `${Math.floor(diff)}s`;
+  if (diff < 3600) return `${Math.floor(diff/60)}m`;
+  if (diff < 86400) return `${Math.floor(diff/3600)}h`;
+  if (diff < 604800) return `${Math.floor(diff/86400)}d`;
+  return date.toISOString().slice(0,10);
+}
+
+function fmtUSD(n) { return `$${Number(n ?? 0).toFixed(4)}`; }
+function fmtUSD2(n) { return `$${Number(n ?? 0).toFixed(2)}`; }
+function fmtNum(n) { return Number(n ?? 0).toLocaleString(); }
+
+function guildBadge(g) {
+  const name = escapeHtml(g.name ?? '?');
+  const initial = escapeHtml((g.name ?? '?').slice(0,2));
+  const icon = g.iconUrl
+    ? `<img src="${escapeHtml(g.iconUrl)}" alt="" class="w-5 h-5 rounded-md object-cover" />`
+    : `<span class="w-5 h-5 rounded-md grid place-items-center mono text-[9px] font-bold" style="background:#D4A85822;color:#D4A858">${initial}</span>`;
+  return `<span class="inline-flex items-center gap-1.5 mono text-[10px] tracking-label uppercase text-mute">${icon}<span class="max-w-[180px] truncate">${name}</span></span>`;
+}
+
+async function fetchJson(url) {
+  const r = await fetch(url, { credentials: 'include' });
+  let body = null;
+  try { body = await r.json(); } catch {}
+  if (!r.ok) {
+    if (body?.error === 'unauthenticated') {
+      elAuthMsg.textContent = 'Cần đăng nhập Discord để vào admin.';
+      elAuthLogin.classList.remove('hidden');
+    } else if (body?.error === 'forbidden') {
+      elAuthMsg.textContent = 'Owner only — bạn không có quyền vào trang này.';
+    } else {
+      elAuthMsg.textContent = body?.error ?? `lỗi ${r.status}`;
+    }
+    elAuthWarn.classList.remove('hidden');
+    return null;
+  }
+  return body;
+}
+
+function clearAuthWarn() {
+  elAuthWarn.classList.add('hidden');
+  elAuthLogin.classList.add('hidden');
+}
+
+function renderActionsRange(tab) {
+  if (tab !== 'cost') return '';
+  const range = params.get('range') || '30d';
+  const opts = ['7d','30d','90d'].map(r =>
+    `<button data-range="${r}" class="mono h-8 px-3 rounded-full border border-line text-[10px] tracking-label uppercase ${r===range?'tab-active':'text-mute hover:text-ink'}">${r}</button>`
+  ).join('');
+  return opts;
+}
+
+async function renderServers() {
+  elContent.innerHTML = '<div class="mono text-[11px] text-mute">loading…</div>';
+  const data = await fetchJson('/api/kata/admin/servers');
+  if (!data) return;
+  clearAuthWarn();
+  elCounts.textContent = `${data.servers.length} servers · 30d window`;
+
+  const totalCost = data.servers.reduce((s, r) => s + r.cost30d, 0);
+  const totalEvents = data.servers.reduce((s, r) => s + r.events30d, 0);
+  const heroHtml = `
+    <div class="grid grid-cols-3 gap-3 mb-6">
+      <div class="row"><div class="mono text-[10px] tracking-label uppercase text-mute mb-1">guilds</div><div class="text-[28px] font-extrabold tracking-[-0.02em]">${data.servers.length}</div></div>
+      <div class="row"><div class="mono text-[10px] tracking-label uppercase text-mute mb-1">cost · 30d</div><div class="text-[28px] font-extrabold tracking-[-0.02em] text-gold">${fmtUSD2(totalCost)}</div></div>
+      <div class="row"><div class="mono text-[10px] tracking-label uppercase text-mute mb-1">events · 30d</div><div class="text-[28px] font-extrabold tracking-[-0.02em]">${fmtNum(totalEvents)}</div></div>
+    </div>`;
+
+  const rowsHtml = data.servers.map((s) => `
+    <div class="row flex items-center gap-4">
+      ${s.iconUrl ? `<img src="${escapeHtml(s.iconUrl)}" alt="" class="w-10 h-10 rounded-[8px] object-cover" />` : `<div class="w-10 h-10 rounded-[8px] grid place-items-center mono text-[11px] font-extrabold" style="background:#D4A85822;color:#D4A858">${escapeHtml((s.name||'?').slice(0,2))}</div>`}
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-3 flex-wrap">
+          <div class="text-[14px] font-medium truncate">${escapeHtml(s.name)}</div>
+          <div class="mono text-[9px] tracking-label uppercase text-mute2">${escapeHtml(s.guildId)}</div>
+          ${s.isActive ? '' : '<span class="mono text-[9px] tracking-label uppercase px-2 py-0.5 rounded-full border border-red/40 text-red">left</span>'}
+        </div>
+        <div class="mono text-[10px] text-mute mt-1">members ${fmtNum(s.memberCount ?? '?')} · joined ${escapeHtml(fmtTime(s.joinedAt))}</div>
+      </div>
+      <div class="text-right">
+        <div class="mono text-[10px] tracking-label uppercase text-mute">cost · msgs · events</div>
+        <div class="mono text-[12px] font-bold text-gold">${fmtUSD2(s.cost30d)} · ${fmtNum(s.msgs30d)} · ${fmtNum(s.events30d)}</div>
+        <a href="overview.html?guild=${encodeURIComponent(s.guildId)}" class="mono text-[10px] text-red hover:underline">manage →</a>
+      </div>
+    </div>
+  `).join('');
+
+  elContent.innerHTML = heroHtml + `<div class="space-y-2">${rowsHtml}</div>`;
+}
+
+async function renderLogs() {
+  elContent.innerHTML = '<div class="mono text-[11px] text-mute">loading…</div>';
+  const type = params.get('logtype') || 'chat';
+  elActions.innerHTML = ['chat','image','video','command'].map(t =>
+    `<button data-logtype="${t}" class="mono h-8 px-3 rounded-full border border-line text-[10px] tracking-label uppercase ${t===type?'tab-active':'text-mute hover:text-ink'}">${t}</button>`
+  ).join('');
+  elActions.querySelectorAll('[data-logtype]').forEach(b => b.addEventListener('click', () => {
+    const u = new URL(location.href); u.searchParams.set('logtype', b.dataset.logtype); history.replaceState(null, '', u); renderLogs();
+  }));
+
+  const data = await fetchJson(`/api/kata/admin/logs?type=${encodeURIComponent(type)}`);
+  if (!data) return;
+  clearAuthWarn();
+  elCounts.textContent = `${data.items.length} loaded`;
+
+  if (data.items.length === 0) {
+    elContent.innerHTML = '<div class="mono text-[12px] tracking-label uppercase text-mute py-8 text-center">— no events —</div>';
+    return;
+  }
+  const rowsHtml = data.items.map((r) => {
+    const meta = [];
+    if (r.modelUsed) meta.push(`<span>${escapeHtml(r.modelUsed)}</span>`);
+    if (r.costUSD != null) meta.push(`<span>${fmtUSD(r.costUSD)}</span>`);
+    if (r.tokensIn != null || r.tokensOut != null) meta.push(`<span>${r.tokensIn ?? 0}→${r.tokensOut ?? 0}</span>`);
+    if (r.durationSec) meta.push(`<span>${r.durationSec}s</span>`);
+    if (r.latencyMs) meta.push(`<span>${r.latencyMs}ms</span>`);
+    const body = r.content ?? r.prompt ?? r.input ?? '';
+    return `<div class="row">
+      <div class="flex items-center justify-between gap-3 mb-2">
+        ${guildBadge(r.guild)}
+        <span class="mono text-[10px] text-mute">${escapeHtml(fmtTime(r.createdAt))}</span>
+      </div>
+      <div class="text-[13px] truncate-2">${escapeHtml(body)}</div>
+      <div class="flex items-center gap-3 mt-2 mono text-[10px] text-mute2">${meta.join('')}</div>
+    </div>`;
+  }).join('');
+  elContent.innerHTML = `<div class="space-y-2">${rowsHtml}</div>`;
+}
+
+async function renderCost() {
+  elContent.innerHTML = '<div class="mono text-[11px] text-mute">loading…</div>';
+  const range = params.get('range') || '30d';
+  elActions.innerHTML = renderActionsRange('cost');
+  elActions.querySelectorAll('[data-range]').forEach(b => b.addEventListener('click', () => {
+    const u = new URL(location.href); u.searchParams.set('range', b.dataset.range); history.replaceState(null, '', u); renderCost();
+  }));
+
+  const data = await fetchJson(`/api/kata/admin/cost?range=${encodeURIComponent(range)}`);
+  if (!data) return;
+  clearAuthWarn();
+  const deltaCls = data.totalDelta > 0 ? 'stat-pos' : 'stat-neg';
+  const deltaSign = data.totalDelta > 0 ? '↑' : (data.totalDelta < 0 ? '↓' : '·');
+  elCounts.textContent = `${fmtNum(data.events)} events · ${range}`;
+
+  const hero = `
+    <div class="grid grid-cols-3 gap-3 mb-6">
+      <div class="row col-span-1">
+        <div class="mono text-[10px] tracking-label uppercase text-mute mb-1">total · ${range}</div>
+        <div class="text-[36px] font-extrabold tracking-[-0.02em] text-gold">${fmtUSD2(data.total)}</div>
+        <div class="mono text-[10px] mt-1 ${deltaCls}">${deltaSign} ${Math.abs(data.totalDelta)}% vs prior ${range}</div>
+      </div>
+      <div class="row col-span-1">
+        <div class="mono text-[10px] tracking-label uppercase text-mute mb-2">by service</div>
+        <div class="space-y-1">${data.byService.map((s) =>
+          `<div class="flex justify-between mono text-[11px]"><span class="text-ink">${escapeHtml(s.service)}</span><span class="text-mute">${fmtUSD2(s.cost)} · ${fmtNum(s.count)}</span></div>`
+        ).join('')}</div>
+      </div>
+      <div class="row col-span-1">
+        <div class="mono text-[10px] tracking-label uppercase text-mute mb-2">top guilds</div>
+        <div class="space-y-1">${data.byGuild.slice(0, 5).map((g) =>
+          `<div class="flex justify-between mono text-[11px]"><span class="text-ink truncate">${escapeHtml(g.name)}</span><span class="text-gold">${fmtUSD2(g.cost)}</span></div>`
+        ).join('')}</div>
+      </div>
+    </div>`;
+
+  const guildRows = data.byGuild.map((g) => `
+    <div class="row flex items-center gap-3">
+      ${g.iconUrl ? `<img src="${escapeHtml(g.iconUrl)}" alt="" class="w-8 h-8 rounded-[6px] object-cover" />` : `<div class="w-8 h-8 rounded-[6px] grid place-items-center mono text-[10px] font-bold" style="background:#D4A85822;color:#D4A858">${escapeHtml((g.name||'?').slice(0,2))}</div>`}
+      <div class="flex-1 min-w-0">
+        <div class="text-[13px] truncate">${escapeHtml(g.name)}</div>
+        <div class="mono text-[10px] text-mute">${escapeHtml(g.guildId)}</div>
+      </div>
+      <div class="mono text-[12px] font-bold text-gold">${fmtUSD2(g.cost)}</div>
+      <div class="mono text-[10px] text-mute2 w-16 text-right">${fmtNum(g.count)} ev</div>
+    </div>
+  `).join('');
+
+  const cmdRows = data.byCommand.map((c) => `
+    <div class="flex justify-between mono text-[11px] py-1 border-b border-line/50 last:border-0">
+      <span class="text-ink">${escapeHtml(c.command || '?')}</span>
+      <span class="text-mute">${fmtUSD(c.cost)} · ${fmtNum(c.count)}</span>
+    </div>
+  `).join('');
+
+  elContent.innerHTML = hero + `
+    <div class="grid grid-cols-2 gap-3 mb-6">
+      <div class="row">
+        <div class="mono text-[10px] tracking-label uppercase text-mute mb-3">guilds (${data.byGuild.length})</div>
+        <div class="space-y-2">${guildRows}</div>
+      </div>
+      <div class="row">
+        <div class="mono text-[10px] tracking-label uppercase text-mute mb-3">commands (${data.byCommand.length})</div>
+        <div>${cmdRows}</div>
+      </div>
+    </div>`;
+}
+
+async function renderModels() {
+  elContent.innerHTML = '<div class="mono text-[11px] text-mute">loading…</div>';
+  const data = await fetchJson('/api/kata/admin/models');
+  if (!data) return;
+  clearAuthWarn();
+  elCounts.textContent = `${data.models.length} active models · ${data.rangeDays}d`;
+  if (data.models.length === 0) {
+    elContent.innerHTML = '<div class="mono text-[12px] tracking-label uppercase text-mute py-8 text-center">— no usage in window —</div>';
+    return;
+  }
+  const totalCost = data.models.reduce((s, m) => s + m.cost, 0);
+  const rows = data.models.map((m) => {
+    const pct = totalCost > 0 ? Math.round((m.cost / totalCost) * 100) : 0;
+    return `<div class="row">
+      <div class="flex items-center justify-between gap-3 mb-2">
+        <div class="flex items-center gap-2">
+          <span class="mono text-[10px] tracking-label uppercase px-2 py-0.5 rounded border border-line text-mute">${escapeHtml(m.service)}</span>
+          <span class="text-[13px] font-medium">${escapeHtml(m.model)}</span>
+        </div>
+        <span class="mono text-[10px] text-mute">${escapeHtml(fmtTime(m.lastUsed))} ago</span>
+      </div>
+      <div class="grid grid-cols-3 gap-3 mono text-[11px]">
+        <div><span class="text-mute uppercase tracking-label text-[9px]">cost</span><div class="text-gold font-bold">${fmtUSD(m.cost)}</div></div>
+        <div><span class="text-mute uppercase tracking-label text-[9px]">calls</span><div>${fmtNum(m.count)}</div></div>
+        <div><span class="text-mute uppercase tracking-label text-[9px]">share</span><div>${pct}%</div></div>
+      </div>
+    </div>`;
+  }).join('');
+  elContent.innerHTML = `<div class="space-y-2">${rows}</div>`;
+}
+
+async function renderHealth() {
+  elContent.innerHTML = '<div class="mono text-[11px] text-mute">loading…</div>';
+  const data = await fetchJson('/api/kata/admin/health');
+  if (!data) return;
+  clearAuthWarn();
+  elCounts.textContent = `checked ${escapeHtml(fmtTime(data.checkedAt))} ago`;
+
+  function statusPill(label, ok, sub) {
+    const dotColor = ok ? '#5BA868' : '#E04545';
+    const txtColor = ok ? 'text-green' : 'text-red';
+    return `<div class="row">
+      <div class="flex items-center justify-between gap-3 mb-1">
+        <div class="mono text-[10px] tracking-label uppercase text-mute">${label}</div>
+        <span class="flex items-center gap-1.5 mono text-[10px] tracking-label uppercase ${txtColor}">
+          <span class="dot-pulse w-1.5 h-1.5 rounded-full" style="background:${dotColor}"></span>${ok ? 'ok' : 'down'}
+        </span>
+      </div>
+      <div class="mono text-[11px] text-mute">${sub}</div>
+    </div>`;
+  }
+
+  const mongoSub = data.mongo.ok ? `ping ${data.mongo.latencyMs}ms` : `error: ${escapeHtml(data.mongo.error || 'unknown')}`;
+  const redisSub = data.redis.ok ? `ping ${data.redis.latencyMs}ms` : `error: ${escapeHtml(data.redis.error || 'unknown')}`;
+  const botSub = data.bot.anyAlive
+    ? `${data.bot.instances.filter(i => i.alive && !i.isShuttingDown).length} alive instance(s)`
+    : (data.bot.instances.length === 0 ? 'no heartbeat ever' : 'all stale');
+
+  const instances = data.bot.instances.map((h) => {
+    const cls = h.alive && !h.isShuttingDown ? 'text-green' : (h.isShuttingDown ? 'text-mute' : 'text-red');
+    const status = h.isShuttingDown ? 'shutting down' : (h.alive ? 'alive' : 'stale');
+    return `<div class="row">
+      <div class="flex items-center justify-between gap-3 mb-1">
+        <div class="mono text-[11px] truncate">${escapeHtml(h.instanceId)}</div>
+        <span class="mono text-[10px] tracking-label uppercase ${cls}">${status}</span>
+      </div>
+      <div class="grid grid-cols-4 gap-3 mono text-[10px] text-mute mt-1">
+        <div>guilds <span class="text-ink">${fmtNum(h.guildCount)}</span></div>
+        <div>queue <span class="text-ink">${fmtNum(h.queueDepth)}</span></div>
+        <div>mem <span class="text-ink">${h.memMB ?? '?'}MB</span></div>
+        <div>node <span class="text-ink">${escapeHtml(h.nodeVersion ?? '?')}</span></div>
+      </div>
+      <div class="mono text-[10px] text-mute2 mt-1">last seen ${escapeHtml(fmtTime(h.lastSeen))} ago · started ${escapeHtml(fmtTime(h.startedAt))} ago${h.version ? ' · v' + escapeHtml(h.version) : ''}</div>
+    </div>`;
+  }).join('');
+
+  elContent.innerHTML = `
+    <div class="grid grid-cols-3 gap-3 mb-6">
+      ${statusPill('mongo', data.mongo.ok, mongoSub)}
+      ${statusPill('redis', data.redis.ok, redisSub)}
+      ${statusPill('bot', data.bot.anyAlive, botSub)}
+    </div>
+    <div class="mono text-[10px] tracking-label uppercase text-mute mb-2">bot instances (${data.bot.instances.length})</div>
+    <div class="space-y-2">${instances || '<div class="row mono text-[11px] text-mute">no heartbeat docs</div>'}</div>`;
+}
+
+const renderers = { servers: renderServers, logs: renderLogs, cost: renderCost, models: renderModels, health: renderHealth };
+
+function switchTab(tab) {
+  if (!TABS.includes(tab)) return;
+  currentTab = tab;
+  setTabUI();
+  const url = new URL(location.href);
+  url.searchParams.set('tab', tab);
+  history.replaceState(null, '', url);
+  elActions.innerHTML = '';
+  renderers[tab]();
+}
+
+document.querySelectorAll('[data-tab]').forEach(a => {
+  a.addEventListener('click', (e) => {
+    e.preventDefault();
+    switchTab(a.dataset.tab);
+  });
+});
+
+async function bootUserChip() {
+  try {
+    const r = await fetch('/api/auth/me', { credentials: 'include' });
+    if (!r.ok) return;
+    const data = await r.json();
+    if (data?.user?.username) {
+      document.getElementById('kata-user-name').textContent = data.user.username;
+      document.getElementById('kata-user-avatar').textContent = data.user.username.slice(0,1).toUpperCase();
+    }
+  } catch {}
+}
+
+bootUserChip();
+setTabUI();
+renderers[currentTab]();
+</script>
+</body>
+</html>
