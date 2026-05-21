@@ -483,7 +483,9 @@ function renderTopUsers(data){
     const pct = (u.cost / max) * 100;
     const accent = avatarSeed(u.userId);
     const short = u.userId.slice(-6);
-    return '<div class="flex items-center gap-3 mono text-[12px]"><span class="w-[110px] text-mute truncate flex items-center gap-2"><span class="w-4 h-4 rounded-full grid place-items-center text-[8px] font-extrabold flex-shrink-0" style="background:' + accent + '22;color:' + accent + '">' + short.slice(0,1) + '</span>' + escapeHtml(short) + '</span><div class="flex-1 h-5 rounded-[3px] bg-bg overflow-hidden"><div class="h-full" style="width:' + pct.toFixed(1) + '%;background:' + accent + '"></div></div><span class="text-gold w-[60px] text-right">' + fmtUsd(u.cost) + '</span></div>';
+    const display = u.displayName || u.username || short;
+    const initial = display.slice(0, 1).toUpperCase();
+    return '<div class="flex items-center gap-3 mono text-[12px]"><span class="w-[140px] text-ink truncate flex items-center gap-2" title="' + escapeHtml(u.userId) + '"><span class="w-4 h-4 rounded-full grid place-items-center text-[8px] font-extrabold flex-shrink-0" style="background:' + accent + '22;color:' + accent + '">' + escapeHtml(initial) + '</span>' + escapeHtml(display) + '</span><div class="flex-1 h-5 rounded-[3px] bg-bg overflow-hidden"><div class="h-full" style="width:' + pct.toFixed(1) + '%;background:' + accent + '"></div></div><span class="text-gold w-[60px] text-right">' + fmtUsd(u.cost) + '</span></div>';
   }).join('');
 }
 

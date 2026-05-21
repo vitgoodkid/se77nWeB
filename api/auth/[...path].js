@@ -542,6 +542,35 @@ async function authorizeGuildAccess(req, guildId) {
 // stats are scoped to last 24h for KPIs and hourly bars; top users + cost
 // are 30-day windows.
 
+// Resolve a list of Discord user IDs to display names from the bot's
+// `katasusers` collection (written by apps/bot/src/services/userMeta.ts on
+// every mention/command). Returns a map keyed by id; missing entries are
+// omitted so callers can fall back to "?{snowflake-suffix}" rendering.
+async function hydrateUsernames(kataDb, userIds) {
+  const ids = [...new Set(userIds.filter(Boolean))];
+  if (ids.length === 0) return {};
+  try {
+    const rows = await kataDb
+      .collection('katasusers')
+      .find(
+        { discordId: { $in: ids } },
+        { projection: { discordId: 1, username: 1, displayName: 1, avatarUrl: 1 } },
+      )
+      .toArray();
+    const out = {};
+    for (const r of rows) {
+      out[r.discordId] = {
+        username: r.username,
+        displayName: r.displayName ?? r.username,
+        avatarUrl: r.avatarUrl ?? null,
+      };
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+
 async function handleKataServerGet(req, res, guildId) {
   const auth = await authorizeGuildAccess(req, guildId);
   if (auth.error) return res.status(auth.status).json({ error: auth.error });
@@ -630,16 +659,37 @@ async function handleKataServerGet(req, res, guildId) {
         cost30d: { value: cost30dTotal },
       },
       hourly: hourBars,
-      topUsers: topUsers.map((u) => ({ userId: u._id, cost: u.cost, count: u.count })),
-      recent: recent.map((r) => ({
-        command: r.command,
-        userId: r.userId,
-        input: (r.input || '').slice(0, 120),
-        success: r.success,
-        costUSD: r.costUSD ?? null,
-        errorMessage: r.errorMessage ?? null,
-        createdAt: r.createdAt,
-      })),
+      topUsers: await (async () => {
+        const meta = await hydrateUsernames(
+          kataDb,
+          topUsers.map((u) => u._id),
+        );
+        return topUsers.map((u) => ({
+          userId: u._id,
+          cost: u.cost,
+          count: u.count,
+          username: meta[u._id]?.username ?? null,
+          displayName: meta[u._id]?.displayName ?? null,
+          avatarUrl: meta[u._id]?.avatarUrl ?? null,
+        }));
+      })(),
+      recent: await (async () => {
+        const meta = await hydrateUsernames(
+          kataDb,
+          recent.map((r) => r.userId),
+        );
+        return recent.map((r) => ({
+          command: r.command,
+          userId: r.userId,
+          username: meta[r.userId]?.username ?? null,
+          displayName: meta[r.userId]?.displayName ?? null,
+          input: (r.input || '').slice(0, 120),
+          success: r.success,
+          costUSD: r.costUSD ?? null,
+          errorMessage: r.errorMessage ?? null,
+          createdAt: r.createdAt,
+        }));
+      })(),
     },
   });
 }
@@ -1088,6 +1138,8 @@ async function handleKataServerCost(req, res, guildId) {
       latencyMap[row._id] = sorted[Math.floor(sorted.length / 2)] ?? null;
     }
 
+    const userMeta = await hydrateUsernames(kataDb, topUsers.map((u) => u._id));
+
     return {
       range,
       days,
@@ -1107,7 +1159,14 @@ async function handleKataServerCost(req, res, guildId) {
         count: c.count,
         latencyP50Ms: latencyMap[c._id] ?? null,
       })),
-      topUsers: topUsers.map((u) => ({ userId: u._id, cost: Number(u.cost), count: u.count })),
+      topUsers: topUsers.map((u) => ({
+        userId: u._id,
+        cost: Number(u.cost),
+        count: u.count,
+        username: userMeta[u._id]?.username ?? null,
+        displayName: userMeta[u._id]?.displayName ?? null,
+        avatarUrl: userMeta[u._id]?.avatarUrl ?? null,
+      })),
       dailyCost: fillSeries(dailyCost, 'cost'),
       dailyTokens: fillSeries(dailyTokens, 'tokens'),
     };
