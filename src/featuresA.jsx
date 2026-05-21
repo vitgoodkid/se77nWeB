@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import {
   COLORS, CITIES,
   Panel, Btn, Field, Pill, Kicker,
-  useSyncedData, usePasteImage, copyText, useLang, useMediaQuery, usePersisted,
+  useSyncedData, usePasteImage, copyText, useLang, useMediaQuery, usePersisted, compressImage,
 } from './lib.jsx';
 
 // ═════════════════════════════════════════════════════════════
@@ -232,9 +232,8 @@ export function AIPlayground() {
   function onImageRef(e) {
     const f = e.target.files?.[0];
     if (!f) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => setImgRef({ name: f.name, dataUrl: ev.target.result });
-    reader.readAsDataURL(f);
+    compressImage(f).then((img) => { if (img) setImgRef(img); }).catch(() => {});
+    e.target.value = '';
   }
 
   const acceptImage = true; // every preset can take an image (chat = vision, others = source)

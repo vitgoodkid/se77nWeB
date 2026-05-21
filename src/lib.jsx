@@ -1112,26 +1112,61 @@ export function copyText(t) {
   }
 }
 
+// Downscale + re-encode an image File/Blob to a JPEG data URL that fits under
+// Vercel's 4.5 MB serverless body cap (base64 inflates ~33%, so we target
+// ≤ 3 MB encoded → ≤ ~4 MB on the wire). PNGs/HEICs from phones routinely
+// exceed this; passing them raw to /api/image|video gives FUNCTION_PAYLOAD_TOO_LARGE.
+export async function compressImage(file, { maxDim = 2048, quality = 0.85, maxBytes = 3_000_000 } = {}) {
+  if (!file) return null;
+  const dataUrl = await new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result);
+    r.onerror = () => reject(r.error || new Error('read failed'));
+    r.readAsDataURL(file);
+  });
+  const img = await new Promise((resolve, reject) => {
+    const im = new Image();
+    im.onload = () => resolve(im);
+    im.onerror = () => reject(new Error('decode failed'));
+    im.src = dataUrl;
+  });
+  let { width, height } = img;
+  const scale = Math.min(1, maxDim / Math.max(width, height));
+  width = Math.round(width * scale);
+  height = Math.round(height * scale);
+  const canvas = document.createElement('canvas');
+  canvas.width = width; canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0, width, height);
+
+  // Step quality down until under maxBytes (encoded base64 length ≈ size).
+  let q = quality;
+  let out = canvas.toDataURL('image/jpeg', q);
+  while (out.length > maxBytes && q > 0.4) {
+    q -= 0.1;
+    out = canvas.toDataURL('image/jpeg', q);
+  }
+  return { name: (file.name || `image-${Date.now()}.jpg`).replace(/\.\w+$/, '.jpg'), dataUrl: out };
+}
+
 // Listen for image paste (Ctrl+V) on the window. When `enabled` is true,
-// any image found in the clipboard is read as a data URL and handed back
-// via onImage({ name, dataUrl }).
+// any image found in the clipboard is compressed and handed back via
+// onImage({ name, dataUrl }).
 export function usePasteImage(onImage, enabled = true) {
   useEffect(() => {
     if (!enabled) return;
-    function onPaste(e) {
+    async function onPaste(e) {
       const items = e.clipboardData?.items;
       if (!items || !items.length) return;
       for (const item of items) {
         if (item.type && item.type.startsWith('image/')) {
           const f = item.getAsFile();
           if (!f) continue;
-          const reader = new FileReader();
-          reader.onload = (ev) => onImage({
-            name: f.name || `pasted-${Date.now()}.png`,
-            dataUrl: ev.target.result,
-          });
-          reader.readAsDataURL(f);
           e.preventDefault();
+          try {
+            const img = await compressImage(f);
+            if (img) onImage(img);
+          } catch { /* swallow — paste fallback not worth a toast */ }
           return;
         }
       }

@@ -11,7 +11,7 @@ import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react'
 import {
   COLORS,
   useClock, useGeoDayNight, useLang, useAuth,
-  useSyncedData, usePasteImage,
+  useSyncedData, usePasteImage, compressImage,
 } from './lib.jsx';
 
 const AIPlayground       = lazy(() => import('./featuresA.jsx').then((m) => ({ default: m.AIPlayground })));
@@ -882,9 +882,7 @@ export default function MobileShell() {
   function onPickFile(e) {
     const f = e.target.files?.[0];
     if (!f) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => setAttached({ name: f.name, dataUrl: ev.target.result });
-    reader.readAsDataURL(f);
+    compressImage(f).then((img) => { if (img) setAttached(img); }).catch(() => {});
     e.target.value = '';
   }
 
