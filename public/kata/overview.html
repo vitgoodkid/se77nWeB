@@ -539,6 +539,109 @@ async function loadOverview(){
 }
 
 // Settings drawer
+//
+// Each form field below maps to a config key. After populating values from
+// CURRENT_CONFIG, we walk this map and stamp a source badge on every field's
+// LABEL element so admins can see whether the value comes from a per-guild
+// override (this drawer's save), a global default set by the bot owner in
+// /kata/admin?tab=settings, or the bot's hardcoded code default. Override
+// fields also get a "reset" button that PATCHes the field as null.
+const SETTINGS_FIELD_MAP = [
+  { key: 'systemPrompt',         input: 'f-systemPrompt' },
+  { key: 'chatModel',            input: 'f-chatModel' },
+  { key: 'chatMode',             input: 'f-chatMode' },
+  { key: 'imageModel',           input: 'f-imageModel' },
+  { key: 'videoModel',           input: 'f-videoModel' },
+  { key: 'rateLimitPerUser',     input: 'f-rateLimitPerUser' },
+  { key: 'nsfwThresholdNormal',  input: 'f-nsfwThresholdNormal' },
+  { key: 'nsfwThresholdNsfw',    input: 'f-nsfwThresholdNsfw' },
+  { key: 'allowedChannels',      input: 'f-allowedChannels' },
+];
+
+function fieldSource(cfg, key) {
+  if (!cfg) return 'code';
+  const overridden = cfg.guildOverride && Object.prototype.hasOwnProperty.call(cfg.guildOverride, key);
+  if (overridden) return 'override';
+  const fromGlobal = cfg.global && Object.prototype.hasOwnProperty.call(cfg.global, key);
+  if (fromGlobal) return 'global';
+  return 'code';
+}
+
+function paintFieldSources(cfg) {
+  for (const { key, input } of SETTINGS_FIELD_MAP) {
+    const inputEl = document.getElementById(input);
+    if (!inputEl) continue;
+    // Walk up to the row container — heuristic: nearest section header
+    // sibling. Simpler: stamp a badge into the input's parent label.
+    let labelHost = inputEl.closest('label, .field, [data-field-host]');
+    if (!labelHost) labelHost = inputEl.parentElement;
+    if (!labelHost) continue;
+    // Remove any previous badge so re-opens don't stack them.
+    labelHost.querySelectorAll('[data-source-badge]').forEach((n) => n.remove());
+
+    const source = fieldSource(cfg, key);
+    const badge = document.createElement('span');
+    badge.setAttribute('data-source-badge', '1');
+    badge.className = 'mono text-[9px] tracking-label uppercase px-1.5 py-0.5 rounded ml-2 align-middle';
+    if (source === 'override') {
+      badge.style.background = '#E0454522';
+      badge.style.color = '#E04545';
+      badge.style.border = '1px solid #E0454544';
+      badge.textContent = 'OVERRIDE';
+    } else if (source === 'global') {
+      badge.style.background = '#D4A85822';
+      badge.style.color = '#D4A858';
+      badge.style.border = '1px solid #D4A85844';
+      badge.textContent = 'GLOBAL';
+    } else {
+      badge.style.background = 'rgba(245,237,224,0.05)';
+      badge.style.color = 'rgba(245,237,224,0.5)';
+      badge.style.border = '1px solid rgba(245,237,224,0.10)';
+      badge.textContent = 'CODE';
+    }
+    // Find the leading element to append onto — usually the first <div> with
+    // section heading text. Append into it; if none, prepend to the host.
+    const heading = labelHost.querySelector(':scope > .mono.text-\\[11px\\], :scope > .mono.text-\\[12px\\], :scope > div:first-child') || labelHost;
+    heading.appendChild(badge);
+
+    if (source === 'override') {
+      const reset = document.createElement('button');
+      reset.type = 'button';
+      reset.setAttribute('data-source-badge', '1');
+      reset.className = 'mono text-[10px] tracking-label uppercase text-mute hover:text-ink ml-2';
+      reset.textContent = 'reset';
+      reset.title = 'Clear this guild override; field will inherit from global / code';
+      reset.addEventListener('click', () => resetFieldToInherit(key));
+      heading.appendChild(reset);
+    }
+  }
+}
+
+async function resetFieldToInherit(key) {
+  const status = document.getElementById('settings-status');
+  if (status) { status.textContent = 'Đang reset…'; status.className = 'mono text-[11px] text-mute2'; }
+  try {
+    const r = await fetch(`/api/kata/server/${encodeURIComponent(getGuildId())}/config`, {
+      method: 'PATCH',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ [key]: null }),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) {
+      const detail = Array.isArray(data.details) ? data.details.join('; ') : (data.error || `HTTP ${r.status}`);
+      if (status) { status.textContent = '⚠ ' + detail; status.className = 'mono text-[11px] text-err'; }
+      showToast('Reset thất bại — ' + detail, 'err');
+      return;
+    }
+    showToast('Reset xong — field đã trả về kế thừa', 'ok');
+    closeSettings();
+    loadOverview();
+  } catch (err) {
+    if (status) { status.textContent = '⚠ ' + (err.message || 'lỗi mạng'); status.className = 'mono text-[11px] text-err'; }
+  }
+}
+
 function openSettings(focusSection){
   if (!CURRENT_CONFIG){ showToast('Đang tải config…', 'info'); return; }
   const c = CURRENT_CONFIG;
@@ -560,6 +663,7 @@ function openSettings(focusSection){
   document.getElementById('f-allowedChannels').value = (c.allowedChannels || []).join(', ');
   document.getElementById('settings-status').textContent = '';
   document.getElementById('settings-drawer').classList.remove('hidden');
+  paintFieldSources(c);
   if (focusSection){
     const target = document.querySelector(`#settings-form [data-section="${focusSection}"]`);
     if (target) target.scrollIntoView({ behavior:'smooth', block:'start' });

@@ -585,8 +585,9 @@ async function handleKataServerGet(req, res, guildId) {
   const since48h = new Date(now - 2 * day);
   const since30d = new Date(now - 30 * day);
 
-  const [config, msg24h, msg48h, img24h, img48h, vid24h, vid48h, cmd24h, cmd48h, cost30d, hourly, topUsers, recent] = await Promise.all([
+  const [config, globalConfig, msg24h, msg48h, img24h, img48h, vid24h, vid48h, cmd24h, cmd48h, cost30d, hourly, topUsers, recent] = await Promise.all([
     kataDb.collection('serverconfigs').findOne({ guildId }),
+    kataDb.collection('globalconfigs').findOne({ scope: '_global' }),
     kataDb.collection('chatlogs').countDocuments({ guildId, role: 'user', createdAt: { $gte: since24h } }),
     kataDb.collection('chatlogs').countDocuments({ guildId, role: 'user', createdAt: { $gte: since48h, $lt: since24h } }),
     kataDb.collection('imagegens').countDocuments({ guildId, createdAt: { $gte: since24h } }),
@@ -641,18 +642,46 @@ async function handleKataServerGet(req, res, guildId) {
       ownerId: serverDoc.ownerId,
       joinedAt: serverDoc.joinedAt,
     },
-    config: config ? {
-      systemPrompt: config.systemPrompt ?? '',
-      chatModel: config.chatModel ?? 'gemini-3.1-flash-lite',
-      chatMode: config.chatMode ?? 'balanced',
-      imageModel: config.imageModel ?? 'fal-ai/nano-banana-pro',
-      videoModel: config.videoModel ?? 'bytedance/seedance-2.0/image-to-video',
-      rateLimitPerUser: config.rateLimitPerUser ?? 30,
-      nsfwThresholdNormal: config.nsfwThresholdNormal ?? 0.3,
-      nsfwThresholdNsfw: config.nsfwThresholdNsfw ?? 0.85,
-      allowedChannels: Array.isArray(config.allowedChannels) ? config.allowedChannels : [],
-      updatedAt: config.updatedAt,
-    } : null,
+    config: (() => {
+      // Three layers exposed to the FE:
+      //   guildOverride: only fields explicitly set on this guild's doc
+      //   global: only fields set in the GlobalConfig doc
+      //   effective: code-default ← global ← guildOverride
+      // FE picks the right badge per field by checking which layer the
+      // value came from (matches the bot's resolution order verbatim).
+      const codeDefaults = {
+        systemPrompt: '',
+        chatModel: 'gemini-3.1-flash-lite',
+        chatMode: 'balanced',
+        imageModel: 'fal-ai/nano-banana-pro',
+        videoModel: 'bytedance/seedance-2.0/image-to-video',
+        rateLimitPerUser: 30,
+        nsfwThresholdNormal: 0.3,
+        nsfwThresholdNsfw: 0.85,
+        allowedChannels: [],
+      };
+      const guildOverride = {};
+      const globalLayer = {};
+      const effective = { ...codeDefaults };
+      for (const k of Object.keys(codeDefaults)) {
+        const g = globalConfig ? globalConfig[k] : undefined;
+        const p = config ? config[k] : undefined;
+        if (g !== undefined && g !== null) {
+          globalLayer[k] = g;
+          effective[k] = g;
+        }
+        if (p !== undefined && p !== null) {
+          guildOverride[k] = p;
+          effective[k] = p;
+        }
+      }
+      return {
+        ...effective,
+        guildOverride,
+        global: globalLayer,
+        updatedAt: config?.updatedAt ?? null,
+      };
+    })(),
     stats: {
       kpis: {
         msg24h: { value: msg24h, delta: delta(msg24h, msg48h) },
@@ -716,63 +745,94 @@ async function handleKataServerConfigPatch(req, res, guildId) {
   }
   if (!body || typeof body !== 'object') return res.status(400).json({ error: 'invalid_body' });
 
+  // PATCH semantics:
+  //   field omitted   → no change
+  //   field === null  → $unset (drop back to inherit from global / code)
+  //   field === value → validate then $set
   const update = {};
+  const unset = {};
   const errors = [];
 
+  function clearOrSet(field, value) {
+    if (value === null) {
+      unset[field] = '';
+      return true;
+    }
+    return false;
+  }
+
   if (body.systemPrompt !== undefined) {
-    if (typeof body.systemPrompt !== 'string') errors.push('systemPrompt must be string');
-    else if (body.systemPrompt.length > MAX_SYSPROMPT_LEN) errors.push(`systemPrompt > ${MAX_SYSPROMPT_LEN} chars`);
-    else update.systemPrompt = body.systemPrompt;
+    if (!clearOrSet('systemPrompt', body.systemPrompt)) {
+      if (typeof body.systemPrompt !== 'string') errors.push('systemPrompt must be string');
+      else if (body.systemPrompt.length > MAX_SYSPROMPT_LEN) errors.push(`systemPrompt > ${MAX_SYSPROMPT_LEN} chars`);
+      else update.systemPrompt = body.systemPrompt;
+    }
   }
   if (body.chatModel !== undefined) {
-    if (typeof body.chatModel !== 'string' || !body.chatModel.trim()) errors.push('chatModel must be non-empty string');
-    else update.chatModel = body.chatModel.trim();
+    if (!clearOrSet('chatModel', body.chatModel)) {
+      if (typeof body.chatModel !== 'string' || !body.chatModel.trim()) errors.push('chatModel must be non-empty string');
+      else update.chatModel = body.chatModel.trim();
+    }
   }
   if (body.chatMode !== undefined) {
-    if (!ALLOWED_CHAT_MODES.has(body.chatMode)) errors.push('chatMode must be fast|balanced|deep');
-    else update.chatMode = body.chatMode;
+    if (!clearOrSet('chatMode', body.chatMode)) {
+      if (!ALLOWED_CHAT_MODES.has(body.chatMode)) errors.push('chatMode must be fast|balanced|deep');
+      else update.chatMode = body.chatMode;
+    }
   }
   if (body.imageModel !== undefined) {
-    if (typeof body.imageModel !== 'string' || !body.imageModel.trim()) errors.push('imageModel must be non-empty string');
-    else update.imageModel = body.imageModel.trim();
+    if (!clearOrSet('imageModel', body.imageModel)) {
+      if (typeof body.imageModel !== 'string' || !body.imageModel.trim()) errors.push('imageModel must be non-empty string');
+      else update.imageModel = body.imageModel.trim();
+    }
   }
   if (body.videoModel !== undefined) {
-    if (typeof body.videoModel !== 'string' || !body.videoModel.trim()) errors.push('videoModel must be non-empty string');
-    else update.videoModel = body.videoModel.trim();
+    if (!clearOrSet('videoModel', body.videoModel)) {
+      if (typeof body.videoModel !== 'string' || !body.videoModel.trim()) errors.push('videoModel must be non-empty string');
+      else update.videoModel = body.videoModel.trim();
+    }
   }
   if (body.rateLimitPerUser !== undefined) {
-    const n = Number(body.rateLimitPerUser);
-    if (!Number.isFinite(n) || n < 1 || n > 1000) errors.push('rateLimitPerUser must be 1-1000');
-    else update.rateLimitPerUser = Math.round(n);
+    if (!clearOrSet('rateLimitPerUser', body.rateLimitPerUser)) {
+      const n = Number(body.rateLimitPerUser);
+      if (!Number.isFinite(n) || n < 1 || n > 1000) errors.push('rateLimitPerUser must be 1-1000');
+      else update.rateLimitPerUser = Math.round(n);
+    }
   }
   if (body.nsfwThresholdNormal !== undefined) {
-    const n = Number(body.nsfwThresholdNormal);
-    if (!Number.isFinite(n) || n < 0 || n > 1) errors.push('nsfwThresholdNormal must be 0-1');
-    else update.nsfwThresholdNormal = n;
+    if (!clearOrSet('nsfwThresholdNormal', body.nsfwThresholdNormal)) {
+      const n = Number(body.nsfwThresholdNormal);
+      if (!Number.isFinite(n) || n < 0 || n > 1) errors.push('nsfwThresholdNormal must be 0-1');
+      else update.nsfwThresholdNormal = n;
+    }
   }
   if (body.nsfwThresholdNsfw !== undefined) {
-    const n = Number(body.nsfwThresholdNsfw);
-    if (!Number.isFinite(n) || n < 0 || n > 1) errors.push('nsfwThresholdNsfw must be 0-1');
-    else update.nsfwThresholdNsfw = n;
+    if (!clearOrSet('nsfwThresholdNsfw', body.nsfwThresholdNsfw)) {
+      const n = Number(body.nsfwThresholdNsfw);
+      if (!Number.isFinite(n) || n < 0 || n > 1) errors.push('nsfwThresholdNsfw must be 0-1');
+      else update.nsfwThresholdNsfw = n;
+    }
   }
   if (body.allowedChannels !== undefined) {
-    if (!Array.isArray(body.allowedChannels)) errors.push('allowedChannels must be array');
-    else if (body.allowedChannels.length > MAX_ALLOWED_CHANNELS) errors.push(`allowedChannels > ${MAX_ALLOWED_CHANNELS}`);
-    else if (!body.allowedChannels.every((c) => typeof c === 'string' && /^\d{15,21}$/.test(c))) errors.push('allowedChannels entries must be channel ids');
-    else update.allowedChannels = body.allowedChannels;
+    if (!clearOrSet('allowedChannels', body.allowedChannels)) {
+      if (!Array.isArray(body.allowedChannels)) errors.push('allowedChannels must be array');
+      else if (body.allowedChannels.length > MAX_ALLOWED_CHANNELS) errors.push(`allowedChannels > ${MAX_ALLOWED_CHANNELS}`);
+      else if (!body.allowedChannels.every((c) => typeof c === 'string' && /^\d{15,21}$/.test(c))) errors.push('allowedChannels entries must be channel ids');
+      else update.allowedChannels = body.allowedChannels;
+    }
   }
 
   if (errors.length) return res.status(400).json({ error: 'validation_failed', details: errors });
-  if (Object.keys(update).length === 0) return res.status(400).json({ error: 'empty_update' });
+  if (Object.keys(update).length === 0 && Object.keys(unset).length === 0) {
+    return res.status(400).json({ error: 'empty_update' });
+  }
 
   const { kataDb } = auth;
   update.updatedAt = new Date();
 
-  await kataDb.collection('serverconfigs').updateOne(
-    { guildId },
-    { $set: update, $setOnInsert: { guildId } },
-    { upsert: true },
-  );
+  const mongoUpdate = { $set: { ...update, guildId } };
+  if (Object.keys(unset).length > 0) mongoUpdate.$unset = unset;
+  await kataDb.collection('serverconfigs').updateOne({ guildId }, mongoUpdate, { upsert: true });
 
   // Best-effort Redis publish — bot also polls Mongo every 30s so a missed
   // publish only delays propagation, doesn't drop the change.
@@ -788,7 +848,10 @@ async function handleKataServerConfigPatch(req, res, guildId) {
       actorUserId: auth.user.providerUserId,
       guildId,
       action: 'config_update',
-      details: { fields: Object.keys(update).filter((k) => k !== 'updatedAt') },
+      details: {
+        set: Object.keys(update).filter((k) => k !== 'updatedAt'),
+        unset: Object.keys(unset),
+      },
       createdAt: new Date(),
     });
   } catch { /* audit is best-effort */ }
