@@ -73,7 +73,10 @@ export default async function handler(req, res) {
         const policyErr = extractPolicyError(final);
         if (policyErr) return res.status(422).json({ error: policyErr, upstream: final });
         const url = pickVideoUrl(final);
-        if (!url) return res.status(502).json({ error: 'no video in response', upstream: final });
+        if (!url) return res.status(502).json({
+          error: 'no video in response — keys=' + Object.keys(final || {}).join(',') + ' preview=' + JSON.stringify(final).slice(0, 400),
+          upstream: final,
+        });
         return res.status(200).json({ video: url, model });
       }
       if (sd.status === 'FAILED' || sd.status === 'CANCELLED') {
@@ -104,7 +107,10 @@ async function pollOnce({ apiKey, model, requestId, res }) {
       const policyErr = extractPolicyError(final);
       if (policyErr) return res.status(422).json({ error: policyErr, upstream: final });
       const url = pickVideoUrl(final);
-      if (!url) return res.status(502).json({ error: 'no video in response', upstream: final });
+      if (!url) return res.status(502).json({
+        error: 'no video in response — keys=' + Object.keys(final || {}).join(',') + ' preview=' + JSON.stringify(final).slice(0, 400),
+        upstream: final,
+      });
       return res.status(200).json({ video: url, model });
     }
     if (sd.status === 'FAILED' || sd.status === 'CANCELLED') {
