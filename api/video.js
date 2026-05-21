@@ -1,5 +1,6 @@
 // POST /api/video
-// Body: { prompt: string, image?: string, duration?: number, resolution?: '480p'|'720p'|'1080p',
+// Body: { prompt: string, image?: string, engine?: 'seedance'|'veo3'|'kling'|'grok',
+//         duration?: number, resolution?: '480p'|'720p'|'1080p',
 //         aspectRatio?: '16:9'|'9:16'|'1:1'|'21:9', generateAudio?: boolean }
 // Returns:
 //   - { video: url }                              when result is ready within ~55s
@@ -7,12 +8,36 @@
 //
 // GET /api/video?requestId=...&model=...   (client polling)
 //
-// Proxies to fal.ai seedance-2.0 (text-to-video by default; switches to image-to-video if `image` provided).
-// Hides FAL_API_KEY server-side.
+// Proxies to fal.ai. Hides FAL_API_KEY server-side.
 
 import { pickVideoUrl } from './_helpers.js';
 
 export const config = { maxDuration: 60 };
+
+// Engine → fal model paths. Each engine picks t2v vs i2v based on whether
+// the request body includes an image. Endpoint paths confirmed against fal.ai
+// docs (2026-05). Override any of these via env if fal renames.
+function pickModel(engine, hasImage) {
+  switch (engine) {
+    case 'veo3':
+      return hasImage
+        ? (process.env.FAL_VIDEO_VEO3_I2V || 'fal-ai/veo3.1/image-to-video')
+        : (process.env.FAL_VIDEO_VEO3_T2V || 'fal-ai/veo3.1');
+    case 'kling':
+      return hasImage
+        ? (process.env.FAL_VIDEO_KLING_I2V || 'fal-ai/kling-video/v2.5-turbo/pro/image-to-video')
+        : (process.env.FAL_VIDEO_KLING_T2V || 'fal-ai/kling-video/v2.5-turbo/pro/text-to-video');
+    case 'grok':
+      return hasImage
+        ? (process.env.FAL_VIDEO_GROK_I2V || 'xai/grok-imagine-video/image-to-video')
+        : (process.env.FAL_VIDEO_GROK_T2V || 'xai/grok-imagine-video/text-to-video');
+    case 'seedance':
+    default:
+      return hasImage
+        ? (process.env.FAL_VIDEO_I2V_MODEL || 'fal-ai/bytedance/seedance-2.0/image-to-video')
+        : (process.env.FAL_VIDEO_T2V_MODEL || 'fal-ai/bytedance/seedance-2.0/text-to-video');
+  }
+}
 
 export default async function handler(req, res) {
   const apiKey = process.env.FAL_API_KEY;
@@ -29,6 +54,7 @@ export default async function handler(req, res) {
   const {
     prompt = '',
     image,
+    engine = 'seedance',
     duration,
     resolution,
     aspectRatio,
@@ -36,9 +62,7 @@ export default async function handler(req, res) {
   } = req.body || {};
   if (!prompt) return res.status(400).json({ error: 'prompt required' });
 
-  const t2v = process.env.FAL_VIDEO_T2V_MODEL || 'fal-ai/bytedance/seedance-2.0/text-to-video';
-  const i2v = process.env.FAL_VIDEO_I2V_MODEL || 'fal-ai/bytedance/seedance-2.0/image-to-video';
-  const model = image ? i2v : t2v;
+  const model = pickModel(engine, !!image);
 
   const input = { prompt };
   if (image) input.image_url = image;

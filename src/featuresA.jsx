@@ -80,6 +80,10 @@ export function AIPlayground() {
     { localKey: 'se77n.ai.imageEngine', serverKey: 'aiImageEngine' },
     'openai',
   );
+  const [videoEngine, setVideoEngine] = useSyncedData(
+    { localKey: 'se77n.ai.videoEngine', serverKey: 'aiVideoEngine' },
+    'seedance',
+  );
   const scrollRef = useRef(null);
 
   // Clipboard paste
@@ -170,6 +174,7 @@ export function AIPlayground() {
           body: JSON.stringify({
             prompt: q,
             image: usedImage?.dataUrl,
+            engine: videoEngine,
             duration: videoOpts.duration,
             resolution: videoOpts.resolution,
             aspectRatio: videoOpts.aspectRatio,
@@ -338,6 +343,14 @@ export function AIPlayground() {
                 options={IMAGE_ENGINES}
               />
             )}
+            {preset.kind === 'video' && (
+              <ModelSwap
+                label="MODEL"
+                value={videoEngine}
+                onChange={setVideoEngine}
+                options={VIDEO_ENGINES}
+              />
+            )}
           </div>
           <Btn onClick={clearChat} variant="ghost">{t('ai.clear')}</Btn>
         </div>
@@ -416,6 +429,13 @@ const VIDEO_ASPECTS = ['16:9', '9:16', '1:1', '21:9'];
 const IMAGE_ENGINES = [
   { v: 'openai', l: 'GPT-IMAGE-2' },
   { v: 'nano',   l: 'NANO-BANANA-PRO' },
+];
+
+const VIDEO_ENGINES = [
+  { v: 'seedance', l: 'SEEDANCE-2.0' },
+  { v: 'veo3',     l: 'VEO 3.1' },
+  { v: 'kling',    l: 'KLING 2.5' },
+  { v: 'grok',     l: 'GROK IMAGINE' },
 ];
 
 // Animated dropdown — uses CSS transitions on opacity + transform for the
