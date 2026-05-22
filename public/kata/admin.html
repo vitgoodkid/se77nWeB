@@ -722,23 +722,47 @@ function openModelPicker(triggerBtn) {
     pop.appendChild(tabs);
 
     const list = byProvider[activeProvider] || [];
-    const sel = document.createElement('select');
-    sel.className = 'mono text-[12px] w-full bg-bg border border-line rounded-[8px] px-3 py-2 text-ink focus:outline-none focus:border-line2';
-    sel.style.marginBottom = '8px';
-    const def = document.createElement('option');
-    def.value = '';
-    def.textContent = `(use default · ${placeholder || '—'})`;
-    if (!currentValue) def.selected = true;
-    sel.appendChild(def);
-    for (const m of list) {
-      const o = document.createElement('option');
-      o.value = m;
-      o.textContent = m;
-      if (m === currentValue) o.selected = true;
-      sel.appendChild(o);
+    // Render every model in the active provider as a clickable row so the
+    // user sees the full list without an extra click on a <select>.
+    const listWrap = document.createElement('div');
+    listWrap.style.maxHeight = '280px';
+    listWrap.style.overflowY = 'auto';
+    listWrap.style.marginBottom = '8px';
+    listWrap.style.display = 'flex';
+    listWrap.style.flexDirection = 'column';
+    listWrap.style.gap = '2px';
+
+    // Default row at the top — picks "(use default)" which clears the field.
+    const defRow = document.createElement('button');
+    defRow.type = 'button';
+    defRow.textContent = `(use default · ${placeholder || '—'})`;
+    defRow.className = 'mono text-left bg-bg border border-line rounded-[6px] px-3 py-2 hover:border-line2';
+    defRow.style.fontSize = '11px';
+    defRow.style.color = 'rgba(245,237,224,0.5)';
+    if (!currentValue) {
+      defRow.style.borderColor = 'var(--accent)';
+      defRow.style.color = '#f5ede0';
     }
-    sel.addEventListener('change', () => apply(sel.value));
-    pop.appendChild(sel);
+    defRow.addEventListener('click', () => apply(''));
+    listWrap.appendChild(defRow);
+
+    for (const m of list) {
+      const row = document.createElement('button');
+      row.type = 'button';
+      row.textContent = m;
+      row.className = 'mono text-left bg-bg border border-line rounded-[6px] px-3 py-2 hover:border-line2';
+      row.style.fontSize = '12px';
+      if (m === currentValue) {
+        row.style.borderColor = 'var(--accent)';
+        row.style.background = 'rgba(212,168,88,0.06)';
+        row.style.color = '#f5ede0';
+      } else {
+        row.style.color = '#f5ede0';
+      }
+      row.addEventListener('click', () => apply(m));
+      listWrap.appendChild(row);
+    }
+    pop.appendChild(listWrap);
 
     const customWrap = document.createElement('div');
     customWrap.style.display = 'flex';
