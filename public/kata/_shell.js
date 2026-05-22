@@ -102,6 +102,7 @@
   }
   function paint() {
     var hex = TRACKS[activeIdx()].palette[0];
+    var hex2 = TRACKS[activeIdx()].palette[1] || '#5BA868';
     var r = parseInt(hex.slice(1, 3), 16);
     var g = parseInt(hex.slice(3, 5), 16);
     var b = parseInt(hex.slice(5, 7), 16);
@@ -110,6 +111,8 @@
     root.style.setProperty('--ambient-g', String(g));
     root.style.setProperty('--ambient-b', String(b));
     root.style.setProperty('--accent', hex);
+    root.style.setProperty('--accent-2', hex2);
+    repaintAmbient();
     document.dispatchEvent(new CustomEvent('kata:theme-change', { detail: { idx: activeIdx(), hex: hex } }));
   }
   function startRotation() {
@@ -149,7 +152,7 @@
     var s = document.createElement('style');
     s.id = 'kata-accent-overlay';
     s.textContent = [
-      ':root { --accent: #E04545; --ambient-r: 224; --ambient-g: 69; --ambient-b: 69; }',
+      ':root { --accent: #E04545; --accent-2: #5BA868; --ambient-r: 224; --ambient-g: 69; --ambient-b: 69; }',
       // Solid red usages
       '.text-red { color: var(--accent) !important; }',
       '.bg-red { background-color: var(--accent) !important; }',
@@ -158,11 +161,65 @@
       '.stroke-red { stroke: var(--accent) !important; }',
       // Glow used on logo and accent dots
       '.glow77 { text-shadow: 0 0 6px color-mix(in srgb, var(--accent) 80%, transparent), 0 0 18px color-mix(in srgb, var(--accent) 40%, transparent), 0 0 36px color-mix(in srgb, var(--accent) 20%, transparent); }',
-      // Some pages use bg-red/N pattern via inline styles with hex; nothing
-      // we can do for those without HTML edits — but the accent vars are
-      // exposed so page-level scripts can read them where needed.
+      // Ambient breathe animation, mirrors src/styles.css
+      '@keyframes kata-ambient { 0%,100% { opacity: 0.55; } 50% { opacity: 0.85; } }',
+      // The 3 fixed full-viewport background layers we paint in injectAmbientLayers().
+      '#kata-ambient-base, #kata-ambient-grain, #kata-ambient-pulse { position: fixed; inset: 0; pointer-events: none; z-index: 0; }',
+      '#kata-ambient-base { transition: background-image 1.2s ease; }',
+      '#kata-ambient-grain { background-image: radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px); background-size: 3px 3px; opacity: 0.5; }',
+      '#kata-ambient-pulse { animation: kata-ambient 4s ease-in-out infinite; }',
+      // Lift the page content above the fixed ambient layers. Body is the
+      // direct ancestor of every kata page's root container, so positioning
+      // body content above z-index 0 is enough.
+      'body > *:not(#kata-ambient-base):not(#kata-ambient-grain):not(#kata-ambient-pulse) { position: relative; z-index: 1; }',
     ].join('\n');
     document.head.appendChild(s);
+  }
+
+  // ── Ambient background layers ──────────────────────────────────
+  // Paints three fixed full-viewport backgrounds behind the page content,
+  // mirroring AmbientBackground in se77n/src/App.jsx. Layer 1 is the soft
+  // gradient driven by the active palette (changes when theme changes),
+  // layer 2 is a static dotted grain, layer 3 is a bottom radial that
+  // pulses via the kata-ambient keyframe.
+  function injectAmbientLayers() {
+    if (!document.getElementById('kata-ambient-base')) {
+      var base = document.createElement('div');
+      base.id = 'kata-ambient-base';
+      base.setAttribute('aria-hidden', 'true');
+      document.body.insertBefore(base, document.body.firstChild);
+    }
+    if (!document.getElementById('kata-ambient-grain')) {
+      var grain = document.createElement('div');
+      grain.id = 'kata-ambient-grain';
+      grain.setAttribute('aria-hidden', 'true');
+      document.body.insertBefore(grain, document.body.firstChild);
+    }
+    if (!document.getElementById('kata-ambient-pulse')) {
+      var pulse = document.createElement('div');
+      pulse.id = 'kata-ambient-pulse';
+      pulse.setAttribute('aria-hidden', 'true');
+      document.body.insertBefore(pulse, document.body.firstChild);
+    }
+  }
+
+  function repaintAmbient() {
+    var idx = activeIdx();
+    var c1 = TRACKS[idx].palette[0];
+    var c2 = TRACKS[idx].palette[1] || '#5BA868';
+    var base = document.getElementById('kata-ambient-base');
+    var pulse = document.getElementById('kata-ambient-pulse');
+    if (base) {
+      base.style.backgroundImage =
+        'radial-gradient(60% 50% at 18% 12%, ' + c1 + '26 0%, transparent 65%),' +
+        'radial-gradient(50% 45% at 90% 88%, ' + c2 + '28 0%, transparent 70%),' +
+        'radial-gradient(35% 30% at 60% 50%, #D4A85810 0%, transparent 75%),' +
+        'linear-gradient(180deg, rgba(91,168,104,0.02) 0%, transparent 50%)';
+    }
+    if (pulse) {
+      pulse.style.background =
+        'radial-gradient(600px circle at 50% 100%, ' + c1 + '11, transparent 70%)';
+    }
   }
 
   // ── Header chrome ───────────────────────────────────────────────
@@ -457,6 +514,7 @@
   // ── Boot ────────────────────────────────────────────────────────
   function boot() {
     injectAccentOverlay();
+    injectAmbientLayers();
     paint();
     if (state.lockIdx == null) startRotation();
     rerenderHeader();
