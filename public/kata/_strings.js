@@ -150,14 +150,9 @@ window.KATA_STRINGS = {
     'admin.tab.servers': 'all servers',
     'admin.tab.logs': 'global logs',
     'admin.tab.cost': 'global cost',
-    'admin.tab.models': 'models',
-    'admin.tab.health': 'health',
     'admin.tab.settings': 'global settings',
     'admin.subtitle': 'admin console',
     'admin.subtitle.desc': 'global view',
-    'admin.health.mongo': 'mongo',
-    'admin.health.bot': 'bot',
-    'admin.health.instances': 'bot instances',
   },
 
   en: {
@@ -308,13 +303,8 @@ window.KATA_STRINGS = {
     'admin.tab.servers': 'all servers',
     'admin.tab.logs': 'global logs',
     'admin.tab.cost': 'global cost',
-    'admin.tab.models': 'models',
-    'admin.tab.health': 'health',
     'admin.tab.settings': 'global settings',
     'admin.subtitle': 'admin console',
     'admin.subtitle.desc': 'global view',
-    'admin.health.mongo': 'mongo',
-    'admin.health.bot': 'bot',
-    'admin.health.instances': 'bot instances',
   },
 };

@@ -68,8 +68,6 @@
     <a data-tab="servers" class="block px-3 py-2 rounded-[8px] text-mute hover:text-ink cursor-pointer mb-1"><span data-i18n="admin.tab.servers">▸ all servers</span></a>
     <a data-tab="logs" class="block px-3 py-2 rounded-[8px] text-mute hover:text-ink cursor-pointer mb-1"><span data-i18n="admin.tab.logs">▸ global logs</span></a>
     <a data-tab="cost" class="block px-3 py-2 rounded-[8px] text-mute hover:text-ink cursor-pointer mb-1"><span data-i18n="admin.tab.cost">▸ global cost</span></a>
-    <a data-tab="models" class="block px-3 py-2 rounded-[8px] text-mute hover:text-ink cursor-pointer mb-1"><span data-i18n="admin.tab.models">▸ models</span></a>
-    <a data-tab="health" class="block px-3 py-2 rounded-[8px] text-mute hover:text-ink cursor-pointer mb-1"><span data-i18n="admin.tab.health">▸ health</span></a>
     <a data-tab="settings" class="block px-3 py-2 rounded-[8px] text-mute hover:text-ink cursor-pointer mb-1"><span data-i18n="admin.tab.settings">▸ global settings</span></a>
   </nav>
   <div class="px-5 py-4 border-t border-line">
@@ -98,7 +96,7 @@
 </main>
 
 <script>
-const TABS = ['servers','logs','cost','models','health','settings'];
+const TABS = ['servers','logs','cost','settings'];
 const params = new URLSearchParams(location.search);
 let currentTab = TABS.includes(params.get('tab')) ? params.get('tab') : 'servers';
 
@@ -350,90 +348,6 @@ async function renderCost() {
         <div>${cmdRows}</div>
       </div>
     </div>`;
-}
-
-async function renderModels() {
-  elContent.innerHTML = '<div class="mono text-[11px] text-mute">loading…</div>';
-  const data = await fetchJson('/api/kata/admin/models');
-  if (!data) return;
-  clearAuthWarn();
-  elCounts.textContent = `${data.models.length} active models · ${data.rangeDays}d`;
-  if (data.models.length === 0) {
-    elContent.innerHTML = '<div class="mono text-[12px] tracking-label uppercase text-mute py-8 text-center">— no usage in window —</div>';
-    return;
-  }
-  const totalCost = data.models.reduce((s, m) => s + m.cost, 0);
-  const rows = data.models.map((m) => {
-    const pct = totalCost > 0 ? Math.round((m.cost / totalCost) * 100) : 0;
-    return `<div class="row">
-      <div class="flex items-center justify-between gap-3 mb-2">
-        <div class="flex items-center gap-2">
-          <span class="mono text-[10px] tracking-label uppercase px-2 py-0.5 rounded border border-line text-mute">${escapeHtml(m.service)}</span>
-          <span class="text-[13px] font-medium">${escapeHtml(m.model)}</span>
-        </div>
-        <span class="mono text-[10px] text-mute">${escapeHtml(fmtTime(m.lastUsed))} ago</span>
-      </div>
-      <div class="grid grid-cols-3 gap-3 mono text-[11px]">
-        <div><span class="text-mute uppercase tracking-label text-[9px]">cost</span><div class="text-gold font-bold">${fmtUSD(m.cost)}</div></div>
-        <div><span class="text-mute uppercase tracking-label text-[9px]">calls</span><div>${fmtNum(m.count)}</div></div>
-        <div><span class="text-mute uppercase tracking-label text-[9px]">share</span><div>${pct}%</div></div>
-      </div>
-    </div>`;
-  }).join('');
-  elContent.innerHTML = `<div class="space-y-2">${rows}</div>`;
-}
-
-async function renderHealth() {
-  elContent.innerHTML = '<div class="mono text-[11px] text-mute">loading…</div>';
-  const data = await fetchJson('/api/kata/admin/health');
-  if (!data) return;
-  clearAuthWarn();
-  elCounts.textContent = `checked ${escapeHtml(fmtTime(data.checkedAt))} ago`;
-
-  function statusPill(label, ok, sub) {
-    const dotColor = ok ? '#5BA868' : '#E04545';
-    const txtColor = ok ? 'text-green' : 'text-red';
-    return `<div class="row">
-      <div class="flex items-center justify-between gap-3 mb-1">
-        <div class="mono text-[10px] tracking-label uppercase text-mute">${label}</div>
-        <span class="flex items-center gap-1.5 mono text-[10px] tracking-label uppercase ${txtColor}">
-          <span class="dot-pulse w-1.5 h-1.5 rounded-full" style="background:${dotColor}"></span>${ok ? 'ok' : 'down'}
-        </span>
-      </div>
-      <div class="mono text-[11px] text-mute">${sub}</div>
-    </div>`;
-  }
-
-  const mongoSub = data.mongo.ok ? `ping ${data.mongo.latencyMs}ms` : `error: ${escapeHtml(data.mongo.error || 'unknown')}`;
-  const botSub = data.bot.anyAlive
-    ? `${data.bot.instances.filter(i => i.alive && !i.isShuttingDown).length} alive instance(s)`
-    : (data.bot.instances.length === 0 ? 'no heartbeat ever' : 'all stale');
-
-  const instances = data.bot.instances.map((h) => {
-    const cls = h.alive && !h.isShuttingDown ? 'text-green' : (h.isShuttingDown ? 'text-mute' : 'text-red');
-    const status = h.isShuttingDown ? 'shutting down' : (h.alive ? 'alive' : 'stale');
-    return `<div class="row">
-      <div class="flex items-center justify-between gap-3 mb-1">
-        <div class="mono text-[11px] truncate">${escapeHtml(h.instanceId)}</div>
-        <span class="mono text-[10px] tracking-label uppercase ${cls}">${status}</span>
-      </div>
-      <div class="grid grid-cols-4 gap-3 mono text-[10px] text-mute mt-1">
-        <div>guilds <span class="text-ink">${fmtNum(h.guildCount)}</span></div>
-        <div>queue <span class="text-ink">${fmtNum(h.queueDepth)}</span></div>
-        <div>mem <span class="text-ink">${h.memMB ?? '?'}MB</span></div>
-        <div>node <span class="text-ink">${escapeHtml(h.nodeVersion ?? '?')}</span></div>
-      </div>
-      <div class="mono text-[10px] text-mute2 mt-1">last seen ${escapeHtml(fmtTime(h.lastSeen))} ago · started ${escapeHtml(fmtTime(h.startedAt))} ago${h.version ? ' · v' + escapeHtml(h.version) : ''}</div>
-    </div>`;
-  }).join('');
-
-  elContent.innerHTML = `
-    <div class="grid grid-cols-2 gap-3 mb-6">
-      ${statusPill('mongo', data.mongo.ok, mongoSub)}
-      ${statusPill('bot', data.bot.anyAlive, botSub)}
-    </div>
-    <div class="mono text-[10px] tracking-label uppercase text-mute mb-2">bot instances (${data.bot.instances.length})</div>
-    <div class="space-y-2">${instances || '<div class="row mono text-[11px] text-mute">no heartbeat docs</div>'}</div>`;
 }
 
 // ── settings (global config) ────────────────────────────────────
@@ -869,7 +783,7 @@ async function saveSettings(payload) {
   }
 }
 
-const renderers = { servers: renderServers, logs: renderLogs, cost: renderCost, models: renderModels, health: renderHealth, settings: renderSettings };
+const renderers = { servers: renderServers, logs: renderLogs, cost: renderCost, settings: renderSettings };
 
 function switchTab(tab) {
   if (!TABS.includes(tab)) return;

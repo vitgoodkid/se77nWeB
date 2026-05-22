@@ -1282,8 +1282,6 @@ async function handleKataAdmin(req, res, section) {
     case 'servers':  return adminServers(req, res, kataDb);
     case 'logs':     return adminLogs(req, res, kataDb);
     case 'cost':     return adminCost(req, res, kataDb);
-    case 'models':   return adminModels(req, res, kataDb);
-    case 'health':   return adminHealth(req, res, kataDb);
     case 'global-config': return adminGlobalConfigGet(req, res, kataDb);
   }
 }
@@ -1472,82 +1470,6 @@ async function adminCost(req, res, kataDb) {
 
   res.setHeader('X-Kata-Cache', hit ? 'HIT' : 'MISS');
   return res.status(200).json(value);
-}
-
-// ── /admin/models ──────────────────────────────────────────────
-// Read-only snapshot: which models are actually being called and at what
-// volume / cost. We don't expose chain editing — chains live in the bot
-// source so the dashboard view is purely observational.
-async function adminModels(req, res, kataDb) {
-  const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-  const cost = kataDb.collection('costentries');
-
-  const rows = await cost.aggregate([
-    { $match: { timestamp: { $gte: since } } },
-    { $group: {
-      _id: { service: '$service', model: '$model' },
-      cost: { $sum: '$costUSD' },
-      count: { $sum: 1 },
-      lastUsed: { $max: '$timestamp' },
-    } },
-    { $sort: { cost: -1 } },
-  ]).toArray();
-
-  return res.status(200).json({
-    rangeDays: 7,
-    models: rows.map((r) => ({
-      service: r._id.service,
-      model: r._id.model,
-      cost: Number(r.cost),
-      count: r.count,
-      lastUsed: r.lastUsed,
-    })),
-  });
-}
-
-// ── /admin/health ──────────────────────────────────────────────
-// Liveness across the stack:
-//   - Mongo: ping the kata db
-//   - Bot: read botheartbeats — any row whose lastSeen is within 2 min is
-//     considered alive
-async function adminHealth(req, res, kataDb) {
-  const startedMongo = Date.now();
-  let mongo;
-  try {
-    await kataDb.command({ ping: 1 });
-    mongo = { ok: true, latencyMs: Date.now() - startedMongo };
-  } catch (err) {
-    mongo = { ok: false, latencyMs: Date.now() - startedMongo, error: err.message };
-  }
-
-  const heartbeats = await kataDb.collection('botheartbeats')
-    .find({}, { projection: { instanceId: 1, lastSeen: 1, startedAt: 1, pid: 1, version: 1, guildCount: 1, queueDepth: 1, memMB: 1, nodeVersion: 1, extras: 1 } })
-    .sort({ lastSeen: -1 })
-    .toArray();
-
-  const aliveCutoff = Date.now() - 2 * 60 * 1000;
-  const annotated = heartbeats.map((h) => ({
-    instanceId: h.instanceId,
-    lastSeen: h.lastSeen,
-    startedAt: h.startedAt,
-    pid: h.pid ?? null,
-    version: h.version ?? null,
-    guildCount: h.guildCount ?? 0,
-    queueDepth: h.queueDepth ?? 0,
-    memMB: h.memMB ?? null,
-    nodeVersion: h.nodeVersion ?? null,
-    isShuttingDown: !!h.extras?.isShuttingDown,
-    alive: h.lastSeen?.getTime?.() >= aliveCutoff,
-  }));
-
-  return res.status(200).json({
-    mongo,
-    bot: {
-      instances: annotated,
-      anyAlive: annotated.some((h) => h.alive && !h.isShuttingDown),
-    },
-    checkedAt: new Date().toISOString(),
-  });
 }
 
 // ── /admin/global-config ──────────────────────────────────────
