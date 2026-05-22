@@ -163,15 +163,22 @@
       '.glow77 { text-shadow: 0 0 6px color-mix(in srgb, var(--accent) 80%, transparent), 0 0 18px color-mix(in srgb, var(--accent) 40%, transparent), 0 0 36px color-mix(in srgb, var(--accent) 20%, transparent); }',
       // Ambient breathe animation, mirrors src/styles.css
       '@keyframes kata-ambient { 0%,100% { opacity: 0.55; } 50% { opacity: 0.85; } }',
-      // The 3 fixed full-viewport background layers we paint in injectAmbientLayers().
-      '#kata-ambient-base, #kata-ambient-grain, #kata-ambient-pulse { position: fixed; inset: 0; pointer-events: none; z-index: 0; }',
+      // The 3 fixed full-viewport background layers we paint in
+      // injectAmbientLayers(). z-index:-1 so they stay above body's own
+      // background paint but below every other element on the page,
+      // including elements that are themselves position:fixed (header,
+      // sidebar) — without forcing position:relative on the whole page,
+      // which would break those fixed elements and push content down.
+      '#kata-ambient-base, #kata-ambient-grain, #kata-ambient-pulse { position: fixed; inset: 0; pointer-events: none; z-index: -1; }',
       '#kata-ambient-base { transition: background-image 1.2s ease; }',
       '#kata-ambient-grain { background-image: radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px); background-size: 3px 3px; opacity: 0.5; }',
       '#kata-ambient-pulse { animation: kata-ambient 4s ease-in-out infinite; }',
-      // Lift the page content above the fixed ambient layers. Body is the
-      // direct ancestor of every kata page's root container, so positioning
-      // body content above z-index 0 is enough.
-      'body > *:not(#kata-ambient-base):not(#kata-ambient-grain):not(#kata-ambient-pulse) { position: relative; z-index: 1; }',
+      // The kata pages set bg-bg on <body>, which would paint OVER our
+      // z-index:-1 layers. Make body's background transparent and move
+      // the solid colour to <html> instead — html paints below body, so
+      // the negative-z-index layers sit between the two and are visible.
+      'html { background-color: #0d0a08; }',
+      'body { background-color: transparent !important; }',
     ].join('\n');
     document.head.appendChild(s);
   }
