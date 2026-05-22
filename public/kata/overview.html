@@ -262,7 +262,7 @@
       <section data-section="models" class="grid grid-cols-2 gap-3">
         <div>
           <div class="mono text-[10px] uppercase tracking-kicker text-mute mb-2">chat model</div>
-          <input id="f-chatModel" class="w-full bg-bg border border-line rounded-[10px] h-10 px-3 text-[12px] text-ink mono focus:outline-none focus:border-red/60" placeholder="gemini-3.1-flash-lite" />
+          <select id="f-chatModel" class="w-full bg-bg border border-line rounded-[10px] h-10 px-3 text-[12px] text-ink mono focus:outline-none focus:border-red/60"></select>
         </div>
         <div>
           <div class="mono text-[10px] uppercase tracking-kicker text-mute mb-2">chat mode</div>
@@ -275,11 +275,11 @@
         </div>
         <div>
           <div class="mono text-[10px] uppercase tracking-kicker text-mute mb-2">image model</div>
-          <input id="f-imageModel" class="w-full bg-bg border border-line rounded-[10px] h-10 px-3 text-[12px] text-ink mono focus:outline-none focus:border-red/60" placeholder="fal-ai/nano-banana-pro" />
+          <select id="f-imageModel" class="w-full bg-bg border border-line rounded-[10px] h-10 px-3 text-[12px] text-ink mono focus:outline-none focus:border-red/60"></select>
         </div>
         <div>
           <div class="mono text-[10px] uppercase tracking-kicker text-mute mb-2">video model</div>
-          <input id="f-videoModel" class="w-full bg-bg border border-line rounded-[10px] h-10 px-3 text-[12px] text-ink mono focus:outline-none focus:border-red/60" placeholder="bytedance/seedance-2.0/image-to-video" />
+          <select id="f-videoModel" class="w-full bg-bg border border-line rounded-[10px] h-10 px-3 text-[12px] text-ink mono focus:outline-none focus:border-red/60"></select>
         </div>
       </section>
 
@@ -558,6 +558,66 @@ const SETTINGS_FIELD_MAP = [
   { key: 'allowedChannels',      input: 'f-allowedChannels' },
 ];
 
+// Hardcoded model whitelists shown in the per-guild settings dropdowns.
+// Sync with packages/pricing/src/models.ts in the KataS bot when a new
+// model is added. The PATCH endpoint accepts any string the bot supports;
+// a stale list here just hides a new model behind the "custom…" prompt.
+const CHAT_MODELS = [
+  'gemini-3.1-flash-lite',
+  'gemini-3.1-flash-preview',
+  'gemini-3-flash-preview',
+  'gemini-3-pro-preview',
+  'gemini-3.1-pro-preview',
+  'gemini-2.5-flash',
+  'gemini-2.5-flash-lite',
+  'gemini-2.5-pro',
+  'claude-haiku-4-5',
+  'claude-sonnet-4-6',
+  'claude-opus-4-7',
+  'grok-4',
+  'grok-4.1',
+  'grok-4-fast',
+];
+const IMAGE_MODELS = [
+  'fal-ai/nano-banana-pro',
+  'fal-ai/nano-banana-pro/edit',
+  'fal-ai/gpt-image-2',
+  'fal-ai/gpt-image-2/edit',
+  'fal-ai/flux/dev/image-to-image',
+  'fal-ai/wan-2.6/image-to-image',
+];
+const VIDEO_MODELS = [
+  'bytedance/seedance-2.0/text-to-video',
+  'bytedance/seedance-2.0/image-to-video',
+  'fal-ai/happy-horse/text-to-video',
+  'fal-ai/happy-horse/image-to-video',
+  'xai/grok-imagine-video/text-to-video',
+  'xai/grok-imagine-video/image-to-video',
+];
+
+// Replace a select's options with the given list + a leading "(default)"
+// option, then select `current`. If `current` isn't in the list, prepend
+// it so we don't silently drop a value the bot was using.
+function populateModelSelect(id, options, current) {
+  const sel = document.getElementById(id);
+  if (!sel) return;
+  const opts = options.slice();
+  if (current && !opts.includes(current)) opts.unshift(current);
+  sel.innerHTML = '';
+  const def = document.createElement('option');
+  def.value = '';
+  def.textContent = '(default)';
+  if (!current) def.selected = true;
+  sel.appendChild(def);
+  for (const m of opts) {
+    const o = document.createElement('option');
+    o.value = m;
+    o.textContent = m;
+    if (current === m) o.selected = true;
+    sel.appendChild(o);
+  }
+}
+
 function fieldSource(cfg, key) {
   if (!cfg) return 'code';
   const overridden = cfg.guildOverride && Object.prototype.hasOwnProperty.call(cfg.guildOverride, key);
@@ -647,7 +707,7 @@ function openSettings(focusSection){
   const c = CURRENT_CONFIG;
   document.getElementById('f-systemPrompt').value = c.systemPrompt || '';
   document.getElementById('f-systemPrompt-count').textContent = (c.systemPrompt || '').length;
-  document.getElementById('f-chatModel').value = c.chatModel || '';
+  populateModelSelect('f-chatModel', CHAT_MODELS, c.chatModel || '');
   document.getElementById('f-chatMode').value = c.chatMode || 'balanced';
   for (const btn of document.querySelectorAll('#f-chatMode-group button')){
     const active = btn.dataset.mode === (c.chatMode || 'balanced');
@@ -655,8 +715,8 @@ function openSettings(focusSection){
     btn.classList.toggle('text-mute', !active);
     btn.style.background = active ? '#1c1813' : 'transparent';
   }
-  document.getElementById('f-imageModel').value = c.imageModel || '';
-  document.getElementById('f-videoModel').value = c.videoModel || '';
+  populateModelSelect('f-imageModel', IMAGE_MODELS, c.imageModel || '');
+  populateModelSelect('f-videoModel', VIDEO_MODELS, c.videoModel || '');
   document.getElementById('f-nsfwThresholdNormal').value = c.nsfwThresholdNormal ?? 0.3;
   document.getElementById('f-nsfwThresholdNsfw').value = c.nsfwThresholdNsfw ?? 0.85;
   document.getElementById('f-rateLimitPerUser').value = c.rateLimitPerUser ?? 30;
@@ -709,10 +769,10 @@ document.getElementById('settings-form').addEventListener('submit', async (e)=>{
   const allowedChannels = channelsRaw.split(/[\s,]+/).map(s=>s.trim()).filter(Boolean);
   const payload = {
     systemPrompt: document.getElementById('f-systemPrompt').value,
-    chatModel: document.getElementById('f-chatModel').value.trim(),
+    chatModel: document.getElementById('f-chatModel').value,
     chatMode: document.getElementById('f-chatMode').value,
-    imageModel: document.getElementById('f-imageModel').value.trim(),
-    videoModel: document.getElementById('f-videoModel').value.trim(),
+    imageModel: document.getElementById('f-imageModel').value,
+    videoModel: document.getElementById('f-videoModel').value,
     nsfwThresholdNormal: parseFloat(document.getElementById('f-nsfwThresholdNormal').value),
     nsfwThresholdNsfw: parseFloat(document.getElementById('f-nsfwThresholdNsfw').value),
     rateLimitPerUser: parseInt(document.getElementById('f-rateLimitPerUser').value, 10),

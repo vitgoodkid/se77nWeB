@@ -412,12 +412,52 @@ async function renderHealth() {
 }
 
 // ── settings (global config) ────────────────────────────────────
+//
+// Model dropdown options. Hardcoded against the bot's pricing/model list
+// at apps/bot/src/services (yunwu chat models, fal image/video models).
+// Sync these with packages/pricing/src/models.ts when the bot adds support
+// for new models — the bot will accept any string we send, so a stale
+// list here just means a new model is missing from the dropdown until we
+// remember to add it.
+const CHAT_MODELS = [
+  'gemini-3.1-flash-lite',
+  'gemini-3.1-flash-preview',
+  'gemini-3-flash-preview',
+  'gemini-3-pro-preview',
+  'gemini-3.1-pro-preview',
+  'gemini-2.5-flash',
+  'gemini-2.5-flash-lite',
+  'gemini-2.5-pro',
+  'claude-haiku-4-5',
+  'claude-sonnet-4-6',
+  'claude-opus-4-7',
+  'grok-4',
+  'grok-4.1',
+  'grok-4-fast',
+];
+const IMAGE_MODELS = [
+  'fal-ai/nano-banana-pro',
+  'fal-ai/nano-banana-pro/edit',
+  'fal-ai/gpt-image-2',
+  'fal-ai/gpt-image-2/edit',
+  'fal-ai/flux/dev/image-to-image',
+  'fal-ai/wan-2.6/image-to-image',
+];
+const VIDEO_MODELS = [
+  'bytedance/seedance-2.0/text-to-video',
+  'bytedance/seedance-2.0/image-to-video',
+  'fal-ai/happy-horse/text-to-video',
+  'fal-ai/happy-horse/image-to-video',
+  'xai/grok-imagine-video/text-to-video',
+  'xai/grok-imagine-video/image-to-video',
+];
+
 const SETTINGS_FIELDS = [
   { key: 'systemPrompt', type: 'textarea', label: 'system prompt', placeholder: '(empty — bot uses no extra prompt)', max: 4000 },
-  { key: 'chatModel', type: 'text', label: 'chat model', placeholder: 'gemini-3.1-flash-lite' },
+  { key: 'chatModel', type: 'model-select', label: 'chat model', options: CHAT_MODELS, placeholder: 'gemini-3.1-flash-lite' },
   { key: 'chatMode', type: 'select', label: 'chat mode', options: ['fast', 'balanced', 'deep'] },
-  { key: 'imageModel', type: 'text', label: 'image model', placeholder: 'fal-ai/nano-banana-pro' },
-  { key: 'videoModel', type: 'text', label: 'video model', placeholder: 'bytedance/seedance-2.0/image-to-video' },
+  { key: 'imageModel', type: 'model-select', label: 'image model', options: IMAGE_MODELS, placeholder: 'fal-ai/nano-banana-pro' },
+  { key: 'videoModel', type: 'model-select', label: 'video model', options: VIDEO_MODELS, placeholder: 'bytedance/seedance-2.0/image-to-video' },
   { key: 'rateLimitPerUser', type: 'number', label: 'rate limit / user (mentions/h)', min: 1, max: 1000 },
   { key: 'nsfwThresholdNormal', type: 'number', label: 'NSFW threshold (normal channels)', min: 0, max: 1, step: 0.05 },
   { key: 'nsfwThresholdNsfw', type: 'number', label: 'NSFW threshold (NSFW channels)', min: 0, max: 1, step: 0.05 },
@@ -454,6 +494,23 @@ async function renderSettings() {
       inputHtml = `<textarea data-field="${f.key}" rows="${f.key === 'systemPrompt' ? 6 : 3}" class="mono text-[12px] w-full bg-bg border border-line rounded-[8px] px-3 py-2 text-ink focus:outline-none focus:border-line2" placeholder="${escapeHtml(f.placeholder || '')}">${escapeHtml(v)}</textarea>`;
     } else if (f.type === 'select') {
       inputHtml = `<select data-field="${f.key}" class="mono text-[12px] bg-bg border border-line rounded-[8px] px-3 py-2 text-ink focus:outline-none focus:border-line2">${f.options.map((o) => `<option value="${o}" ${value === o ? 'selected' : ''}>${o}</option>`).join('')}</select>`;
+    } else if (f.type === 'model-select') {
+      // Model picker: dropdown of known models + free-text fallback so we
+      // can still type a new model the bot supports before this list is
+      // updated. If the stored value isn't in the list we add it as a
+      // selected option so it doesn't get silently lost.
+      const opts = [...f.options];
+      const cur = (value ?? '').toString();
+      if (cur && !opts.includes(cur)) opts.unshift(cur);
+      const optionsHtml = opts.map((o) => `<option value="${escapeHtml(o)}" ${cur === o ? 'selected' : ''}>${escapeHtml(o)}</option>`).join('');
+      inputHtml = `
+        <div class="flex gap-2 items-center">
+          <select data-field="${f.key}" data-field-kind="model-select" class="mono text-[12px] bg-bg border border-line rounded-[8px] px-3 py-2 text-ink focus:outline-none focus:border-line2 flex-1">
+            <option value="" ${cur === '' ? 'selected' : ''}>(use default · ${escapeHtml(f.placeholder || '')})</option>
+            ${optionsHtml}
+          </select>
+          <button data-custom="${f.key}" class="mono text-[10px] tracking-label uppercase text-mute hover:text-ink border border-line rounded-[8px] px-3 py-2" title="Type a custom model id">custom…</button>
+        </div>`;
     } else if (f.type === 'number') {
       inputHtml = `<input type="number" data-field="${f.key}" value="${value ?? ''}" min="${f.min ?? ''}" max="${f.max ?? ''}" step="${f.step ?? 1}" class="mono text-[12px] w-32 bg-bg border border-line rounded-[8px] px-3 py-2 text-ink focus:outline-none focus:border-line2" />`;
     } else {
@@ -491,6 +548,32 @@ async function renderSettings() {
       renderSettings();
     });
   });
+  // "custom…" button on model dropdowns: prompt for a free-text model id
+  // so we can set a model the dropdown doesn't list yet.
+  document.querySelectorAll('[data-custom]').forEach((b) => {
+    b.addEventListener('click', () => {
+      const key = b.getAttribute('data-custom');
+      const sel = document.querySelector(`[data-field="${key}"]`);
+      const current = sel ? sel.value : '';
+      const next = window.prompt(`Custom model id for ${key}:`, current);
+      if (next == null) return;
+      const trimmed = next.trim();
+      if (!sel) return;
+      if (trimmed === '') {
+        sel.value = '';
+        return;
+      }
+      // Inject the custom value as an option so the select can show it.
+      let opt = Array.from(sel.options).find((o) => o.value === trimmed);
+      if (!opt) {
+        opt = document.createElement('option');
+        opt.value = trimmed;
+        opt.textContent = trimmed;
+        sel.insertBefore(opt, sel.options[1] || null);
+      }
+      sel.value = trimmed;
+    });
+  });
   document.getElementById('settings-save').addEventListener('click', async () => {
     const payload = collectSettingsPayload(cfg);
     if (Object.keys(payload).length === 0) {
@@ -513,6 +596,8 @@ function collectSettingsPayload(currentCfg) {
       v = el.value === '' ? null : (Number.isFinite(n) ? n : null);
     } else if (f.type === 'select') {
       v = el.value;
+    } else if (f.type === 'model-select') {
+      v = el.value === '' ? null : el.value;
     } else if (f.type === 'textarea' && f.key === 'allowedChannels') {
       const lines = el.value.split('\n').map((s) => s.trim()).filter(Boolean);
       v = lines.length === 0 ? null : lines;
