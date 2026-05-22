@@ -213,7 +213,6 @@
       </div>
       <div class="space-y-2 mono text-[11px]">
         <div class="flex items-baseline justify-between"><span class="text-mute2">chat</span><span id="cfg-chat-model" class="text-ink">—</span></div>
-        <div class="flex items-baseline justify-between"><span class="text-mute2">mode</span><span id="cfg-chat-mode" class="text-ink">—</span></div>
         <div class="flex items-baseline justify-between"><span class="text-mute2">image</span><span id="cfg-image-model" class="text-ink">—</span></div>
         <div class="flex items-baseline justify-between"><span class="text-mute2">video</span><span id="cfg-video-model" class="text-ink">—</span></div>
       </div>
@@ -262,24 +261,36 @@
       <section data-section="models" class="grid grid-cols-2 gap-3">
         <div>
           <div class="mono text-[10px] uppercase tracking-kicker text-mute mb-2">chat model</div>
-          <select id="f-chatModel" class="w-full bg-bg border border-line rounded-[10px] h-10 px-3 text-[12px] text-ink mono focus:outline-none focus:border-red/60"></select>
-        </div>
-        <div>
-          <div class="mono text-[10px] uppercase tracking-kicker text-mute mb-2">chat mode</div>
-          <div class="flex items-center gap-0.5 p-0.5 rounded-[10px] border border-line bg-bg mono text-[10px] tracking-label uppercase h-10" id="f-chatMode-group">
-            <button type="button" data-mode="fast" class="flex-1 h-full rounded-[8px] text-mute hover:text-ink">fast</button>
-            <button type="button" data-mode="balanced" class="flex-1 h-full rounded-[8px] text-mute hover:text-ink">balanced</button>
-            <button type="button" data-mode="deep" class="flex-1 h-full rounded-[8px] text-mute hover:text-ink">deep</button>
+          <div class="flex gap-2 items-center">
+            <input type="hidden" id="f-chatModel" value="" />
+            <button type="button" id="f-chatModel-btn" class="mono text-[12px] flex-1 bg-bg border border-line rounded-[10px] h-10 px-3 text-ink hover:border-line2 text-left flex items-center justify-between gap-2">
+              <span id="f-chatModel-label">(default)</span>
+              <span class="text-mute text-[10px]">▾</span>
+            </button>
+            <button type="button" id="f-chatModel-clear" class="mono text-[10px] tracking-label uppercase text-mute hover:text-ink border border-line rounded-[10px] h-10 px-3" title="Use default">clear</button>
           </div>
-          <input type="hidden" id="f-chatMode" value="balanced" />
         </div>
         <div>
           <div class="mono text-[10px] uppercase tracking-kicker text-mute mb-2">image model</div>
-          <select id="f-imageModel" class="w-full bg-bg border border-line rounded-[10px] h-10 px-3 text-[12px] text-ink mono focus:outline-none focus:border-red/60"></select>
+          <div class="flex gap-2 items-center">
+            <input type="hidden" id="f-imageModel" value="" />
+            <button type="button" id="f-imageModel-btn" class="mono text-[12px] flex-1 bg-bg border border-line rounded-[10px] h-10 px-3 text-ink hover:border-line2 text-left flex items-center justify-between gap-2">
+              <span id="f-imageModel-label">(default)</span>
+              <span class="text-mute text-[10px]">▾</span>
+            </button>
+            <button type="button" id="f-imageModel-clear" class="mono text-[10px] tracking-label uppercase text-mute hover:text-ink border border-line rounded-[10px] h-10 px-3" title="Use default">clear</button>
+          </div>
         </div>
         <div>
           <div class="mono text-[10px] uppercase tracking-kicker text-mute mb-2">video model</div>
-          <select id="f-videoModel" class="w-full bg-bg border border-line rounded-[10px] h-10 px-3 text-[12px] text-ink mono focus:outline-none focus:border-red/60"></select>
+          <div class="flex gap-2 items-center">
+            <input type="hidden" id="f-videoModel" value="" />
+            <button type="button" id="f-videoModel-btn" class="mono text-[12px] flex-1 bg-bg border border-line rounded-[10px] h-10 px-3 text-ink hover:border-line2 text-left flex items-center justify-between gap-2">
+              <span id="f-videoModel-label">(default)</span>
+              <span class="text-mute text-[10px]">▾</span>
+            </button>
+            <button type="button" id="f-videoModel-clear" class="mono text-[10px] tracking-label uppercase text-mute hover:text-ink border border-line rounded-[10px] h-10 px-3" title="Use default">clear</button>
+          </div>
         </div>
       </section>
 
@@ -527,8 +538,7 @@ async function loadOverview(){
   const c = CURRENT_CONFIG;
   document.getElementById('cfg-sysprompt').textContent = c.systemPrompt && c.systemPrompt.trim() ? c.systemPrompt : '(Để trống — bot dùng prompt mặc định)';
   document.getElementById('cfg-sysprompt-meta').textContent = c.updatedAt ? `cập nhật ${relTime(c.updatedAt)} trước` : 'chưa từng cập nhật';
-  document.getElementById('cfg-chat-model').textContent = c.chatModel || '—';
-  document.getElementById('cfg-chat-mode').textContent = c.chatMode || 'balanced';
+  document.getElementById('cfg-chat-model').textContent = c.chatModel || 'grok-4-fast';
   document.getElementById('cfg-image-model').textContent = (c.imageModel || '').replace(/^fal-ai\//,'') || '—';
   document.getElementById('cfg-video-model').textContent = (c.videoModel || '').split('/').slice(-2).join('/') || '—';
   document.getElementById('cfg-nsfw-normal').textContent = `≥ ${(c.nsfwThresholdNormal ?? 0.3).toFixed(2)}`;
@@ -549,7 +559,6 @@ async function loadOverview(){
 const SETTINGS_FIELD_MAP = [
   { key: 'systemPrompt',         input: 'f-systemPrompt' },
   { key: 'chatModel',            input: 'f-chatModel' },
-  { key: 'chatMode',             input: 'f-chatMode' },
   { key: 'imageModel',           input: 'f-imageModel' },
   { key: 'videoModel',           input: 'f-videoModel' },
   { key: 'rateLimitPerUser',     input: 'f-rateLimitPerUser' },
@@ -558,64 +567,84 @@ const SETTINGS_FIELD_MAP = [
   { key: 'allowedChannels',      input: 'f-allowedChannels' },
 ];
 
-// Hardcoded model whitelists shown in the per-guild settings dropdowns.
-// Sync with packages/pricing/src/models.ts in the KataS bot when a new
-// model is added. The PATCH endpoint accepts any string the bot supports;
-// a stale list here just hides a new model behind the "custom…" prompt.
-const CHAT_MODELS = [
-  'gemini-3.1-flash-lite',
-  'gemini-3.1-flash-preview',
-  'gemini-3-flash-preview',
-  'gemini-3-pro-preview',
-  'gemini-3.1-pro-preview',
-  'gemini-2.5-flash',
-  'gemini-2.5-flash-lite',
-  'gemini-2.5-pro',
-  'claude-haiku-4-5',
-  'claude-sonnet-4-6',
-  'claude-opus-4-7',
-  'grok-4',
-  'grok-4.1',
-  'grok-4-fast',
-];
-const IMAGE_MODELS = [
-  'fal-ai/nano-banana-pro',
-  'fal-ai/nano-banana-pro/edit',
-  'fal-ai/gpt-image-2',
-  'fal-ai/gpt-image-2/edit',
-  'fal-ai/flux/dev/image-to-image',
-  'fal-ai/wan-2.6/image-to-image',
-];
-const VIDEO_MODELS = [
-  'bytedance/seedance-2.0/text-to-video',
-  'bytedance/seedance-2.0/image-to-video',
-  'fal-ai/happy-horse/text-to-video',
-  'fal-ai/happy-horse/image-to-video',
-  'xai/grok-imagine-video/text-to-video',
-  'xai/grok-imagine-video/image-to-video',
-];
+// Models grouped by provider for the popup picker. Provider tabs are
+// arbitrary labels — the bot just needs the model id string. Sync with
+// the bot's pricing list at packages/pricing/src/models.ts when adding
+// new models. The picker also has a "custom…" text input so any model
+// id the bot accepts can be set without editing this file.
+const CHAT_MODELS_BY_PROVIDER = {
+  yunwu: [
+    'gemini-3.1-flash-lite',
+    'gemini-3.1-flash-preview',
+    'gemini-3-flash-preview',
+    'gemini-3-pro-preview',
+    'gemini-3.1-pro-preview',
+    'gemini-2.5-flash',
+    'gemini-2.5-flash-lite',
+    'gemini-2.5-pro',
+    'claude-haiku-4-5',
+    'claude-sonnet-4-6',
+    'claude-opus-4-7',
+    'grok-4',
+    'grok-4.1',
+    'grok-4-fast',
+  ],
+};
+const IMAGE_MODELS_BY_PROVIDER = {
+  'fal.ai': [
+    'fal-ai/nano-banana-pro',
+    'fal-ai/nano-banana-pro/edit',
+    'fal-ai/gpt-image-2',
+    'fal-ai/gpt-image-2/edit',
+    'fal-ai/flux/dev/image-to-image',
+    'fal-ai/wan-2.6/image-to-image',
+  ],
+};
+const VIDEO_MODELS_BY_PROVIDER = {
+  'fal.ai': [
+    'bytedance/seedance-2.0/text-to-video',
+    'bytedance/seedance-2.0/image-to-video',
+    'fal-ai/happy-horse/text-to-video',
+    'fal-ai/happy-horse/image-to-video',
+    'xai/grok-imagine-video/text-to-video',
+    'xai/grok-imagine-video/image-to-video',
+  ],
+};
 
-// Replace a select's options with the given list + a leading "(default)"
-// option, then select `current`. If `current` isn't in the list, prepend
-// it so we don't silently drop a value the bot was using.
-function populateModelSelect(id, options, current) {
-  const sel = document.getElementById(id);
-  if (!sel) return;
-  const opts = options.slice();
-  if (current && !opts.includes(current)) opts.unshift(current);
-  sel.innerHTML = '';
-  const def = document.createElement('option');
-  def.value = '';
-  def.textContent = '(default)';
-  if (!current) def.selected = true;
-  sel.appendChild(def);
-  for (const m of opts) {
-    const o = document.createElement('option');
-    o.value = m;
-    o.textContent = m;
-    if (current === m) o.selected = true;
-    sel.appendChild(o);
+// Wire up a model picker popup attached to a hidden input + a button +
+// a label span + a clear button. Idempotent — safe to call repeatedly
+// each time the drawer opens. The trigger button stores its provider
+// list / placeholder in data-* so the popup helper is identical to the
+// admin page.
+function wireModelPicker(idBase, byProvider, placeholder) {
+  const btn = document.getElementById(idBase + '-btn');
+  const inp = document.getElementById(idBase);
+  const lbl = document.getElementById(idBase + '-label');
+  const clr = document.getElementById(idBase + '-clear');
+  if (!btn || !inp || !lbl || !clr) return;
+  btn.setAttribute('data-providers', JSON.stringify(byProvider).replace(/"/g, '&quot;'));
+  btn.setAttribute('data-placeholder', placeholder || '');
+  btn.setAttribute('data-picker', idBase);
+  inp.setAttribute('data-field', idBase);
+  if (!btn.dataset.bound) {
+    btn.dataset.bound = '1';
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openModelPicker(btn);
+    });
+    clr.addEventListener('click', () => {
+      inp.value = '';
+      lbl.textContent = `(default · ${placeholder || '—'})`;
+    });
   }
+}
+
+function setModelValue(idBase, value, placeholder) {
+  const inp = document.getElementById(idBase);
+  const lbl = document.getElementById(idBase + '-label');
+  if (!inp || !lbl) return;
+  inp.value = value || '';
+  lbl.textContent = value || `(default · ${placeholder || '—'})`;
 }
 
 function fieldSource(cfg, key) {
@@ -702,21 +731,150 @@ async function resetFieldToInherit(key) {
   }
 }
 
+// Provider-tabbed model picker — same impl as /kata/admin's settings page.
+// Anchored to triggerBtn; reads provider list + placeholder from data-*
+// attrs that wireModelPicker() set. On selection, writes the chosen model
+// id into the hidden input and updates the visible label.
+function openModelPicker(triggerBtn) {
+  const placeholder = triggerBtn.getAttribute('data-placeholder') || '';
+  let byProvider;
+  try {
+    byProvider = JSON.parse(triggerBtn.getAttribute('data-providers').replace(/&quot;/g, '"'));
+  } catch { byProvider = {}; }
+  const providers = Object.keys(byProvider);
+  if (providers.length === 0) return;
+
+  const idBase = triggerBtn.getAttribute('data-picker');
+  const hiddenInput = document.getElementById(idBase);
+  const labelEl = document.getElementById(idBase + '-label');
+  const currentValue = (hiddenInput && hiddenInput.value) || '';
+
+  let activeProvider = providers[0];
+  for (const p of providers) {
+    if ((byProvider[p] || []).includes(currentValue)) { activeProvider = p; break; }
+  }
+
+  const pop = document.createElement('div');
+  pop.style.position = 'absolute';
+  pop.style.zIndex = '500';
+  pop.style.minWidth = '320px';
+  pop.style.background = 'rgba(13,10,8,0.95)';
+  pop.style.border = '1px solid rgba(255,255,255,0.1)';
+  pop.style.borderRadius = '10px';
+  pop.style.padding = '8px';
+  pop.style.backdropFilter = 'blur(8px)';
+  pop.style.boxShadow = '0 8px 24px rgba(0,0,0,0.4)';
+
+  const r = triggerBtn.getBoundingClientRect();
+  pop.style.left = (r.left + window.scrollX) + 'px';
+  pop.style.top = (r.bottom + window.scrollY + 6) + 'px';
+  pop.style.width = r.width + 'px';
+
+  function render() {
+    pop.innerHTML = '';
+    const tabs = document.createElement('div');
+    tabs.style.display = 'flex';
+    tabs.style.gap = '4px';
+    tabs.style.marginBottom = '8px';
+    tabs.style.borderBottom = '1px solid rgba(255,255,255,0.06)';
+    tabs.style.paddingBottom = '6px';
+    for (const p of providers) {
+      const t = document.createElement('button');
+      t.type = 'button';
+      t.textContent = p;
+      t.className = 'mono px-3 py-1.5 rounded-[6px]';
+      t.style.fontSize = '10px';
+      t.style.letterSpacing = '0.18em';
+      t.style.textTransform = 'uppercase';
+      if (p === activeProvider) {
+        t.style.background = 'rgba(245,237,224,0.10)';
+        t.style.color = '#f5ede0';
+      } else {
+        t.style.color = 'rgba(245,237,224,0.5)';
+      }
+      t.addEventListener('click', () => { activeProvider = p; render(); });
+      tabs.appendChild(t);
+    }
+    pop.appendChild(tabs);
+
+    const list = byProvider[activeProvider] || [];
+    const sel = document.createElement('select');
+    sel.className = 'mono w-full bg-bg border border-line rounded-[8px] px-3 py-2 text-ink focus:outline-none focus:border-line2';
+    sel.style.fontSize = '12px';
+    sel.style.marginBottom = '8px';
+    const def = document.createElement('option');
+    def.value = '';
+    def.textContent = `(use default · ${placeholder || '—'})`;
+    if (!currentValue) def.selected = true;
+    sel.appendChild(def);
+    for (const m of list) {
+      const o = document.createElement('option');
+      o.value = m;
+      o.textContent = m;
+      if (m === currentValue) o.selected = true;
+      sel.appendChild(o);
+    }
+    sel.addEventListener('change', () => apply(sel.value));
+    pop.appendChild(sel);
+
+    const customWrap = document.createElement('div');
+    customWrap.style.display = 'flex';
+    customWrap.style.gap = '6px';
+    const inp = document.createElement('input');
+    inp.type = 'text';
+    inp.placeholder = 'custom model id';
+    inp.className = 'mono flex-1 bg-bg border border-line rounded-[8px] px-3 py-2 text-ink focus:outline-none focus:border-line2';
+    inp.style.fontSize = '11px';
+    const setBtn = document.createElement('button');
+    setBtn.type = 'button';
+    setBtn.textContent = 'use';
+    setBtn.className = 'mono px-3 py-2 rounded-[8px] text-bg font-bold';
+    setBtn.style.fontSize = '10px';
+    setBtn.style.letterSpacing = '0.18em';
+    setBtn.style.textTransform = 'uppercase';
+    setBtn.style.background = 'var(--accent)';
+    setBtn.addEventListener('click', () => {
+      const v = inp.value.trim();
+      if (v) apply(v);
+    });
+    inp.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); setBtn.click(); }
+    });
+    customWrap.appendChild(inp);
+    customWrap.appendChild(setBtn);
+    pop.appendChild(customWrap);
+  }
+
+  function apply(v) {
+    if (hiddenInput) hiddenInput.value = v;
+    if (labelEl) labelEl.textContent = v || `(default · ${placeholder || '—'})`;
+    close();
+  }
+  function close() {
+    if (pop.parentElement) pop.parentElement.removeChild(pop);
+    document.removeEventListener('click', onOutside, true);
+  }
+  function onOutside(e) {
+    if (pop.contains(e.target) || triggerBtn.contains(e.target)) return;
+    close();
+  }
+
+  render();
+  document.body.appendChild(pop);
+  setTimeout(() => document.addEventListener('click', onOutside, true), 0);
+}
+
 function openSettings(focusSection){
   if (!CURRENT_CONFIG){ showToast('Đang tải config…', 'info'); return; }
   const c = CURRENT_CONFIG;
   document.getElementById('f-systemPrompt').value = c.systemPrompt || '';
   document.getElementById('f-systemPrompt-count').textContent = (c.systemPrompt || '').length;
-  populateModelSelect('f-chatModel', CHAT_MODELS, c.chatModel || '');
-  document.getElementById('f-chatMode').value = c.chatMode || 'balanced';
-  for (const btn of document.querySelectorAll('#f-chatMode-group button')){
-    const active = btn.dataset.mode === (c.chatMode || 'balanced');
-    btn.classList.toggle('text-ink', active);
-    btn.classList.toggle('text-mute', !active);
-    btn.style.background = active ? '#1c1813' : 'transparent';
-  }
-  populateModelSelect('f-imageModel', IMAGE_MODELS, c.imageModel || '');
-  populateModelSelect('f-videoModel', VIDEO_MODELS, c.videoModel || '');
+  wireModelPicker('f-chatModel', CHAT_MODELS_BY_PROVIDER, 'grok-4-fast');
+  setModelValue('f-chatModel', c.chatModel || '', 'grok-4-fast');
+  wireModelPicker('f-imageModel', IMAGE_MODELS_BY_PROVIDER, 'fal-ai/nano-banana-pro');
+  setModelValue('f-imageModel', c.imageModel || '', 'fal-ai/nano-banana-pro');
+  wireModelPicker('f-videoModel', VIDEO_MODELS_BY_PROVIDER, 'bytedance/seedance-2.0/image-to-video');
+  setModelValue('f-videoModel', c.videoModel || '', 'bytedance/seedance-2.0/image-to-video');
   document.getElementById('f-nsfwThresholdNormal').value = c.nsfwThresholdNormal ?? 0.3;
   document.getElementById('f-nsfwThresholdNsfw').value = c.nsfwThresholdNsfw ?? 0.85;
   document.getElementById('f-rateLimitPerUser').value = c.rateLimitPerUser ?? 30;
@@ -749,17 +907,6 @@ for (const btn of document.querySelectorAll('[data-open-settings]')){
 document.getElementById('f-systemPrompt').addEventListener('input', (e)=>{
   document.getElementById('f-systemPrompt-count').textContent = e.target.value.length;
 });
-for (const btn of document.querySelectorAll('#f-chatMode-group button')){
-  btn.addEventListener('click', ()=>{
-    document.getElementById('f-chatMode').value = btn.dataset.mode;
-    for (const b of document.querySelectorAll('#f-chatMode-group button')){
-      const active = b === btn;
-      b.classList.toggle('text-ink', active);
-      b.classList.toggle('text-mute', !active);
-      b.style.background = active ? '#1c1813' : 'transparent';
-    }
-  });
-}
 
 document.getElementById('settings-form').addEventListener('submit', async (e)=>{
   e.preventDefault();
@@ -770,7 +917,6 @@ document.getElementById('settings-form').addEventListener('submit', async (e)=>{
   const payload = {
     systemPrompt: document.getElementById('f-systemPrompt').value,
     chatModel: document.getElementById('f-chatModel').value,
-    chatMode: document.getElementById('f-chatMode').value,
     imageModel: document.getElementById('f-imageModel').value,
     videoModel: document.getElementById('f-videoModel').value,
     nsfwThresholdNormal: parseFloat(document.getElementById('f-nsfwThresholdNormal').value),
