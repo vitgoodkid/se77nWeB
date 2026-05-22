@@ -1364,11 +1364,18 @@ async function adminLogs(req, res, kataDb) {
     guildMeta = Object.fromEntries(servers.map((s) => [s.guildId, { name: s.name, iconUrl: s.iconUrl ?? null }]));
   }
 
+  // Hydrate the message author (chat / image / video / command logs all
+  // store userId). The dashboard wants displayName + avatar to render the
+  // row, not the bare snowflake. Bot writes katasusers on every mention.
+  const userIds = [...new Set(trimmed.map((r) => r.userId).filter(Boolean))];
+  const userMeta = userIds.length > 0 ? await hydrateUsernames(kataDb, userIds) : {};
+
   return res.status(200).json({
     type,
     items: trimmed.map((r) => ({
       ...r,
       guild: guildMeta[r.guildId] ?? { name: r.guildId, iconUrl: null },
+      user: userMeta[r.userId] ?? null,
     })),
     nextCursor,
     hasMore,

@@ -247,10 +247,36 @@ async function renderLogs() {
     if (r.durationSec) meta.push(`<span>${r.durationSec}s</span>`);
     if (r.latencyMs) meta.push(`<span>${r.latencyMs}ms</span>`);
     const body = r.content ?? r.prompt ?? r.input ?? '';
+
+    // Author header — small avatar + display name. Falls back to a
+    // truncated snowflake when katasusers hasn't been populated yet.
+    const authorName = r.user?.displayName ?? r.user?.username ?? (r.userId ? r.userId.slice(-6) : 'unknown');
+    const authorAvatar = r.user?.avatarUrl
+      ? `<img src="${escapeHtml(r.user.avatarUrl)}" class="w-5 h-5 rounded-full" />`
+      : `<span class="w-5 h-5 rounded-full bg-panel2 inline-block"></span>`;
+    const authorLine = `<span class="flex items-center gap-2 mono text-[11px]">${authorAvatar}<span class="text-ink">${escapeHtml(authorName)}</span></span>`;
+
+    // Channel — chatlogs / imagegens / videogens / commandhistories all
+    // project channelId. Render as a discord-style #id pill so the user
+    // can click to copy. Channel names aren't in our index (would need
+    // an extra collection), so the snowflake is what we have.
+    const channelPill = r.channelId
+      ? `<span class="mono text-[10px] text-mute2 px-2 py-0.5 rounded-full" style="border:1px solid rgba(255,255,255,0.08)">#${escapeHtml(r.channelId.slice(-6))}</span>`
+      : '';
+
+    // Full timestamp on hover, relative time as the visible label.
+    const ts = r.createdAt ? new Date(r.createdAt) : null;
+    const tsTitle = ts ? ts.toLocaleString('vi-VN', { hour12: false }) : '';
+    const tsLabel = ts ? fmtTime(r.createdAt) : '';
+
     return `<div class="row">
       <div class="flex items-center justify-between gap-3 mb-2">
-        ${guildBadge(r.guild)}
-        <span class="mono text-[10px] text-mute">${escapeHtml(fmtTime(r.createdAt))}</span>
+        <div class="flex items-center gap-3 min-w-0 flex-1">
+          ${authorLine}
+          ${guildBadge(r.guild)}
+          ${channelPill}
+        </div>
+        <span class="mono text-[10px] text-mute" title="${escapeHtml(tsTitle)}">${escapeHtml(tsLabel)}</span>
       </div>
       <div class="text-[13px] truncate-2">${escapeHtml(body)}</div>
       <div class="flex items-center gap-3 mt-2 mono text-[10px] text-mute2">${meta.join('')}</div>
