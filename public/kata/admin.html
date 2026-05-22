@@ -241,27 +241,26 @@ async function renderLogs() {
   }
   const rowsHtml = data.items.map((r) => {
     const meta = [];
-    if (r.modelUsed) meta.push(`<span>${escapeHtml(r.modelUsed)}</span>`);
-    if (r.costUSD != null) meta.push(`<span>${fmtUSD(r.costUSD)}</span>`);
+    if (r.modelUsed) meta.push(`<span class="text-mute">${escapeHtml(r.modelUsed)}</span>`);
     if (r.tokensIn != null || r.tokensOut != null) meta.push(`<span>${r.tokensIn ?? 0}→${r.tokensOut ?? 0}</span>`);
     if (r.durationSec) meta.push(`<span>${r.durationSec}s</span>`);
     if (r.latencyMs) meta.push(`<span>${r.latencyMs}ms</span>`);
+    if (r.costUSD != null) meta.push(`<span class="text-gold">${fmtUSD(r.costUSD)}</span>`);
     const body = r.content ?? r.prompt ?? r.input ?? '';
 
-    // Author header — small avatar + display name. Falls back to a
+    // Author header — bigger avatar + display name. Falls back to a
     // truncated snowflake when katasusers hasn't been populated yet.
     const authorName = r.user?.displayName ?? r.user?.username ?? (r.userId ? r.userId.slice(-6) : 'unknown');
+    const authorInitial = authorName.slice(0, 1).toUpperCase();
     const authorAvatar = r.user?.avatarUrl
-      ? `<img src="${escapeHtml(r.user.avatarUrl)}" class="w-5 h-5 rounded-full" />`
-      : `<span class="w-5 h-5 rounded-full bg-panel2 inline-block"></span>`;
-    const authorLine = `<span class="flex items-center gap-2 mono text-[11px]">${authorAvatar}<span class="text-ink">${escapeHtml(authorName)}</span></span>`;
+      ? `<img src="${escapeHtml(r.user.avatarUrl)}" class="w-7 h-7 rounded-full flex-shrink-0" />`
+      : `<span class="w-7 h-7 rounded-full grid place-items-center text-[11px] font-bold flex-shrink-0" style="background:rgba(224,69,69,0.15);color:#E04545">${escapeHtml(authorInitial)}</span>`;
+    const authorLine = `<span class="flex items-center gap-2 min-w-0">${authorAvatar}<span class="text-[14px] text-ink font-medium truncate">${escapeHtml(authorName)}</span></span>`;
 
-    // Channel — chatlogs / imagegens / videogens / commandhistories all
-    // project channelId. Render as a discord-style #id pill so the user
-    // can click to copy. Channel names aren't in our index (would need
-    // an extra collection), so the snowflake is what we have.
+    // Channel — render as a discord-style #id pill. Last 6 of the snowflake
+    // since we don't have a channel-name index yet.
     const channelPill = r.channelId
-      ? `<span class="mono text-[10px] text-mute2 px-2 py-0.5 rounded-full" style="border:1px solid rgba(255,255,255,0.08)">#${escapeHtml(r.channelId.slice(-6))}</span>`
+      ? `<span class="mono text-[12px] text-mute">#${escapeHtml(r.channelId.slice(-6))}</span>`
       : '';
 
     // Full timestamp on hover, relative time as the visible label.
@@ -269,20 +268,20 @@ async function renderLogs() {
     const tsTitle = ts ? ts.toLocaleString('vi-VN', { hour12: false }) : '';
     const tsLabel = ts ? fmtTime(r.createdAt) : '';
 
-    return `<div class="row">
-      <div class="flex items-center justify-between gap-3 mb-2">
+    return `<article class="rounded-[14px] border border-line bg-panel p-5">
+      <header class="flex items-center justify-between gap-3 mb-3 flex-wrap">
         <div class="flex items-center gap-3 min-w-0 flex-1">
           ${authorLine}
           ${guildBadge(r.guild)}
           ${channelPill}
         </div>
-        <span class="mono text-[10px] text-mute" title="${escapeHtml(tsTitle)}">${escapeHtml(tsLabel)}</span>
-      </div>
-      <div class="text-[13px] truncate-2">${escapeHtml(body)}</div>
-      <div class="flex items-center gap-3 mt-2 mono text-[10px] text-mute2">${meta.join('')}</div>
-    </div>`;
+        <span class="mono text-[12px] text-mute" title="${escapeHtml(tsTitle)}">${escapeHtml(tsLabel)}</span>
+      </header>
+      <div class="text-[15px] text-ink leading-[1.6] break-words">${escapeHtml(body)}</div>
+      ${meta.length > 0 ? `<footer class="flex items-center gap-3 mono text-[11px] mt-3 pt-3 border-t border-line/60 flex-wrap text-mute2">${meta.join('')}</footer>` : ''}
+    </article>`;
   }).join('');
-  elContent.innerHTML = `<div class="space-y-2">${rowsHtml}</div>`;
+  elContent.innerHTML = `<div class="space-y-2.5">${rowsHtml}</div>`;
 }
 
 async function renderCost() {

@@ -210,30 +210,34 @@ function renderTabsActive(){
 }
 
 function rowChat(e){
-  const accent = avatarSeed(e.userId); const short = e.userId.slice(-4);
+  const accent = avatarSeed(e.userId);
+  const short = e.userId.slice(-4);
   const isAssistant = e.role === 'assistant';
-  return `<article class="rounded-[14px] border border-line bg-panel p-4">
-    <div class="flex items-center gap-3 mb-2 mono text-[11px]">
-      <span class="flex items-center gap-2"><span class="w-5 h-5 rounded-full grid place-items-center text-[9px] font-extrabold" style="background:${accent}22;color:${accent}">${short.slice(0,1)}</span><span class="text-mute">${short}</span></span>
-      <span class="text-mute2">·</span>
-      <span class="text-${isAssistant?'gold':'red'} text-[10px] tracking-label uppercase">${isAssistant?'bot':'user'}</span>
-      <span class="text-mute2">·</span>
-      <span class="text-mute">#${e.channelId.slice(-6)}</span>
-      <span class="text-mute2">·</span>
-      <span class="text-mute">${relTime(e.createdAt)}</span>
-      ${e.modelUsed ? `<span class="text-mute2">·</span><span class="mono text-[9px] tracking-label uppercase text-mute2">${escapeHtml(e.modelUsed)}</span>` : ''}
-    </div>
-    <div class="text-[13px] text-ink leading-[1.55] whitespace-pre-wrap break-words">${escapeHtml(e.content)}${e.contentTruncated?'<span class="text-mute2"> …</span>':''}</div>
-    <div class="flex items-center gap-3 mono text-[10px] tracking-label uppercase mt-3 flex-wrap text-mute2">
+  const roleColor = isAssistant ? '#D4A858' : '#E04545';
+  const roleLabel = isAssistant ? 'bot' : 'user';
+  return `<article class="rounded-[14px] border border-line bg-panel p-5">
+    <header class="flex items-center justify-between gap-3 mb-3 flex-wrap">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <span class="w-7 h-7 rounded-full grid place-items-center text-[12px] font-bold flex-shrink-0" style="background:${accent}22;color:${accent}">${short.slice(0,1).toUpperCase()}</span>
+        <span class="text-[14px] text-ink font-medium">${short}</span>
+        <span class="mono text-[11px] px-2 py-0.5 rounded-full" style="background:${roleColor}18;border:1px solid ${roleColor}40;color:${roleColor}">${roleLabel}</span>
+        <span class="mono text-[12px] text-mute">#${e.channelId.slice(-6)}</span>
+      </div>
+      <span class="mono text-[12px] text-mute" title="${escapeHtml(new Date(e.createdAt).toLocaleString('vi-VN', { hour12: false }))}">${relTime(e.createdAt)}</span>
+    </header>
+    <div class="text-[15px] text-ink leading-[1.6] whitespace-pre-wrap break-words">${escapeHtml(e.content)}${e.contentTruncated?'<span class="text-mute2"> …</span>':''}</div>
+    <footer class="flex items-center gap-3 mono text-[11px] mt-3 pt-3 border-t border-line/60 flex-wrap text-mute2">
+      ${e.modelUsed ? `<span class="text-mute">${escapeHtml(e.modelUsed)}</span>` : ''}
       ${e.tokensIn != null ? `<span>in · ${e.tokensIn}</span>` : ''}
       ${e.tokensOut != null ? `<span>out · ${e.tokensOut}</span>` : ''}
-      ${e.costUSD != null ? `<span class="text-gold">cost · $${e.costUSD.toFixed(4)}</span>` : ''}
-    </div>
+      ${e.costUSD != null ? `<span class="text-gold">$${e.costUSD.toFixed(4)}</span>` : ''}
+    </footer>
   </article>`;
 }
 
 function rowImage(e){
-  const accent = avatarSeed(e.userId); const short = e.userId.slice(-4);
+  const accent = avatarSeed(e.userId);
+  const short = e.userId.slice(-4);
   const inputUrl = e.inputImageUrl;
   const outputUrl = e.outputUrl;
   const fallback = Array.isArray(e.fallbackChain) ? e.fallbackChain.find(f => f.status === 'fallback') : null;
@@ -241,67 +245,68 @@ function rowImage(e){
     <div class="p-5 flex gap-5">
       <div class="flex items-center gap-3 flex-shrink-0">
         ${inputUrl
-          ? `<a href="${escapeHtml(inputUrl)}" target="_blank" rel="noopener"><img src="${escapeHtml(inputUrl)}" loading="lazy" alt="input" class="w-[72px] h-[72px] rounded-[8px] object-cover border border-line" /></a>`
-          : `<div class="w-[72px] h-[72px] rounded-[8px] grid place-items-center border border-line" style="background:#0a0807"><span class="mono text-[9px] text-mute2 tracking-label uppercase">no input</span></div>`
+          ? `<a href="${escapeHtml(inputUrl)}" target="_blank" rel="noopener"><img src="${escapeHtml(inputUrl)}" loading="lazy" alt="input" class="w-[88px] h-[88px] rounded-[10px] object-cover border border-line" /></a>`
+          : `<div class="w-[88px] h-[88px] rounded-[10px] grid place-items-center border border-line" style="background:#0a0807"><span class="mono text-[10px] text-mute2">no input</span></div>`
         }
-        <span class="text-mute2 text-lg">→</span>
+        <span class="text-mute2 text-xl">→</span>
         ${outputUrl
-          ? `<a href="${escapeHtml(outputUrl)}" target="_blank" rel="noopener"><img src="${escapeHtml(outputUrl)}" loading="lazy" alt="output" class="w-[72px] h-[72px] rounded-[8px] object-cover border border-line" /></a>`
-          : `<div class="w-[72px] h-[72px] rounded-[8px] border border-line" style="background:#0a0807"></div>`
+          ? `<a href="${escapeHtml(outputUrl)}" target="_blank" rel="noopener"><img src="${escapeHtml(outputUrl)}" loading="lazy" alt="output" class="w-[88px] h-[88px] rounded-[10px] object-cover border border-line" /></a>`
+          : `<div class="w-[88px] h-[88px] rounded-[10px] border border-line" style="background:#0a0807"></div>`
         }
       </div>
       <div class="flex-1 min-w-0">
-        <div class="flex items-center gap-4 mb-3 mono text-[11px] flex-wrap">
-          <span class="flex items-center gap-2"><span class="w-5 h-5 rounded-full grid place-items-center text-[9px] font-extrabold" style="background:${accent}22;color:${accent}">${short.slice(0,1)}</span><span class="text-mute">${short}</span></span>
-          <span class="text-mute2">·</span>
-          <span class="text-red text-[10px] tracking-label uppercase">${escapeHtml(e.command)}</span>
-          <span class="text-mute2">·</span>
-          <span class="text-mute">#${e.channelId.slice(-6)}</span>
-          <span class="text-mute2">·</span>
-          <span class="text-mute">${relTime(e.createdAt)}</span>
-          ${fallback ? `<span class="mono text-[9px] tracking-label uppercase px-2 py-0.5 rounded-full" style="background:#c9a65318;border:1px solid #c9a65340;color:#c9a653">FALLBACK · ${escapeHtml(fallback.model.split('/').pop())}</span>` : ''}
+        <header class="flex items-center justify-between gap-3 mb-3 flex-wrap">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <span class="w-7 h-7 rounded-full grid place-items-center text-[12px] font-bold flex-shrink-0" style="background:${accent}22;color:${accent}">${short.slice(0,1).toUpperCase()}</span>
+            <span class="text-[14px] text-ink font-medium">${short}</span>
+            <span class="mono text-[11px] px-2 py-0.5 rounded-full" style="background:#E0454518;border:1px solid #E0454540;color:#E04545">${escapeHtml(e.command)}</span>
+            <span class="mono text-[12px] text-mute">#${e.channelId.slice(-6)}</span>
+            ${fallback ? `<span class="mono text-[10px] tracking-label uppercase px-2 py-0.5 rounded-full" style="background:#c9a65318;border:1px solid #c9a65340;color:#c9a653">fallback · ${escapeHtml(fallback.model.split('/').pop())}</span>` : ''}
+          </div>
+          <span class="mono text-[12px] text-mute" title="${escapeHtml(new Date(e.createdAt).toLocaleString('vi-VN', { hour12: false }))}">${relTime(e.createdAt)}</span>
+        </header>
+        <div class="text-[15px] leading-[1.6] mb-3">
+          ${e.prompt ? `<span class="text-ink">${escapeHtml(e.prompt)}</span>` : `<span class="italic text-mute2 text-[13px]">— no prompt</span>`}
         </div>
-        <div class="text-[13px] text-mute leading-[1.55] mb-3">
-          ${e.prompt ? `<span class="text-mute2 mono text-[10px] uppercase tracking-label mr-2">prompt</span><span class="text-ink">${escapeHtml(e.prompt)}</span>` : `<span class="italic text-mute2">— no prompt</span>`}
-        </div>
-        <div class="flex items-center gap-3 mono text-[10px] tracking-label uppercase flex-wrap">
-          ${e.modelUsed ? `<span class="px-2 py-1 rounded-full bg-ink/[0.05] border border-line">model · ${escapeHtml(e.modelUsed.split('/').slice(-2).join('/'))}</span>` : ''}
-          ${e.costUSD != null ? `<span class="text-gold">cost · $${e.costUSD.toFixed(4)}</span>` : ''}
+        <div class="flex items-center gap-3 mono text-[11px] flex-wrap text-mute2">
+          ${e.modelUsed ? `<span class="text-mute">${escapeHtml(e.modelUsed.split('/').slice(-2).join('/'))}</span>` : ''}
+          ${e.costUSD != null ? `<span class="text-gold">$${e.costUSD.toFixed(4)}</span>` : ''}
         </div>
       </div>
-      ${outputUrl ? `<div class="flex flex-col gap-1.5 flex-shrink-0"><a href="${escapeHtml(outputUrl)}" target="_blank" rel="noopener" class="mono h-7 px-2.5 rounded-[6px] border border-line text-mute hover:text-ink text-[9px] tracking-label uppercase grid place-items-center">↗ open</a></div>` : ''}
+      ${outputUrl ? `<a href="${escapeHtml(outputUrl)}" target="_blank" rel="noopener" class="mono h-8 px-3 rounded-[8px] border border-line text-mute hover:text-ink text-[11px] tracking-label uppercase grid place-items-center flex-shrink-0 self-start">↗ open</a>` : ''}
     </div>
   </article>`;
 }
 
 function rowVideo(e){
-  const accent = avatarSeed(e.userId); const short = e.userId.slice(-4);
+  const accent = avatarSeed(e.userId);
+  const short = e.userId.slice(-4);
   const outputUrl = e.outputUrl;
   return `<article class="rounded-[14px] border border-line bg-panel">
     <div class="p-5 flex gap-5">
-      <div class="flex items-center gap-3 flex-shrink-0">
+      <div class="flex items-center flex-shrink-0">
         ${outputUrl
-          ? `<a href="${escapeHtml(outputUrl)}" target="_blank" rel="noopener" class="block w-[120px] h-[72px] rounded-[8px] border border-line overflow-hidden grid place-items-center" style="background:#0a0807"><span class="mono text-[10px] text-red tracking-label uppercase">▸ open mp4</span></a>`
-          : `<div class="w-[120px] h-[72px] rounded-[8px] border border-line grid place-items-center" style="background:#0a0807"><span class="mono text-[9px] text-mute2 tracking-label uppercase">no output</span></div>`
+          ? `<a href="${escapeHtml(outputUrl)}" target="_blank" rel="noopener" class="block w-[140px] h-[88px] rounded-[10px] border border-line overflow-hidden grid place-items-center" style="background:#0a0807"><span class="mono text-[11px] text-red tracking-label uppercase">▸ open mp4</span></a>`
+          : `<div class="w-[140px] h-[88px] rounded-[10px] border border-line grid place-items-center" style="background:#0a0807"><span class="mono text-[10px] text-mute2">no output</span></div>`
         }
       </div>
       <div class="flex-1 min-w-0">
-        <div class="flex items-center gap-4 mb-3 mono text-[11px] flex-wrap">
-          <span class="flex items-center gap-2"><span class="w-5 h-5 rounded-full grid place-items-center text-[9px] font-extrabold" style="background:${accent}22;color:${accent}">${short.slice(0,1)}</span><span class="text-mute">${short}</span></span>
-          <span class="text-mute2">·</span>
-          <span class="text-red text-[10px] tracking-label uppercase">${escapeHtml(e.command)}</span>
-          <span class="text-mute2">·</span>
-          <span class="text-mute">#${e.channelId.slice(-6)}</span>
-          <span class="text-mute2">·</span>
-          <span class="text-mute">${relTime(e.createdAt)}</span>
+        <header class="flex items-center justify-between gap-3 mb-3 flex-wrap">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <span class="w-7 h-7 rounded-full grid place-items-center text-[12px] font-bold flex-shrink-0" style="background:${accent}22;color:${accent}">${short.slice(0,1).toUpperCase()}</span>
+            <span class="text-[14px] text-ink font-medium">${short}</span>
+            <span class="mono text-[11px] px-2 py-0.5 rounded-full" style="background:#E0454518;border:1px solid #E0454540;color:#E04545">${escapeHtml(e.command)}</span>
+            <span class="mono text-[12px] text-mute">#${e.channelId.slice(-6)}</span>
+          </div>
+          <span class="mono text-[12px] text-mute" title="${escapeHtml(new Date(e.createdAt).toLocaleString('vi-VN', { hour12: false }))}">${relTime(e.createdAt)}</span>
+        </header>
+        <div class="text-[15px] leading-[1.6] mb-3">
+          ${e.prompt ? `<span class="text-ink">${escapeHtml(e.prompt)}</span>` : `<span class="italic text-mute2 text-[13px]">— no prompt</span>`}
         </div>
-        <div class="text-[13px] text-mute leading-[1.55] mb-3">
-          ${e.prompt ? `<span class="text-mute2 mono text-[10px] uppercase tracking-label mr-2">prompt</span><span class="text-ink">${escapeHtml(e.prompt)}</span>` : `<span class="italic text-mute2">— no prompt</span>`}
-        </div>
-        <div class="flex items-center gap-3 mono text-[10px] tracking-label uppercase flex-wrap">
-          ${e.modelUsed ? `<span class="px-2 py-1 rounded-full bg-ink/[0.05] border border-line">model · ${escapeHtml(e.modelUsed.split('/').slice(-2).join('/'))}</span>` : ''}
-          ${e.durationSec != null ? `<span class="text-mute2">duration · ${e.durationSec}s</span>` : ''}
-          ${e.costUSD != null ? `<span class="text-gold">cost · $${e.costUSD.toFixed(4)}</span>` : ''}
+        <div class="flex items-center gap-3 mono text-[11px] flex-wrap text-mute2">
+          ${e.modelUsed ? `<span class="text-mute">${escapeHtml(e.modelUsed.split('/').slice(-2).join('/'))}</span>` : ''}
+          ${e.durationSec != null ? `<span>${e.durationSec}s</span>` : ''}
+          ${e.costUSD != null ? `<span class="text-gold">$${e.costUSD.toFixed(4)}</span>` : ''}
         </div>
       </div>
     </div>
@@ -309,32 +314,27 @@ function rowVideo(e){
 }
 
 function rowCommand(e){
-  const accent = avatarSeed(e.userId); const short = e.userId.slice(-4);
+  const accent = avatarSeed(e.userId);
+  const short = e.userId.slice(-4);
   const failed = e.success === false;
   const wrapStyle = failed ? 'background:#c4686808;border-color:#c4686844' : '';
-  return `<article class="rounded-[14px] border bg-panel" style="border-color:rgba(255,255,255,0.08);${wrapStyle}">
-    <div class="p-4">
-      <div class="flex items-center gap-4 mb-2 mono text-[11px] flex-wrap">
-        <span class="flex items-center gap-2"><span class="w-5 h-5 rounded-full grid place-items-center text-[9px] font-extrabold" style="background:${accent}22;color:${accent}">${short.slice(0,1)}</span><span class="text-mute">${short}</span></span>
-        <span class="text-mute2">·</span>
-        <span class="text-${failed?'err':'red'} text-[10px] tracking-label uppercase">${escapeHtml(e.command)}${failed?' · fail':''}</span>
-        <span class="text-mute2">·</span>
-        <span class="text-mute">#${e.channelId.slice(-6)}</span>
-        <span class="text-mute2">·</span>
-        <span class="text-mute">${relTime(e.createdAt)}</span>
-        ${failed ? `<span class="mono text-[9px] tracking-label uppercase px-2 py-0.5 rounded-full" style="background:#c4686818;border:1px solid #c4686844;color:#c46868">FAIL</span>` : ''}
+  return `<article class="rounded-[14px] border bg-panel p-5" style="border-color:rgba(255,255,255,0.08);${wrapStyle}">
+    <header class="flex items-center justify-between gap-3 mb-3 flex-wrap">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <span class="w-7 h-7 rounded-full grid place-items-center text-[12px] font-bold flex-shrink-0" style="background:${accent}22;color:${accent}">${short.slice(0,1).toUpperCase()}</span>
+        <span class="text-[14px] text-ink font-medium">${short}</span>
+        <span class="mono text-[11px] px-2 py-0.5 rounded-full" style="background:${failed?'#c4686818':'#E0454518'};border:1px solid ${failed?'#c4686844':'#E0454540'};color:${failed?'#c46868':'#E04545'}">${escapeHtml(e.command)}${failed?' · fail':''}</span>
+        <span class="mono text-[12px] text-mute">#${e.channelId.slice(-6)}</span>
       </div>
-      <div class="text-[13px] text-mute leading-[1.55] mb-2">
-        <span class="text-mute2 mono text-[10px] uppercase tracking-label mr-2">input</span>
-        <span class="text-ink">${escapeHtml((e.input||'').slice(0, 400))}</span>
-      </div>
-      ${failed && e.errorMessage ? `<div class="text-[12px] mono mt-1" style="color:#c46868">${escapeHtml(e.errorMessage)}</div>` : ''}
-      <div class="flex items-center gap-3 mono text-[10px] tracking-label uppercase mt-2 flex-wrap text-mute2">
-        ${e.modelUsed ? `<span>model · ${escapeHtml(e.modelUsed)}</span>` : ''}
-        ${e.latencyMs != null ? `<span>latency · ${(e.latencyMs/1000).toFixed(1)}s</span>` : ''}
-        ${e.costUSD != null ? `<span class="text-gold">cost · $${e.costUSD.toFixed(4)}</span>` : ''}
-      </div>
-    </div>
+      <span class="mono text-[12px] text-mute" title="${escapeHtml(new Date(e.createdAt).toLocaleString('vi-VN', { hour12: false }))}">${relTime(e.createdAt)}</span>
+    </header>
+    <div class="text-[15px] text-ink leading-[1.6] mb-2 break-words">${escapeHtml((e.input||'').slice(0, 400))}</div>
+    ${failed && e.errorMessage ? `<div class="text-[13px] mono mt-2 px-3 py-2 rounded-[8px]" style="color:#c46868;background:#c4686810;border:1px solid #c4686830">${escapeHtml(e.errorMessage)}</div>` : ''}
+    <footer class="flex items-center gap-3 mono text-[11px] mt-3 pt-3 border-t border-line/60 flex-wrap text-mute2">
+      ${e.latencyMs != null ? `<span>${e.latencyMs}ms</span>` : ''}
+      ${e.modelUsed ? `<span class="text-mute">${escapeHtml(e.modelUsed)}</span>` : ''}
+      ${e.costUSD != null ? `<span class="text-gold">$${e.costUSD.toFixed(4)}</span>` : ''}
+    </footer>
   </article>`;
 }
 
