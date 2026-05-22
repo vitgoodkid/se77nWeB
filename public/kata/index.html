@@ -256,7 +256,7 @@
           <div class="t-section mono">DASHBOARD</div>
           <div class="mono t-meta uppercase tracking-label flex items-center gap-2">
             <span class="dot-pulse w-1.5 h-1.5 rounded-full bg-green inline-block"></span>
-            <span>4 surfaces · live</span>
+            <span>2 surfaces · live</span>
           </div>
         </div>
 
@@ -267,7 +267,7 @@
               <span class="tile-glyph">▤</span>
             </div>
             <div class="t-card-title lowercase text-ink" data-i18n="index.tile.servers">servers list</div>
-            <div class="t-card-desc mt-1 text-[13px]" data-i18n="index.tile.servers.desc">Server bot đang phục vụ.</div>
+            <div class="t-card-desc mt-1 text-[13px]" data-i18n="index.tile.servers.desc">Server bot đang phục vụ — vào từng server để xem logs / cost.</div>
             <div class="tile-metric pt-3" id="tile-servers-metric">— <span class="unit">active</span></div>
           </a>
 
@@ -277,28 +277,8 @@
               <span class="tile-glyph">⌬</span>
             </div>
             <div class="t-card-title lowercase text-ink" data-i18n="index.tile.admin">admin console</div>
-            <div class="t-card-desc mt-1 text-[13px]" data-i18n="index.tile.admin.desc">Cấu hình toàn bộ bot — sysprompt, models cho mọi server.</div>
+            <div class="t-card-desc mt-1 text-[13px]" data-i18n="index.tile.admin.desc">Sysprompt, models, global logs + cost cho mọi server.</div>
             <div class="mt-auto pt-3 mono text-[11px] tracking-label uppercase" style="color:var(--tile-accent)">global · settings</div>
-          </a>
-
-          <a href="logs-image.html" class="tile tile-logs group">
-            <div class="flex items-start justify-between mb-2">
-              <span class="mono t-meta tracking-label uppercase text-mute" data-i18n="index.tile.logs.tag">surface · 03</span>
-              <span class="tile-glyph">◧</span>
-            </div>
-            <div class="t-card-title lowercase text-ink" data-i18n="index.tile.logs">logs · image</div>
-            <div class="t-card-desc mt-1 text-[13px]" data-i18n="index.tile.logs.desc">Lịch sử ảnh đã tạo.</div>
-            <div class="tile-metric pt-3" id="tile-logs-metric">— <span class="unit">img · 30d</span></div>
-          </a>
-
-          <a href="cost.html" class="tile tile-cost group">
-            <div class="flex items-start justify-between mb-2">
-              <span class="mono t-meta tracking-label uppercase text-mute" data-i18n="index.tile.cost.tag">surface · 04</span>
-              <span class="tile-glyph">$</span>
-            </div>
-            <div class="t-card-title lowercase text-ink" data-i18n="index.tile.cost">cost</div>
-            <div class="t-card-desc mt-1 text-[13px]" data-i18n="index.tile.cost.desc">API token theo tháng.</div>
-            <div class="tile-metric pt-3" id="tile-cost-metric"><span class="unit">$</span>— <span class="unit">/ 30d</span></div>
           </a>
         </div>
       </div>
@@ -567,22 +547,11 @@ function paintLandingStats(data) {
   const summary = data.summary;
   const managedCount = data?.counts?.managed ?? 0;
 
-  // Tile metrics. Each tile shows the actual focal number (huge, mono)
-  // instead of a wordy meta line. The unit is the small text after.
+  // Tile metric — only the servers tile remains on the homepage; logs &
+  // cost moved into per-server overview / admin console respectively.
   const tileServersMetric = document.getElementById('tile-servers-metric');
-  const tileLogsMetric = document.getElementById('tile-logs-metric');
-  const tileCostMetric = document.getElementById('tile-cost-metric');
   if (tileServersMetric) {
     tileServersMetric.innerHTML = `${fmtNum(managedCount)} <span class="unit">${managedCount === 1 ? 'server' : 'servers'}</span>`;
-  }
-  if (tileLogsMetric) {
-    const img = summary?.images30d ?? 0;
-    const vid = summary?.videos30d ?? 0;
-    tileLogsMetric.innerHTML = `${fmtNum(img + vid)} <span class="unit">media · 30d</span>`;
-  }
-  if (tileCostMetric) {
-    const c = summary?.cost30d ?? 0;
-    tileCostMetric.innerHTML = `<span class="unit">$</span>${(Number(c) || 0).toFixed(2)} <span class="unit">/ 30d</span>`;
   }
 
   // Owner-only admin tile reveal
