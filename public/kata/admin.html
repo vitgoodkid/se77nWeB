@@ -417,6 +417,10 @@ async function renderHealth() {
 // the bot just needs the model id string. Sync with the bot's pricing
 // list at packages/pricing/src/models.ts when adding new models;
 // providers are the convenient UI grouping, not a runtime concept.
+//
+// IMPORTANT: ids that should route to a non-default provider must be
+// prefixed with `<provider>:` so the bot dispatches correctly. For yunwu
+// (the default) the prefix is omitted to keep existing Mongo docs valid.
 const CHAT_MODELS_BY_PROVIDER = {
   yunwu: [
     'gemini-3.1-flash-lite',
@@ -433,6 +437,9 @@ const CHAT_MODELS_BY_PROVIDER = {
     'grok-4',
     'grok-4.1',
     'grok-4-fast',
+  ],
+  '9router': [
+    '9router:kr/claude-opus-4.7',
   ],
 };
 const IMAGE_MODELS_BY_PROVIDER = {
@@ -522,7 +529,10 @@ async function renderSettings() {
       // that gets PATCHed back. (use default) keeps the value empty so
       // the bot falls back to the global / code default.
       const cur = (value ?? '').toString();
-      const display = cur || '(default · ' + (f.placeholder || '—') + ')';
+      // Strip provider prefix when showing the label — the prefix is a
+      // routing hint, not a name humans want to read.
+      const curDisplay = cur.includes(':') ? cur.split(':').slice(1).join(':') : cur;
+      const display = curDisplay || '(default · ' + (f.placeholder || '—') + ')';
       const providers = JSON.stringify(f.byProvider).replace(/"/g, '&quot;');
       inputHtml = `
         <div class="flex gap-2 items-center">
@@ -749,7 +759,10 @@ function openModelPicker(triggerBtn) {
     for (const m of list) {
       const row = document.createElement('button');
       row.type = 'button';
-      row.textContent = m;
+      // Strip the provider prefix when displaying — the prefix is just a
+      // routing hint for the bot, the human-readable model id is whatever
+      // comes after the colon.
+      row.textContent = m.includes(':') ? m.split(':').slice(1).join(':') : m;
       row.className = 'mono text-left bg-bg border border-line rounded-[6px] px-3 py-2 hover:border-line2';
       row.style.fontSize = '12px';
       if (m === currentValue) {
@@ -790,7 +803,10 @@ function openModelPicker(triggerBtn) {
 
   function apply(v) {
     if (hiddenInput) hiddenInput.value = v;
-    if (labelEl) labelEl.textContent = v || `(default · ${placeholder || '—'})`;
+    if (labelEl) {
+      const disp = v && v.includes(':') ? v.split(':').slice(1).join(':') : v;
+      labelEl.textContent = disp || `(default · ${placeholder || '—'})`;
+    }
     close();
   }
   function close() {
