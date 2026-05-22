@@ -65,32 +65,111 @@
       radial-gradient(35% 30% at 60% 50%, #D4A85810 0%, transparent 75%);
   }
 
-  /* Dashboard tile in hero */
+  /* Dashboard tile in hero — bento-ish stat cards. Each card carries
+     - a big focal number (the actual metric)
+     - a glyph in the corner instead of the bland ↗
+     - a per-tile accent (--tile-accent) that drives the border, the
+       corner glyph color, and the cursor-follow spotlight gradient.
+     The spotlight is wired up via a couple of CSS vars (--mx, --my)
+     that JS pokes from a single mousemove handler.
+  */
   .tile {
+    --tile-accent: #E04545;
+    --tile-accent-soft: rgba(224,69,69,0.08);
+    --mx: 50%;
+    --my: 50%;
     position: relative;
+    isolation: isolate;
+    overflow: hidden;
     border: 1px solid rgba(255,255,255,0.08);
     border-radius: 14px;
-    background: rgba(21,17,13,0.85);
-    padding: 20px 18px 18px;
-    transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+    background: linear-gradient(180deg, rgba(21,17,13,0.92) 0%, rgba(13,10,8,0.85) 100%);
+    padding: 20px 20px 18px;
+    transition: transform 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
     display: flex; flex-direction: column;
-    min-height: 132px;
+    min-height: 158px;
   }
-  .tile:hover {
-    transform: translateY(-2px);
-    border-color: rgba(255,255,255,0.18);
-    background: rgba(28,24,19,0.95);
-  }
+  /* Spotlight — radial gradient pinned at the cursor, tinted by the
+     tile's accent. Fades in on hover so the resting state stays clean. */
   .tile::before {
     content: '';
     position: absolute; inset: 0;
-    border-radius: 14px;
+    border-radius: inherit;
     pointer-events: none;
-    background: radial-gradient(120% 90% at 0% 0%, rgba(224,69,69,0.06) 0%, transparent 55%);
-    opacity: 0.7;
+    background: radial-gradient(220px circle at var(--mx) var(--my),
+      var(--tile-accent-soft) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 200ms ease;
+    z-index: 0;
   }
-  .tile .arrow { transition: transform 180ms ease, color 180ms ease; }
-  .tile:hover .arrow { transform: translate(2px,-2px); color: #f5ede0; }
+  /* Faint accent rule on the left edge — gives every tile a vertical
+     identity strip without screaming. Strengthens on hover. */
+  .tile::after {
+    content: '';
+    position: absolute;
+    left: 0; top: 14%; bottom: 14%;
+    width: 2px;
+    border-radius: 2px;
+    background: var(--tile-accent);
+    opacity: 0.35;
+    transition: opacity 220ms ease, top 220ms ease, bottom 220ms ease;
+    z-index: 0;
+  }
+  .tile > * { position: relative; z-index: 1; }
+  .tile:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--tile-accent) 35%, rgba(255,255,255,0.15));
+    box-shadow: 0 8px 28px -12px color-mix(in srgb, var(--tile-accent) 60%, transparent);
+  }
+  .tile:hover::before { opacity: 1; }
+  .tile:hover::after { opacity: 0.85; top: 8%; bottom: 8%; }
+
+  /* Per-tile accent themes */
+  .tile-servers { --tile-accent: #E04545; --tile-accent-soft: rgba(224,69,69,0.10); }
+  .tile-admin   { --tile-accent: #D4A858; --tile-accent-soft: rgba(212,168,88,0.12);
+                  background: linear-gradient(180deg, rgba(28,22,12,0.95) 0%, rgba(13,10,8,0.88) 100%); }
+  .tile-logs    { --tile-accent: #B97AA8; --tile-accent-soft: rgba(185,122,168,0.10); }
+  .tile-cost    { --tile-accent: #5BA868; --tile-accent-soft: rgba(91,168,104,0.10); }
+
+  /* Big focal number — fills most of the card height */
+  .tile-metric {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-weight: 700;
+    font-size: 44px;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: #f5ede0;
+    margin-top: auto;
+    text-shadow: 0 0 24px color-mix(in srgb, var(--tile-accent) 35%, transparent);
+  }
+  .tile-metric .unit {
+    font-size: 16px;
+    color: rgba(245,237,224,0.45);
+    margin-left: 4px;
+    letter-spacing: 0;
+  }
+  .tile-glyph {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 22px;
+    line-height: 1;
+    color: var(--tile-accent);
+    opacity: 0.75;
+    transition: transform 220ms ease, opacity 220ms ease;
+  }
+  .tile:hover .tile-glyph { transform: translate(2px,-2px) scale(1.05); opacity: 1; }
+  .tile-owner-pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 1px 8px;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--tile-accent) 50%, transparent);
+    background: color-mix(in srgb, var(--tile-accent) 12%, transparent);
+    color: var(--tile-accent);
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
 
   ::-webkit-scrollbar { width: 8px; height: 8px; }
   ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
@@ -181,48 +260,45 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-3">
-          <a href="servers.html" class="tile group">
-            <div class="flex items-start justify-between mb-3">
-              <span class="mono t-meta tracking-label uppercase">&nbsp;</span>
-              <span class="mono t-meta tracking-label uppercase arrow">↗</span>
+        <div class="grid grid-cols-2 gap-3" id="dashboard-tiles">
+          <a href="servers.html" class="tile tile-servers group">
+            <div class="flex items-start justify-between mb-2">
+              <span class="mono t-meta tracking-label uppercase text-mute" data-i18n="index.tile.servers.tag">surface · 01</span>
+              <span class="tile-glyph">▤</span>
             </div>
             <div class="t-card-title lowercase text-ink" data-i18n="index.tile.servers">servers list</div>
-            <div class="t-card-desc mt-1.5 flex-1" data-i18n="index.tile.servers.desc">Danh sách server bot đang phục vụ.</div>
-            <div class="mt-3 mono t-meta uppercase tracking-label flex items-center gap-2">
-              <span class="dot-pulse w-1 h-1 rounded-full bg-green inline-block"></span>
-              <span>4 active</span>
-            </div>
+            <div class="t-card-desc mt-1 text-[13px]" data-i18n="index.tile.servers.desc">Server bot đang phục vụ.</div>
+            <div class="tile-metric pt-3" id="tile-servers-metric">— <span class="unit">active</span></div>
           </a>
 
-          <a id="tile-admin" href="admin.html" class="tile group hidden">
-            <div class="flex items-start justify-between mb-3">
-              <span class="mono t-meta tracking-label uppercase text-gold">owner</span>
-              <span class="mono t-meta tracking-label uppercase arrow">↗</span>
+          <a id="tile-admin" href="admin.html" class="tile tile-admin group hidden">
+            <div class="flex items-start justify-between mb-2">
+              <span class="tile-owner-pill" data-i18n="index.tile.admin.tag">owner</span>
+              <span class="tile-glyph">⌬</span>
             </div>
             <div class="t-card-title lowercase text-ink" data-i18n="index.tile.admin">admin console</div>
-            <div class="t-card-desc mt-1.5 flex-1" data-i18n="index.tile.admin.desc">Cấu hình toàn bộ bot, sysprompt và model dùng cho mọi server.</div>
-            <div class="mt-3 mono t-meta uppercase tracking-label text-gold">global · settings</div>
+            <div class="t-card-desc mt-1 text-[13px]" data-i18n="index.tile.admin.desc">Cấu hình toàn bộ bot — sysprompt, models cho mọi server.</div>
+            <div class="mt-auto pt-3 mono text-[11px] tracking-label uppercase" style="color:var(--tile-accent)">global · settings</div>
           </a>
 
-          <a href="logs-image.html" class="tile group">
-            <div class="flex items-start justify-between mb-3">
-              <span class="mono t-meta tracking-label uppercase">&nbsp;</span>
-              <span class="mono t-meta tracking-label uppercase arrow">↗</span>
+          <a href="logs-image.html" class="tile tile-logs group">
+            <div class="flex items-start justify-between mb-2">
+              <span class="mono t-meta tracking-label uppercase text-mute" data-i18n="index.tile.logs.tag">surface · 03</span>
+              <span class="tile-glyph">◧</span>
             </div>
             <div class="t-card-title lowercase text-ink" data-i18n="index.tile.logs">logs · image</div>
-            <div class="t-card-desc mt-1.5 flex-1" data-i18n="index.tile.logs.desc">Lịch sử ảnh đã tạo qua bot.</div>
-            <div id="tile-logs-meta" class="mt-3 mono t-meta uppercase tracking-label">— img · 30d</div>
+            <div class="t-card-desc mt-1 text-[13px]" data-i18n="index.tile.logs.desc">Lịch sử ảnh đã tạo.</div>
+            <div class="tile-metric pt-3" id="tile-logs-metric">— <span class="unit">img · 30d</span></div>
           </a>
 
-          <a href="cost.html" class="tile group">
-            <div class="flex items-start justify-between mb-3">
-              <span class="mono t-meta tracking-label uppercase">&nbsp;</span>
-              <span class="mono t-meta tracking-label uppercase arrow">↗</span>
+          <a href="cost.html" class="tile tile-cost group">
+            <div class="flex items-start justify-between mb-2">
+              <span class="mono t-meta tracking-label uppercase text-mute" data-i18n="index.tile.cost.tag">surface · 04</span>
+              <span class="tile-glyph">$</span>
             </div>
             <div class="t-card-title lowercase text-ink" data-i18n="index.tile.cost">cost</div>
-            <div class="t-card-desc mt-1.5 flex-1" data-i18n="index.tile.cost.desc">Chi phí api token theo tháng.</div>
-            <div id="tile-cost-meta" class="mt-3 mono text-[11px] tracking-label uppercase text-gold opacity-90">— · 30d</div>
+            <div class="t-card-desc mt-1 text-[13px]" data-i18n="index.tile.cost.desc">API token theo tháng.</div>
+            <div class="tile-metric pt-3" id="tile-cost-metric"><span class="unit">$</span>— <span class="unit">/ 30d</span></div>
           </a>
         </div>
       </div>
@@ -491,16 +567,23 @@ function paintLandingStats(data) {
   const summary = data.summary;
   const managedCount = data?.counts?.managed ?? 0;
 
-  // Tile metadata strings (logs + cost). Admin tile is owner-only and
-  // surfaced via tile-admin reveal in paintTiles below.
-  const tileLogs = document.getElementById('tile-logs-meta');
-  const tileCost = document.getElementById('tile-cost-meta');
-  if (tileLogs) {
-    const img = summary?.images30d ?? null;
-    const vid = summary?.videos30d ?? null;
-    tileLogs.textContent = `${fmtNum(img)} img · ${fmtNum(vid)} vid · 30d`;
+  // Tile metrics. Each tile shows the actual focal number (huge, mono)
+  // instead of a wordy meta line. The unit is the small text after.
+  const tileServersMetric = document.getElementById('tile-servers-metric');
+  const tileLogsMetric = document.getElementById('tile-logs-metric');
+  const tileCostMetric = document.getElementById('tile-cost-metric');
+  if (tileServersMetric) {
+    tileServersMetric.innerHTML = `${fmtNum(managedCount)} <span class="unit">${managedCount === 1 ? 'server' : 'servers'}</span>`;
   }
-  if (tileCost) tileCost.textContent = `${fmtUSD(summary?.cost30d ?? 0)} · 30d`;
+  if (tileLogsMetric) {
+    const img = summary?.images30d ?? 0;
+    const vid = summary?.videos30d ?? 0;
+    tileLogsMetric.innerHTML = `${fmtNum(img + vid)} <span class="unit">media · 30d</span>`;
+  }
+  if (tileCostMetric) {
+    const c = summary?.cost30d ?? 0;
+    tileCostMetric.innerHTML = `<span class="unit">$</span>${(Number(c) || 0).toFixed(2)} <span class="unit">/ 30d</span>`;
+  }
 
   // Owner-only admin tile reveal
   if (data?.user?.isOwner) {
@@ -620,6 +703,20 @@ function paintTicker(data) {
     `<span class="text-${s.color} flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-${s.color}"></span>${escapeHtml(s.label)}</span>`
   ).join('');
 }
+
+// Cursor-follow spotlight on the dashboard tiles. Pokes --mx/--my CSS
+// vars (in px relative to the tile) so the ::before radial-gradient
+// tracks the cursor. One mousemove handler per tile; cheap.
+(function wireDashboardSpotlights() {
+  const tiles = document.querySelectorAll('#dashboard-tiles .tile');
+  tiles.forEach((el) => {
+    el.addEventListener('mousemove', (e) => {
+      const r = el.getBoundingClientRect();
+      el.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+      el.style.setProperty('--my', (e.clientY - r.top) + 'px');
+    });
+  });
+})();
 </script>
 
 </body>
