@@ -380,7 +380,6 @@ async function renderHealth() {
   }
 
   const mongoSub = data.mongo.ok ? `ping ${data.mongo.latencyMs}ms` : `error: ${escapeHtml(data.mongo.error || 'unknown')}`;
-  const redisSub = data.redis.ok ? `ping ${data.redis.latencyMs}ms` : `error: ${escapeHtml(data.redis.error || 'unknown')}`;
   const botSub = data.bot.anyAlive
     ? `${data.bot.instances.filter(i => i.alive && !i.isShuttingDown).length} alive instance(s)`
     : (data.bot.instances.length === 0 ? 'no heartbeat ever' : 'all stale');
@@ -404,9 +403,8 @@ async function renderHealth() {
   }).join('');
 
   elContent.innerHTML = `
-    <div class="grid grid-cols-3 gap-3 mb-6">
+    <div class="grid grid-cols-2 gap-3 mb-6">
       ${statusPill('mongo', data.mongo.ok, mongoSub)}
-      ${statusPill('redis', data.redis.ok, redisSub)}
       ${statusPill('bot', data.bot.anyAlive, botSub)}
     </div>
     <div class="mono text-[10px] tracking-label uppercase text-mute mb-2">bot instances (${data.bot.instances.length})</div>

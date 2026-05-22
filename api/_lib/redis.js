@@ -1,105 +1,62 @@
-// Lightweight Redis helpers for Vercel serverless. Used by the kata
-// dashboard to:
-//   - broadcast config:updated:{guildId} so the bot picks up new config
-//     across processes (Phase 10 pub/sub)
-//   - cache expensive aggregations (e.g. /api/kata/server/:id/cost) for
-//     a few minutes so a dashboard refresh doesn't refire 11 Mongo
-//     aggregations every time
+// In-process cache helpers for the kata dashboard, used by the Vercel
+// serverless functions. Replaces the previous Upstash Redis cache after
+// the bot project also dropped Redis (it was burning the free tier just
+// from BullMQ idle polls).
 //
-// We open a per-invocation connection rather than caching a long-lived client
-// because Vercel functions can be frozen for minutes between calls — a stale
-// ioredis socket would hang the next call for the connect timeout.
-import Redis from 'ioredis';
+// Vercel keeps function instances warm for a few minutes between calls
+// when traffic is steady, so a module-level Map gives us cache hits in
+// the common dashboard-refresh case. Cold starts recompute — same
+// behaviour the old wrapper had when Redis was unreachable.
+//
+// Each function file imports its own copy of this module, so caches are
+// isolated per function. That's fine — the only callers (kata cost +
+// admin cost) live in the same auth handler.
 
-const CONNECT_OPTS = {
-  // Keep the function lean — fail fast instead of holding the request open.
-  connectTimeout: 4000,
-  maxRetriesPerRequest: 1,
-  enableReadyCheck: true,
-  lazyConnect: false,
-};
+const store = new Map();
 
-function makeClient() {
-  const url = process.env.REDIS_URL;
-  if (!url) throw new Error('REDIS_URL not configured');
-  return new Redis(url, CONNECT_OPTS);
+function readEntry(key) {
+  const entry = store.get(key);
+  if (!entry) return null;
+  if (entry.expiresAt <= Date.now()) {
+    store.delete(key);
+    return null;
+  }
+  return entry.value;
 }
 
-export async function publish(channel, payload) {
-  const client = makeClient();
-  try {
-    const message = typeof payload === 'string' ? payload : JSON.stringify(payload);
-    return await client.publish(channel, message);
-  } finally {
-    // disconnect() is non-blocking; quit() flushes the buffer first. We want quit.
-    try { await client.quit(); } catch { /* socket already gone */ }
+function writeEntry(key, value, ttlSeconds) {
+  // Soft cap so a runaway key explosion can't OOM the function. 2k entries
+  // at ~5KB each ≈ 10MB; well under the Vercel function memory budget.
+  const MAX = 2000;
+  if (store.size >= MAX && !store.has(key)) {
+    const oldest = store.keys().next().value;
+    if (oldest !== undefined) store.delete(oldest);
   }
-}
-
-/**
- * One-shot Redis PING for the admin health page. Returns latency in ms on
- * success, or `{ error }` on failure. Never throws — the dashboard should
- * be able to render even when Redis is down.
- */
-export async function ping() {
-  let client;
-  const startedAt = Date.now();
-  try {
-    client = makeClient();
-  } catch (err) {
-    return { ok: false, error: err.message };
-  }
-  try {
-    const r = await client.ping();
-    return { ok: r === 'PONG', latencyMs: Date.now() - startedAt };
-  } catch (err) {
-    return { ok: false, error: err.message, latencyMs: Date.now() - startedAt };
-  } finally {
-    try { await client.quit(); } catch { /* ignore */ }
-  }
+  store.set(key, { value, expiresAt: Date.now() + ttlSeconds * 1000 });
 }
 
 /**
- * Cache wrapper for expensive serverless aggregations. Returns the cached
- * value if present, otherwise runs `producer`, stores the result with TTL,
- * and returns it. Cache failures degrade to running the producer directly —
- * Redis going down should NEVER break the dashboard.
+ * Cache wrapper for expensive aggregations. Returns the cached value if
+ * present, otherwise runs `producer`, stores the result with TTL, and
+ * returns it. Same shape as the old Redis-backed `cached(...)` so callers
+ * don't need to change.
  *
- * Values are stringified JSON. `producer` must return something JSON-safe.
- *
- * Returns `{ value, hit: boolean }` so callers can surface cache status in
- * response headers for debugging.
+ * Returns `{ value, hit }` so the dashboard can label "fresh / cached".
  */
 export async function cached(key, ttlSeconds, producer) {
-  let client;
-  try {
-    client = makeClient();
-  } catch {
-    return { value: await producer(), hit: false };
-  }
+  const cachedValue = readEntry(key);
+  if (cachedValue !== null) return { value: cachedValue, hit: true };
+  const value = await producer();
+  writeEntry(key, value, ttlSeconds);
+  return { value, hit: false };
+}
 
-  try {
-    let raw = null;
-    try {
-      raw = await client.get(key);
-    } catch {
-      // ignore read errors — fall through to recompute.
-    }
-    if (raw) {
-      try {
-        return { value: JSON.parse(raw), hit: true };
-      } catch {
-        // Cached blob is corrupt — fall through to recompute.
-      }
-    }
-    const value = await producer();
-    try {
-      await client.setex(key, ttlSeconds, JSON.stringify(value));
-    } catch {
-      // ignore — better to serve uncached than 500.
-    }
-    return { value, hit: false };
-  } finally {
-    try { await client.quit(); } catch { /* ignore */ }
-  }
+/**
+ * Compatibility shim for the admin health page, which used to ping
+ * Upstash. With the in-process cache there's nothing to ping — we just
+ * return `ok: true` so the page renders without a "redis down" banner.
+ * Kept as an async function in case callers `await` it.
+ */
+export async function ping() {
+  return { ok: true, latencyMs: 0, mode: 'in-process' };
 }

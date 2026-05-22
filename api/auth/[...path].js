@@ -15,7 +15,7 @@ import {
   getBaseUrl,
 } from '../_lib/session.js';
 import { getUsers, getKataDb } from '../_lib/mongo.js';
-import { publish as redisPublish, cached, ping as redisPing } from '../_lib/redis.js';
+import { cached } from '../_lib/redis.js';
 
 export const config = { maxDuration: 60 };
 
@@ -834,13 +834,8 @@ async function handleKataServerConfigPatch(req, res, guildId) {
   if (Object.keys(unset).length > 0) mongoUpdate.$unset = unset;
   await kataDb.collection('serverconfigs').updateOne({ guildId }, mongoUpdate, { upsert: true });
 
-  // Best-effort Redis publish — bot also polls Mongo every 30s so a missed
-  // publish only delays propagation, doesn't drop the change.
-  try {
-    await redisPublish(`config:updated:${guildId}`, { guildId, ts: Date.now() });
-  } catch (e) {
-    console.warn('redis publish failed', e?.message || e);
-  }
+  // The bot subscribes to a Mongo change stream on `serverconfigs`, so
+  // writing the doc here is the publish — there's no separate fanout step.
 
   // Audit trail
   try {
@@ -1506,7 +1501,6 @@ async function adminModels(req, res, kataDb) {
 // ── /admin/health ──────────────────────────────────────────────
 // Liveness across the stack:
 //   - Mongo: ping the kata db
-//   - Redis: PING
 //   - Bot: read botheartbeats — any row whose lastSeen is within 2 min is
 //     considered alive
 async function adminHealth(req, res, kataDb) {
@@ -1518,8 +1512,6 @@ async function adminHealth(req, res, kataDb) {
   } catch (err) {
     mongo = { ok: false, latencyMs: Date.now() - startedMongo, error: err.message };
   }
-
-  const redis = await redisPing();
 
   const heartbeats = await kataDb.collection('botheartbeats')
     .find({}, { projection: { instanceId: 1, lastSeen: 1, startedAt: 1, pid: 1, version: 1, guildCount: 1, queueDepth: 1, memMB: 1, nodeVersion: 1, extras: 1 } })
@@ -1543,7 +1535,6 @@ async function adminHealth(req, res, kataDb) {
 
   return res.status(200).json({
     mongo,
-    redis,
     bot: {
       instances: annotated,
       anyAlive: annotated.some((h) => h.alive && !h.isShuttingDown),
@@ -1673,13 +1664,9 @@ async function handleKataAdminGlobalConfigPatch(req, res) {
   if (Object.keys(unset).length > 0) update.$unset = unset;
   await kataDb.collection('globalconfigs').updateOne({ scope: GLOBAL_SCOPE }, update, { upsert: true });
 
-  // Fan-out: the bot subscribes to config:updated:_global and treats it as
-  // a cascade — every per-guild merged result is invalidated.
-  try {
-    await redisPublish(`config:updated:${GLOBAL_SCOPE}`, { scope: GLOBAL_SCOPE, ts: Date.now() });
-  } catch (e) {
-    console.warn('redis publish failed (global config)', e?.message || e);
-  }
+  // The bot subscribes to a Mongo change stream on `globalconfigs`, so the
+  // updateOne above triggers cache invalidation across every guild on its
+  // own — no separate fanout step.
 
   // Audit log — same collection as per-guild changes, no guildId.
   try {
