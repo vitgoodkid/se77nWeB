@@ -258,40 +258,10 @@
         <div class="mono text-[10px] text-mute2 mt-1.5"><span id="f-systemPrompt-count">0</span> / 4000 ký tự</div>
       </section>
 
-      <section data-section="models" class="grid grid-cols-2 gap-3">
-        <div>
-          <div class="mono text-[10px] uppercase tracking-kicker text-mute mb-2">chat model</div>
-          <div class="flex gap-2 items-center">
-            <input type="hidden" id="f-chatModel" value="" />
-            <button type="button" id="f-chatModel-btn" class="mono text-[12px] flex-1 bg-bg border border-line rounded-[10px] h-10 px-3 text-ink hover:border-line2 text-left flex items-center justify-between gap-2">
-              <span id="f-chatModel-label">(default)</span>
-              <span class="text-mute text-[10px]">▾</span>
-            </button>
-            <button type="button" id="f-chatModel-clear" class="mono text-[10px] tracking-label uppercase text-mute hover:text-ink border border-line rounded-[10px] h-10 px-3" title="Use default">clear</button>
-          </div>
-        </div>
-        <div>
-          <div class="mono text-[10px] uppercase tracking-kicker text-mute mb-2">image model</div>
-          <div class="flex gap-2 items-center">
-            <input type="hidden" id="f-imageModel" value="" />
-            <button type="button" id="f-imageModel-btn" class="mono text-[12px] flex-1 bg-bg border border-line rounded-[10px] h-10 px-3 text-ink hover:border-line2 text-left flex items-center justify-between gap-2">
-              <span id="f-imageModel-label">(default)</span>
-              <span class="text-mute text-[10px]">▾</span>
-            </button>
-            <button type="button" id="f-imageModel-clear" class="mono text-[10px] tracking-label uppercase text-mute hover:text-ink border border-line rounded-[10px] h-10 px-3" title="Use default">clear</button>
-          </div>
-        </div>
-        <div>
-          <div class="mono text-[10px] uppercase tracking-kicker text-mute mb-2">video model</div>
-          <div class="flex gap-2 items-center">
-            <input type="hidden" id="f-videoModel" value="" />
-            <button type="button" id="f-videoModel-btn" class="mono text-[12px] flex-1 bg-bg border border-line rounded-[10px] h-10 px-3 text-ink hover:border-line2 text-left flex items-center justify-between gap-2">
-              <span id="f-videoModel-label">(default)</span>
-              <span class="text-mute text-[10px]">▾</span>
-            </button>
-            <button type="button" id="f-videoModel-clear" class="mono text-[10px] tracking-label uppercase text-mute hover:text-ink border border-line rounded-[10px] h-10 px-3" title="Use default">clear</button>
-          </div>
-        </div>
+      <section data-section="models" class="grid grid-cols-2 gap-3" style="display:none">
+        <input type="hidden" id="f-chatModel" value="" />
+        <input type="hidden" id="f-imageModel" value="" />
+        <input type="hidden" id="f-videoModel" value="" />
       </section>
 
       <section data-section="moderation" class="grid grid-cols-2 gap-3">
@@ -889,12 +859,6 @@ function openSettings(focusSection){
   const c = CURRENT_CONFIG;
   document.getElementById('f-systemPrompt').value = c.systemPrompt || '';
   document.getElementById('f-systemPrompt-count').textContent = (c.systemPrompt || '').length;
-  wireModelPicker('f-chatModel', CHAT_MODELS_BY_PROVIDER, 'grok-4-fast');
-  setModelValue('f-chatModel', c.chatModel || '', 'grok-4-fast');
-  wireModelPicker('f-imageModel', IMAGE_MODELS_BY_PROVIDER, 'fal-ai/nano-banana-pro');
-  setModelValue('f-imageModel', c.imageModel || '', 'fal-ai/nano-banana-pro');
-  wireModelPicker('f-videoModel', VIDEO_MODELS_BY_PROVIDER, 'bytedance/seedance-2.0/image-to-video');
-  setModelValue('f-videoModel', c.videoModel || '', 'bytedance/seedance-2.0/image-to-video');
   document.getElementById('f-nsfwThresholdNormal').value = c.nsfwThresholdNormal ?? 0.3;
   document.getElementById('f-nsfwThresholdNsfw').value = c.nsfwThresholdNsfw ?? 0.85;
   document.getElementById('f-rateLimitPerUser').value = c.rateLimitPerUser ?? 30;
@@ -936,18 +900,11 @@ document.getElementById('settings-form').addEventListener('submit', async (e)=>{
   const allowedChannels = channelsRaw.split(/[\s,]+/).map(s=>s.trim()).filter(Boolean);
   const payload = {
     systemPrompt: document.getElementById('f-systemPrompt').value,
-    chatModel: document.getElementById('f-chatModel').value,
-    imageModel: document.getElementById('f-imageModel').value,
-    videoModel: document.getElementById('f-videoModel').value,
     nsfwThresholdNormal: parseFloat(document.getElementById('f-nsfwThresholdNormal').value),
     nsfwThresholdNsfw: parseFloat(document.getElementById('f-nsfwThresholdNsfw').value),
     rateLimitPerUser: parseInt(document.getElementById('f-rateLimitPerUser').value, 10),
     allowedChannels,
   };
-  // Drop empty model fields so we don't overwrite existing values with blanks.
-  for (const k of ['chatModel','imageModel','videoModel']){
-    if (!payload[k]) delete payload[k];
-  }
   btn.disabled = true; btn.style.opacity = 0.6;
   status.textContent = 'Đang lưu…'; status.className = 'mono text-[11px] text-mute2';
   try {
