@@ -200,6 +200,12 @@ async function loadWorld() {
   elTitle.innerHTML = `${escapeHtml(world.name)}<span class="text-purple glow77">.</span>`;
   elBcName.textContent = world.name;
   elMeta.textContent = `${world.mode} · ${world.difficulty} · ${world.participation}${world.isLocked ? ' · 🔒 locked' : ''}`;
+  if (world.coverImageUrl) {
+    const coverWrap = document.createElement('div');
+    coverWrap.style.cssText = 'margin-top:16px;border-radius:12px;overflow:hidden;border:1px solid rgba(138,79,255,0.20);max-width:520px';
+    coverWrap.innerHTML = `<img src="${escapeHtml(world.coverImageUrl)}" alt="" style="width:100%;display:block" />`;
+    document.getElementById('world-header').appendChild(coverWrap);
+  }
   if (world.isLocked) {
     elInput.disabled = true;
     elSend.disabled = true;

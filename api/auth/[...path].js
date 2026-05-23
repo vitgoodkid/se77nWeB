@@ -1732,6 +1732,12 @@ async function handleKataTavern(req, res, sub) {
   if (path === 'lore/generate' && req.method === 'POST') return tavernLoreGenerate(req, res);
   if (path === 'lore/improve' && req.method === 'POST') return tavernLoreImprove(req, res);
 
+  // Cover-art generation. POST { name, setting, coverPromptSeed?, imageStyle? } → { url }.
+  // Uses fal flux-schnell directly so it's fast + cheap. Mirrors result to
+  // R2-equivalent storage isn't available on se77n yet — we hand back fal's
+  // CDN URL and let the client persist it via PATCH /world/:id { coverImageUrl }.
+  if (path === 'cover/generate' && req.method === 'POST') return tavernCoverGenerate(req, res);
+
   // Web roleplay turn (Phase T6). Submits player text, returns bot reply
   // synchronously. Same persistence side-effects as the bot's roleplay path.
   const turnMatch = path.match(/^world\/([a-f0-9]{24})\/turn$/i);
@@ -1840,6 +1846,8 @@ async function tavernWorldCreate(req, res) {
     participation: body.participation ?? 'creator_only',
     imageGenEnabled: body.imageGenEnabled ?? false, // default off for web — fal cost
     imageStyle: body.imageStyle ?? 'cinematic detailed',
+    coverImageUrl: typeof body.coverImageUrl === 'string' && /^https?:\/\//i.test(body.coverImageUrl) ? body.coverImageUrl : null,
+    coverGenerated: false,
     forumChannelId: '',
     threadId: makeWebThreadId(),
     appliedTagIds: [],
@@ -1985,6 +1993,18 @@ async function tavernWorldPatch(req, res, id) {
   strField('lore', TAVERN_FIELD_LIMITS.lore);
   strField('rules', TAVERN_FIELD_LIMITS.rules);
   strField('imageStyle', TAVERN_FIELD_LIMITS.imageStyle);
+
+  if ('coverImageUrl' in body) {
+    if (body.coverImageUrl === null || body.coverImageUrl === '') {
+      set.coverImageUrl = null;
+    } else if (typeof body.coverImageUrl !== 'string') {
+      errors.push('coverImageUrl must be string or null');
+    } else if (!/^https?:\/\//i.test(body.coverImageUrl)) {
+      errors.push('coverImageUrl must start with http(s)://');
+    } else {
+      set.coverImageUrl = body.coverImageUrl;
+    }
+  }
 
   if ('imageGenEnabled' in body) {
     if (typeof body.imageGenEnabled !== 'boolean') errors.push('imageGenEnabled must be boolean');
@@ -2301,6 +2321,80 @@ async function tavernLoreGenerate(req, res) {
     return res.status(200).json({ ok: true, text });
   } catch (err) {
     return res.status(502).json({ error: 'llm_failed', message: err?.message?.slice(0, 500) });
+  }
+}
+
+// ── Cover-art generation ───────────────────────────────────────
+//
+// POST /api/kata/tavern/cover/generate
+// Body: { name?, setting?, coverPromptSeed?, imageStyle?, lore? }
+// Returns: { url, model }
+//
+// Calls fal queue API directly (flux-schnell — fast + cheap, ~3s p50).
+// Returns fal's CDN URL; the client persists it via PATCH /world/:id
+// { coverImageUrl }. fal CDN expires after 30+ days but cover images are
+// re-generatable so we don't bother mirroring to durable storage here.
+
+async function tavernCoverGenerate(req, res) {
+  const auth = await requireUser(req);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  let body = req.body;
+  if (typeof body === 'string') {
+    try { body = JSON.parse(body); } catch { return res.status(400).json({ error: 'invalid_json' }); }
+  }
+  const apiKey = process.env.FAL_API_KEY;
+  if (!apiKey) return res.status(500).json({ error: 'fal_not_configured' });
+
+  const seed = (body?.coverPromptSeed ?? '').toString().trim();
+  const style = (body?.imageStyle ?? '').toString().trim() || 'cinematic, detailed, atmospheric, book cover art';
+  const settingHint = (body?.setting ?? '').toString().trim();
+  const name = (body?.name ?? '').toString().trim();
+  const lore = (body?.lore ?? '').toString().trim();
+
+  let prompt = seed;
+  if (!prompt) {
+    // Heuristic from setting + lore. Yank content-bearing words.
+    const blob = `${settingHint}\n${lore}`.replace(/[^\p{L}\p{N}\s,.\-]/gu, ' ');
+    const words = blob.split(/\s+/).filter((w) => w.length > 3).slice(0, 14).join(', ').toLowerCase();
+    prompt = [name, words || 'wide landscape vista', style].filter(Boolean).join(', ');
+  } else {
+    prompt = `${prompt}, ${style}`;
+  }
+
+  const model = process.env.FAL_TAVERN_COVER_MODEL || 'fal-ai/flux/schnell';
+  try {
+    const submit = await fetch(`https://queue.fal.run/${model}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Key ${apiKey}` },
+      body: JSON.stringify({ prompt }),
+    });
+    const submitData = await submit.json();
+    if (!submit.ok) {
+      return res.status(submit.status).json({ error: 'fal_submit_failed', upstream: submitData });
+    }
+    const requestId = submitData.request_id;
+    const statusUrl = submitData.status_url || `https://queue.fal.run/${model}/requests/${requestId}/status`;
+    const resultUrl = submitData.response_url || `https://queue.fal.run/${model}/requests/${requestId}`;
+
+    const deadline = Date.now() + 50_000;
+    while (Date.now() < deadline) {
+      await new Promise((r) => setTimeout(r, 2000));
+      const s = await fetch(statusUrl, { headers: { Authorization: `Key ${apiKey}` } });
+      const sd = await s.json();
+      if (sd.status === 'COMPLETED') {
+        const finalRes = await fetch(resultUrl, { headers: { Authorization: `Key ${apiKey}` } });
+        const final = await finalRes.json();
+        const url = final?.images?.[0]?.url ?? final?.image?.url;
+        if (!url) return res.status(502).json({ error: 'no_image_url', upstream: final });
+        return res.status(200).json({ ok: true, url, model, prompt });
+      }
+      if (sd.status === 'FAILED' || sd.status === 'CANCELLED') {
+        return res.status(502).json({ error: 'fal_' + sd.status.toLowerCase(), upstream: sd });
+      }
+    }
+    return res.status(504).json({ error: 'fal_timeout' });
+  } catch (err) {
+    return res.status(502).json({ error: 'cover_gen_failed', message: err?.message?.slice(0, 500) });
   }
 }
 

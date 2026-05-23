@@ -252,8 +252,12 @@ async function renderWorlds() {
     const status = w.isLocked
       ? '<span class="lock-badge">🔒 locked</span>'
       : '<span class="live-badge">▶ live</span>';
+    const cover = w.coverImageUrl
+      ? `<img src="${escapeHtml(w.coverImageUrl)}" alt="" class="rounded-[8px] object-cover" style="width:64px;height:64px;flex:0 0 64px" />`
+      : `<div class="rounded-[8px] grid place-items-center mono text-[10px] tracking-label uppercase text-mute2" style="width:64px;height:64px;flex:0 0 64px;background:rgba(138,79,255,0.06);border:1px solid rgba(138,79,255,0.18)">⌑</div>`;
     return `
       <div class="row flex items-center gap-4">
+        ${cover}
         <div class="flex-1 min-w-0 cursor-pointer" data-world-id="${escapeHtml(w._id)}">
           <div class="flex items-center gap-3 flex-wrap">
             <div class="text-[15px] font-semibold tracking-tight">${escapeHtml(w.name)}</div>
@@ -396,6 +400,22 @@ async function renderWorldCreate() {
             </select>
           </label>
         </div>
+
+        <div class="row" style="background:rgba(138,79,255,0.04);border-color:rgba(138,79,255,0.25)">
+          <div class="mono text-[10px] tracking-label uppercase text-purple mb-2">cover art</div>
+          <div class="flex gap-3 items-start">
+            <div id="cover-preview" style="flex:0 0 140px">
+              <div class="rounded-[10px] grid place-items-center text-mute2 mono text-[10px] tracking-label uppercase" style="width:140px;aspect-ratio:1/1;background:rgba(138,79,255,0.05);border:1px dashed rgba(138,79,255,0.30)">no cover</div>
+            </div>
+            <div class="flex-1 space-y-2">
+              <input class="field" data-n="coverImageUrl" placeholder="https://… (paste URL hoặc bấm AI gen)" />
+              <div class="flex gap-2 flex-wrap">
+                <button type="button" id="create-cover-ai" class="btn btn-primary">🎨 AI gen</button>
+              </div>
+              <div class="mono text-[10px] text-mute2">AI gen dùng setting + lore vừa nhập làm prompt seed.</div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="flex justify-end gap-2 mt-5 pt-4 border-t border-line">
@@ -444,6 +464,36 @@ async function renderWorldCreate() {
     });
   });
 
+  // Cover-art AI gen button — uses whatever lore/setting is in the form right now.
+  const coverAi = document.getElementById('create-cover-ai');
+  const coverPreview = document.getElementById('cover-preview');
+  const coverInput = elContent.querySelector('[data-n="coverImageUrl"]');
+  function paintCoverPreview(url) {
+    if (!coverPreview) return;
+    coverPreview.innerHTML = url
+      ? `<img src="${escapeHtml(url)}" alt="" class="rounded-[10px]" style="width:140px;aspect-ratio:1/1;object-fit:cover" />`
+      : `<div class="rounded-[10px] grid place-items-center text-mute2 mono text-[10px] tracking-label uppercase" style="width:140px;aspect-ratio:1/1;background:rgba(138,79,255,0.05);border:1px dashed rgba(138,79,255,0.30)">no cover</div>`;
+  }
+  if (coverInput) coverInput.addEventListener('input', () => paintCoverPreview(coverInput.value.trim()));
+  if (coverAi) coverAi.addEventListener('click', async () => {
+    coverAi.disabled = true; coverAi.textContent = 'generating…';
+    const get = (k) => elContent.querySelector(`[data-n="${k}"]`)?.value ?? '';
+    const r = await fetchJson('/api/kata/tavern/cover/generate', {
+      method: 'POST',
+      body: {
+        name: get('name'),
+        setting: get('setting'),
+        lore: get('lore'),
+        imageStyle: get('imageStyle'),
+      },
+    });
+    coverAi.disabled = false; coverAi.textContent = '🎨 AI gen';
+    if (r?.url) {
+      if (coverInput) coverInput.value = r.url;
+      paintCoverPreview(r.url);
+    }
+  });
+
   document.getElementById('create-submit').addEventListener('click', async () => {
     const get = (k) => elContent.querySelector(`[data-n="${k}"]`)?.value ?? '';
     const body = {
@@ -458,6 +508,8 @@ async function renderWorldCreate() {
       imageGenEnabled: get('imageGenEnabled') === 'true',
       guildId: get('guildId').trim() || 'web',
     };
+    const coverUrl = get('coverImageUrl').trim();
+    if (coverUrl) body.coverImageUrl = coverUrl;
     if (!body.name) return alert('Name bắt buộc');
     if (!body.setting) return alert('Setting bắt buộc');
     const charId = get('characterId');
@@ -525,6 +577,26 @@ async function renderWorldDetail(id) {
     </div>
     <div class="grid grid-cols-12 gap-4">
       <div class="col-span-7 space-y-3">
+        <div class="row">
+          <div class="mono text-[10px] tracking-label uppercase text-purple mb-3">cover art</div>
+          <div class="flex gap-3 items-start">
+            <div style="flex:0 0 200px">
+              ${w.coverImageUrl
+                ? `<img src="${escapeHtml(w.coverImageUrl)}" alt="" class="rounded-[10px]" style="width:200px;aspect-ratio:1/1;object-fit:cover" />`
+                : `<div class="rounded-[10px] grid place-items-center text-mute2 mono text-[11px] tracking-label uppercase" style="width:200px;aspect-ratio:1/1;background:rgba(138,79,255,0.05);border:1px dashed rgba(138,79,255,0.30)">no cover</div>`}
+            </div>
+            <div class="flex-1 space-y-2">
+              <input class="field" id="cover-url-input" placeholder="https://… (paste URL)" value="${escapeHtml(w.coverImageUrl ?? '')}" />
+              <div class="flex gap-2 flex-wrap">
+                <button id="cover-save-url" class="btn">save URL</button>
+                <button id="cover-ai-gen" class="btn btn-primary">🎨 AI gen từ lore</button>
+                ${w.coverImageUrl ? '<button id="cover-clear" class="btn btn-danger">clear</button>' : ''}
+              </div>
+              <div class="mono text-[10px] text-mute2">AI gen dùng fal flux-schnell — lore + setting làm prompt seed.</div>
+            </div>
+          </div>
+        </div>
+
         <div class="row">
           <div class="mono text-[10px] tracking-label uppercase text-purple mb-3">world</div>
           <div class="space-y-3">
@@ -638,6 +710,48 @@ async function renderWorldDetail(id) {
     });
     const r = await fetchJson(`/api/kata/tavern/world/${id}`, { method: 'PATCH', body: { overrides } });
     if (r) flash('overrides saved');
+  });
+
+  // Cover art handlers.
+  const coverSaveBtn = document.getElementById('cover-save-url');
+  if (coverSaveBtn) coverSaveBtn.addEventListener('click', async () => {
+    const url = document.getElementById('cover-url-input').value.trim();
+    const r = await fetchJson(`/api/kata/tavern/world/${id}`, {
+      method: 'PATCH',
+      body: { coverImageUrl: url || null },
+    });
+    if (r) { flash('cover saved'); renderWorldDetail(id); }
+  });
+  const coverGenBtn = document.getElementById('cover-ai-gen');
+  if (coverGenBtn) coverGenBtn.addEventListener('click', async () => {
+    coverGenBtn.disabled = true;
+    coverGenBtn.textContent = 'generating…';
+    const gen = await fetchJson('/api/kata/tavern/cover/generate', {
+      method: 'POST',
+      body: {
+        name: w.name,
+        setting: w.setting,
+        lore: w.lore,
+        imageStyle: w.imageStyle,
+      },
+    });
+    if (gen?.url) {
+      const r = await fetchJson(`/api/kata/tavern/world/${id}`, {
+        method: 'PATCH',
+        body: { coverImageUrl: gen.url },
+      });
+      if (r) { flash('cover generated'); renderWorldDetail(id); return; }
+    }
+    coverGenBtn.disabled = false;
+    coverGenBtn.textContent = '🎨 AI gen từ lore';
+  });
+  const coverClearBtn = document.getElementById('cover-clear');
+  if (coverClearBtn) coverClearBtn.addEventListener('click', async () => {
+    const r = await fetchJson(`/api/kata/tavern/world/${id}`, {
+      method: 'PATCH',
+      body: { coverImageUrl: null },
+    });
+    if (r) { flash('cover cleared'); renderWorldDetail(id); }
   });
 
   const endBtn = document.getElementById('end-world');
