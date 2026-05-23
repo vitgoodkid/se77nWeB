@@ -81,7 +81,7 @@
   <nav class="px-3 py-4 mono text-[11px] tracking-label uppercase">
     <a data-tab="worlds" class="block px-3 py-2 rounded-[8px] border border-transparent text-mute hover:text-ink cursor-pointer mb-1">▸ my worlds</a>
     <a data-tab="characters" class="block px-3 py-2 rounded-[8px] border border-transparent text-mute hover:text-ink cursor-pointer mb-1">▸ characters</a>
-    <a data-tab="defaults" id="nav-defaults" class="hidden px-3 py-2 rounded-[8px] border border-transparent text-mute hover:text-ink cursor-pointer mb-1">▸ tavern defaults <span class="text-gold">(owner)</span></a>
+    <a data-tab="defaults" id="nav-defaults" class="block px-3 py-2 rounded-[8px] border border-transparent text-mute hover:text-ink cursor-pointer mb-1">▸ tavern defaults <span class="text-gold">(owner)</span></a>
   </nav>
   <div class="px-5 py-4 border-t border-line">
     <a href="index.html" class="mono text-[10px] tracking-label uppercase text-mute hover:text-ink">← my servers</a>
@@ -183,15 +183,19 @@ function clearAuthWarn() {
   elAuthLogin.classList.add('hidden');
 }
 
-// ── Bootstrap: detect owner & gate the defaults nav ────────────
+// ── Bootstrap: detect owner ─────────────────────────────────
+//
+// Defaults tab is rendered into the nav unconditionally so the layout
+// doesn't reflow when /me resolves. Server rejects PATCH /admin/tavern-config
+// from non-owners with 403; the GET endpoint also gates owner-only, so a
+// regular user clicking the tab will see an "owner only" message rather
+// than the form.
 async function bootstrap() {
   const r = await fetch('/api/kata/me', { credentials: 'include' });
   if (r.ok) {
     me = await r.json();
     isOwner = !!me?.isOwner;
-    if (isOwner) elNavDefaults.classList.remove('hidden');
   }
-  if (!isOwner && currentTab === 'defaults') currentTab = 'worlds';
   setTabUI();
   switchTab(currentTab);
 }
