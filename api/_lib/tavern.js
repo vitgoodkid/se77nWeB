@@ -70,9 +70,18 @@ const DEFAULT_DIFFICULTY_INSTRUCTIONS = {
 };
 
 const DEFAULT_OUTPUT_RULES = [
-  'Do NOT prefix replies with "Bot:", "Narrator:", "<character>:" or similar — just deliver prose.',
-  "Never act on behalf of the main character. Wait for the player's next move.",
-  'Maintain the storyteller voice and pacing rules above.',
+  'Trả lời mặc định bằng TIẾNG VIỆT, trừ khi user chat bằng ngôn ngữ khác — match theo ngôn ngữ user.',
+  'KHÔNG prefix "Bot:", "Narrator:", "<character>:" hay tương tự — chỉ deliver prose trực tiếp.',
+  "KHÔNG tự ý hành động thay main character. Đợi player viết next move của họ.",
+  'Giữ giọng kể + pacing rules ở trên.',
+  '',
+  'SAU khi viết xong scene, BẮT BUỘC thêm 1 dòng đúng dạng `<<SUGGESTIONS>>` rồi 4 dòng tiếp theo là 4 lựa chọn cho player ở ngôi thứ nhất, mỗi dòng đánh số 1. 2. 3. 4. Mỗi gợi ý ≤80 ký tự, là 1 hành động/câu nói cụ thể player CÓ THỂ làm tiếp theo. Đa dạng hướng (ví dụ: hành động táo bạo / dò hỏi / phòng thủ / bất ngờ). Không lặp ý.',
+  'Định dạng PHẢI chính xác:',
+  '<<SUGGESTIONS>>',
+  '1. ...',
+  '2. ...',
+  '3. ...',
+  '4. ...',
 ].join('\n');
 
 const DEFAULT_IMAGE_PROMPT_TEMPLATE = '{character_base}, {keywords}, {style}';
@@ -288,6 +297,36 @@ function ensureNoMinorSexualization(ctx) {
   return { ok: true };
 }
 
+// ── Storyteller reply parser ──────────────────────────────────
+//
+// Splits the LLM raw output into prose + 4 suggestions per the OUTPUT
+// contract (`<<SUGGESTIONS>>` marker line, then numbered list).
+
+const REPLY_MARKER_RE = /\n*<<\s*SUGGESTIONS\s*>>\n+([\s\S]*)$/i;
+const NUMBERED_LINE_RE = /^\s*\d+[).\s-]+\s*(.+?)\s*$/;
+const BULLET_LINE_RE = /^\s*[•\-*–—]\s*(.+?)\s*$/;
+const MAX_SUGGESTION_LEN = 200;
+const MAX_SUGGESTIONS = 4;
+
+function parseStorytellerReply(raw) {
+  if (!raw) return { prose: '', suggestions: [], hadMarker: false };
+  const m = REPLY_MARKER_RE.exec(raw);
+  if (!m) return { prose: raw.trim(), suggestions: [], hadMarker: false };
+  const prose = raw.slice(0, m.index).trim();
+  const tail = m[1] ?? '';
+  const lines = tail.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  const suggestions = [];
+  for (const line of lines) {
+    if (suggestions.length >= MAX_SUGGESTIONS) break;
+    const num = NUMBERED_LINE_RE.exec(line);
+    const bul = !num ? BULLET_LINE_RE.exec(line) : null;
+    const body = ((num && num[1]) || (bul && bul[1]) || '').trim();
+    if (!body) continue;
+    suggestions.push(body.slice(0, MAX_SUGGESTION_LEN));
+  }
+  return { prose, suggestions, hadMarker: true };
+}
+
 // ── Exports ────────────────────────────────────────────────────
 
 export {
@@ -312,6 +351,7 @@ export {
   buildSystemPrompt,
   parseOOC,
   applyOOC,
+  parseStorytellerReply,
   trimVerbatimWindow,
   ensureNoMinorSexualization,
   MAX_DIRECTOR_NOTES,

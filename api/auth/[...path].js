@@ -21,6 +21,7 @@ import {
   buildSystemPrompt as tavernBuildSystemPrompt,
   parseOOC as tavernParseOOC,
   applyOOC as tavernApplyOOC,
+  parseStorytellerReply as tavernParseStorytellerReply,
   trimVerbatimWindow as tavernTrimVerbatimWindow,
   ensureNoMinorSexualization,
   MEMORY_VERBATIM_WINDOW,
@@ -2594,11 +2595,12 @@ async function tavernWorldTurn(req, res, id) {
     return res.status(502).json({ error: 'llm_failed', message: err?.message?.slice(0, 500) });
   }
   const rawReply = completion.text;
+  const parsedReply = tavernParseStorytellerReply(rawReply);
 
   // Child-safety post-process — silent hard rule.
   const protagonistAppearance = character?.appearance ?? world.characterInline?.appearance ?? null;
   const safety = ensureNoMinorSexualization({
-    reply: rawReply,
+    reply: parsedReply.prose,
     protagonistAppearance,
     worldLore: `${world.setting || ''}\n${world.lore || ''}`,
   });
@@ -2637,8 +2639,8 @@ async function tavernWorldTurn(req, res, id) {
       $push: {
         messages: {
           $each: [
-            { role: 'user', content: userText, timestamp: now, isOOC: false },
-            { role: 'assistant', content: rawReply, timestamp: now, isOOC: false },
+            { role: 'user', content: userText, timestamp: now, isOOC: false, suggestions: [] },
+            { role: 'assistant', content: parsedReply.prose, timestamp: now, isOOC: false, suggestions: parsedReply.suggestions },
           ],
         },
       },
@@ -2668,7 +2670,8 @@ async function tavernWorldTurn(req, res, id) {
     ok: true,
     isOOC: false,
     refusedForSafety: false,
-    replyText: rawReply,
+    replyText: parsedReply.prose,
+    suggestions: parsedReply.suggestions,
     tokensIn: completion.tokensIn,
     tokensOut: completion.tokensOut,
   });
