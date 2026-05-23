@@ -16,6 +16,15 @@ import {
 } from '../_lib/session.js';
 import { getUsers, getKataDb } from '../_lib/mongo.js';
 import { cached } from '../_lib/redis.js';
+import {
+  resolvePromptConfig as tavernResolvePromptConfig,
+  buildSystemPrompt as tavernBuildSystemPrompt,
+  parseOOC as tavernParseOOC,
+  applyOOC as tavernApplyOOC,
+  trimVerbatimWindow as tavernTrimVerbatimWindow,
+  ensureNoMinorSexualization,
+  MEMORY_VERBATIM_WINDOW,
+} from '../_lib/tavern.js';
 
 export const config = { maxDuration: 60 };
 
@@ -1721,6 +1730,11 @@ async function handleKataTavern(req, res, sub) {
   if (path === 'lore/generate' && req.method === 'POST') return tavernLoreGenerate(req, res);
   if (path === 'lore/improve' && req.method === 'POST') return tavernLoreImprove(req, res);
 
+  // Web roleplay turn (Phase T6). Submits player text, returns bot reply
+  // synchronously. Same persistence side-effects as the bot's roleplay path.
+  const turnMatch = path.match(/^world\/([a-f0-9]{24})\/turn$/i);
+  if (turnMatch && req.method === 'POST') return tavernWorldTurn(req, res, turnMatch[1]);
+
   return res.status(404).json({ error: 'tavern_not_found', path });
 }
 
@@ -2155,6 +2169,224 @@ async function tavernLoreImprove(req, res) {
   } catch (err) {
     return res.status(502).json({ error: 'llm_failed', message: err?.message?.slice(0, 500) });
   }
+}
+
+// ── Roleplay turn (Phase T6 — web chat) ───────────────────────
+//
+// Mirrors the bot's runRoleplayTurn:
+//   1. Load world + session + character (creator-only access, except owner)
+//   2. OOC short-circuit on `((...))` — append to directorNotes, no LLM
+//   3. Resolve layered prompt config (per-world > global > engine defaults)
+//   4. Build system prompt, splice last 50 non-OOC turns, fire chatFn
+//   5. Post-process child-safety
+//   6. Persist user + assistant messages, bump messageCount + lastActiveAt
+//
+// Web turns DO NOT cross-post to Discord — the user picks one venue per
+// session. Documented in PLAN-tavern §9.3.
+
+const TAVERN_DEFAULT_MODEL = process.env.YUNWU_TAVERN_MODEL?.trim() || 'grok-4-fast';
+const TAVERN_TURN_TEMPERATURE = 0.85;
+const TAVERN_TURN_MAX_TOKENS = 1200;
+
+async function callTavernChat(systemContent, history, userText, model) {
+  const apiKey = process.env.YUNWU_API_KEY;
+  const baseUrl = process.env.YUNWU_BASE_URL || 'https://yunwu.ai/v1';
+  if (!apiKey) throw new Error('YUNWU_API_KEY not configured');
+  const messages = [
+    { role: 'system', content: systemContent },
+    ...history,
+    { role: 'user', content: userText },
+  ];
+  const r = await fetch(`${baseUrl}/chat/completions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model,
+      messages,
+      temperature: TAVERN_TURN_TEMPERATURE,
+      max_tokens: TAVERN_TURN_MAX_TOKENS,
+    }),
+  });
+  const text = await r.text();
+  if (!r.ok) throw new Error(`yunwu ${r.status}: ${text.slice(0, 500)}`);
+  let data;
+  try { data = JSON.parse(text); } catch { throw new Error('yunwu returned non-JSON'); }
+  return {
+    text: (data?.choices?.[0]?.message?.content ?? '').trim(),
+    tokensIn: data?.usage?.prompt_tokens ?? 0,
+    tokensOut: data?.usage?.completion_tokens ?? 0,
+  };
+}
+
+async function tavernWorldTurn(req, res, id) {
+  const auth = await requireUser(req);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  let body = req.body;
+  if (typeof body === 'string') {
+    try { body = JSON.parse(body); } catch { return res.status(400).json({ error: 'invalid_json' }); }
+  }
+  const userText = (body?.userText ?? '').toString().trim();
+  if (!userText) return res.status(400).json({ error: 'userText_required' });
+  if (userText.length > 4000) return res.status(400).json({ error: 'userText_too_long' });
+
+  const kataDb = await getKataDb();
+  let worldOid;
+  try { worldOid = new ObjectId(id); } catch { return res.status(400).json({ error: 'invalid_id' }); }
+  const world = await kataDb.collection('tavern_worlds').findOne({ _id: worldOid });
+  if (!world) return res.status(404).json({ error: 'not_found' });
+
+  // Web-side participation gate matches Discord-side: creator only on
+  // creator_only worlds (owner can ride along for testing). Anyone-mode
+  // worlds let any logged-in user participate.
+  const myDiscordId = auth.user.providerUserId;
+  if (world.userId !== myDiscordId && world.participation === 'creator_only' && !auth.isOwner) {
+    return res.status(403).json({ error: 'forbidden' });
+  }
+  if (world.isLocked) return res.status(409).json({ error: 'world_locked' });
+
+  const session = await kataDb.collection('tavern_sessions').findOne({ worldId: world._id });
+  if (!session) return res.status(500).json({ error: 'session_missing' });
+
+  // OOC short-circuit — no LLM round-trip.
+  const parsed = tavernParseOOC(userText);
+  if (parsed.isOOC) {
+    const directorNotes = session.directorNotes ?? [];
+    tavernApplyOOC(directorNotes, parsed.body);
+    const userMsg = { role: 'user', content: userText, timestamp: Date.now(), isOOC: true };
+    await kataDb.collection('tavern_sessions').updateOne(
+      { _id: session._id },
+      {
+        $set: { directorNotes, lastActiveAt: new Date() },
+        $push: { messages: userMsg },
+        $inc: { messageCount: 1 },
+      },
+    );
+    await kataDb.collection('tavern_worlds').updateOne(
+      { _id: world._id },
+      { $set: { lastActiveAt: new Date() } },
+    );
+    return res.status(200).json({
+      ok: true,
+      isOOC: true,
+      ackText: `*ghi nhớ:* ${parsed.body.slice(0, 200)}`,
+    });
+  }
+
+  // Resolve layered overrides for this turn.
+  const globalDoc = await kataDb.collection('globalconfigs').findOne({ scope: GLOBAL_SCOPE }, { projection: { tavern: 1 } });
+  const promptConfig = tavernResolvePromptConfig(world.overrides, globalDoc?.tavern);
+
+  // Pull character + build the prompt.
+  const character = world.characterId ? await kataDb.collection('tavern_characters').findOne({ _id: world.characterId }) : null;
+  const systemContent = tavernBuildSystemPrompt(
+    {
+      world: {
+        name: world.name,
+        setting: world.setting,
+        lore: world.lore,
+        rules: world.rules,
+        mode: world.mode,
+        difficulty: world.difficulty,
+      },
+      character: character
+        ? { name: character.name, persona: character.persona, appearance: character.appearance }
+        : null,
+      characterInline: world.characterInline ?? null,
+      summary: session.summary ?? '',
+      directorNotes: (session.directorNotes ?? []).map((d) => d.note),
+    },
+    promptConfig,
+  );
+  const window = tavernTrimVerbatimWindow(session.messages ?? [], MEMORY_VERBATIM_WINDOW);
+
+  let completion;
+  try {
+    completion = await callTavernChat(systemContent, window.messages, userText, TAVERN_DEFAULT_MODEL);
+  } catch (err) {
+    return res.status(502).json({ error: 'llm_failed', message: err?.message?.slice(0, 500) });
+  }
+  const rawReply = completion.text;
+
+  // Child-safety post-process — silent hard rule.
+  const protagonistAppearance = character?.appearance ?? world.characterInline?.appearance ?? null;
+  const safety = ensureNoMinorSexualization({
+    reply: rawReply,
+    protagonistAppearance,
+    worldLore: `${world.setting || ''}\n${world.lore || ''}`,
+  });
+  if (!safety.ok) {
+    // Persist the user message, refuse the assistant turn.
+    await kataDb.collection('tavern_sessions').updateOne(
+      { _id: session._id },
+      {
+        $set: { lastActiveAt: new Date() },
+        $push: { messages: { role: 'user', content: userText, timestamp: Date.now(), isOOC: false } },
+        $inc: { messageCount: 1 },
+      },
+    );
+    try {
+      await kataDb.collection('tavern_audits').insertOne({
+        userId: myDiscordId,
+        action: 'tavern.childSafetyDropWeb',
+        worldId: world._id,
+        details: { reason: safety.reason },
+        createdAt: new Date(),
+      });
+    } catch { /* best-effort */ }
+    return res.status(200).json({
+      ok: true,
+      isOOC: false,
+      refusedForSafety: true,
+      replyText: '*(scene refused — minor sexualization)*',
+    });
+  }
+
+  const now = Date.now();
+  await kataDb.collection('tavern_sessions').updateOne(
+    { _id: session._id },
+    {
+      $set: { lastActiveAt: new Date() },
+      $push: {
+        messages: {
+          $each: [
+            { role: 'user', content: userText, timestamp: now, isOOC: false },
+            { role: 'assistant', content: rawReply, timestamp: now, isOOC: false },
+          ],
+        },
+      },
+      $inc: { messageCount: 2 },
+    },
+  );
+  await kataDb.collection('tavern_worlds').updateOne(
+    { _id: world._id },
+    { $set: { lastActiveAt: new Date() } },
+  );
+
+  // Cost ledger so /kata/admin/cost rolls up tavern web-turn usage too.
+  try {
+    await kataDb.collection('costentries').insertOne({
+      guildId: world.guildId,
+      userId: myDiscordId,
+      service: 'yunwu',
+      model: TAVERN_DEFAULT_MODEL,
+      command: '/tavern-web',
+      tokensIn: completion.tokensIn,
+      tokensOut: completion.tokensOut,
+      timestamp: new Date(),
+    });
+  } catch { /* best-effort */ }
+
+  return res.status(200).json({
+    ok: true,
+    isOOC: false,
+    refusedForSafety: false,
+    replyText: rawReply,
+    tokensIn: completion.tokensIn,
+    tokensOut: completion.tokensOut,
+  });
 }
 
 // ── Admin tavern engine defaults (owner-only) ─────────────────

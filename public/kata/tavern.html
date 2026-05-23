@@ -235,8 +235,8 @@ async function renderWorlds() {
       ? '<span class="lock-badge">🔒 locked</span>'
       : '<span class="live-badge">▶ live</span>';
     return `
-      <div class="row flex items-center gap-4 cursor-pointer" data-world-id="${escapeHtml(w._id)}">
-        <div class="flex-1 min-w-0">
+      <div class="row flex items-center gap-4">
+        <div class="flex-1 min-w-0 cursor-pointer" data-world-id="${escapeHtml(w._id)}">
           <div class="flex items-center gap-3 flex-wrap">
             <div class="text-[15px] font-semibold tracking-tight">${escapeHtml(w.name)}</div>
             ${status}
@@ -246,10 +246,9 @@ async function renderWorlds() {
             ${fmtNum(w.messageCount)} turns · last ${escapeHtml(fmtTime(w.lastActiveAt))} · guild ${escapeHtml(w.guildId)}
           </div>
         </div>
-        <div class="text-right">
-          <div class="mono text-[10px] tracking-label uppercase text-mute">${w.imageGenEnabled ? 'images on' : 'images off'}</div>
-          <div class="mono text-[10px] text-mute">${escapeHtml(w.imageStyle || '—')}</div>
-          <button class="btn mt-1">edit →</button>
+        <div class="flex flex-col gap-1">
+          <a href="tavern-play.html?world=${escapeHtml(w._id)}" class="btn btn-primary" ${w.isLocked ? 'style="opacity:0.5;pointer-events:none"' : ''}>▶ play</a>
+          <button class="btn" data-world-id="${escapeHtml(w._id)}">edit</button>
         </div>
       </div>`;
   }).join('');
@@ -301,6 +300,7 @@ async function renderWorldDetail(id) {
   elContent.innerHTML = `
     <div class="mb-4">
       <button id="back-to-worlds" class="btn">← back to worlds</button>
+      <a href="tavern-play.html?world=${escapeHtml(w._id)}" class="btn btn-primary" style="margin-left:8px">▶ play on web</a>
     </div>
     <div class="grid grid-cols-12 gap-4">
       <div class="col-span-7 space-y-3">
