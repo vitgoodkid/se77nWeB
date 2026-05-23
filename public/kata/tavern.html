@@ -660,11 +660,6 @@ async function renderWorldDetail(id) {
               ${ovField('modeInstructionChat', 'mode · chat', 'Instruction injected when world.mode=chat.', true)}
               ${ovField('modeInstructionRpg', 'mode · rpg', 'Instruction injected when world.mode=rpg.', true)}
             </div>
-            <div class="grid grid-cols-3 gap-3">
-              ${ovField('difficultyEasy', 'difficulty · easy', '', true)}
-              ${ovField('difficultyNormal', 'difficulty · normal', '', true)}
-              ${ovField('difficultyHard', 'difficulty · hard', '', true)}
-            </div>
             ${ovField('outputRules', 'output rules', 'No-prefix / pacing rules block.', true)}
             <div class="grid grid-cols-2 gap-3">
               ${ovField('imagePromptTemplate', 'image prompt template', '{character_base}, {keywords}, {style}', false)}
@@ -674,15 +669,27 @@ async function renderWorldDetail(id) {
             <div class="row" style="background:rgba(138,79,255,0.04);border-color:rgba(138,79,255,0.25)">
               <div class="mono text-[10px] tracking-label uppercase text-purple mb-3">models · per-world</div>
               <div class="grid grid-cols-2 gap-3">
-                ${ovField('chatModel', 'storyteller model', 'kr/claude-opus-4.7 · ...', false)}
-                ${ovField('loreModel', 'lore/rules AI model', 'grok-4-fast', false)}
+                <div>
+                  <div class="mono text-[10px] tracking-label uppercase text-mute mb-1">storyteller model</div>
+                  ${modelPickerHtml({ scope: 'ovmp', key: 'chatModel' }, ovs.chatModel, 'gemini-3.1-pro-preview', TAVERN_CHAT_MODELS_BY_PROVIDER)}
+                </div>
+                <div>
+                  <div class="mono text-[10px] tracking-label uppercase text-mute mb-1">lore/rules AI model</div>
+                  ${modelPickerHtml({ scope: 'ovmp', key: 'loreModel' }, ovs.loreModel, 'grok-4-fast', TAVERN_CHAT_MODELS_BY_PROVIDER)}
+                </div>
               </div>
               <div class="grid grid-cols-2 gap-3 mt-3">
-                ${ovField('worldGenModel', 'whole-world AI model', 'grok-4-fast', false)}
-                ${ovField('subjectModel', 'scene-subject extractor', 'openrouter:google/gemini-2.5-flash-lite', false)}
+                <div>
+                  <div class="mono text-[10px] tracking-label uppercase text-mute mb-1">whole-world AI model</div>
+                  ${modelPickerHtml({ scope: 'ovmp', key: 'worldGenModel' }, ovs.worldGenModel, 'grok-4-fast', TAVERN_CHAT_MODELS_BY_PROVIDER)}
+                </div>
+                <div>
+                  <div class="mono text-[10px] tracking-label uppercase text-mute mb-1">scene-subject extractor</div>
+                  ${modelPickerHtml({ scope: 'ovmp', key: 'subjectModel' }, ovs.subjectModel, 'grok-4-fast', TAVERN_SUBJECT_MODELS_BY_PROVIDER)}
+                </div>
               </div>
               <label class="block mt-3">
-                <div class="mono text-[10px] tracking-label uppercase text-mute mb-1">scene image fal models (chain)</div>
+                <div class="mono text-[10px] tracking-label uppercase text-mute mb-1">scene image fal models (chain, comma-separated)</div>
                 <input class="field" data-ovarr="sceneImageModels" value="${escapeHtml((ovs.sceneImageModels ?? []).join(', '))}" placeholder="fal-ai/flux/schnell, fal-ai/fast-sdxl" />
               </label>
               <label class="block mt-3">
@@ -746,6 +753,10 @@ async function renderWorldDetail(id) {
       const k = el.dataset.ov; const v = el.value;
       if (v && v.trim()) overrides[k] = v;
     });
+    elContent.querySelectorAll('[data-ovmp]').forEach((el) => {
+      const v = (el.value ?? '').trim();
+      if (v) overrides[el.dataset.ovmp] = v;
+    });
     elContent.querySelectorAll('[data-ovarr]').forEach((el) => {
       const arr = el.value.split(',').map((s) => s.trim()).filter(Boolean);
       if (arr.length) overrides[el.dataset.ovarr] = arr;
@@ -759,6 +770,9 @@ async function renderWorldDetail(id) {
     const r = await fetchJson(`/api/kata/tavern/world/${id}`, { method: 'PATCH', body: { overrides } });
     if (r) flash('overrides saved', 'success');
   });
+
+  // Wire the model-picker triggers (storyteller / lore / worldgen / subject).
+  wireModelPickers();
 
   // Cover art handlers.
   const coverSaveBtn = document.getElementById('cover-save-url');
@@ -972,11 +986,6 @@ async function renderDefaults() {
         ${fld('modeInstructionChat', 'mode · chat', '', true)}
         ${fld('modeInstructionRpg', 'mode · rpg', '', true)}
       </div>
-      <div class="grid grid-cols-3 gap-3">
-        ${fld('difficultyEasy', 'difficulty · easy', '', true)}
-        ${fld('difficultyNormal', 'difficulty · normal', '', true)}
-        ${fld('difficultyHard', 'difficulty · hard', '', true)}
-      </div>
       ${fld('outputRules', 'output rules', 'no-prefix, pacing, length...', true)}
       <div class="grid grid-cols-2 gap-3">
         ${fld('imagePromptTemplate', 'image prompt template', '{character_base}, {keywords}, {style}', false)}
@@ -984,31 +993,41 @@ async function renderDefaults() {
       </div>
 
       <div class="row" style="background:rgba(138,79,255,0.04);border-color:rgba(138,79,255,0.25)">
-        <div class="mono text-[10px] tracking-label uppercase text-purple mb-3">models · mặc định grok-4-fast / flux-schnell</div>
-        <div class="space-y-3">
-          <div class="grid grid-cols-2 gap-3">
-            ${fld('chatModel', 'storyteller model (engine default: grok-4-fast)', 'kr/claude-opus-4.7 · openrouter:google/gemini-2.5-pro · ...', false)}
-            ${fld('loreModel', 'lore/rules AI model', 'grok-4-fast', false)}
+        <div class="mono text-[10px] tracking-label uppercase text-purple mb-3">models · global default</div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <div class="mono text-[10px] tracking-label uppercase text-mute mb-1">storyteller model</div>
+            ${modelPickerHtml({ scope: 'tmp', key: 'chatModel' }, t.chatModel, 'gemini-3.1-pro-preview', TAVERN_CHAT_MODELS_BY_PROVIDER)}
           </div>
-          <div class="grid grid-cols-2 gap-3">
-            ${fld('worldGenModel', 'whole-world AI model', 'grok-4-fast', false)}
-            ${fld('subjectModel', 'scene-subject extractor', 'openrouter:google/gemini-2.5-flash-lite', false)}
+          <div>
+            <div class="mono text-[10px] tracking-label uppercase text-mute mb-1">lore/rules AI model</div>
+            ${modelPickerHtml({ scope: 'tmp', key: 'loreModel' }, t.loreModel, 'grok-4-fast', TAVERN_CHAT_MODELS_BY_PROVIDER)}
           </div>
-          <label class="block">
-            <div class="flex items-center justify-between mb-1">
-              <div class="mono text-[10px] tracking-label uppercase text-mute">scene image fal models (comma-separated chain, fallback in order)</div>
-              <span class="mono text-[9px] text-mute2">default: fal-ai/flux/schnell, fal-ai/fast-sdxl</span>
-            </div>
-            <input class="field" data-tarr="sceneImageModels" value="${escapeHtml((t.sceneImageModels ?? []).join(', '))}" placeholder="fal-ai/flux/schnell, fal-ai/fast-sdxl" />
-          </label>
-          <label class="block">
-            <div class="flex items-center justify-between mb-1">
-              <div class="mono text-[10px] tracking-label uppercase text-mute">cover image fal models</div>
-              <span class="mono text-[9px] text-mute2">default: fal-ai/flux/schnell, fal-ai/fast-sdxl</span>
-            </div>
-            <input class="field" data-tarr="coverImageModels" value="${escapeHtml((t.coverImageModels ?? []).join(', '))}" placeholder="fal-ai/flux/schnell, fal-ai/fast-sdxl" />
-          </label>
         </div>
+        <div class="grid grid-cols-2 gap-3 mt-3">
+          <div>
+            <div class="mono text-[10px] tracking-label uppercase text-mute mb-1">whole-world AI model</div>
+            ${modelPickerHtml({ scope: 'tmp', key: 'worldGenModel' }, t.worldGenModel, 'grok-4-fast', TAVERN_CHAT_MODELS_BY_PROVIDER)}
+          </div>
+          <div>
+            <div class="mono text-[10px] tracking-label uppercase text-mute mb-1">scene-subject extractor</div>
+            ${modelPickerHtml({ scope: 'tmp', key: 'subjectModel' }, t.subjectModel, 'grok-4-fast', TAVERN_SUBJECT_MODELS_BY_PROVIDER)}
+          </div>
+        </div>
+        <label class="block mt-3">
+          <div class="flex items-center justify-between mb-1">
+            <div class="mono text-[10px] tracking-label uppercase text-mute">scene image fal models (comma-separated chain, fallback in order)</div>
+            <span class="mono text-[9px] text-mute2">default: fal-ai/flux/schnell, fal-ai/fast-sdxl</span>
+          </div>
+          <input class="field" data-tarr="sceneImageModels" value="${escapeHtml((t.sceneImageModels ?? []).join(', '))}" placeholder="fal-ai/flux/schnell, fal-ai/fast-sdxl" />
+        </label>
+        <label class="block mt-3">
+          <div class="flex items-center justify-between mb-1">
+            <div class="mono text-[10px] tracking-label uppercase text-mute">cover image fal models</div>
+            <span class="mono text-[9px] text-mute2">default: fal-ai/flux/schnell, fal-ai/fast-sdxl</span>
+          </div>
+          <input class="field" data-tarr="coverImageModels" value="${escapeHtml((t.coverImageModels ?? []).join(', '))}" placeholder="fal-ai/flux/schnell, fal-ai/fast-sdxl" />
+        </label>
       </div>
 
       <div class="row" style="background:rgba(138,79,255,0.04);border-color:rgba(138,79,255,0.25)">
@@ -1040,6 +1059,10 @@ async function renderDefaults() {
       const v = el.value;
       body[el.dataset.t] = v.trim() ? v : null;
     });
+    elContent.querySelectorAll('[data-tmp]').forEach((el) => {
+      const v = (el.value ?? '').trim();
+      body[el.dataset.tmp] = v || null;
+    });
     elContent.querySelectorAll('[data-tarr]').forEach((el) => {
       const arr = el.value.split(',').map((s) => s.trim()).filter(Boolean);
       body[el.dataset.tarr] = arr.length ? arr : null;
@@ -1053,9 +1076,104 @@ async function renderDefaults() {
     const r = await fetchJson('/api/kata/admin/tavern-config', { method: 'PATCH', body });
     if (r) flash('defaults saved', 'success');
   });
+
+  wireModelPickers();
 }
 
 function flash(msg, kind) { window.KataShell?.toast(msg, kind ? { kind } : undefined); }
+
+// Tavern model lists per provider, mirrored from the bot's pricing list.
+const TAVERN_CHAT_MODELS_BY_PROVIDER = {
+  yunwu: [
+    'gemini-3.1-pro-preview',
+    'gemini-3-pro-preview',
+    'gemini-3.1-flash-preview',
+    'gemini-3-flash-preview',
+    'gemini-2.5-pro',
+    'gemini-2.5-flash',
+    'claude-opus-4-7',
+    'claude-sonnet-4-6',
+    'claude-haiku-4-5',
+    'grok-4',
+    'grok-4.1',
+    'grok-4-fast',
+  ],
+  '9router': [
+    '9router:kr/claude-opus-4.7',
+  ],
+  openrouter: [
+    'openrouter:google/gemini-3.1-pro-preview',
+    'openrouter:google/gemini-2.5-pro',
+    'openrouter:anthropic/claude-opus-4.1',
+  ],
+};
+// Cheap visual-extractor pool — fast + light. grok-4-fast is the new default
+// per owner request.
+const TAVERN_SUBJECT_MODELS_BY_PROVIDER = {
+  yunwu: [
+    'grok-4-fast',
+    'gemini-2.5-flash-lite',
+    'gemini-3.1-flash-preview',
+  ],
+  openrouter: [
+    'openrouter:google/gemini-2.5-flash-lite',
+    'openrouter:x-ai/grok-4-fast',
+  ],
+};
+const TAVERN_FAL_IMAGE_MODELS_BY_PROVIDER = {
+  'fal.ai': [
+    'fal-ai/flux/schnell',
+    'fal-ai/fast-sdxl',
+    'fal-ai/flux/dev',
+    'fal-ai/nano-banana-pro',
+    'fal-ai/gpt-image-2',
+    'wan/v2.6/image-to-image',
+  ],
+};
+
+// Render a "model picker" control wired against KataShell.modelPicker.
+function modelPickerHtml(field, currentValue, placeholder, byProvider) {
+  const cur = (currentValue ?? '').toString();
+  const display = cur.includes(':') ? cur.split(':').slice(1).join(':') : cur;
+  const label = display || `(default · ${placeholder})`;
+  const providers = JSON.stringify(byProvider).replace(/"/g, '&quot;');
+  return `
+    <div class="flex gap-2 items-center">
+      <input type="hidden" data-${field.scope}="${escapeHtml(field.key)}" value="${escapeHtml(cur)}" />
+      <button type="button" data-mp-trigger="${escapeHtml(field.key)}"
+              data-mp-providers="${providers}"
+              data-mp-placeholder="${escapeHtml(placeholder)}"
+              data-mp-scope="${field.scope}"
+              class="field flex-1 text-left flex items-center justify-between gap-2"
+              style="cursor:pointer">
+        <span data-mp-label>${escapeHtml(label)}</span>
+        <span class="text-mute text-[10px]">▾</span>
+      </button>
+    </div>`;
+}
+
+// Wire all model-picker triggers in elContent (idempotent).
+function wireModelPickers() {
+  elContent.querySelectorAll('[data-mp-trigger]').forEach((btn) => {
+    if (btn.dataset.mpWired) return;
+    btn.dataset.mpWired = '1';
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const key = btn.dataset.mpTrigger;
+      const scope = btn.dataset.mpScope;
+      const hiddenInput = elContent.querySelector(`input[data-${scope}="${key}"]`);
+      const labelEl = btn.querySelector('[data-mp-label]');
+      let byProvider = {};
+      try { byProvider = JSON.parse(btn.dataset.mpProviders.replace(/&quot;/g, '"')); } catch {}
+      window.KataShell.modelPicker(btn, {
+        byProvider,
+        placeholder: btn.dataset.mpPlaceholder || '',
+        hiddenInput,
+        labelEl,
+      });
+    });
+  });
+}
 
 bootstrap();
 </script>

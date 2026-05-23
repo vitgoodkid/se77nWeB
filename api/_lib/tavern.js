@@ -88,12 +88,12 @@ const DEFAULT_IMAGE_PROMPT_TEMPLATE = '{character_base}, {keywords}, {style}';
 const DEFAULT_IMAGE_NEGATIVE_PROMPT = '';
 
 // Model + tuning defaults — must mirror packages/tavern-engine/src/promptDefaults.ts.
-const DEFAULT_CHAT_MODEL = 'grok-4-fast';
+const DEFAULT_CHAT_MODEL = 'gemini-3.1-pro-preview';
 const DEFAULT_LORE_MODEL = 'grok-4-fast';
 const DEFAULT_WORLDGEN_MODEL = 'grok-4-fast';
-const DEFAULT_SUBJECT_MODEL = 'openrouter:google/gemini-2.5-flash-lite';
-const DEFAULT_SCENE_IMAGE_MODELS = ['fal-ai/flux/schnell', 'fal-ai/fast-sdxl'];
-const DEFAULT_COVER_IMAGE_MODELS = ['fal-ai/flux/schnell', 'fal-ai/fast-sdxl'];
+const DEFAULT_SUBJECT_MODEL = 'grok-4-fast';
+const DEFAULT_SCENE_IMAGE_MODELS = ['fal-ai/nano-banana-pro', 'fal-ai/flux/schnell'];
+const DEFAULT_COVER_IMAGE_MODELS = ['fal-ai/nano-banana-pro', 'fal-ai/flux/schnell'];
 const DEFAULT_TURN_TEMPERATURE = 0.85;
 const DEFAULT_TURN_MAX_TOKENS = 1200;
 const DEFAULT_MEMORY_WINDOW_SIZE = 50;

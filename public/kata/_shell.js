@@ -528,7 +528,165 @@
       return openDialog({ kind: 'prompt', message: message, defaultValue: defaultValue || '', ...(opts || {}) });
     },
     toast: showToast,
+    /**
+     * Open a provider-tabbed model picker popup anchored to a trigger
+     * button. Used by Admin (chat/image/video model) and Tavern (storyteller
+     * model, lore model, etc.). The picker writes the chosen value into
+     * `opts.hiddenInput` and updates `opts.labelEl` text.
+     *
+     *   KataShell.modelPicker(buttonEl, {
+     *     byProvider: { yunwu: ['grok-4-fast', 'gemini-3.1-pro-preview'], ... },
+     *     placeholder: 'grok-4-fast',
+     *     hiddenInput: <HTMLInputElement>,
+     *     labelEl: <HTMLElement>,
+     *     onApply: (value) => {},  // optional
+     *   });
+     */
+    modelPicker: openModelPicker,
   };
+
+  function openModelPicker(triggerBtn, opts) {
+    const byProvider = opts.byProvider || {};
+    const providers = Object.keys(byProvider);
+    if (providers.length === 0) return;
+    const placeholder = opts.placeholder || '';
+    const hiddenInput = opts.hiddenInput;
+    const labelEl = opts.labelEl;
+    const accent = window.KataShell.getAccent();
+    const currentValue = (hiddenInput && hiddenInput.value) || '';
+
+    let activeProvider = providers[0];
+    for (const p of providers) {
+      if ((byProvider[p] || []).includes(currentValue)) { activeProvider = p; break; }
+    }
+
+    const pop = document.createElement('div');
+    pop.style.cssText = [
+      'position:absolute', 'z-index:1100', 'min-width:340px',
+      'background:rgba(13,10,8,0.95)', 'border:1px solid rgba(255,255,255,0.10)',
+      'border-radius:10px', 'padding:8px',
+      'backdrop-filter:blur(8px)',
+      'box-shadow:0 8px 24px rgba(0,0,0,0.45)',
+    ].join(';');
+
+    const r = triggerBtn.getBoundingClientRect();
+    pop.style.left = (r.left + window.scrollX) + 'px';
+    pop.style.top = (r.bottom + window.scrollY + 6) + 'px';
+    pop.style.width = Math.max(r.width, 340) + 'px';
+
+    function render() {
+      pop.innerHTML = '';
+      const tabs = document.createElement('div');
+      tabs.style.cssText = 'display:flex;gap:4px;margin-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.06);padding-bottom:6px';
+      for (const p of providers) {
+        const t = document.createElement('button');
+        t.type = 'button';
+        t.textContent = p;
+        t.style.cssText = [
+          'font-family:"JetBrains Mono", ui-monospace, monospace',
+          'font-size:10px', 'letter-spacing:0.18em', 'text-transform:uppercase',
+          'padding:6px 12px', 'border-radius:6px', 'border:none', 'cursor:pointer',
+          p === activeProvider ? 'background:rgba(245,237,224,0.10);color:#f5ede0' : 'background:transparent;color:rgba(245,237,224,0.5)',
+        ].join(';');
+        t.addEventListener('click', () => { activeProvider = p; render(); });
+        tabs.appendChild(t);
+      }
+      pop.appendChild(tabs);
+
+      const list = byProvider[activeProvider] || [];
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'max-height:280px;overflow-y:auto;margin-bottom:8px;display:flex;flex-direction:column;gap:2px';
+
+      const def = document.createElement('button');
+      def.type = 'button';
+      def.textContent = `(use default · ${placeholder || '—'})`;
+      def.style.cssText = [
+        'font-family:"JetBrains Mono", ui-monospace, monospace',
+        'font-size:11px', 'text-align:left',
+        'background:rgba(13,10,8,0.6)', 'border:1px solid rgba(255,255,255,0.10)',
+        'border-radius:6px', 'padding:9px 12px', 'cursor:pointer',
+        !currentValue ? `border-color:${accent};color:#f5ede0` : 'color:rgba(245,237,224,0.5)',
+      ].join(';');
+      def.addEventListener('click', () => apply(''));
+      wrap.appendChild(def);
+
+      for (const m of list) {
+        const row = document.createElement('button');
+        row.type = 'button';
+        row.textContent = m.includes(':') ? m.split(':').slice(1).join(':') : m;
+        const isCur = m === currentValue;
+        row.style.cssText = [
+          'font-family:"JetBrains Mono", ui-monospace, monospace',
+          'font-size:12px', 'text-align:left', 'cursor:pointer',
+          'background:' + (isCur ? `${accent}11` : 'rgba(13,10,8,0.6)'),
+          'border:1px solid ' + (isCur ? accent : 'rgba(255,255,255,0.08)'),
+          'border-radius:6px', 'padding:9px 12px', 'color:#f5ede0',
+        ].join(';');
+        row.addEventListener('click', () => apply(m));
+        wrap.appendChild(row);
+      }
+      pop.appendChild(wrap);
+
+      const custom = document.createElement('div');
+      custom.style.cssText = 'display:flex;gap:6px';
+      const inp = document.createElement('input');
+      inp.type = 'text';
+      inp.placeholder = 'custom model id (vd: 9router:kr/...)';
+      inp.style.cssText = [
+        'font-family:"JetBrains Mono", ui-monospace, monospace', 'font-size:11px', 'flex:1',
+        'background:rgba(13,10,8,0.6)', 'border:1px solid rgba(255,255,255,0.10)',
+        'border-radius:8px', 'padding:8px 12px', 'color:#f5ede0', 'outline:none',
+      ].join(';');
+      const setBtn = document.createElement('button');
+      setBtn.type = 'button'; setBtn.textContent = 'use';
+      setBtn.style.cssText = [
+        'font-family:"JetBrains Mono", ui-monospace, monospace',
+        'font-size:10px', 'letter-spacing:0.18em', 'text-transform:uppercase',
+        'padding:8px 14px', 'border-radius:8px', 'border:1px solid ' + accent + '70',
+        'background:' + accent + '20', 'color:#f5ede0', 'cursor:pointer', 'font-weight:700',
+      ].join(';');
+      setBtn.addEventListener('click', () => { const v = inp.value.trim(); if (v) apply(v); });
+      inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); setBtn.click(); } });
+      custom.appendChild(inp); custom.appendChild(setBtn);
+      pop.appendChild(custom);
+    }
+
+    function apply(v) {
+      if (hiddenInput) hiddenInput.value = v;
+      if (labelEl) {
+        const disp = v && v.includes(':') ? v.split(':').slice(1).join(':') : v;
+        labelEl.textContent = disp || `(default · ${placeholder || '—'})`;
+      }
+      if (typeof opts.onApply === 'function') opts.onApply(v);
+      close();
+    }
+    function close() {
+      if (pop.parentElement) pop.parentElement.removeChild(pop);
+      document.removeEventListener('click', onOutside, true);
+    }
+    function onOutside(e) {
+      if (pop.contains(e.target) || triggerBtn.contains(e.target)) return;
+      close();
+    }
+
+    render();
+    document.body.appendChild(pop);
+    setTimeout(() => document.addEventListener('click', onOutside, true), 0);
+  }
+
+  function ensureDialogStyles() {
+    if (document.getElementById('kata-dialog-styles')) return;
+    var s = document.createElement('style');
+    s.id = 'kata-dialog-styles';
+    s.textContent = [
+      '@keyframes kdFadeIn { from { opacity:0 } to { opacity:1 } }',
+      '@keyframes kdFadeOut { from { opacity:1 } to { opacity:0 } }',
+      '@keyframes kdPop { from { transform: translateY(8px) scale(0.98); opacity:0 } to { transform: translateY(0) scale(1); opacity:1 } }',
+      '@keyframes kdToastIn { from { transform: translateY(20px); opacity:0 } to { transform: translateY(0); opacity:1 } }',
+      '@keyframes kdToastOut { from { transform: translateY(0); opacity:1 } to { transform: translateY(8px); opacity:0 } }',
+    ].join('\n');
+    document.head.appendChild(s);
+  }
 
   // ── Dialog implementation (vanilla, no deps) ──────────────────
   // Matches the kata palette: panel bg, mono kicker, ink button. Returns
@@ -711,20 +869,6 @@
       ensureDialogStyles();
       if (input) setTimeout(function () { input.focus(); input.select && input.select(); }, 30);
     });
-  }
-
-  function ensureDialogStyles() {
-    if (document.getElementById('kata-dialog-styles')) return;
-    var s = document.createElement('style');
-    s.id = 'kata-dialog-styles';
-    s.textContent = [
-      '@keyframes kdFadeIn { from { opacity:0 } to { opacity:1 } }',
-      '@keyframes kdFadeOut { from { opacity:1 } to { opacity:0 } }',
-      '@keyframes kdPop { from { transform: translateY(8px) scale(0.98); opacity:0 } to { transform: translateY(0) scale(1); opacity:1 } }',
-      '@keyframes kdToastIn { from { transform: translateY(20px); opacity:0 } to { transform: translateY(0); opacity:1 } }',
-      '@keyframes kdToastOut { from { transform: translateY(0); opacity:1 } to { transform: translateY(8px); opacity:0 } }',
-    ].join('\n');
-    document.head.appendChild(s);
   }
 
   // Toast (fire-and-forget). Replaces in-line `flash()` helpers.
