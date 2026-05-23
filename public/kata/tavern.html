@@ -214,6 +214,8 @@ document.querySelectorAll('[data-tab]').forEach(a => {
 async function renderWorlds() {
   const detailId = params.get('world');
   if (detailId) return renderWorldDetail(detailId);
+  const isNew = params.get('new') === '1';
+  if (isNew) return renderWorldCreate();
   elContent.innerHTML = '<div class="mono text-[11px] text-mute">loading…</div>';
   const data = await fetchJson('/api/kata/tavern/me/worlds');
   if (!data) return;
@@ -221,12 +223,28 @@ async function renderWorlds() {
   const worlds = data.worlds ?? [];
   elCounts.textContent = `${worlds.length} world${worlds.length === 1 ? '' : 's'}`;
 
+  elActions.innerHTML = '<a href="?tab=worlds&new=1" id="world-new-btn" class="btn btn-primary">+ new world</a>';
+  document.getElementById('world-new-btn').addEventListener('click', (e) => {
+    e.preventDefault();
+    params.set('new', '1');
+    history.replaceState(null, '', '?tab=worlds&new=1');
+    renderWorldCreate();
+  });
+
   if (worlds.length === 0) {
     elContent.innerHTML = `
       <div class="row text-center py-12">
         <div class="text-[14px] text-mute">Chưa có world nào.</div>
-        <div class="mono text-[10px] text-mute2 mt-2">Tạo trên Discord bằng <code class="text-ink">/worldcreate</code></div>
+        <div class="mono text-[10px] text-mute2 mt-2">Tạo trên web bằng <a href="?tab=worlds&new=1" class="text-purple hover:underline" data-go-new>+ new world</a> hoặc trên Discord bằng <code class="text-ink">/worldcreate</code></div>
       </div>`;
+    document.querySelectorAll('[data-go-new]').forEach((a) => {
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        params.set('new', '1');
+        history.replaceState(null, '', '?tab=worlds&new=1');
+        renderWorldCreate();
+      });
+    });
     return;
   }
 
@@ -260,6 +278,209 @@ async function renderWorlds() {
       history.replaceState(null, '', `?tab=worlds&world=${id}`);
       renderWorldDetail(id);
     });
+  });
+}
+
+async function renderWorldCreate() {
+  elContent.innerHTML = '<div class="mono text-[11px] text-mute">loading character library…</div>';
+  elActions.innerHTML = '';
+  elCounts.textContent = 'tạo world mới';
+  // Pull character library so user can pick a protagonist.
+  const charData = await fetchJson('/api/kata/tavern/character');
+  if (!charData) return;
+  clearAuthWarn();
+  const chars = charData.characters ?? [];
+
+  elContent.innerHTML = `
+    <div class="row max-w-3xl">
+      <div class="flex items-center justify-between mb-4">
+        <div class="mono text-[10px] tracking-label uppercase text-purple">new world · web</div>
+        <button id="cancel-new" class="btn">cancel</button>
+      </div>
+
+      <div class="space-y-3">
+        <label class="block">
+          <div class="mono text-[10px] tracking-label uppercase text-mute mb-1">name *</div>
+          <input class="field" data-n="name" maxlength="100" placeholder="Vd: Học viện Chân Lực" />
+        </label>
+
+        <div class="grid grid-cols-3 gap-3">
+          <label class="block">
+            <div class="mono text-[10px] tracking-label uppercase text-mute mb-1">mode *</div>
+            <select class="field" data-n="mode">
+              <option value="chat">chat (1-1 NPC)</option>
+              <option value="rpg">rpg (narrator)</option>
+            </select>
+          </label>
+          <label class="block">
+            <div class="mono text-[10px] tracking-label uppercase text-mute mb-1">difficulty</div>
+            <select class="field" data-n="difficulty">
+              <option value="easy">easy</option>
+              <option value="normal" selected>normal</option>
+              <option value="hard">hard</option>
+            </select>
+          </label>
+          <label class="block">
+            <div class="mono text-[10px] tracking-label uppercase text-mute mb-1">participation</div>
+            <select class="field" data-n="participation">
+              <option value="creator_only" selected>creator_only</option>
+              <option value="anyone">anyone</option>
+            </select>
+          </label>
+        </div>
+
+        <label class="block">
+          <div class="mono text-[10px] tracking-label uppercase text-mute mb-1">setting *</div>
+          <textarea class="field" data-n="setting" rows="3" maxlength="1500" placeholder="Bối cảnh nơi câu chuyện diễn ra (1-3 đoạn)."></textarea>
+        </label>
+
+        <label class="block">
+          <div class="mono text-[10px] tracking-label uppercase text-mute mb-1">lore</div>
+          <textarea class="field" data-n="lore" rows="8" maxlength="30000" placeholder="Lịch sử, các phe phái, sự kiện đã xảy ra. Có thể để trống."></textarea>
+        </label>
+        <div class="flex gap-2">
+          <button class="btn" data-ai="lore-fix">AI rewrite (FIX)</button>
+          <button class="btn" data-ai="lore-gen">AI write from brief…</button>
+        </div>
+
+        <label class="block">
+          <div class="mono text-[10px] tracking-label uppercase text-mute mb-1">rules</div>
+          <textarea class="field" data-n="rules" rows="4" maxlength="1500" placeholder="Vd: phép thuật cần năng lượng, đàn ông không được mặc trắng."></textarea>
+        </label>
+        <div class="flex gap-2">
+          <button class="btn" data-ai="rules-fix">AI rewrite (FIX)</button>
+          <button class="btn" data-ai="rules-gen">AI write from brief…</button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <label class="block">
+            <div class="mono text-[10px] tracking-label uppercase text-mute mb-1">main character (library)</div>
+            <select class="field" data-n="characterId">
+              <option value="">— anonymous / inline —</option>
+              ${chars.map((c) => `<option value="${escapeHtml(c._id)}">${escapeHtml(c.name)}</option>`).join('')}
+            </select>
+          </label>
+          <label class="block">
+            <div class="mono text-[10px] tracking-label uppercase text-mute mb-1">guild (tag)</div>
+            <input class="field" data-n="guildId" maxlength="40" value="web" placeholder="web (default)" />
+          </label>
+        </div>
+
+        <details class="row" style="margin-top: 4px">
+          <summary class="flex items-center gap-2">
+            <span class="chev mono text-mute">▸</span>
+            <div class="mono text-[10px] tracking-label uppercase text-mute">inline character (nếu không pick từ library)</div>
+          </summary>
+          <div class="space-y-3 mt-3">
+            <label class="block">
+              <div class="mono text-[10px] tracking-label uppercase text-mute mb-1">name</div>
+              <input class="field" data-n="inlineName" maxlength="200" />
+            </label>
+            <label class="block">
+              <div class="mono text-[10px] tracking-label uppercase text-mute mb-1">appearance</div>
+              <textarea class="field" data-n="inlineAppearance" rows="3" maxlength="1500" placeholder="Mô tả ngoại hình + tính cách ngắn."></textarea>
+            </label>
+          </div>
+        </details>
+
+        <div class="grid grid-cols-2 gap-3">
+          <label class="block">
+            <div class="mono text-[10px] tracking-label uppercase text-mute mb-1">image style</div>
+            <input class="field" data-n="imageStyle" maxlength="200" value="cinematic detailed" />
+          </label>
+          <label class="block">
+            <div class="mono text-[10px] tracking-label uppercase text-mute mb-1">scene images</div>
+            <select class="field" data-n="imageGenEnabled">
+              <option value="false" selected>off (web default — fal cost)</option>
+              <option value="true">on</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 mt-5 pt-4 border-t border-line">
+        <button id="create-cancel" class="btn">cancel</button>
+        <button id="create-submit" class="btn btn-primary">create world</button>
+      </div>
+    </div>`;
+
+  function backToList() {
+    params.delete('new');
+    history.replaceState(null, '', '?tab=worlds');
+    renderWorlds();
+  }
+  document.getElementById('cancel-new').addEventListener('click', backToList);
+  document.getElementById('create-cancel').addEventListener('click', backToList);
+
+  // AI helpers — reuse the same /lore/* endpoints used by world detail.
+  elContent.querySelectorAll('[data-ai]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const tag = btn.dataset.ai; // "lore-fix" | "lore-gen" | "rules-fix" | "rules-gen"
+      const [kind, op] = tag.split('-');
+      const ta = elContent.querySelector(`[data-n="${kind}"]`);
+      if (op === 'gen') {
+        const brief = prompt(`Brief cho ${kind} (1-3 câu mô tả):`);
+        if (!brief) return;
+        btn.textContent = 'thinking…'; btn.disabled = true;
+        const mode = elContent.querySelector('[data-n="mode"]').value;
+        const difficulty = elContent.querySelector('[data-n="difficulty"]').value;
+        const r = await fetchJson('/api/kata/tavern/lore/generate', {
+          method: 'POST',
+          body: { brief, kind, mode, difficulty },
+        });
+        btn.disabled = false; btn.textContent = 'AI write from brief…';
+        if (r?.text) ta.value = r.text;
+      } else {
+        const draft = ta.value.trim();
+        if (!draft) { alert('Field rỗng — không có gì để FIX.'); return; }
+        btn.textContent = 'thinking…'; btn.disabled = true;
+        const r = await fetchJson('/api/kata/tavern/lore/improve', {
+          method: 'POST',
+          body: { draft, kind },
+        });
+        btn.disabled = false; btn.textContent = 'AI rewrite (FIX)';
+        if (r?.text) ta.value = r.text;
+      }
+    });
+  });
+
+  document.getElementById('create-submit').addEventListener('click', async () => {
+    const get = (k) => elContent.querySelector(`[data-n="${k}"]`)?.value ?? '';
+    const body = {
+      name: get('name').trim(),
+      setting: get('setting').trim(),
+      lore: get('lore').trim(),
+      rules: get('rules').trim(),
+      mode: get('mode'),
+      difficulty: get('difficulty'),
+      participation: get('participation'),
+      imageStyle: get('imageStyle').trim() || 'cinematic detailed',
+      imageGenEnabled: get('imageGenEnabled') === 'true',
+      guildId: get('guildId').trim() || 'web',
+    };
+    if (!body.name) return alert('Name bắt buộc');
+    if (!body.setting) return alert('Setting bắt buộc');
+    const charId = get('characterId');
+    if (charId) body.characterId = charId;
+    const inlineName = get('inlineName').trim();
+    const inlineAppearance = get('inlineAppearance').trim();
+    if (!charId && (inlineName || inlineAppearance)) {
+      body.characterInline = {
+        name: inlineName || null,
+        appearance: inlineAppearance || null,
+      };
+    }
+    const submitBtn = document.getElementById('create-submit');
+    submitBtn.disabled = true; submitBtn.textContent = 'creating…';
+    const r = await fetchJson('/api/kata/tavern/world', { method: 'POST', body });
+    submitBtn.disabled = false; submitBtn.textContent = 'create world';
+    if (r?.world) {
+      // Drop straight into the new world's detail.
+      params.delete('new');
+      params.set('world', r.world._id);
+      history.replaceState(null, '', `?tab=worlds&world=${r.world._id}`);
+      renderWorldDetail(r.world._id);
+    }
   });
 }
 

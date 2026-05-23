@@ -1705,6 +1705,8 @@ async function handleKataTavern(req, res, sub) {
 
   if (path === 'me/worlds' && req.method === 'GET') return tavernMyWorlds(req, res);
 
+  if (path === 'world' && req.method === 'POST') return tavernWorldCreate(req, res);
+
   const worldMatch = path.match(/^world\/([a-f0-9]{24})(?:\/(end))?$/i);
   if (worldMatch) {
     const [, id, action] = worldMatch;
@@ -1739,6 +1741,156 @@ async function handleKataTavern(req, res, sub) {
 }
 
 // ── Worlds ──────────────────────────────────────────────────────
+
+// Web-created worlds aren't tied to a Discord forum thread. We synthesize a
+// `threadId` with a `web:` prefix so the unique-index on TavernWorld.threadId
+// stays satisfied without colliding with real Discord snowflakes.
+function makeWebThreadId() {
+  return `web:${Math.random().toString(36).slice(2, 10)}${Date.now().toString(36)}`;
+}
+
+const WORLD_NAME_MAX = 100;
+const WORLD_SETTING_MAX = 1500;
+const WORLD_LORE_MAX = 30_000;
+const WORLD_RULES_MAX = 1500;
+const IMAGE_STYLE_MAX = 200;
+
+async function tavernWorldCreate(req, res) {
+  const auth = await requireUser(req);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  let body = req.body;
+  if (typeof body === 'string') {
+    try { body = JSON.parse(body); } catch { return res.status(400).json({ error: 'invalid_json' }); }
+  }
+  if (!body || typeof body !== 'object') return res.status(400).json({ error: 'invalid_body' });
+
+  const errors = [];
+  function strReq(name, max) {
+    const v = body[name];
+    if (typeof v !== 'string' || !v.trim()) return errors.push(`${name} required`);
+    if (v.length > max) return errors.push(`${name} > ${max} chars`);
+  }
+  function strOpt(name, max) {
+    if (!(name in body)) return;
+    const v = body[name];
+    if (typeof v !== 'string') return errors.push(`${name} must be string`);
+    if (v.length > max) return errors.push(`${name} > ${max} chars`);
+  }
+  strReq('name', WORLD_NAME_MAX);
+  strReq('setting', WORLD_SETTING_MAX);
+  strOpt('lore', WORLD_LORE_MAX);
+  strOpt('rules', WORLD_RULES_MAX);
+  strOpt('imageStyle', IMAGE_STYLE_MAX);
+  if (!['chat', 'rpg'].includes(body.mode)) errors.push('mode invalid (chat | rpg)');
+  if ('difficulty' in body && !['easy', 'normal', 'hard'].includes(body.difficulty)) {
+    errors.push('difficulty invalid');
+  }
+  if ('participation' in body && !['creator_only', 'anyone'].includes(body.participation)) {
+    errors.push('participation invalid');
+  }
+  if ('imageGenEnabled' in body && typeof body.imageGenEnabled !== 'boolean') {
+    errors.push('imageGenEnabled must be boolean');
+  }
+
+  // Optional character link or inline shape.
+  let characterOid = null;
+  if (body.characterId) {
+    try { characterOid = new ObjectId(body.characterId); }
+    catch { errors.push('invalid characterId'); }
+  }
+  let characterInline = null;
+  if (body.characterInline && typeof body.characterInline === 'object') {
+    const ci = body.characterInline;
+    if (ci.name && typeof ci.name !== 'string') errors.push('characterInline.name must be string');
+    if (ci.appearance && typeof ci.appearance !== 'string') errors.push('characterInline.appearance must be string');
+    characterInline = {
+      name: typeof ci.name === 'string' ? ci.name.slice(0, 200) : null,
+      appearance: typeof ci.appearance === 'string' ? ci.appearance.slice(0, 1500) : null,
+    };
+  }
+
+  if (errors.length) return res.status(400).json({ error: 'validation_failed', details: errors });
+
+  const kataDb = await getKataDb();
+
+  // Verify the character exists and belongs to the user (if linked).
+  if (characterOid) {
+    const c = await kataDb.collection('tavern_characters').findOne({ _id: characterOid });
+    if (!c) return res.status(400).json({ error: 'character_not_found' });
+    if (c.userId !== auth.user.providerUserId && !auth.isOwner) {
+      return res.status(403).json({ error: 'character_not_yours' });
+    }
+  }
+
+  const now = new Date();
+  const worldDoc = {
+    userId: auth.user.providerUserId,
+    // Web-only worlds aren't scoped to a Discord guild. We tag them with a
+    // sentinel so the bot's per-guild aggregations skip them cleanly.
+    guildId: typeof body.guildId === 'string' && body.guildId ? body.guildId : 'web',
+    name: body.name.trim(),
+    setting: body.setting,
+    lore: body.lore ?? '',
+    rules: body.rules ?? '',
+    characterId: characterOid,
+    characterInline,
+    mode: body.mode,
+    difficulty: body.difficulty ?? 'normal',
+    visibility: 'public',
+    participation: body.participation ?? 'creator_only',
+    imageGenEnabled: body.imageGenEnabled ?? false, // default off for web — fal cost
+    imageStyle: body.imageStyle ?? 'cinematic detailed',
+    forumChannelId: '',
+    threadId: makeWebThreadId(),
+    appliedTagIds: [],
+    isLocked: false,
+    overrides: {},
+    lastActiveAt: now,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  let inserted;
+  try {
+    inserted = await kataDb.collection('tavern_worlds').insertOne(worldDoc);
+  } catch (err) {
+    return res.status(500).json({ error: 'world_insert_failed', message: err?.message });
+  }
+
+  // Empty session shell — opening generation is on-demand via /turn (the
+  // first reply will use the world's lore as system context). Keeping the
+  // create flow snappy — no LLM call inside this endpoint.
+  await kataDb.collection('tavern_sessions').insertOne({
+    worldId: inserted.insertedId,
+    userId: auth.user.providerUserId,
+    threadId: worldDoc.threadId,
+    messages: [],
+    summary: '',
+    directorNotes: [],
+    pendingImageJobId: null,
+    messageCount: 0,
+    lastSummaryAt: null,
+    startedAt: now,
+    lastActiveAt: now,
+    endedAt: null,
+    createdAt: now,
+    updatedAt: now,
+  });
+
+  try {
+    await kataDb.collection('auditlogs').insertOne({
+      actorUserId: auth.user.providerUserId,
+      action: 'tavern.worldCreateWeb',
+      details: { worldId: String(inserted.insertedId), name: worldDoc.name, mode: worldDoc.mode },
+      createdAt: now,
+    });
+  } catch { /* best-effort */ }
+
+  return res.status(200).json({
+    ok: true,
+    world: { ...worldDoc, _id: inserted.insertedId },
+  });
+}
 
 async function tavernMyWorlds(req, res) {
   const auth = await requireUser(req);
