@@ -262,6 +262,18 @@ async function handleKata(req, res) {
     return handleKataAdminGlobalConfigPatch(req, res);
   }
 
+  // /api/kata/admin/tavern-config (GET, PATCH) — owner-only tavern engine defaults
+  if (kataPath === 'admin/tavern-config') {
+    if (req.method === 'GET') return handleKataAdminTavernConfigGet(req, res);
+    if (req.method === 'PATCH') return handleKataAdminTavernConfigPatch(req, res);
+    return res.status(405).json({ error: 'method_not_allowed' });
+  }
+
+  // /api/kata/tavern/* — tavern-specific routes (worlds, characters, lore AI)
+  if (kataPath.startsWith('tavern/') || kataPath === 'tavern') {
+    return handleKataTavern(req, res, kataPath.replace(/^tavern\/?/, ''));
+  }
+
   // /api/kata/server/:guildId  → GET overview + config
   // /api/kata/server/:guildId/config (PATCH) → write config + redis publish
   // /api/kata/server/:guildId/logs?type=… (GET) → paginated logs
@@ -1612,4 +1624,602 @@ async function handleKataAdminGlobalConfigPatch(req, res) {
 
   const fresh = await kataDb.collection('globalconfigs').findOne({ scope: GLOBAL_SCOPE });
   return res.status(200).json({ ok: true, config: fresh });
+}
+
+// ────────────────────────────────────────────────────────────────
+// /api/kata/tavern/*  — tavern roleplay system
+// ────────────────────────────────────────────────────────────────
+//
+// Per PLAN-tavern.md §9. Surface:
+//
+//   GET    /tavern/me/worlds                → user's worlds across guilds
+//   GET    /tavern/world/:id                → world detail + recent messages
+//   PATCH  /tavern/world/:id                → edit world fields + overrides
+//   POST   /tavern/world/:id/end            → /endstory equivalent (lock)
+//   GET    /tavern/character                → user's character library
+//   POST   /tavern/character                → create
+//   PATCH  /tavern/character/:id            → edit
+//   DELETE /tavern/character/:id            → delete (rejected if used)
+//   POST   /tavern/lore/generate            → AI write lore/rules from brief
+//   POST   /tavern/lore/improve             → AI improve a draft
+//
+// Everything below scopes by `userId === user.providerUserId` (Discord id).
+// Owner sees everyone's data on the dedicated /admin/* surface, not here.
+
+const TAVERN_FIELD_LIMITS = {
+  name: 100,
+  setting: 1500,
+  lore: 30_000,
+  rules: 1500,
+  imageStyle: 200,
+  imageBasePrompt: 600,
+  greeting: 600,
+  persona: 1500,
+  appearance: 1500,
+  storytellerSystemPrompt: 16_000,
+  modeInstruction: 4_000,
+  difficulty: 4_000,
+  outputRules: 4_000,
+  imagePromptTemplate: 1_500,
+  imageNegativePrompt: 1_500,
+};
+
+const TAVERN_OVERRIDE_FIELDS = [
+  ['storytellerSystemPrompt', 'storytellerSystemPrompt'],
+  ['modeInstructionChat', 'modeInstruction'],
+  ['modeInstructionRpg', 'modeInstruction'],
+  ['difficultyEasy', 'difficulty'],
+  ['difficultyNormal', 'difficulty'],
+  ['difficultyHard', 'difficulty'],
+  ['outputRules', 'outputRules'],
+  ['imagePromptTemplate', 'imagePromptTemplate'],
+  ['imageNegativePrompt', 'imageNegativePrompt'],
+];
+
+async function requireUser(req) {
+  const session = readSession(req);
+  if (!session?.uid) return { error: 'unauthenticated', status: 401 };
+  let userOid;
+  try { userOid = new ObjectId(session.uid); }
+  catch { return { error: 'bad_session', status: 401 }; }
+  const user = await (await getUsers()).findOne({ _id: userOid });
+  if (!user) return { error: 'user_not_found', status: 401 };
+  if (user.provider !== 'discord' || !user.providerUserId) {
+    return { error: 'discord_required', status: 403 };
+  }
+  const ownerId = process.env.OWNER_DISCORD_ID?.trim() || '397342895327150080';
+  return { user, isOwner: user.providerUserId === ownerId, ownerId };
+}
+
+async function handleKataTavern(req, res, sub) {
+  const path = sub.replace(/^\/+|\/+$/g, '');
+
+  if (path === 'me/worlds' && req.method === 'GET') return tavernMyWorlds(req, res);
+
+  const worldMatch = path.match(/^world\/([a-f0-9]{24})(?:\/(end))?$/i);
+  if (worldMatch) {
+    const [, id, action] = worldMatch;
+    if (action === 'end' && req.method === 'POST') return tavernWorldEnd(req, res, id);
+    if (!action && req.method === 'GET') return tavernWorldGet(req, res, id);
+    if (!action && req.method === 'PATCH') return tavernWorldPatch(req, res, id);
+    return res.status(405).json({ error: 'method_not_allowed' });
+  }
+
+  if (path === 'character') {
+    if (req.method === 'GET') return tavernCharacterList(req, res);
+    if (req.method === 'POST') return tavernCharacterCreate(req, res);
+    return res.status(405).json({ error: 'method_not_allowed' });
+  }
+  const charMatch = path.match(/^character\/([a-f0-9]{24})$/i);
+  if (charMatch) {
+    const [, id] = charMatch;
+    if (req.method === 'PATCH') return tavernCharacterPatch(req, res, id);
+    if (req.method === 'DELETE') return tavernCharacterDelete(req, res, id);
+    return res.status(405).json({ error: 'method_not_allowed' });
+  }
+
+  if (path === 'lore/generate' && req.method === 'POST') return tavernLoreGenerate(req, res);
+  if (path === 'lore/improve' && req.method === 'POST') return tavernLoreImprove(req, res);
+
+  return res.status(404).json({ error: 'tavern_not_found', path });
+}
+
+// ── Worlds ──────────────────────────────────────────────────────
+
+async function tavernMyWorlds(req, res) {
+  const auth = await requireUser(req);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  const kataDb = await getKataDb();
+  const worlds = await kataDb
+    .collection('tavern_worlds')
+    .find({ userId: auth.user.providerUserId })
+    .project({ name: 1, guildId: 1, mode: 1, difficulty: 1, isLocked: 1, threadId: 1, lastActiveAt: 1, imageGenEnabled: 1, imageStyle: 1, createdAt: 1 })
+    .sort({ lastActiveAt: -1 })
+    .limit(100)
+    .toArray();
+  // Pull turn counts from sessions in one query.
+  const ids = worlds.map((w) => w._id);
+  const sessions = await kataDb
+    .collection('tavern_sessions')
+    .find({ worldId: { $in: ids } }, { projection: { worldId: 1, messageCount: 1 } })
+    .toArray();
+  const countMap = new Map(sessions.map((s) => [String(s.worldId), s.messageCount ?? 0]));
+  return res.status(200).json({
+    worlds: worlds.map((w) => ({ ...w, messageCount: countMap.get(String(w._id)) ?? 0 })),
+  });
+}
+
+async function loadTavernWorldOrFail(kataDb, id, auth) {
+  let worldOid;
+  try { worldOid = new ObjectId(id); } catch { return { error: 'invalid_id', status: 400 }; }
+  const world = await kataDb.collection('tavern_worlds').findOne({ _id: worldOid });
+  if (!world) return { error: 'not_found', status: 404 };
+  if (world.userId !== auth.user.providerUserId && !auth.isOwner) {
+    return { error: 'forbidden', status: 403 };
+  }
+  return { world };
+}
+
+async function tavernWorldGet(req, res, id) {
+  const auth = await requireUser(req);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  const kataDb = await getKataDb();
+  const r = await loadTavernWorldOrFail(kataDb, id, auth);
+  if (r.error) return res.status(r.status).json({ error: r.error });
+
+  const session = await kataDb
+    .collection('tavern_sessions')
+    .findOne({ worldId: r.world._id });
+
+  // Truncate to last 200 non-OOC messages so the response stays bounded.
+  const allMessages = (session?.messages ?? []).filter((m) => !m.isOOC);
+  const messages = allMessages.slice(-200);
+
+  let character = null;
+  if (r.world.characterId) {
+    character = await kataDb.collection('tavern_characters').findOne({ _id: r.world.characterId });
+  }
+
+  return res.status(200).json({
+    world: r.world,
+    character,
+    summary: session?.summary ?? '',
+    directorNotes: session?.directorNotes ?? [],
+    messageCount: session?.messageCount ?? allMessages.length,
+    messages,
+  });
+}
+
+async function tavernWorldPatch(req, res, id) {
+  const auth = await requireUser(req);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  const kataDb = await getKataDb();
+  const r = await loadTavernWorldOrFail(kataDb, id, auth);
+  if (r.error) return res.status(r.status).json({ error: r.error });
+
+  let body = req.body;
+  if (typeof body === 'string') {
+    try { body = JSON.parse(body); } catch { return res.status(400).json({ error: 'invalid_json' }); }
+  }
+  if (!body || typeof body !== 'object') return res.status(400).json({ error: 'invalid_body' });
+
+  const set = {};
+  const errors = [];
+
+  function strField(name, max) {
+    if (!(name in body)) return;
+    const v = body[name];
+    if (typeof v !== 'string') return errors.push(`${name} must be string`);
+    if (v.length > max) return errors.push(`${name} > ${max} chars`);
+    set[name] = v;
+  }
+
+  strField('name', TAVERN_FIELD_LIMITS.name);
+  strField('setting', TAVERN_FIELD_LIMITS.setting);
+  strField('lore', TAVERN_FIELD_LIMITS.lore);
+  strField('rules', TAVERN_FIELD_LIMITS.rules);
+  strField('imageStyle', TAVERN_FIELD_LIMITS.imageStyle);
+
+  if ('imageGenEnabled' in body) {
+    if (typeof body.imageGenEnabled !== 'boolean') errors.push('imageGenEnabled must be boolean');
+    else set.imageGenEnabled = body.imageGenEnabled;
+  }
+  if ('participation' in body) {
+    if (!['creator_only', 'anyone'].includes(body.participation)) errors.push('participation invalid');
+    else set.participation = body.participation;
+  }
+  if ('difficulty' in body) {
+    if (!['easy', 'normal', 'hard'].includes(body.difficulty)) errors.push('difficulty invalid');
+    else set.difficulty = body.difficulty;
+  }
+
+  // Overrides subdoc — null on a field clears it (drops back to global/default).
+  if ('overrides' in body) {
+    const ov = body.overrides;
+    if (ov === null) {
+      set.overrides = {};
+    } else if (typeof ov !== 'object') {
+      errors.push('overrides must be object or null');
+    } else {
+      const cleaned = {};
+      for (const [field, kind] of TAVERN_OVERRIDE_FIELDS) {
+        if (!(field in ov)) continue;
+        const v = ov[field];
+        if (v === null || v === '') continue; // unset
+        if (typeof v !== 'string') {
+          errors.push(`overrides.${field} must be string`);
+          continue;
+        }
+        if (v.length > TAVERN_FIELD_LIMITS[kind]) {
+          errors.push(`overrides.${field} > ${TAVERN_FIELD_LIMITS[kind]} chars`);
+          continue;
+        }
+        cleaned[field] = v;
+      }
+      set.overrides = cleaned;
+    }
+  }
+
+  if (errors.length) return res.status(400).json({ error: 'validation_failed', details: errors });
+  if (Object.keys(set).length === 0) return res.status(400).json({ error: 'empty_update' });
+
+  set.lastActiveAt = new Date();
+  await kataDb.collection('tavern_worlds').updateOne({ _id: r.world._id }, { $set: set });
+
+  try {
+    await kataDb.collection('auditlogs').insertOne({
+      actorUserId: auth.user.providerUserId,
+      action: 'tavern.worldEditWeb',
+      details: { worldId: String(r.world._id), keys: Object.keys(set) },
+      createdAt: new Date(),
+    });
+  } catch { /* best-effort */ }
+
+  const fresh = await kataDb.collection('tavern_worlds').findOne({ _id: r.world._id });
+  return res.status(200).json({ ok: true, world: fresh });
+}
+
+async function tavernWorldEnd(req, res, id) {
+  const auth = await requireUser(req);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  const kataDb = await getKataDb();
+  const r = await loadTavernWorldOrFail(kataDb, id, auth);
+  if (r.error) return res.status(r.status).json({ error: r.error });
+  if (r.world.isLocked) return res.status(400).json({ error: 'already_locked' });
+
+  await kataDb.collection('tavern_worlds').updateOne(
+    { _id: r.world._id },
+    { $set: { isLocked: true, lastActiveAt: new Date() } },
+  );
+  await kataDb.collection('tavern_sessions').updateOne(
+    { worldId: r.world._id },
+    { $set: { endedAt: new Date() } },
+  );
+  // Discord side-effects (thread lock + archive divider) are bot-only — the
+  // bot's tavern world cache invalidates on next message hit; the locked
+  // post will simply stop accepting bot replies.
+  try {
+    await kataDb.collection('auditlogs').insertOne({
+      actorUserId: auth.user.providerUserId,
+      action: 'tavern.endStoryWeb',
+      details: { worldId: String(r.world._id), worldName: r.world.name },
+      createdAt: new Date(),
+    });
+  } catch { /* best-effort */ }
+  return res.status(200).json({ ok: true });
+}
+
+// ── Character library ──────────────────────────────────────────
+
+async function tavernCharacterList(req, res) {
+  const auth = await requireUser(req);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  const kataDb = await getKataDb();
+  const chars = await kataDb
+    .collection('tavern_characters')
+    .find({ userId: auth.user.providerUserId })
+    .sort({ updatedAt: -1 })
+    .limit(200)
+    .toArray();
+  return res.status(200).json({ characters: chars });
+}
+
+function validateCharacterBody(body, errors, partial = false) {
+  function fld(name, max, required) {
+    if (!(name in body)) {
+      if (required && !partial) errors.push(`${name} required`);
+      return;
+    }
+    const v = body[name];
+    if (typeof v !== 'string') return errors.push(`${name} must be string`);
+    if (required && !v.trim()) return errors.push(`${name} required`);
+    if (v.length > max) return errors.push(`${name} > ${max} chars`);
+  }
+  fld('name', TAVERN_FIELD_LIMITS.name, true);
+  fld('persona', TAVERN_FIELD_LIMITS.persona, false);
+  fld('appearance', TAVERN_FIELD_LIMITS.appearance, false);
+  fld('greeting', TAVERN_FIELD_LIMITS.greeting, false);
+  fld('imageBasePrompt', TAVERN_FIELD_LIMITS.imageBasePrompt, false);
+}
+
+async function tavernCharacterCreate(req, res) {
+  const auth = await requireUser(req);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  let body = req.body;
+  if (typeof body === 'string') {
+    try { body = JSON.parse(body); } catch { return res.status(400).json({ error: 'invalid_json' }); }
+  }
+  if (!body || typeof body !== 'object') return res.status(400).json({ error: 'invalid_body' });
+  const errors = [];
+  validateCharacterBody(body, errors, false);
+  if (errors.length) return res.status(400).json({ error: 'validation_failed', details: errors });
+
+  const now = new Date();
+  const doc = {
+    userId: auth.user.providerUserId,
+    name: body.name.trim(),
+    persona: body.persona ?? '',
+    appearance: body.appearance ?? '',
+    greeting: body.greeting ?? '',
+    imageBasePrompt: body.imageBasePrompt ?? '',
+    isAdult: true,
+    createdAt: now,
+    updatedAt: now,
+  };
+  const kataDb = await getKataDb();
+  try {
+    const r = await kataDb.collection('tavern_characters').insertOne(doc);
+    return res.status(200).json({ ok: true, character: { ...doc, _id: r.insertedId } });
+  } catch (err) {
+    if (err?.code === 11000) {
+      return res.status(409).json({ error: 'duplicate_name', message: 'You already have a character with that name' });
+    }
+    return res.status(500).json({ error: 'insert_failed', message: err?.message });
+  }
+}
+
+async function tavernCharacterPatch(req, res, id) {
+  const auth = await requireUser(req);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  let charOid;
+  try { charOid = new ObjectId(id); } catch { return res.status(400).json({ error: 'invalid_id' }); }
+  let body = req.body;
+  if (typeof body === 'string') {
+    try { body = JSON.parse(body); } catch { return res.status(400).json({ error: 'invalid_json' }); }
+  }
+  if (!body || typeof body !== 'object') return res.status(400).json({ error: 'invalid_body' });
+  const errors = [];
+  validateCharacterBody(body, errors, true);
+  if (errors.length) return res.status(400).json({ error: 'validation_failed', details: errors });
+
+  const kataDb = await getKataDb();
+  const existing = await kataDb.collection('tavern_characters').findOne({ _id: charOid });
+  if (!existing) return res.status(404).json({ error: 'not_found' });
+  if (existing.userId !== auth.user.providerUserId && !auth.isOwner) {
+    return res.status(403).json({ error: 'forbidden' });
+  }
+
+  const set = { updatedAt: new Date() };
+  for (const k of ['name', 'persona', 'appearance', 'greeting', 'imageBasePrompt']) {
+    if (k in body) set[k] = String(body[k] ?? '');
+  }
+  if (set.name) set.name = set.name.trim();
+
+  try {
+    await kataDb.collection('tavern_characters').updateOne({ _id: charOid }, { $set: set });
+  } catch (err) {
+    if (err?.code === 11000) return res.status(409).json({ error: 'duplicate_name' });
+    return res.status(500).json({ error: 'update_failed', message: err?.message });
+  }
+  const fresh = await kataDb.collection('tavern_characters').findOne({ _id: charOid });
+  return res.status(200).json({ ok: true, character: fresh });
+}
+
+async function tavernCharacterDelete(req, res, id) {
+  const auth = await requireUser(req);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  let charOid;
+  try { charOid = new ObjectId(id); } catch { return res.status(400).json({ error: 'invalid_id' }); }
+  const kataDb = await getKataDb();
+  const existing = await kataDb.collection('tavern_characters').findOne({ _id: charOid });
+  if (!existing) return res.status(404).json({ error: 'not_found' });
+  if (existing.userId !== auth.user.providerUserId && !auth.isOwner) {
+    return res.status(403).json({ error: 'forbidden' });
+  }
+  // Refuse if any world references it — would orphan the protagonist.
+  const inUse = await kataDb.collection('tavern_worlds').findOne(
+    { characterId: charOid },
+    { projection: { _id: 1, name: 1 } },
+  );
+  if (inUse) {
+    return res.status(409).json({
+      error: 'character_in_use',
+      message: `Used by world "${inUse.name}". Update the world first.`,
+    });
+  }
+  await kataDb.collection('tavern_characters').deleteOne({ _id: charOid });
+  return res.status(200).json({ ok: true });
+}
+
+// ── Lore / rules AI ────────────────────────────────────────────
+
+const LORE_GEN_SYS = (mode, difficulty) => [
+  'You are a world-building assistant for a tabletop / roleplay setting.',
+  'Given a short brief from the player, write a rich lore document for the world.',
+  '',
+  'TARGET',
+  `- Mode: ${mode === 'rpg' ? 'RPG / adventure (narrator-driven)' : mode === 'chat' ? 'Chat / 1-1 with NPC' : 'either'}`,
+  `- Difficulty hint: ${difficulty || 'normal'}`,
+  '',
+  'OUTPUT REQUIREMENTS',
+  '- 600-1500 words.',
+  '- Plain prose paragraphs. No markdown headers, no bullet points, no JSON.',
+  '- Cover: setting, key factions, important locations, recent history / current tension, one or two specific NPCs the player will hear about.',
+  '- Do NOT invent the player character.',
+  '- Adult content / dark themes are allowed when the brief asks for them. Sexualized characters must be adults; never a minor in sexual context.',
+  '',
+  'Return only the lore prose.',
+].join('\n');
+
+const LORE_FIX_SYS = `You polish and expand world-building drafts.
+
+- Keep every name, faction, place, and hook the player wrote — do NOT silently delete things.
+- Fix prose flow. Add depth where the draft was thin. Cut repetition.
+- Expand to 600-1500 words if the original was shorter; otherwise stay near original length.
+- Plain prose paragraphs. No markdown headers, no bullets, no JSON.
+- Adult / dark themes stay if present. Only hard rule: no sexualizing minors.
+
+Return only the improved lore prose.`;
+
+const RULES_GEN_SYS = `You write the rules of magic / physics / society for a roleplay world.
+
+- 200-600 words. Plain prose, 3-6 short paragraphs by topic. No bullets, no headers.
+- Be concrete: limits, costs, what a player CAN and CANNOT do. Bias toward constraints.
+- Do not invent the player character.
+- Adult / dark themes allowed. Only hard rule: no sexualizing minors.
+
+Return only the rules prose.`;
+
+const RULES_FIX_SYS = `You polish a player's draft of world rules.
+
+- Keep every constraint the player named. Don't silently relax rules.
+- Make each rule concrete (cost, where it fails, who it applies to).
+- 200-600 words. Plain prose, 3-6 short paragraphs. No bullets, no headers.
+- Adult / dark themes stay if present.
+
+Return only the improved rules prose.`;
+
+async function callYunwuChat(systemPrompt, userContent, maxTokens) {
+  const apiKey = process.env.YUNWU_API_KEY;
+  const baseUrl = process.env.YUNWU_BASE_URL || 'https://yunwu.ai/v1';
+  const model = process.env.YUNWU_TAVERN_LORE_MODEL || 'grok-4-fast';
+  if (!apiKey) throw new Error('YUNWU_API_KEY not configured');
+  const r = await fetch(`${baseUrl}/chat/completions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userContent },
+      ],
+      temperature: 0.85,
+      max_tokens: maxTokens,
+    }),
+  });
+  const text = await r.text();
+  if (!r.ok) throw new Error(`yunwu ${r.status}: ${text.slice(0, 500)}`);
+  let data;
+  try { data = JSON.parse(text); } catch { throw new Error('yunwu returned non-JSON'); }
+  return (data?.choices?.[0]?.message?.content ?? '').trim();
+}
+
+async function tavernLoreGenerate(req, res) {
+  const auth = await requireUser(req);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  let body = req.body;
+  if (typeof body === 'string') {
+    try { body = JSON.parse(body); } catch { return res.status(400).json({ error: 'invalid_json' }); }
+  }
+  const brief = (body?.brief ?? '').toString().trim();
+  if (!brief) return res.status(400).json({ error: 'brief_required' });
+  const kind = body?.kind === 'rules' ? 'rules' : 'lore';
+  const mode = body?.mode === 'rpg' ? 'rpg' : body?.mode === 'chat' ? 'chat' : 'chat';
+  const difficulty = ['easy', 'normal', 'hard'].includes(body?.difficulty) ? body.difficulty : 'normal';
+  const systemPrompt = kind === 'rules' ? RULES_GEN_SYS : LORE_GEN_SYS(mode, difficulty);
+  try {
+    const text = await callYunwuChat(systemPrompt, brief, kind === 'rules' ? 900 : 1800);
+    return res.status(200).json({ ok: true, text });
+  } catch (err) {
+    return res.status(502).json({ error: 'llm_failed', message: err?.message?.slice(0, 500) });
+  }
+}
+
+async function tavernLoreImprove(req, res) {
+  const auth = await requireUser(req);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  let body = req.body;
+  if (typeof body === 'string') {
+    try { body = JSON.parse(body); } catch { return res.status(400).json({ error: 'invalid_json' }); }
+  }
+  const draft = (body?.draft ?? '').toString().trim();
+  if (!draft) return res.status(400).json({ error: 'draft_required' });
+  const kind = body?.kind === 'rules' ? 'rules' : 'lore';
+  const systemPrompt = kind === 'rules' ? RULES_FIX_SYS : LORE_FIX_SYS;
+  try {
+    const text = await callYunwuChat(systemPrompt, draft, kind === 'rules' ? 900 : 1800);
+    return res.status(200).json({ ok: true, text });
+  } catch (err) {
+    return res.status(502).json({ error: 'llm_failed', message: err?.message?.slice(0, 500) });
+  }
+}
+
+// ── Admin tavern engine defaults (owner-only) ─────────────────
+
+const TAVERN_GLOBAL_FIELDS = TAVERN_OVERRIDE_FIELDS;
+
+async function handleKataAdminTavernConfigGet(req, res) {
+  const auth = await requireOwner(req);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error, message: auth.message });
+  const kataDb = await getKataDb();
+  const doc = await kataDb.collection('globalconfigs').findOne({ scope: GLOBAL_SCOPE });
+  return res.status(200).json({ tavern: doc?.tavern ?? {} });
+}
+
+async function handleKataAdminTavernConfigPatch(req, res) {
+  const auth = await requireOwner(req);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error, message: auth.message });
+  let body = req.body;
+  if (typeof body === 'string') {
+    try { body = JSON.parse(body); } catch { return res.status(400).json({ error: 'invalid_json' }); }
+  }
+  if (!body || typeof body !== 'object') return res.status(400).json({ error: 'invalid_body' });
+
+  const set = {};
+  const unset = {};
+  const errors = [];
+
+  for (const [field, kind] of TAVERN_GLOBAL_FIELDS) {
+    if (!(field in body)) continue;
+    const v = body[field];
+    if (v === null || v === '') {
+      unset[`tavern.${field}`] = '';
+      continue;
+    }
+    if (typeof v !== 'string') { errors.push(`${field} must be string`); continue; }
+    if (v.length > TAVERN_FIELD_LIMITS[kind]) {
+      errors.push(`${field} > ${TAVERN_FIELD_LIMITS[kind]} chars`);
+      continue;
+    }
+    set[`tavern.${field}`] = v;
+  }
+
+  if (errors.length) return res.status(400).json({ error: 'validation_failed', details: errors });
+  if (Object.keys(set).length === 0 && Object.keys(unset).length === 0) {
+    return res.status(400).json({ error: 'empty_update' });
+  }
+
+  set.updatedAt = new Date();
+  const kataDb = await getKataDb();
+  const update = { $set: { ...set, scope: GLOBAL_SCOPE } };
+  if (Object.keys(unset).length > 0) update.$unset = unset;
+  await kataDb.collection('globalconfigs').updateOne({ scope: GLOBAL_SCOPE }, update, { upsert: true });
+
+  try {
+    await kataDb.collection('auditlogs').insertOne({
+      actorUserId: auth.user.providerUserId,
+      action: 'tavern.globalConfigUpdate',
+      details: {
+        set: Object.keys(set).filter((k) => k !== 'updatedAt'),
+        unset: Object.keys(unset),
+      },
+      createdAt: new Date(),
+    });
+  } catch { /* best-effort */ }
+
+  const fresh = await kataDb.collection('globalconfigs').findOne({ scope: GLOBAL_SCOPE });
+  return res.status(200).json({ ok: true, tavern: fresh?.tavern ?? {} });
 }
