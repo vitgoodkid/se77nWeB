@@ -3016,43 +3016,117 @@ function makeDottedLandscape(W, H) {
 }
 
 // ═════════════════════════════════════════════════════════════
-// 4. GAME — placeholder
+// 4. GAME — hub of game-adjacent modules. Today: Tavern (KataS roleplay).
 // ═════════════════════════════════════════════════════════════
+const GAME_TILES = [
+  {
+    id: 'tavern',
+    label: 'Tavern',
+    accent: '#8a4fff',
+    glyph: '⌑',
+    tagline: 'Roleplay engine',
+    desc: 'Worlds, characters, lore AI, scene images. Discord + web.',
+    href: '/kata/tavern.html',
+    external: true,
+  },
+];
+
+function readGameSubRoute() {
+  if (typeof window === 'undefined') return null;
+  const segs = window.location.hash.replace(/^#\//, '').split('/').filter(Boolean);
+  // #/game/<sub>
+  return segs[0] === 'game' && segs[1] ? segs[1] : null;
+}
+
 export function GamePanel() {
+  const [sub, setSub] = useState(readGameSubRoute);
+
+  useEffect(() => {
+    function onHash() { setSub(readGameSubRoute()); }
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+
+  // Resolve `#/game/tavern` and friends — open the external dashboard target
+  // in this tab (full-page navigation) so the user lands inside /kata's auth
+  // surface instead of bouncing back here.
+  useEffect(() => {
+    if (!sub) return;
+    const tile = GAME_TILES.find((t) => t.id === sub);
+    if (!tile) return;
+    if (tile.external) {
+      window.location.href = tile.href;
+    }
+  }, [sub]);
+
   return (
     <Panel padding={0} style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%' }}>
       <div style={{ padding: '16px 20px', borderBottom: '1px solid ' + COLORS.line }}>
-        <Kicker>GAME · WIP</Kicker>
-        <div className="mono" style={{ fontSize: 18, fontWeight: 700, marginTop: 4 }}>Coming soon</div>
+        <Kicker>GAME · HUB</Kicker>
+        <div className="mono" style={{ fontSize: 18, fontWeight: 700, marginTop: 4 }}>Pick a venue</div>
       </div>
-      <div style={{ flex: 1, display: 'grid', placeItems: 'center', padding: 40 }}>
-        <div style={{ textAlign: 'center', maxWidth: 480 }}>
+
+      <div style={{ flex: 1, padding: 24, overflow: 'auto' }}>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+          gap: 14,
+        }}>
+          {GAME_TILES.map((t) => (
+            <a
+              key={t.id}
+              href={`#/game/${t.id}`}
+              onClick={(e) => {
+                if (t.external) {
+                  e.preventDefault();
+                  window.location.href = t.href;
+                }
+              }}
+              style={{
+                display: 'flex', flexDirection: 'column', gap: 10,
+                padding: 18, borderRadius: 14,
+                border: `1px solid ${COLORS.line}`,
+                background: `linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0))`,
+                color: COLORS.text, textDecoration: 'none',
+                transition: 'border-color 160ms ease, transform 160ms ease',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = t.accent; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = COLORS.line; }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <span className="mono" style={{
+                  fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase',
+                  color: COLORS.muted,
+                }}>{t.tagline}</span>
+                <span style={{ color: t.accent, fontSize: 22, lineHeight: 1 }}>{t.glyph}</span>
+              </div>
+              <div className="mono" style={{
+                fontSize: 22, fontWeight: 800, letterSpacing: '-0.02em', color: COLORS.text,
+              }}>{t.label}</div>
+              <div style={{ fontSize: 13, color: COLORS.muted, lineHeight: 1.55 }}>{t.desc}</div>
+              <div style={{ marginTop: 'auto', paddingTop: 8 }}>
+                <span className="mono" style={{
+                  fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase',
+                  color: t.accent,
+                }}>open →</span>
+              </div>
+            </a>
+          ))}
+
+          {/* Placeholder slot for upcoming modules — keeps the grid feeling alive
+              instead of looking like a 1-tile dead-end. */}
           <div style={{
-            width: 120, height: 120, margin: '0 auto 24px',
-            border: `1px dashed ${COLORS.line}`, borderRadius: 16,
-            display: 'grid', placeItems: 'center', position: 'relative',
+            display: 'flex', flexDirection: 'column', justifyContent: 'center',
+            padding: 18, borderRadius: 14,
+            border: `1px dashed ${COLORS.line}`,
+            color: COLORS.muted, opacity: 0.55,
           }}>
-            <svg width="68" height="68" viewBox="0 0 64 64" fill="none">
-              <rect x="6" y="20" width="52" height="28" rx="14" stroke={COLORS.red} strokeWidth="2" opacity="0.6" />
-              <circle cx="20" cy="34" r="2.5" fill={COLORS.green} />
-              <circle cx="44" cy="30" r="2" fill={COLORS.gold} />
-              <circle cx="48" cy="38" r="2" fill={COLORS.red} />
-              <line x1="14" y1="30" x2="14" y2="38" stroke={COLORS.text} strokeWidth="2" strokeLinecap="round" />
-              <line x1="10" y1="34" x2="18" y2="34" stroke={COLORS.text} strokeWidth="2" strokeLinecap="round" />
-            </svg>
-          </div>
-          <div className="mono" style={{
-            fontSize: 13, letterSpacing: '0.18em', textTransform: 'uppercase',
-            color: COLORS.text, fontWeight: 700, marginBottom: 8,
-          }}>Game hub</div>
-          <div style={{ fontSize: 14, color: COLORS.muted, lineHeight: 1.6 }}>
-            Mini-games, leaderboards và arcade collection sẽ xuất hiện ở đây.
-            Hiện tại slot này là <em style={{ color: COLORS.gold, fontStyle: 'normal' }}>placeholder</em> theo design brief.
-          </div>
-          <div style={{ marginTop: 22, display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Pill color={COLORS.red}>idle</Pill>
-            <Pill color={COLORS.green}>browser</Pill>
-            <Pill color={COLORS.gold}>multiplayer</Pill>
+            <div className="mono" style={{
+              fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase',
+            }}>more · soon</div>
+            <div style={{ fontSize: 13, marginTop: 6 }}>
+              Mini-games, leaderboards, arcade — placeholder per design brief.
+            </div>
           </div>
         </div>
       </div>
