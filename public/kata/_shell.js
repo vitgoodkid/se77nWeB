@@ -516,7 +516,243 @@
     getLockIdx: function () { return state.lockIdx; },
     setLockIdx: setLockIdx,
     getAccent: function () { return TRACKS[activeIdx()].palette[0]; },
+    // ── Dialog primitives ─────────────────────────────────────────
+    // Native browser prompt/confirm/alert dialogs look like this:
+    //   "se77n.com says..."
+    // — they break the visual style of the page and on Firefox they
+    // even include an "always block dialogs from this site" checkbox.
+    // Pages should call these instead.
+    alert: function (message, opts) { return openDialog({ kind: 'alert', message: message, ...(opts || {}) }); },
+    confirm: function (message, opts) { return openDialog({ kind: 'confirm', message: message, ...(opts || {}) }); },
+    prompt: function (message, defaultValue, opts) {
+      return openDialog({ kind: 'prompt', message: message, defaultValue: defaultValue || '', ...(opts || {}) });
+    },
+    toast: showToast,
   };
+
+  // ── Dialog implementation (vanilla, no deps) ──────────────────
+  // Matches the kata palette: panel bg, mono kicker, ink button. Returns
+  // a promise:
+  //   alert   → resolves null (always)
+  //   confirm → resolves true (ok) | false (cancel)
+  //   prompt  → resolves string | null (cancel)
+  //   custom  → resolves whatever the caller's resolver returned
+
+  function openDialog(opts) {
+    return new Promise(function (resolve) {
+      var accent = window.KataShell.getAccent();
+      var overlay = document.createElement('div');
+      overlay.setAttribute('data-kata-dialog', '');
+      overlay.style.cssText = [
+        'position:fixed', 'inset:0', 'z-index:1000',
+        'background:rgba(13,10,8,0.78)', 'backdrop-filter:blur(8px)',
+        'display:flex', 'align-items:center', 'justify-content:center',
+        'padding:24px', 'animation:kdFadeIn 140ms ease',
+        'font-family:Geist, system-ui, sans-serif',
+      ].join(';');
+
+      var panel = document.createElement('div');
+      panel.style.cssText = [
+        'min-width:340px', 'max-width:520px', 'width:100%',
+        'background:linear-gradient(180deg, rgba(28,24,19,0.95), rgba(21,17,13,0.95))',
+        'border:1px solid rgba(255,255,255,0.10)',
+        'border-radius:14px',
+        'box-shadow:0 24px 60px rgba(0,0,0,0.55)',
+        'padding:22px 22px 18px',
+        'color:#f5ede0',
+        'animation:kdPop 160ms cubic-bezier(.2,.9,.3,1.05)',
+      ].join(';');
+
+      var titleLabel = opts.title || (
+        opts.kind === 'confirm' ? 'Xác nhận' :
+        opts.kind === 'prompt'  ? 'Nhập' :
+        'Thông báo'
+      );
+      var kicker = document.createElement('div');
+      kicker.style.cssText = [
+        'font-family:"JetBrains Mono", ui-monospace, monospace',
+        'font-size:10px', 'letter-spacing:0.22em', 'text-transform:uppercase',
+        'color:' + accent, 'margin-bottom:10px',
+      ].join(';');
+      kicker.textContent = titleLabel;
+      panel.appendChild(kicker);
+
+      var msg = document.createElement('div');
+      msg.style.cssText = 'font-size:14px; line-height:1.55; color:rgba(245,237,224,0.92); white-space:pre-wrap';
+      msg.textContent = opts.message || '';
+      panel.appendChild(msg);
+
+      var input = null;
+      if (opts.kind === 'prompt') {
+        input = document.createElement('input');
+        input.type = 'text';
+        input.value = opts.defaultValue || '';
+        input.placeholder = opts.placeholder || '';
+        input.style.cssText = [
+          'width:100%', 'margin-top:14px',
+          'background:rgba(13,10,8,0.65)',
+          'border:1px solid rgba(255,255,255,0.10)',
+          'border-radius:8px', 'padding:9px 12px',
+          'color:#f5ede0',
+          'font-family:Geist, system-ui, sans-serif', 'font-size:14px',
+          'outline:none',
+        ].join(';');
+        input.addEventListener('focus', function () { input.style.borderColor = accent + '88'; });
+        input.addEventListener('blur',  function () { input.style.borderColor = 'rgba(255,255,255,0.10)'; });
+        panel.appendChild(input);
+      } else if (opts.kind === 'longprompt') {
+        input = document.createElement('textarea');
+        input.value = opts.defaultValue || '';
+        input.placeholder = opts.placeholder || '';
+        input.rows = opts.rows || 4;
+        input.style.cssText = [
+          'width:100%', 'margin-top:14px',
+          'background:rgba(13,10,8,0.65)',
+          'border:1px solid rgba(255,255,255,0.10)',
+          'border-radius:8px', 'padding:10px 12px',
+          'color:#f5ede0',
+          'font-family:Geist, system-ui, sans-serif', 'font-size:14px',
+          'line-height:1.5', 'resize:vertical', 'outline:none',
+        ].join(';');
+        input.addEventListener('focus', function () { input.style.borderColor = accent + '88'; });
+        input.addEventListener('blur',  function () { input.style.borderColor = 'rgba(255,255,255,0.10)'; });
+        panel.appendChild(input);
+      }
+
+      var actions = document.createElement('div');
+      actions.style.cssText = 'display:flex; justify-content:flex-end; gap:8px; margin-top:18px';
+
+      function btn(label, primary, danger) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = label;
+        var bg = 'transparent';
+        var bd = 'rgba(255,255,255,0.12)';
+        var col = 'rgba(245,237,224,0.7)';
+        if (primary) { bg = 'rgba(255,255,255,0.04)'; bd = accent + '70'; col = '#f5ede0'; }
+        if (danger)  { col = '#E04545'; bd = 'rgba(224,69,69,0.35)'; }
+        b.style.cssText = [
+          'display:inline-flex', 'align-items:center', 'justify-content:center',
+          'height:34px', 'padding:0 18px', 'border-radius:999px',
+          'border:1px solid ' + bd, 'background:' + bg, 'color:' + col,
+          'font-family:"JetBrains Mono", ui-monospace, monospace',
+          'font-size:11px', 'letter-spacing:0.18em', 'text-transform:uppercase',
+          'cursor:pointer', 'transition:all 120ms ease',
+        ].join(';');
+        b.addEventListener('mouseenter', function () { b.style.background = 'rgba(245,237,224,0.06)'; });
+        b.addEventListener('mouseleave', function () { b.style.background = bg; });
+        return b;
+      }
+
+      function close(result) {
+        if (closed) return;
+        closed = true;
+        overlay.style.animation = 'kdFadeOut 120ms ease forwards';
+        setTimeout(function () {
+          if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+        }, 130);
+        document.removeEventListener('keydown', onKey);
+        resolve(result);
+      }
+      var closed = false;
+      function onKey(e) {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          close(opts.kind === 'confirm' || opts.kind === 'prompt' || opts.kind === 'longprompt' ? null : null);
+          if (opts.kind === 'confirm') resolve(false);
+        } else if (e.key === 'Enter' && e.ctrlKey && opts.kind === 'longprompt') {
+          e.preventDefault();
+          close((input && input.value) || '');
+        } else if (e.key === 'Enter' && opts.kind === 'prompt') {
+          e.preventDefault();
+          close((input && input.value) || '');
+        } else if (e.key === 'Enter' && opts.kind === 'alert') {
+          e.preventDefault();
+          close(null);
+        } else if (e.key === 'Enter' && opts.kind === 'confirm') {
+          e.preventDefault();
+          close(true);
+        }
+      }
+      document.addEventListener('keydown', onKey);
+
+      if (opts.kind === 'alert') {
+        var ok = btn(opts.okLabel || 'OK', true, false);
+        ok.addEventListener('click', function () { close(null); });
+        actions.appendChild(ok);
+      } else if (opts.kind === 'confirm') {
+        var cancel = btn(opts.cancelLabel || 'huỷ', false, false);
+        var confirmBtn = btn(opts.okLabel || 'đồng ý', true, !!opts.danger);
+        cancel.addEventListener('click', function () { close(false); });
+        confirmBtn.addEventListener('click', function () { close(true); });
+        actions.appendChild(cancel);
+        actions.appendChild(confirmBtn);
+      } else if (opts.kind === 'prompt' || opts.kind === 'longprompt') {
+        var cancel2 = btn(opts.cancelLabel || 'huỷ', false, false);
+        var confirm2 = btn(opts.okLabel || 'OK', true, false);
+        cancel2.addEventListener('click', function () { close(null); });
+        confirm2.addEventListener('click', function () { close((input && input.value) || ''); });
+        actions.appendChild(cancel2);
+        actions.appendChild(confirm2);
+      }
+
+      panel.appendChild(actions);
+      overlay.appendChild(panel);
+      // Click on backdrop to dismiss (alert / confirm / prompt all behave
+      // the same as ESC).
+      overlay.addEventListener('click', function (e) {
+        if (e.target === overlay) {
+          if (opts.kind === 'confirm') close(false);
+          else if (opts.kind === 'prompt' || opts.kind === 'longprompt') close(null);
+          else close(null);
+        }
+      });
+      document.body.appendChild(overlay);
+      ensureDialogStyles();
+      if (input) setTimeout(function () { input.focus(); input.select && input.select(); }, 30);
+    });
+  }
+
+  function ensureDialogStyles() {
+    if (document.getElementById('kata-dialog-styles')) return;
+    var s = document.createElement('style');
+    s.id = 'kata-dialog-styles';
+    s.textContent = [
+      '@keyframes kdFadeIn { from { opacity:0 } to { opacity:1 } }',
+      '@keyframes kdFadeOut { from { opacity:1 } to { opacity:0 } }',
+      '@keyframes kdPop { from { transform: translateY(8px) scale(0.98); opacity:0 } to { transform: translateY(0) scale(1); opacity:1 } }',
+      '@keyframes kdToastIn { from { transform: translateY(20px); opacity:0 } to { transform: translateY(0); opacity:1 } }',
+      '@keyframes kdToastOut { from { transform: translateY(0); opacity:1 } to { transform: translateY(8px); opacity:0 } }',
+    ].join('\n');
+    document.head.appendChild(s);
+  }
+
+  // Toast (fire-and-forget). Replaces in-line `flash()` helpers.
+  function showToast(message, opts) {
+    opts = opts || {};
+    ensureDialogStyles();
+    var accent = window.KataShell.getAccent();
+    var color = opts.kind === 'error' ? '#E04545' : opts.kind === 'success' ? '#5BA868' : accent;
+    var bg = opts.kind === 'error' ? 'rgba(224,69,69,0.12)' : opts.kind === 'success' ? 'rgba(91,168,104,0.12)' : (accent + '22');
+    var bd = opts.kind === 'error' ? 'rgba(224,69,69,0.35)' : opts.kind === 'success' ? 'rgba(91,168,104,0.35)' : (accent + '55');
+    var el = document.createElement('div');
+    el.textContent = message;
+    el.style.cssText = [
+      'position:fixed', 'bottom:24px', 'right:24px', 'z-index:1100',
+      'background:' + bg, 'border:1px solid ' + bd, 'color:#f5ede0',
+      'padding:10px 16px', 'border-radius:999px',
+      'font-family:"JetBrains Mono", ui-monospace, monospace',
+      'font-size:11px', 'letter-spacing:0.18em', 'text-transform:uppercase',
+      'animation:kdToastIn 180ms ease',
+      'box-shadow:0 8px 24px rgba(0,0,0,0.35)',
+    ].join(';');
+    void color;
+    document.body.appendChild(el);
+    setTimeout(function () {
+      el.style.animation = 'kdToastOut 180ms ease forwards';
+      setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 200);
+    }, opts.durationMs || 2400);
+  }
 
   // ── Boot ────────────────────────────────────────────────────────
   function boot() {

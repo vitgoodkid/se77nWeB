@@ -78,11 +78,38 @@ const DEFAULT_OUTPUT_RULES = [
 const DEFAULT_IMAGE_PROMPT_TEMPLATE = '{character_base}, {keywords}, {style}';
 const DEFAULT_IMAGE_NEGATIVE_PROMPT = '';
 
+// Model + tuning defaults — must mirror packages/tavern-engine/src/promptDefaults.ts.
+const DEFAULT_CHAT_MODEL = 'grok-4-fast';
+const DEFAULT_LORE_MODEL = 'grok-4-fast';
+const DEFAULT_WORLDGEN_MODEL = 'grok-4-fast';
+const DEFAULT_SUBJECT_MODEL = 'openrouter:google/gemini-2.5-flash-lite';
+const DEFAULT_SCENE_IMAGE_MODELS = ['fal-ai/flux/schnell', 'fal-ai/fast-sdxl'];
+const DEFAULT_COVER_IMAGE_MODELS = ['fal-ai/flux/schnell', 'fal-ai/fast-sdxl'];
+const DEFAULT_TURN_TEMPERATURE = 0.85;
+const DEFAULT_TURN_MAX_TOKENS = 1200;
+const DEFAULT_MEMORY_WINDOW_SIZE = 50;
+
 // ── Layered config resolution ─────────────────────────────────
 
 function pickOverlay(...layers) {
   for (const v of layers) {
     if (typeof v === 'string' && v.trim()) return v;
+  }
+  return undefined;
+}
+
+function pickArrOverlay(...layers) {
+  for (const v of layers) {
+    if (Array.isArray(v) && v.length > 0 && v.every((s) => typeof s === 'string' && s.trim())) {
+      return v.map((s) => s.trim());
+    }
+  }
+  return undefined;
+}
+
+function pickNumOverlay(...layers) {
+  for (const v of layers) {
+    if (typeof v === 'number' && Number.isFinite(v)) return v;
   }
   return undefined;
 }
@@ -110,6 +137,20 @@ function resolvePromptConfig(worldOverrides, globalOverrides) {
     imageNegativePrompt:
       pickOverlay(w.imageNegativePrompt, g.imageNegativePrompt)
       ?? DEFAULT_IMAGE_NEGATIVE_PROMPT,
+    chatModel: pickOverlay(w.chatModel, g.chatModel) ?? DEFAULT_CHAT_MODEL,
+    loreModel: pickOverlay(w.loreModel, g.loreModel) ?? DEFAULT_LORE_MODEL,
+    worldGenModel: pickOverlay(w.worldGenModel, g.worldGenModel) ?? DEFAULT_WORLDGEN_MODEL,
+    subjectModel: pickOverlay(w.subjectModel, g.subjectModel) ?? DEFAULT_SUBJECT_MODEL,
+    sceneImageModels:
+      pickArrOverlay(w.sceneImageModels, g.sceneImageModels) ?? DEFAULT_SCENE_IMAGE_MODELS.slice(),
+    coverImageModels:
+      pickArrOverlay(w.coverImageModels, g.coverImageModels) ?? DEFAULT_COVER_IMAGE_MODELS.slice(),
+    turnTemperature:
+      pickNumOverlay(w.turnTemperature, g.turnTemperature) ?? DEFAULT_TURN_TEMPERATURE,
+    turnMaxTokens:
+      pickNumOverlay(w.turnMaxTokens, g.turnMaxTokens) ?? DEFAULT_TURN_MAX_TOKENS,
+    memoryWindowSize:
+      pickNumOverlay(w.memoryWindowSize, g.memoryWindowSize) ?? DEFAULT_MEMORY_WINDOW_SIZE,
   };
 }
 
@@ -257,6 +298,15 @@ export {
   DEFAULT_OUTPUT_RULES,
   DEFAULT_IMAGE_PROMPT_TEMPLATE,
   DEFAULT_IMAGE_NEGATIVE_PROMPT,
+  DEFAULT_CHAT_MODEL,
+  DEFAULT_LORE_MODEL,
+  DEFAULT_WORLDGEN_MODEL,
+  DEFAULT_SUBJECT_MODEL,
+  DEFAULT_SCENE_IMAGE_MODELS,
+  DEFAULT_COVER_IMAGE_MODELS,
+  DEFAULT_TURN_TEMPERATURE,
+  DEFAULT_TURN_MAX_TOKENS,
+  DEFAULT_MEMORY_WINDOW_SIZE,
   // helpers
   resolvePromptConfig,
   buildSystemPrompt,

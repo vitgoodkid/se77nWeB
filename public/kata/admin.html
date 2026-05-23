@@ -543,11 +543,14 @@ async function renderSettings() {
   // "custom…" button on model dropdowns: prompt for a free-text model id
   // so we can set a model the dropdown doesn't list yet.
   document.querySelectorAll('[data-custom]').forEach((b) => {
-    b.addEventListener('click', () => {
+    b.addEventListener('click', async () => {
       const key = b.getAttribute('data-custom');
       const sel = document.querySelector(`[data-field="${key}"]`);
       const current = sel ? sel.value : '';
-      const next = window.prompt(`Custom model id for ${key}:`, current);
+      const next = await window.KataShell.prompt(`Custom model id cho ${key}:`, current, {
+        title: 'Custom model',
+        placeholder: 'vd: openrouter:google/gemini-2.5-flash-lite',
+      });
       if (next == null) return;
       const trimmed = next.trim();
       if (!sel) return;

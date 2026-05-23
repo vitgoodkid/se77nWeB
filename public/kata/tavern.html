@@ -439,7 +439,10 @@ async function renderWorldCreate() {
       const [kind, op] = tag.split('-');
       const ta = elContent.querySelector(`[data-n="${kind}"]`);
       if (op === 'gen') {
-        const brief = prompt(`Brief cho ${kind} (1-3 câu mô tả):`);
+        const brief = await window.KataShell.prompt(`Brief cho ${kind} (1-3 câu mô tả):`, '', {
+          title: kind === 'lore' ? 'AI write lore' : 'AI write rules',
+          placeholder: 'Vd: học viện thần thoại, NPC chính là một con rồng già đã giả người',
+        });
         if (!brief) return;
         btn.textContent = 'thinking…'; btn.disabled = true;
         const mode = elContent.querySelector('[data-n="mode"]').value;
@@ -452,7 +455,7 @@ async function renderWorldCreate() {
         if (r?.text) ta.value = r.text;
       } else {
         const draft = ta.value.trim();
-        if (!draft) { alert('Field rỗng — không có gì để FIX.'); return; }
+        if (!draft) { window.KataShell.alert('Field rỗng — không có gì để FIX.'); return; }
         btn.textContent = 'thinking…'; btn.disabled = true;
         const r = await fetchJson('/api/kata/tavern/lore/improve', {
           method: 'POST',
@@ -510,8 +513,8 @@ async function renderWorldCreate() {
     };
     const coverUrl = get('coverImageUrl').trim();
     if (coverUrl) body.coverImageUrl = coverUrl;
-    if (!body.name) return alert('Name bắt buộc');
-    if (!body.setting) return alert('Setting bắt buộc');
+    if (!body.name) return window.KataShell.alert('Name bắt buộc');
+    if (!body.setting) return window.KataShell.alert('Setting bắt buộc');
     const charId = get('characterId');
     if (charId) body.characterId = charId;
     const inlineName = get('inlineName').trim();
@@ -667,6 +670,41 @@ async function renderWorldDetail(id) {
               ${ovField('imagePromptTemplate', 'image prompt template', '{character_base}, {keywords}, {style}', false)}
               ${ovField('imageNegativePrompt', 'image negative prompt', 'low quality, deformed, ...', false)}
             </div>
+
+            <div class="row" style="background:rgba(138,79,255,0.04);border-color:rgba(138,79,255,0.25)">
+              <div class="mono text-[10px] tracking-label uppercase text-purple mb-3">models · per-world</div>
+              <div class="grid grid-cols-2 gap-3">
+                ${ovField('chatModel', 'storyteller model', 'kr/claude-opus-4.7 · ...', false)}
+                ${ovField('loreModel', 'lore/rules AI model', 'grok-4-fast', false)}
+              </div>
+              <div class="grid grid-cols-2 gap-3 mt-3">
+                ${ovField('worldGenModel', 'whole-world AI model', 'grok-4-fast', false)}
+                ${ovField('subjectModel', 'scene-subject extractor', 'openrouter:google/gemini-2.5-flash-lite', false)}
+              </div>
+              <label class="block mt-3">
+                <div class="mono text-[10px] tracking-label uppercase text-mute mb-1">scene image fal models (chain)</div>
+                <input class="field" data-ovarr="sceneImageModels" value="${escapeHtml((ovs.sceneImageModels ?? []).join(', '))}" placeholder="fal-ai/flux/schnell, fal-ai/fast-sdxl" />
+              </label>
+              <label class="block mt-3">
+                <div class="mono text-[10px] tracking-label uppercase text-mute mb-1">cover image fal models</div>
+                <input class="field" data-ovarr="coverImageModels" value="${escapeHtml((ovs.coverImageModels ?? []).join(', '))}" placeholder="fal-ai/flux/schnell, fal-ai/fast-sdxl" />
+              </label>
+              <div class="grid grid-cols-3 gap-3 mt-3">
+                <label class="block">
+                  <div class="mono text-[10px] tracking-label uppercase text-mute mb-1">turn temperature</div>
+                  <input class="field" data-ovnum="turnTemperature" type="number" step="0.05" min="0" max="2" value="${typeof ovs.turnTemperature === 'number' ? ovs.turnTemperature : ''}" placeholder="0.85" />
+                </label>
+                <label class="block">
+                  <div class="mono text-[10px] tracking-label uppercase text-mute mb-1">turn max tokens</div>
+                  <input class="field" data-ovnum="turnMaxTokens" type="number" min="1" max="32000" value="${typeof ovs.turnMaxTokens === 'number' ? ovs.turnMaxTokens : ''}" placeholder="1200" />
+                </label>
+                <label class="block">
+                  <div class="mono text-[10px] tracking-label uppercase text-mute mb-1">memory window (turns)</div>
+                  <input class="field" data-ovnum="memoryWindowSize" type="number" min="1" max="500" value="${typeof ovs.memoryWindowSize === 'number' ? ovs.memoryWindowSize : ''}" placeholder="50" />
+                </label>
+              </div>
+            </div>
+
             <button id="save-overrides" class="btn btn-primary">save overrides</button>
           </div>
         </details>
@@ -708,8 +746,18 @@ async function renderWorldDetail(id) {
       const k = el.dataset.ov; const v = el.value;
       if (v && v.trim()) overrides[k] = v;
     });
+    elContent.querySelectorAll('[data-ovarr]').forEach((el) => {
+      const arr = el.value.split(',').map((s) => s.trim()).filter(Boolean);
+      if (arr.length) overrides[el.dataset.ovarr] = arr;
+    });
+    elContent.querySelectorAll('[data-ovnum]').forEach((el) => {
+      const v = el.value.trim();
+      if (!v) return;
+      const n = Number(v);
+      if (Number.isFinite(n)) overrides[el.dataset.ovnum] = n;
+    });
     const r = await fetchJson(`/api/kata/tavern/world/${id}`, { method: 'PATCH', body: { overrides } });
-    if (r) flash('overrides saved');
+    if (r) flash('overrides saved', 'success');
   });
 
   // Cover art handlers.
@@ -756,7 +804,11 @@ async function renderWorldDetail(id) {
 
   const endBtn = document.getElementById('end-world');
   if (endBtn) endBtn.addEventListener('click', async () => {
-    if (!confirm('Lock world này? Story persist vĩnh viễn nhưng bot sẽ không reply nữa.')) return;
+    const ok = await window.KataShell.confirm(
+      'Lock world này? Story persist vĩnh viễn nhưng bot sẽ không reply nữa.',
+      { title: 'End story', okLabel: 'lock world', danger: true },
+    );
+    if (!ok) return;
     const r = await fetchJson(`/api/kata/tavern/world/${id}/end`, { method: 'POST' });
     if (r) renderWorldDetail(id);
   });
@@ -769,7 +821,10 @@ async function renderWorldDetail(id) {
       const kind = target.startsWith('rules') ? 'rules' : 'lore';
       const ta = elContent.querySelector(`[data-w="${kind}"]`);
       if (isGen) {
-        const brief = prompt(`Brief cho ${kind} (1-3 câu mô tả):`);
+        const brief = await window.KataShell.prompt(`Brief cho ${kind} (1-3 câu mô tả):`, '', {
+          title: kind === 'lore' ? 'AI write lore' : 'AI write rules',
+          placeholder: 'Vd: học viện thần thoại, NPC chính là một con rồng già đã giả người',
+        });
         if (!brief) return;
         btn.textContent = 'thinking…'; btn.disabled = true;
         const r = await fetchJson('/api/kata/tavern/lore/generate', {
@@ -780,7 +835,7 @@ async function renderWorldDetail(id) {
         if (r?.text) ta.value = r.text;
       } else {
         const draft = ta.value.trim();
-        if (!draft) { alert('Field rỗng — không có gì để FIX.'); return; }
+        if (!draft) { window.KataShell.alert('Field rỗng — không có gì để FIX.'); return; }
         btn.textContent = 'thinking…'; btn.disabled = true;
         const r = await fetchJson('/api/kata/tavern/lore/improve', {
           method: 'POST',
@@ -836,7 +891,8 @@ async function renderCharacters() {
   });
   elContent.querySelectorAll('[data-char-del]').forEach((b) => {
     b.addEventListener('click', async () => {
-      if (!confirm('Xoá character?')) return;
+      const ok = await window.KataShell.confirm('Xoá character?', { title: 'Xoá character', danger: true, okLabel: 'xoá' });
+      if (!ok) return;
       const r = await fetchJson(`/api/kata/tavern/character/${b.dataset.charDel}`, { method: 'DELETE' });
       if (r) renderCharacters();
     });
@@ -870,7 +926,7 @@ function openCharForm(existing) {
   document.getElementById('char-save').addEventListener('click', async () => {
     const body = {};
     elContent.querySelectorAll('[data-c]').forEach((el) => { body[el.dataset.c] = el.value; });
-    if (!body.name?.trim()) return alert('Name bắt buộc');
+    if (!body.name?.trim()) return window.KataShell.alert('Name bắt buộc');
     const url = isEdit ? `/api/kata/tavern/character/${existing._id}` : '/api/kata/tavern/character';
     const method = isEdit ? 'PATCH' : 'POST';
     const r = await fetchJson(url, { method, body });
@@ -926,6 +982,53 @@ async function renderDefaults() {
         ${fld('imagePromptTemplate', 'image prompt template', '{character_base}, {keywords}, {style}', false)}
         ${fld('imageNegativePrompt', 'image negative prompt', 'low quality, blurry...', false)}
       </div>
+
+      <div class="row" style="background:rgba(138,79,255,0.04);border-color:rgba(138,79,255,0.25)">
+        <div class="mono text-[10px] tracking-label uppercase text-purple mb-3">models · mặc định grok-4-fast / flux-schnell</div>
+        <div class="space-y-3">
+          <div class="grid grid-cols-2 gap-3">
+            ${fld('chatModel', 'storyteller model (engine default: grok-4-fast)', 'kr/claude-opus-4.7 · openrouter:google/gemini-2.5-pro · ...', false)}
+            ${fld('loreModel', 'lore/rules AI model', 'grok-4-fast', false)}
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            ${fld('worldGenModel', 'whole-world AI model', 'grok-4-fast', false)}
+            ${fld('subjectModel', 'scene-subject extractor', 'openrouter:google/gemini-2.5-flash-lite', false)}
+          </div>
+          <label class="block">
+            <div class="flex items-center justify-between mb-1">
+              <div class="mono text-[10px] tracking-label uppercase text-mute">scene image fal models (comma-separated chain, fallback in order)</div>
+              <span class="mono text-[9px] text-mute2">default: fal-ai/flux/schnell, fal-ai/fast-sdxl</span>
+            </div>
+            <input class="field" data-tarr="sceneImageModels" value="${escapeHtml((t.sceneImageModels ?? []).join(', '))}" placeholder="fal-ai/flux/schnell, fal-ai/fast-sdxl" />
+          </label>
+          <label class="block">
+            <div class="flex items-center justify-between mb-1">
+              <div class="mono text-[10px] tracking-label uppercase text-mute">cover image fal models</div>
+              <span class="mono text-[9px] text-mute2">default: fal-ai/flux/schnell, fal-ai/fast-sdxl</span>
+            </div>
+            <input class="field" data-tarr="coverImageModels" value="${escapeHtml((t.coverImageModels ?? []).join(', '))}" placeholder="fal-ai/flux/schnell, fal-ai/fast-sdxl" />
+          </label>
+        </div>
+      </div>
+
+      <div class="row" style="background:rgba(138,79,255,0.04);border-color:rgba(138,79,255,0.25)">
+        <div class="mono text-[10px] tracking-label uppercase text-purple mb-3">tuning</div>
+        <div class="grid grid-cols-3 gap-3">
+          <label class="block">
+            <div class="mono text-[10px] tracking-label uppercase text-mute mb-1">turn temperature (0..2)</div>
+            <input class="field" data-tnum="turnTemperature" type="number" step="0.05" min="0" max="2" value="${typeof t.turnTemperature === 'number' ? t.turnTemperature : ''}" placeholder="0.85" />
+          </label>
+          <label class="block">
+            <div class="mono text-[10px] tracking-label uppercase text-mute mb-1">turn max tokens</div>
+            <input class="field" data-tnum="turnMaxTokens" type="number" min="1" max="32000" value="${typeof t.turnMaxTokens === 'number' ? t.turnMaxTokens : ''}" placeholder="1200" />
+          </label>
+          <label class="block">
+            <div class="mono text-[10px] tracking-label uppercase text-mute mb-1">memory window (turns)</div>
+            <input class="field" data-tnum="memoryWindowSize" type="number" min="1" max="500" value="${typeof t.memoryWindowSize === 'number' ? t.memoryWindowSize : ''}" placeholder="50" />
+          </label>
+        </div>
+      </div>
+
       <div class="flex justify-end pt-3 border-t border-line">
         <button id="defaults-save" class="btn btn-primary">save defaults</button>
       </div>
@@ -934,22 +1037,25 @@ async function renderDefaults() {
   document.getElementById('defaults-save').addEventListener('click', async () => {
     const body = {};
     elContent.querySelectorAll('[data-t]').forEach((el) => {
-      // Empty string → null sentinel = unset on server (drop back to engine default).
       const v = el.value;
       body[el.dataset.t] = v.trim() ? v : null;
     });
+    elContent.querySelectorAll('[data-tarr]').forEach((el) => {
+      const arr = el.value.split(',').map((s) => s.trim()).filter(Boolean);
+      body[el.dataset.tarr] = arr.length ? arr : null;
+    });
+    elContent.querySelectorAll('[data-tnum]').forEach((el) => {
+      const v = el.value.trim();
+      if (!v) { body[el.dataset.tnum] = null; return; }
+      const n = Number(v);
+      body[el.dataset.tnum] = Number.isFinite(n) ? n : null;
+    });
     const r = await fetchJson('/api/kata/admin/tavern-config', { method: 'PATCH', body });
-    if (r) flash('defaults saved');
+    if (r) flash('defaults saved', 'success');
   });
 }
 
-function flash(msg) {
-  const el = document.createElement('div');
-  el.textContent = msg;
-  el.style.cssText = 'position:fixed;bottom:24px;right:24px;background:rgba(138,79,255,0.20);border:1px solid rgba(138,79,255,0.45);color:#f5ede0;padding:10px 16px;border-radius:999px;font-family:JetBrains Mono,monospace;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;z-index:100';
-  document.body.appendChild(el);
-  setTimeout(() => el.remove(), 2200);
-}
+function flash(msg, kind) { window.KataShell?.toast(msg, kind ? { kind } : undefined); }
 
 bootstrap();
 </script>

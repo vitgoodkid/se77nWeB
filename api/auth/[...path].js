@@ -1671,18 +1671,35 @@ const TAVERN_FIELD_LIMITS = {
   outputRules: 4_000,
   imagePromptTemplate: 1_500,
   imageNegativePrompt: 1_500,
+  modelId: 200,
 };
 
+// Each entry: [field-name, kind].
+//   string: validated against TAVERN_FIELD_LIMITS[kind]
+//   number: numeric range (min,max)
+//   array:  array of model-ids (each ≤ TAVERN_FIELD_LIMITS.modelId), max 8 entries
 const TAVERN_OVERRIDE_FIELDS = [
-  ['storytellerSystemPrompt', 'storytellerSystemPrompt'],
-  ['modeInstructionChat', 'modeInstruction'],
-  ['modeInstructionRpg', 'modeInstruction'],
-  ['difficultyEasy', 'difficulty'],
-  ['difficultyNormal', 'difficulty'],
-  ['difficultyHard', 'difficulty'],
-  ['outputRules', 'outputRules'],
-  ['imagePromptTemplate', 'imagePromptTemplate'],
-  ['imageNegativePrompt', 'imageNegativePrompt'],
+  ['storytellerSystemPrompt', 'string', 'storytellerSystemPrompt'],
+  ['modeInstructionChat', 'string', 'modeInstruction'],
+  ['modeInstructionRpg', 'string', 'modeInstruction'],
+  ['difficultyEasy', 'string', 'difficulty'],
+  ['difficultyNormal', 'string', 'difficulty'],
+  ['difficultyHard', 'string', 'difficulty'],
+  ['outputRules', 'string', 'outputRules'],
+  ['imagePromptTemplate', 'string', 'imagePromptTemplate'],
+  ['imageNegativePrompt', 'string', 'imageNegativePrompt'],
+  // Model picks — strings, validated as model ids (≤200 chars, non-empty).
+  ['chatModel', 'string', 'modelId'],
+  ['loreModel', 'string', 'modelId'],
+  ['worldGenModel', 'string', 'modelId'],
+  ['subjectModel', 'string', 'modelId'],
+  // Numeric ranges — turn temperature/max_tokens/memory window.
+  ['turnTemperature', 'number', { min: 0, max: 2 }],
+  ['turnMaxTokens', 'number', { min: 1, max: 32_000 }],
+  ['memoryWindowSize', 'number', { min: 1, max: 500 }],
+  // Array of model ids — fal model fallback chains.
+  ['sceneImageModels', 'array', 'modelId'],
+  ['coverImageModels', 'array', 'modelId'],
 ];
 
 async function requireUser(req) {
@@ -2028,19 +2045,34 @@ async function tavernWorldPatch(req, res, id) {
       errors.push('overrides must be object or null');
     } else {
       const cleaned = {};
-      for (const [field, kind] of TAVERN_OVERRIDE_FIELDS) {
+      for (const [field, kind, meta] of TAVERN_OVERRIDE_FIELDS) {
         if (!(field in ov)) continue;
         const v = ov[field];
         if (v === null || v === '') continue; // unset
-        if (typeof v !== 'string') {
-          errors.push(`overrides.${field} must be string`);
-          continue;
+        if (kind === 'string') {
+          if (typeof v !== 'string') { errors.push(`overrides.${field} must be string`); continue; }
+          if (v.length > TAVERN_FIELD_LIMITS[meta]) {
+            errors.push(`overrides.${field} > ${TAVERN_FIELD_LIMITS[meta]} chars`);
+            continue;
+          }
+          cleaned[field] = v;
+        } else if (kind === 'number') {
+          const n = Number(v);
+          if (!Number.isFinite(n)) { errors.push(`overrides.${field} must be number`); continue; }
+          if (n < meta.min || n > meta.max) {
+            errors.push(`overrides.${field} must be ${meta.min}..${meta.max}`);
+            continue;
+          }
+          cleaned[field] = n;
+        } else if (kind === 'array') {
+          if (!Array.isArray(v)) { errors.push(`overrides.${field} must be array`); continue; }
+          if (v.length > 8) { errors.push(`overrides.${field} > 8 entries`); continue; }
+          if (!v.every((s) => typeof s === 'string' && s.trim() && s.length <= TAVERN_FIELD_LIMITS[meta])) {
+            errors.push(`overrides.${field} entries must be non-empty strings ≤ ${TAVERN_FIELD_LIMITS[meta]} chars`);
+            continue;
+          }
+          cleaned[field] = v.map((s) => s.trim());
         }
-        if (v.length > TAVERN_FIELD_LIMITS[kind]) {
-          errors.push(`overrides.${field} > ${TAVERN_FIELD_LIMITS[kind]} chars`);
-          continue;
-        }
-        cleaned[field] = v;
       }
       set.overrides = cleaned;
     }
@@ -2434,7 +2466,7 @@ const TAVERN_DEFAULT_MODEL = process.env.YUNWU_TAVERN_MODEL?.trim() || 'grok-4-f
 const TAVERN_TURN_TEMPERATURE = 0.85;
 const TAVERN_TURN_MAX_TOKENS = 1200;
 
-async function callTavernChat(systemContent, history, userText, model) {
+async function callTavernChat(systemContent, history, userText, model, temperature, maxTokens) {
   const apiKey = process.env.YUNWU_API_KEY;
   const baseUrl = process.env.YUNWU_BASE_URL || 'https://yunwu.ai/v1';
   if (!apiKey) throw new Error('YUNWU_API_KEY not configured');
@@ -2452,8 +2484,8 @@ async function callTavernChat(systemContent, history, userText, model) {
     body: JSON.stringify({
       model,
       messages,
-      temperature: TAVERN_TURN_TEMPERATURE,
-      max_tokens: TAVERN_TURN_MAX_TOKENS,
+      temperature: typeof temperature === 'number' ? temperature : 0.85,
+      max_tokens: typeof maxTokens === 'number' ? maxTokens : 1200,
     }),
   });
   const text = await r.text();
@@ -2546,11 +2578,18 @@ async function tavernWorldTurn(req, res, id) {
     },
     promptConfig,
   );
-  const window = tavernTrimVerbatimWindow(session.messages ?? [], MEMORY_VERBATIM_WINDOW);
+  const window = tavernTrimVerbatimWindow(session.messages ?? [], promptConfig.memoryWindowSize);
 
   let completion;
   try {
-    completion = await callTavernChat(systemContent, window.messages, userText, TAVERN_DEFAULT_MODEL);
+    completion = await callTavernChat(
+      systemContent,
+      window.messages,
+      userText,
+      promptConfig.chatModel,
+      promptConfig.turnTemperature,
+      promptConfig.turnMaxTokens,
+    );
   } catch (err) {
     return res.status(502).json({ error: 'llm_failed', message: err?.message?.slice(0, 500) });
   }
@@ -2617,7 +2656,7 @@ async function tavernWorldTurn(req, res, id) {
       guildId: world.guildId,
       userId: myDiscordId,
       service: 'yunwu',
-      model: TAVERN_DEFAULT_MODEL,
+      model: promptConfig.chatModel,
       command: '/tavern-web',
       tokensIn: completion.tokensIn,
       tokensOut: completion.tokensOut,
@@ -2660,19 +2699,38 @@ async function handleKataAdminTavernConfigPatch(req, res) {
   const unset = {};
   const errors = [];
 
-  for (const [field, kind] of TAVERN_GLOBAL_FIELDS) {
+  for (const [field, kind, meta] of TAVERN_GLOBAL_FIELDS) {
     if (!(field in body)) continue;
     const v = body[field];
     if (v === null || v === '') {
       unset[`tavern.${field}`] = '';
       continue;
     }
-    if (typeof v !== 'string') { errors.push(`${field} must be string`); continue; }
-    if (v.length > TAVERN_FIELD_LIMITS[kind]) {
-      errors.push(`${field} > ${TAVERN_FIELD_LIMITS[kind]} chars`);
-      continue;
+    if (kind === 'string') {
+      if (typeof v !== 'string') { errors.push(`${field} must be string`); continue; }
+      if (v.length > TAVERN_FIELD_LIMITS[meta]) {
+        errors.push(`${field} > ${TAVERN_FIELD_LIMITS[meta]} chars`);
+        continue;
+      }
+      set[`tavern.${field}`] = v;
+    } else if (kind === 'number') {
+      const n = Number(v);
+      if (!Number.isFinite(n)) { errors.push(`${field} must be number`); continue; }
+      if (n < meta.min || n > meta.max) {
+        errors.push(`${field} must be ${meta.min}..${meta.max}`);
+        continue;
+      }
+      set[`tavern.${field}`] = n;
+    } else if (kind === 'array') {
+      if (!Array.isArray(v)) { errors.push(`${field} must be array`); continue; }
+      if (v.length === 0) { unset[`tavern.${field}`] = ''; continue; }
+      if (v.length > 8) { errors.push(`${field} > 8 entries`); continue; }
+      if (!v.every((s) => typeof s === 'string' && s.trim() && s.length <= TAVERN_FIELD_LIMITS[meta])) {
+        errors.push(`${field} entries must be non-empty strings ≤ ${TAVERN_FIELD_LIMITS[meta]} chars`);
+        continue;
+      }
+      set[`tavern.${field}`] = v.map((s) => s.trim());
     }
-    set[`tavern.${field}`] = v;
   }
 
   if (errors.length) return res.status(400).json({ error: 'validation_failed', details: errors });
