@@ -898,6 +898,82 @@
     }, opts.durationMs || 2400);
   }
 
+  // ── Mobile chrome (responsive header + sidebar drawer) ─────────
+  // Centralised so every kata page gets a usable phone layout without
+  // per-page CSS. Pages that already ship their own mobile handling
+  // (detected via an `.hdr-logo` class) are skipped to avoid double
+  // hamburgers / conflicting rules — currently tavern + tavern-play.
+  function setupMobileChrome() {
+    if (document.querySelector('.hdr-logo')) return;        // page handles its own
+    if (document.getElementById('kata-mobile-css')) return; // idempotent
+
+    var css = [
+      '.kata-nav-toggle { display: none; }',
+      '#kata-nav-scrim { display: none; }',
+      '@media (max-width: 768px) {',
+      '  header { padding-left: 14px !important; padding-right: 14px !important; }',
+      '  header > div:first-child { gap: 10px !important; }',
+      '  header > div:first-child > a:not([href="/"]) { display: none !important; }',
+      '  .kata-nav-toggle { display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 11px; border: 1px solid rgba(255,255,255,0.12); background: transparent; color: rgba(245,237,224,0.7); cursor: pointer; flex: 0 0 auto; }',
+      '  .kata-bc { display: none !important; }',
+      '  .kata-logo > div:first-child { font-size: 19px !important; }',
+      '  .kata-logo > div:nth-child(2) { display: none !important; }',
+      '  .kata-logo span.font-normal { display: none !important; }',
+      '  #kata-header-actions { gap: 7px !important; }',
+      '  #kata-theme-btn button { padding-left: 8px !important; padding-right: 8px !important; gap: 4px !important; }',
+      '  #kata-theme-btn button > span:nth-child(2) { display: none !important; }',
+      '  #kata-lang-btn span { padding-left: 6px; padding-right: 6px; }',
+      '  #kata-user-chip { padding-right: 3px !important; }',
+      '  #kata-user-chip > :last-child { display: none !important; }',
+      '  aside.kata-drawer { transform: translateX(-100%); transition: transform 240ms cubic-bezier(.22,1,.36,1); width: 280px; max-width: 86vw; box-shadow: 0 24px 60px rgba(0,0,0,0.6); }',
+      '  body.kata-nav-open aside.kata-drawer { transform: none; }',
+      '  #kata-nav-scrim { position: fixed; inset: 0; z-index: 39; background: rgba(0,0,0,0.55); }',
+      '  body.kata-nav-open #kata-nav-scrim { display: block; }',
+      '  main.kata-shifted { padding-left: 16px !important; padding-right: 16px !important; }',
+      '  main .grid { grid-template-columns: 1fr !important; }',
+      '}',
+    ].join('\n');
+    var st = document.createElement('style');
+    st.id = 'kata-mobile-css';
+    st.textContent = css;
+    document.head.appendChild(st);
+
+    var header = document.querySelector('header');
+    if (header) {
+      var bc = header.querySelector('.ml-3');         // breadcrumb block
+      if (bc) bc.classList.add('kata-bc');
+      var logo = header.querySelector('a[href="/"]'); // se77n / kata logo
+      if (logo) logo.classList.add('kata-logo');
+    }
+
+    var main = document.querySelector('main');
+    if (main && /pl-\[/.test(main.className)) main.classList.add('kata-shifted');
+
+    // Turn the fixed sidebar into an off-canvas drawer with a hamburger.
+    var aside = document.querySelector('aside');
+    if (aside && header) {
+      aside.classList.add('kata-drawer');
+      var btn = document.createElement('button');
+      btn.id = 'kata-nav-toggle-btn';
+      btn.className = 'kata-nav-toggle';
+      btn.setAttribute('aria-label', 'menu');
+      btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>';
+      var left = header.firstElementChild;
+      if (left) left.insertBefore(btn, left.firstChild);
+      else header.insertBefore(btn, header.firstChild);
+
+      var scrim = document.createElement('div');
+      scrim.id = 'kata-nav-scrim';
+      document.body.appendChild(scrim);
+
+      var close = function () { document.body.classList.remove('kata-nav-open'); };
+      btn.addEventListener('click', function () { document.body.classList.toggle('kata-nav-open'); });
+      scrim.addEventListener('click', close);
+      aside.querySelectorAll('a, [data-tab]').forEach(function (a) { a.addEventListener('click', close); });
+      window.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+    }
+  }
+
   // ── Boot ────────────────────────────────────────────────────────
   function boot() {
     injectAccentOverlay();
@@ -906,6 +982,7 @@
     if (state.lockIdx == null) startRotation();
     rerenderHeader();
     applyI18n();
+    setupMobileChrome();
   }
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', boot);
