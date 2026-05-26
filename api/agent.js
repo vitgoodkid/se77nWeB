@@ -11,6 +11,7 @@
 // dispatches to the correct tool (image gen/edit, video gen, bg remove).
 
 import { callChat, falSubmitAndPoll, pickImageUrl, pickVideoUrl, tryParseJson } from './_helpers.js';
+import { resolveOwner, loadThreadMessages, appendThreadTurns, deleteThread, sanitizeThreadId } from './_lib/threads.js';
 
 export const config = { maxDuration: 60 };
 
@@ -67,7 +68,35 @@ async function classify(prompt, hasImage) {
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   const { prompt = '', image, history } = req.body || {};
+
+  // Server-side conversation memory (3-day sliding TTL). Prefer the stored
+  // thread for context; fall back to client-sent history when there's no
+  // server identity or the thread is empty/new.
+  const threadId = sanitizeThreadId(req.body?.threadId);
+
+  // "clear chat" → wipe server memory too so a cleared thread isn't recalled.
+  if (req.body?.clear === true) {
+    const o = await resolveOwner(req, res);
+    if (o) await deleteThread(o.ownerKey, threadId);
+    return res.status(200).json({ ok: true, cleared: true });
+  }
+
   if (!prompt && !image) return res.status(400).json({ error: 'prompt or image required' });
+
+  const owner = await resolveOwner(req, res);
+  const userTurn = prompt || (image ? '(image)' : '');
+  let context = Array.isArray(history) ? history : [];
+  if (owner) {
+    const stored = await loadThreadMessages(owner.ownerKey, threadId);
+    if (stored.length) context = stored;
+  }
+  const remember = (assistantContent) => {
+    if (!owner || !assistantContent) return;
+    return appendThreadTurns(owner.ownerKey, owner.ownerType, threadId, [
+      { role: 'user', content: userTurn },
+      { role: 'assistant', content: assistantContent },
+    ]);
+  };
 
   // Routing
   let cls;
@@ -96,6 +125,7 @@ export default async function handler(req, res) {
       }
       const url = pickImageUrl(result);
       if (!url) return res.status(502).json({ error: 'no image in result', upstream: result });
+      await remember('[generated an image]');
       return res.status(200).json({ kind: 'image', image: url, intent: cls.tool, refined });
     }
 
@@ -115,6 +145,7 @@ export default async function handler(req, res) {
       }
       const url = pickVideoUrl(result);
       if (!url) return res.status(502).json({ error: 'no video in result', upstream: result });
+      await remember('[generated a video]');
       return res.status(200).json({ kind: 'video', video: url, intent: cls.tool, refined });
     }
 
@@ -124,6 +155,7 @@ export default async function handler(req, res) {
       if (result.__pending) return res.status(202).json({ kind: 'pending', requestId: result.requestId, intent: cls.tool });
       const url = pickImageUrl(result);
       if (!url) return res.status(502).json({ error: 'no image in result', upstream: result });
+      await remember('[removed image background]');
       return res.status(200).json({ kind: 'image', image: url, intent: cls.tool });
     }
 
@@ -134,7 +166,7 @@ export default async function handler(req, res) {
       system: SE77N_SYSTEM,
       prompt,
       image,
-      history,
+      history: context,
       max_tokens: 8000,
       model: 'gemini-3.1-pro-preview',
     });
@@ -143,6 +175,7 @@ export default async function handler(req, res) {
       // Flag it so the client shows a retry affordance instead of a blank bubble.
       return res.status(200).json({ kind: 'chat', text: '', empty: true, intent: 'chat' });
     }
+    await remember(text);
     return res.status(200).json({ kind: 'chat', text, intent: 'chat' });
   } catch (e) {
     return res.status(e.status || 502).json({ error: String(e.message || e), upstream: e.upstream });

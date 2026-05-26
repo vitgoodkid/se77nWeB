@@ -160,7 +160,7 @@ export function AIPlayground() {
         const res = await fetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ system: preset.system, prompt: q, image: usedImage?.dataUrl, model: 'gemini-3.1-pro-preview', history: buildChatHistory(messages, retry ? q : undefined) }),
+          body: JSON.stringify({ system: preset.system, prompt: q, image: usedImage?.dataUrl, model: 'gemini-3.1-pro-preview', threadId: 'ai:' + presetId, history: buildChatHistory(messages, retry ? q : undefined) }),
         });
         const data = await safeJson(res, 'chat');
         assistantMsg = { role: 'assistant', content: data.text };
@@ -243,6 +243,11 @@ export function AIPlayground() {
 
   function clearChat() {
     setMessages([]);
+    fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clear: true, threadId: 'ai:' + presetId }),
+    }).catch(() => { /* best-effort */ });
   }
 
   function onImageRef(e) {

@@ -6,6 +6,8 @@
 // Hides YUNWU_API_KEY server-side. Supports multimodal input via OpenAI's
 // `image_url` content part — provider must accept it (Gemini family does).
 
+import { resolveOwner, loadThreadMessages, appendThreadTurns, deleteThread, sanitizeThreadId } from './_lib/threads.js';
+
 export const config = { maxDuration: 60 };
 
 // Public endpoint — restrict client-selectable models to a known-good set so a
@@ -24,6 +26,14 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
   const { system = '', prompt = '', image, model: reqModel, history } = req.body || {};
+
+  // "clear chat" → wipe server memory for this thread.
+  if (req.body?.clear === true) {
+    const o = await resolveOwner(req, res);
+    if (o) await deleteThread(o.ownerKey, sanitizeThreadId(req.body?.threadId));
+    return res.status(200).json({ ok: true, cleared: true });
+  }
+
   if (!prompt && !image) {
     return res.status(400).json({ error: 'prompt or image required' });
   }
@@ -40,12 +50,21 @@ export default async function handler(req, res) {
       ]
     : prompt;
 
-  const priorMsgs = Array.isArray(history)
+  // Server-side conversation memory (3-day sliding TTL). Prefer the stored
+  // thread; fall back to client-sent history when there's no server identity
+  // or the thread is empty/new.
+  const threadId = sanitizeThreadId(req.body?.threadId);
+  const owner = await resolveOwner(req, res);
+  let context = Array.isArray(history)
     ? history
         .filter((m) => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string' && m.content.trim())
-        .slice(-10)
         .map((m) => ({ role: m.role, content: m.content }))
     : [];
+  if (owner) {
+    const stored = await loadThreadMessages(owner.ownerKey, threadId);
+    if (stored.length) context = stored;
+  }
+  const priorMsgs = context.slice(-10);
 
   try {
     const upstream = await fetch(`${baseUrl}/chat/completions`, {
@@ -81,6 +100,12 @@ export default async function handler(req, res) {
       data?.choices?.[0]?.message?.content ||
       data?.choices?.[0]?.text ||
       '';
+    if (owner && text && text.trim()) {
+      await appendThreadTurns(owner.ownerKey, owner.ownerType, threadId, [
+        { role: 'user', content: prompt || (image ? '(image)' : '') },
+        { role: 'assistant', content: text },
+      ]);
+    }
     return res.status(200).json({ text, model });
   } catch (e) {
     return res.status(502).json({ error: String(e.message || e) });

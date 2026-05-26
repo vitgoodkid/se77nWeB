@@ -936,7 +936,7 @@ export default function MobileShell() {
       const res = await fetch('/api/agent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: q, image: used?.dataUrl, history: buildChatHistory(messages, retry ? q : undefined) }),
+        body: JSON.stringify({ prompt: q, image: used?.dataUrl, threadId: 'agent', history: buildChatHistory(messages, retry ? q : undefined) }),
       });
       const data = await res.json();
       if (!res.ok && res.status !== 202) throw new Error(data.error || `agent ${res.status}`);
@@ -970,6 +970,11 @@ export default function MobileShell() {
 
   function clearChat() {
     setHistory((h) => ({ ...h, chat: [] }));
+    fetch('/api/agent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clear: true, threadId: 'agent' }),
+    }).catch(() => { /* best-effort */ });
   }
 
   // ── Render ────────────────────────────────────────────────
