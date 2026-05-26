@@ -1925,7 +1925,7 @@ async function tavernMyWorlds(req, res) {
   const worlds = await kataDb
     .collection('tavern_worlds')
     .find({ userId: auth.user.providerUserId })
-    .project({ name: 1, guildId: 1, mode: 1, difficulty: 1, isLocked: 1, threadId: 1, lastActiveAt: 1, imageGenEnabled: 1, imageStyle: 1, createdAt: 1 })
+    .project({ name: 1, guildId: 1, mode: 1, difficulty: 1, isLocked: 1, threadId: 1, lastActiveAt: 1, imageGenEnabled: 1, imageStyle: 1, coverImageUrl: 1, createdAt: 1 })
     .sort({ lastActiveAt: -1 })
     .limit(100)
     .toArray();
