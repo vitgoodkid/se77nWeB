@@ -55,7 +55,7 @@
   @media (max-width: 768px) {
     header { padding-left: 14px; padding-right: 14px; }
     #hdr-breadcrumb { display: none; }
-    #nav-toggle { display: inline-grid; place-items: center; }
+    #nav-toggle { display: inline-grid; place-items: center; width: 36px; height: 36px; border-radius: 9px; }
     aside {
       transform: translateX(-100%);
       transition: transform 240ms cubic-bezier(.22,1,.36,1);
@@ -80,7 +80,7 @@
 
     /* header: shrink so the action cluster stops overflowing off-screen */
     header > div:first-child { gap: 10px; }
-    .hdr-logo { font-size: 19px !important; }
+    .hdr-logo { font-size: 22px !important; }
     .hdr-kata, .hdr-sub { display: none; }
     #kata-header-actions { gap: 7px !important; }
     /* theme chip → just the colour dot + caret (drop the WHITE/RED label) */
@@ -103,8 +103,8 @@
 
 <header class="fixed top-0 inset-x-0 h-16 z-50 flex items-center justify-between px-6 backdrop-blur-md border-b border-line" style="background:rgba(13,10,8,0.7)">
   <div class="flex items-center gap-5">
-    <button id="nav-toggle" aria-label="menu" class="btn" style="width:40px;height:40px;padding:0;border-radius:11px">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+    <button id="nav-toggle" aria-label="menu" class="btn" style="width:36px;height:36px;padding:0;border-radius:9px;color:#f5ede0;border-color:rgba(255,255,255,0.08)">
+      <svg width="14" height="12" viewBox="0 0 14 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="1" y1="2" x2="13" y2="2"/><line x1="1" y1="6" x2="13" y2="6"/><line x1="1" y1="10" x2="9" y2="10"/></svg>
     </button>
     <a href="/" class="flex flex-col items-start gap-1 leading-none" title="Về se77n.com">
       <div class="hdr-logo mono text-[24px] font-extrabold tracking-[-0.025em]">se<span class="text-red glow77">77</span>n<span class="hdr-kata text-mute font-normal"> / kata</span></div>

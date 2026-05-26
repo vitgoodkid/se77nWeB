@@ -914,9 +914,9 @@
       '  header { padding-left: 14px !important; padding-right: 14px !important; }',
       '  header > div:first-child { gap: 10px !important; }',
       '  header > div:first-child > a:not([href="/"]) { display: none !important; }',
-      '  .kata-nav-toggle { display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 11px; border: 1px solid rgba(255,255,255,0.12); background: transparent; color: rgba(245,237,224,0.7); cursor: pointer; flex: 0 0 auto; }',
+      '  .kata-nav-toggle { display: inline-grid; place-items: center; width: 36px; height: 36px; border-radius: 9px; border: 1px solid rgba(255,255,255,0.08); background: transparent; color: #f5ede0; cursor: pointer; flex: 0 0 auto; }',
       '  .kata-bc { display: none !important; }',
-      '  .kata-logo > div:first-child { font-size: 19px !important; }',
+      '  .kata-logo > div:first-child { font-size: 22px !important; letter-spacing: -0.025em; }',
       '  .kata-logo > div:nth-child(2) { display: none !important; }',
       '  .kata-logo span.font-normal { display: none !important; }',
       '  #kata-header-actions { gap: 7px !important; }',
@@ -957,7 +957,7 @@
       btn.id = 'kata-nav-toggle-btn';
       btn.className = 'kata-nav-toggle';
       btn.setAttribute('aria-label', 'menu');
-      btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>';
+      btn.innerHTML = '<svg width="14" height="12" viewBox="0 0 14 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="1" y1="2" x2="13" y2="2"/><line x1="1" y1="6" x2="13" y2="6"/><line x1="1" y1="10" x2="9" y2="10"/></svg>';
       var left = header.firstElementChild;
       if (left) left.insertBefore(btn, left.firstChild);
       else header.insertBefore(btn, header.firstChild);
