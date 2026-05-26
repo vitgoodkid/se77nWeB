@@ -68,6 +68,26 @@
   .typing-dot:nth-child(2) { animation-delay: 0.2s; }
   .typing-dot:nth-child(3) { animation-delay: 0.4s; }
   @keyframes dot { 0%, 60%, 100% { opacity: 0.25; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-4px); } }
+
+  /* ── Mobile (≤768px): compact header + tighter padding so nothing overflows ── */
+  @media (max-width: 768px) {
+    header { padding-left: 14px; padding-right: 14px; }
+    #hdr-breadcrumb { display: none; }
+    .hdr-logo { font-size: 19px !important; }
+    .hdr-kata, .hdr-sub { display: none; }
+    #kata-header-actions { gap: 7px !important; }
+    /* theme chip → colour dot + caret only */
+    #kata-theme-btn button { padding-left: 8px !important; padding-right: 8px !important; gap: 4px !important; }
+    #kata-theme-btn button > span:nth-child(2) { display: none; }
+    #kata-lang-btn span { padding-left: 6px; padding-right: 6px; }
+    /* user chip → avatar only */
+    #kata-user-chip { padding-right: 3px !important; }
+    #kata-user-chip > :last-child { display: none; }
+    main { padding-left: 16px !important; padding-right: 16px !important; }
+    #world-title { font-size: 22px !important; }
+    footer .max-w-5xl { padding-left: 16px !important; padding-right: 16px !important; }
+    footer .btn { padding: 0 12px; }
+  }
 </style>
 </head>
 <body class="bg-bg text-ink min-h-screen overflow-x-hidden">
@@ -80,10 +100,10 @@
 <header class="fixed top-0 inset-x-0 h-16 z-50 flex items-center justify-between px-6 backdrop-blur-md border-b border-line" style="background:rgba(13,10,8,0.7)">
   <div class="flex items-center gap-5">
     <a href="/" class="flex flex-col items-start gap-1 leading-none" title="Về se77n.com">
-      <div class="mono text-[24px] font-extrabold tracking-[-0.025em]">se<span class="text-red glow77">77</span>n<span class="text-mute font-normal"> / kata</span></div>
-      <div class="mono text-[9px] uppercase tracking-kicker text-mute">tavern · play</div>
+      <div class="hdr-logo mono text-[24px] font-extrabold tracking-[-0.025em]">se<span class="text-red glow77">77</span>n<span class="hdr-kata text-mute font-normal"> / kata</span></div>
+      <div class="hdr-sub mono text-[9px] uppercase tracking-kicker text-mute">tavern · play</div>
     </a>
-    <div class="flex items-center gap-2 ml-3 mono text-[10px] tracking-label uppercase">
+    <div id="hdr-breadcrumb" class="flex items-center gap-2 ml-3 mono text-[10px] tracking-label uppercase">
       <a href="index.html" class="text-mute hover:text-ink">se77n</a><span class="text-mute2">/</span>
       <a href="index.html" class="text-mute hover:text-ink">kata</a><span class="text-mute2">/</span>
       <a href="tavern.html" class="text-mute hover:text-ink">tavern</a><span class="text-mute2">/</span>
