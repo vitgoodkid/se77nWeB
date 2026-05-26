@@ -12,6 +12,7 @@
 
 import { callChat, falSubmitAndPoll, pickImageUrl, pickVideoUrl, tryParseJson } from './_helpers.js';
 import { resolveOwner, loadThreadMessages, appendThreadTurns, deleteThread, sanitizeThreadId } from './_lib/threads.js';
+import { enforceLimits, LIMITS } from './_lib/ratelimit.js';
 
 export const config = { maxDuration: 60 };
 
@@ -98,12 +99,24 @@ export default async function handler(req, res) {
     ]);
   };
 
+  // Generic per-owner gate first — bounds total agent calls (including the
+  // cheap router classifier) before any paid work.
+  if (!(await enforceLimits(res, owner?.ownerKey, [LIMITS.agentReq]))) return;
+
   // Routing
   let cls;
   if (maybeWantsMedia(prompt, !!image)) {
     cls = await classify(prompt, !!image);
   } else {
     cls = { tool: 'chat' };
+  }
+
+  // Media is far pricier than chat → additional burst + daily caps before the
+  // fal submission.
+  if (cls.tool === 'video_gen') {
+    if (!(await enforceLimits(res, owner?.ownerKey, [LIMITS.videoMin, LIMITS.videoDay]))) return;
+  } else if (cls.tool === 'image_gen' || cls.tool === 'image_edit' || cls.tool === 'bg_remove') {
+    if (!(await enforceLimits(res, owner?.ownerKey, [LIMITS.imageMin, LIMITS.imageDay]))) return;
   }
 
   try {

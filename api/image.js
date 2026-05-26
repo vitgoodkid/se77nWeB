@@ -14,6 +14,8 @@
 // pending response that the client polls separately.
 
 import { pickImageUrl } from './_helpers.js';
+import { resolveOwner } from './_lib/threads.js';
+import { enforceLimits, LIMITS } from './_lib/ratelimit.js';
 
 export const config = { maxDuration: 60 };
 
@@ -43,6 +45,10 @@ export default async function handler(req, res) {
 
   const { prompt = '', image, engine = 'openai' } = req.body || {};
   if (!prompt && !image) return res.status(400).json({ error: 'prompt or image required' });
+
+  // Rate limit per owner before submitting a (paid) fal job.
+  const owner = await resolveOwner(req, res);
+  if (!(await enforceLimits(res, owner?.ownerKey, [LIMITS.imageMin, LIMITS.imageDay]))) return;
 
   const model = pickModel(engine, !!image);
 

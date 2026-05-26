@@ -5,6 +5,8 @@
 // Proxies to fal.ai ideogram/remove-background. Hides FAL_API_KEY.
 
 import { falSubmitAndPoll, pickImageUrl } from './_helpers.js';
+import { resolveOwner } from './_lib/threads.js';
+import { enforceLimits, LIMITS } from './_lib/ratelimit.js';
 
 export const config = { maxDuration: 60 };
 
@@ -13,6 +15,10 @@ export default async function handler(req, res) {
 
   const { image } = req.body || {};
   if (!image) return res.status(400).json({ error: 'image required' });
+
+  // Rate limit per owner before submitting a (paid) fal job.
+  const owner = await resolveOwner(req, res);
+  if (!(await enforceLimits(res, owner?.ownerKey, [LIMITS.imageMin, LIMITS.imageDay]))) return;
 
   const model = process.env.FAL_BG_REMOVE_MODEL || 'fal-ai/ideogram/remove-background';
 

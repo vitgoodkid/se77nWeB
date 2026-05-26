@@ -7,6 +7,7 @@
 // `image_url` content part — provider must accept it (Gemini family does).
 
 import { resolveOwner, loadThreadMessages, appendThreadTurns, deleteThread, sanitizeThreadId } from './_lib/threads.js';
+import { enforceLimits, LIMITS } from './_lib/ratelimit.js';
 
 export const config = { maxDuration: 60 };
 
@@ -55,6 +56,7 @@ export default async function handler(req, res) {
   // or the thread is empty/new.
   const threadId = sanitizeThreadId(req.body?.threadId);
   const owner = await resolveOwner(req, res);
+  if (!(await enforceLimits(res, owner?.ownerKey, [LIMITS.chat]))) return;
   let context = Array.isArray(history)
     ? history
         .filter((m) => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string' && m.content.trim())
