@@ -66,7 +66,7 @@ async function classify(prompt, hasImage) {
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-  const { prompt = '', image } = req.body || {};
+  const { prompt = '', image, history } = req.body || {};
   if (!prompt && !image) return res.status(400).json({ error: 'prompt or image required' });
 
   // Routing
@@ -134,6 +134,7 @@ export default async function handler(req, res) {
       system: SE77N_SYSTEM,
       prompt,
       image,
+      history,
       max_tokens: 8000,
       model: 'gemini-3.1-pro-preview',
     });

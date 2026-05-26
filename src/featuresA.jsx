@@ -3,6 +3,7 @@ import {
   COLORS, CITIES,
   Panel, Btn, Field, Pill, Kicker,
   useSyncedData, usePasteImage, copyText, useLang, useMediaQuery, usePersisted, compressImage,
+  buildChatHistory,
 } from './lib.jsx';
 
 // ═════════════════════════════════════════════════════════════
@@ -159,7 +160,7 @@ export function AIPlayground() {
         const res = await fetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ system: preset.system, prompt: q, image: usedImage?.dataUrl, model: 'gemini-3.1-pro-preview' }),
+          body: JSON.stringify({ system: preset.system, prompt: q, image: usedImage?.dataUrl, model: 'gemini-3.1-pro-preview', history: buildChatHistory(messages, retry ? q : undefined) }),
         });
         const data = await safeJson(res, 'chat');
         assistantMsg = { role: 'assistant', content: data.text };

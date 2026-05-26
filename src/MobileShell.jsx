@@ -12,6 +12,7 @@ import {
   COLORS,
   useClock, useGeoDayNight, useLang, useAuth,
   useSyncedData, usePasteImage, compressImage,
+  buildChatHistory,
 } from './lib.jsx';
 
 const AIPlayground       = lazy(() => import('./featuresA.jsx').then((m) => ({ default: m.AIPlayground })));
@@ -935,7 +936,7 @@ export default function MobileShell() {
       const res = await fetch('/api/agent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: q, image: used?.dataUrl }),
+        body: JSON.stringify({ prompt: q, image: used?.dataUrl, history: buildChatHistory(messages, retry ? q : undefined) }),
       });
       const data = await res.json();
       if (!res.ok && res.status !== 202) throw new Error(data.error || `agent ${res.status}`);

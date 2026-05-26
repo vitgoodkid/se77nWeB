@@ -23,7 +23,7 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
-  const { system = '', prompt = '', image, model: reqModel } = req.body || {};
+  const { system = '', prompt = '', image, model: reqModel, history } = req.body || {};
   if (!prompt && !image) {
     return res.status(400).json({ error: 'prompt or image required' });
   }
@@ -40,6 +40,13 @@ export default async function handler(req, res) {
       ]
     : prompt;
 
+  const priorMsgs = Array.isArray(history)
+    ? history
+        .filter((m) => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string' && m.content.trim())
+        .slice(-10)
+        .map((m) => ({ role: m.role, content: m.content }))
+    : [];
+
   try {
     const upstream = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
@@ -51,6 +58,7 @@ export default async function handler(req, res) {
         model,
         messages: [
           ...(system ? [{ role: 'system', content: system }] : []),
+          ...priorMsgs,
           { role: 'user', content: userContent },
         ],
         max_tokens: 8000,

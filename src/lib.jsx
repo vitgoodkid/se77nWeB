@@ -259,6 +259,27 @@ export function tStatic(key, lang) {
   return _i18nResolve(key, lang || _currentLang);
 }
 
+// Distil a stored chat message list into the {role, content} turns the chat
+// APIs expect — drops media-only / error / placeholder bubbles and caps length
+// so multi-turn context is preserved without ballooning the request.
+export function buildChatHistory(messages, excludePrompt, limit = 10) {
+  if (!Array.isArray(messages)) return [];
+  let turns = messages
+    .filter((m) =>
+      m && (m.role === 'user' || m.role === 'assistant') && !m.error &&
+      typeof m.content === 'string' && m.content.trim() &&
+      m.content !== '(image)' && m.content !== '(no prompt)')
+    .map((m) => ({ role: m.role, content: m.content }));
+  // On retry the failed user turn is still in the list — drop it so the
+  // resent prompt isn't duplicated as two consecutive user messages.
+  if (excludePrompt && turns.length &&
+      turns[turns.length - 1].role === 'user' &&
+      turns[turns.length - 1].content === excludePrompt) {
+    turns = turns.slice(0, -1);
+  }
+  return turns.slice(-limit);
+}
+
 const LangContext = createContext({
   lang: 'en',
   setLang: () => {},
