@@ -48,6 +48,36 @@
   .chev { display: inline-block; transition: transform 120ms ease; }
   .msg-bubble { background: rgba(21,17,13,0.55); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 12px 16px; line-height: 1.55; font-size: 14px; }
   .msg-bubble.assistant { background: rgba(138,79,255,0.04); border-color: rgba(138,79,255,0.20); }
+
+  /* ── Mobile (≤768px): sidebar becomes a slide-in drawer, content goes single-column ── */
+  #nav-toggle { display: none; }
+  #nav-scrim { display: none; }
+  @media (max-width: 768px) {
+    header { padding-left: 14px; padding-right: 14px; }
+    #hdr-breadcrumb { display: none; }
+    #nav-toggle { display: inline-grid; place-items: center; }
+    aside {
+      transform: translateX(-100%);
+      transition: transform 240ms cubic-bezier(.22,1,.36,1);
+      width: 280px; max-width: 86vw;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+    }
+    body.nav-open aside { transform: none; }
+    #nav-scrim { position: fixed; inset: 0; z-index: 39; background: rgba(0,0,0,0.55); }
+    body.nav-open #nav-scrim { display: block; }
+    main { padding-left: 16px !important; padding-right: 16px !important; }
+    /* title + page action stack instead of overflowing off-screen */
+    main > .flex.items-end { flex-direction: column; align-items: flex-start; gap: 12px; }
+    main h1.mono { font-size: 26px; }
+    /* every 2/3/12-col grid collapses to one column */
+    main .grid { grid-template-columns: 1fr !important; }
+    /* list cards (worlds / characters) stack: cover+info on top, buttons full-width below */
+    .tv-card { flex-direction: column; align-items: stretch !important; }
+    .tv-card .tv-actions { flex-direction: row; }
+    .tv-card .tv-actions .btn, .tv-card .tv-actions a.btn { flex: 1; }
+    /* story log unsticks + uncaps so it flows under the editor instead of overlapping */
+    .row.sticky { position: static !important; max-height: none !important; }
+  }
 </style>
 </head>
 <body class="bg-bg text-ink min-h-screen overflow-x-hidden">
@@ -59,11 +89,12 @@
 
 <header class="fixed top-0 inset-x-0 h-16 z-50 flex items-center justify-between px-6 backdrop-blur-md border-b border-line" style="background:rgba(13,10,8,0.7)">
   <div class="flex items-center gap-5">
+    <button id="nav-toggle" aria-label="menu" class="btn" style="width:38px;height:38px;padding:0;border-radius:10px;font-size:16px;letter-spacing:0">☰</button>
     <a href="/" class="flex flex-col items-start gap-1 leading-none" title="Về se77n.com">
       <div class="mono text-[24px] font-extrabold tracking-[-0.025em]">se<span class="text-red glow77">77</span>n<span class="text-mute font-normal"> / kata</span></div>
       <div class="mono text-[9px] uppercase tracking-kicker text-mute">tavern · roleplay</div>
     </a>
-    <div class="flex items-center gap-2 ml-3 mono text-[10px] tracking-label uppercase">
+    <div id="hdr-breadcrumb" class="flex items-center gap-2 ml-3 mono text-[10px] tracking-label uppercase">
       <a href="index.html" class="text-mute hover:text-ink">se77n</a><span class="text-mute2">/</span>
       <a href="index.html" class="text-mute hover:text-ink">kata</a><span class="text-mute2">/</span>
       <span class="text-ink">tavern · <span id="bc-tab">worlds</span></span>
@@ -87,6 +118,7 @@
     <a href="index.html" class="mono text-[10px] tracking-label uppercase text-mute hover:text-ink">← my servers</a>
   </div>
 </aside>
+<div id="nav-scrim" aria-hidden></div>
 
 <main class="relative z-10 pt-20 pb-16 pl-[244px] pr-8">
 
@@ -260,7 +292,7 @@ async function renderWorlds() {
       ? `<img src="${escapeHtml(w.coverImageUrl)}" alt="" class="rounded-[8px] object-cover" style="width:64px;height:64px;flex:0 0 64px" />`
       : `<div class="rounded-[8px] grid place-items-center mono text-[10px] tracking-label uppercase text-mute2" style="width:64px;height:64px;flex:0 0 64px;background:rgba(138,79,255,0.06);border:1px solid rgba(138,79,255,0.18)">⌑</div>`;
     return `
-      <div class="row flex items-center gap-4">
+      <div class="row tv-card flex items-center gap-4">
         ${cover}
         <div class="flex-1 min-w-0 cursor-pointer" data-world-id="${escapeHtml(w._id)}">
           <div class="flex items-center gap-3 flex-wrap">
@@ -272,7 +304,7 @@ async function renderWorlds() {
             ${fmtNum(w.messageCount)} turns · last ${escapeHtml(fmtTime(w.lastActiveAt))} · guild ${escapeHtml(w.guildId)}
           </div>
         </div>
-        <div class="flex flex-col gap-1">
+        <div class="tv-actions flex flex-col gap-1">
           <a href="tavern-play.html?world=${escapeHtml(w._id)}" class="btn btn-primary" ${w.isLocked ? 'style="opacity:0.5;pointer-events:none"' : ''}>▶ play</a>
           <button class="btn" data-world-id="${escapeHtml(w._id)}">edit</button>
         </div>
@@ -888,13 +920,13 @@ async function renderCharacters() {
   }
 
   const rowsHtml = chars.map((c) => `
-    <div class="row flex items-start gap-4">
+    <div class="row tv-card flex items-start gap-4">
       <div class="flex-1 min-w-0">
         <div class="text-[15px] font-semibold tracking-tight">${escapeHtml(c.name)}</div>
         ${c.appearance ? `<div class="text-[12px] text-mute mt-1 truncate-2">${escapeHtml(c.appearance)}</div>` : ''}
         ${c.imageBasePrompt ? `<div class="mono text-[10px] text-mute2 mt-1 truncate">img base: ${escapeHtml(c.imageBasePrompt)}</div>` : ''}
       </div>
-      <div class="flex flex-col gap-1">
+      <div class="tv-actions flex flex-col gap-1">
         <button class="btn" data-char-edit="${escapeHtml(c._id)}">edit</button>
         <button class="btn btn-danger" data-char-del="${escapeHtml(c._id)}">delete</button>
       </div>
@@ -1178,6 +1210,20 @@ function wireModelPickers() {
     });
   });
 }
+
+// ── Mobile drawer toggle ─────────────────────────────────────
+(function () {
+  const btn = document.getElementById('nav-toggle');
+  const scrim = document.getElementById('nav-scrim');
+  const close = () => document.body.classList.remove('nav-open');
+  if (btn) btn.addEventListener('click', () => document.body.classList.toggle('nav-open'));
+  if (scrim) scrim.addEventListener('click', close);
+  // Close after picking a nav entry or leaving to servers.
+  document.querySelectorAll('aside [data-tab], aside a[href="index.html"]').forEach((a) => {
+    a.addEventListener('click', close);
+  });
+  window.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+})();
 
 bootstrap();
 </script>
