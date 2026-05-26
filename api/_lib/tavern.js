@@ -95,7 +95,12 @@ const DEFAULT_SUBJECT_MODEL = 'grok-4-fast';
 const DEFAULT_SCENE_IMAGE_MODELS = ['fal-ai/nano-banana-pro', 'fal-ai/flux/schnell'];
 const DEFAULT_COVER_IMAGE_MODELS = ['fal-ai/nano-banana-pro', 'fal-ai/flux/schnell'];
 const DEFAULT_TURN_TEMPERATURE = 0.85;
-const DEFAULT_TURN_MAX_TOKENS = 1200;
+// The default storyteller model (gemini-3.1-pro-preview) is a reasoning model:
+// on the OpenAI-compatible API the token budget is shared with hidden thinking
+// tokens. At 1200 the reasoning ate most of the budget, leaving a tiny, cut-off
+// reply (and no <<SUGGESTIONS>> block). 4000 leaves room for thinking + a full
+// scene. Owners can tune this per-world or globally (override range 1..32000).
+const DEFAULT_TURN_MAX_TOKENS = 4000;
 const DEFAULT_MEMORY_WINDOW_SIZE = 50;
 
 // ── Layered config resolution ─────────────────────────────────
