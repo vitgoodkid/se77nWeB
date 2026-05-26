@@ -174,6 +174,20 @@
   ::-webkit-scrollbar { width: 8px; height: 8px; }
   ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
   ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
+
+  /* ── Mobile (≤768px): tighter padding + balanced hero/tiles ── */
+  @media (max-width: 768px) {
+    main section { padding-left: 20px !important; padding-right: 20px !important; }
+    /* don't force full-viewport centering on phones — flow from the top */
+    main section:first-of-type { min-height: auto !important; }
+    .t-hero { font-size: clamp(64px, 17vw, 92px); }
+    .t-tagline { font-size: 16px; }
+    /* shorter tiles so the stacked column isn't mostly empty */
+    .tile { min-height: 132px; padding: 18px; }
+    .tile-metric { font-size: 38px; }
+    /* shrink the 007 watermark so it doesn't smear across the column */
+    main section:first-of-type > [aria-hidden] { font-size: 150px !important; right: -6% !important; opacity: .4 !important; }
+  }
 </style>
 </head>
 <body class="bg-bg text-ink min-h-screen overflow-x-hidden">

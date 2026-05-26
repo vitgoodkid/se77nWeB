@@ -67,10 +67,12 @@ window.KATA_STRINGS = {
 
     // ── index landing ───────────────────────────────────────────
     'index.tile.servers': 'servers list',
+    'index.tile.servers.tag': 'surface · 01',
     'index.tile.servers.desc': 'Danh sách server bot đang phục vụ.',
     'index.tile.overview': 'server overview',
     'index.tile.overview.desc': 'Tổng quan hoạt động từng server.',
     'index.tile.admin': 'admin console',
+    'index.tile.admin.tag': 'owner',
     'index.tile.admin.desc': 'Cấu hình toàn bộ bot, sysprompt và model dùng cho mọi server.',
     'index.tile.logs': 'logs · image',
     'index.tile.logs.desc': 'Lịch sử ảnh đã tạo qua bot.',
@@ -220,10 +222,12 @@ window.KATA_STRINGS = {
 
     // ── index ───────────────────────────────────────────────────
     'index.tile.servers': 'servers list',
+    'index.tile.servers.tag': 'surface · 01',
     'index.tile.servers.desc': 'Servers the bot is currently serving.',
     'index.tile.overview': 'server overview',
     'index.tile.overview.desc': 'Per-server activity overview.',
     'index.tile.admin': 'admin console',
+    'index.tile.admin.tag': 'owner',
     'index.tile.admin.desc': 'Configure the whole bot — sysprompt and models used across every server.',
     'index.tile.logs': 'logs · image',
     'index.tile.logs.desc': 'Image generation history.',
