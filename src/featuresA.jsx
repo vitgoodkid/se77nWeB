@@ -137,15 +137,20 @@ export function AIPlayground() {
     throw new Error(`${kind}: still rendering after 10 min — try a shorter prompt`);
   }
 
-  async function send() {
-    const q = input.trim();
-    if ((!q && !imgRef) || busy) return;
+  async function send(retry) {
+    const q = retry ? retry.prompt : input.trim();
+    const usedImage = retry ? retry.image : imgRef;
+    if ((!q && !usedImage) || busy) return;
 
-    const userMsg = { role: 'user', content: q || '(no prompt)', image: imgRef?.dataUrl };
-    setInput('');
-    const usedImage = imgRef;
-    setImgRef(null);
-    setMessages((m) => [...m, userMsg]);
+    if (retry) {
+      // Drop prior error bubbles before re-attempting the same input.
+      setMessages((m) => m.filter((x) => !x.error));
+    } else {
+      const userMsg = { role: 'user', content: q || '(no prompt)', image: usedImage?.dataUrl };
+      setInput('');
+      setImgRef(null);
+      setMessages((m) => [...m, userMsg]);
+    }
     setBusy(true);
 
     try {
@@ -224,7 +229,12 @@ export function AIPlayground() {
         }).catch(() => { /* silent */ });
       }
     } catch (e) {
-      setMessages((m) => [...m, { role: 'assistant', content: '⚠ ' + (e.message || 'Connection wobble. Try again?') }]);
+      setMessages((m) => [...m, {
+        role: 'assistant',
+        content: '⚠ ' + (e.message || 'Connection wobble. Try again?'),
+        error: true,
+        retry: { prompt: q, image: usedImage },
+      }]);
     } finally {
       setBusy(false);
     }
@@ -376,6 +386,8 @@ export function AIPlayground() {
                   ? () => setImgRef({ name: 'reply.jpg', dataUrl: m.image })
                   : null
               }
+              onRetry={m.error && m.retry ? () => send(m.retry) : null}
+              retryLabel={t('ai.retry')}
             />
           ))}
           {busy && <Message role="assistant" content="…" typing kind={preset.kind} />}
@@ -638,7 +650,7 @@ function PillGroup({ label, value, onChange, options }) {
   );
 }
 
-function Message({ role, content, image, video, typing, kind, onReplyImage }) {
+function Message({ role, content, image, video, typing, kind, onReplyImage, onRetry, retryLabel }) {
   const isUser = role === 'user';
   return (
     <div style={{
@@ -665,6 +677,21 @@ function Message({ role, content, image, video, typing, kind, onReplyImage }) {
           <video src={video} controls style={{ display: 'block', maxWidth: '100%', borderRadius: 8, marginBottom: content ? 8 : 0 }} />
         )}
         {typing ? <TypingDots kind={kind} /> : content}
+        {onRetry && (
+          <div style={{ marginTop: 8, display: 'flex', justifyContent: 'flex-start' }}>
+            <button
+              onClick={onRetry}
+              className="mono"
+              style={{
+                fontSize: 10, letterSpacing: '0.15em',
+                padding: '4px 10px', borderRadius: 999,
+                background: 'transparent',
+                border: `1px solid ${COLORS.red}66`,
+                color: COLORS.red, cursor: 'pointer',
+              }}
+            >↻ {retryLabel}</button>
+          </div>
+        )}
         {onReplyImage && (
           <div style={{ marginTop: 8, display: 'flex', justifyContent: 'flex-end' }}>
             <button
@@ -709,21 +736,22 @@ function TypingDots({ kind }) {
 // 2. TOOLBOX — Public / Private (PIN 7777)
 // ═════════════════════════════════════════════════════════════
 const PUBLIC_TOOLS = [
-  { id: 'short', name: 'Rút gọn link',     desc: 'URL shortener với custom alias', icon: '/' },
-  { id: 'pst',   name: 'Pastebin',         desc: 'Quick share snippets / notes',   icon: '¶' },
-  { id: 'game',  name: 'Game resources',   desc: 'Cheat sheets, mods, saves',      icon: '◉' },
-  { id: 'imgc',  name: 'Image Converter',  desc: 'PNG/JPG/WebP + compressor',      icon: '◐' },
-  { id: 'v2g',   name: 'Video → GIF / MP3',desc: 'Extract clips và audio',         icon: '▶' },
-  { id: 'thao',  name: 'Thảo',             desc: 'Gửi em yêu — cosmic letter',     icon: '♥' },
+  { id: 'short', nameKey: 'tools.short.name', descKey: 'tools.short.desc', icon: '/' },
+  { id: 'pst',   nameKey: 'tools.pst.name',   descKey: 'tools.pst.desc',   icon: '¶' },
+  { id: 'game',  nameKey: 'tools.game.name',  descKey: 'tools.game.desc',  icon: '◉' },
+  { id: 'imgc',  nameKey: 'tools.imgc.name',  descKey: 'tools.imgc.desc',  icon: '◐' },
+  { id: 'v2g',   nameKey: 'tools.v2g.name',   descKey: 'tools.v2g.desc',   icon: '▶' },
+  { id: 'thao',  nameKey: 'tools.thao.name',  descKey: 'tools.thao.desc',  icon: '♥' },
 ];
 const PRIVATE_TOOLS = [
-  { id: 'srv', name: 'Server',      desc: 'Home lab dashboard',  icon: '⌬' },
-  { id: 'fin', name: 'Tài chính',   desc: 'Net worth + tracking',icon: '$' },
+  { id: 'srv', nameKey: 'tools.srv.name', descKey: 'tools.srv.desc', icon: '⌬' },
+  { id: 'fin', nameKey: 'tools.fin.name', descKey: 'tools.fin.desc', icon: '$' },
 ];
 
 const THAO_PIN = '2609';
 
 export function Toolbox() {
+  const { t } = useLang();
   const [tab, setTab] = useState('public');
   const [unlocked, setUnlocked] = useState(false);
   const [pin, setPin] = useState('');
@@ -883,10 +911,10 @@ export function Toolbox() {
                 }}>{tool.icon}</div>
                 <div>
                   <div className="mono" style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-                    {tool.name}
+                    {t(tool.nameKey)}
                   </div>
                   <div style={{ fontSize: 12, color: COLORS.muted, marginTop: 4, lineHeight: 1.4 }}>
-                    {tool.desc}
+                    {t(tool.descKey)}
                   </div>
                 </div>
               </button>
@@ -899,13 +927,14 @@ export function Toolbox() {
 }
 
 function ToolDetail({ tool, accent, onBack }) {
+  const { t } = useLang();
   return (
     <div style={{ animation: 'fadeUp 200ms ease-out' }}>
       <div style={{ marginBottom: 18, display: 'flex', alignItems: 'center', gap: 12 }}>
         <Btn onClick={onBack} variant="ghost">← Back</Btn>
         <div>
           <Kicker style={{ color: accent }}>{tool.icon} · TOOL</Kicker>
-          <div className="mono" style={{ fontSize: 18, fontWeight: 700, marginTop: 2 }}>{tool.name}</div>
+          <div className="mono" style={{ fontSize: 18, fontWeight: 700, marginTop: 2 }}>{t(tool.nameKey)}</div>
         </div>
       </div>
       <div style={{

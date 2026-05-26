@@ -425,6 +425,7 @@ function ProviderBtn({ provider, color, label, onClick }) {
 // Hero — time-aware greeting; reads live clock + geolocation phase
 // ─────────────────────────────────────────────────────────────
 function HeroGreeting({ name }) {
+  const { t } = useLang();
   const now = useClock();
   const geo = useGeoDayNight();
   const hour = now.getHours();
@@ -452,7 +453,7 @@ function HeroGreeting({ name }) {
         lineHeight: 1.1, color: COLORS.text,
         fontFamily: "'Geist', system-ui, sans-serif",
       }}>
-        good {phase},<br/>
+        {t('mobile.greeting.' + phase)},<br/>
         <span className="mono" style={{
           color: COLORS.red, fontWeight: 800, letterSpacing: '-0.025em',
           textShadow: `0 0 12px ${COLORS.red}55`,
@@ -533,7 +534,7 @@ function DayDivider({ label }) {
   );
 }
 
-function Bubble({ msg }) {
+function Bubble({ msg, onRetry, retryLabel }) {
   const isUser = msg.role === 'user';
   const badge = !isUser && msg.intent ? INTENT_BADGE[msg.intent] : null;
   const mono = isUser && typeof msg.content === 'string' && msg.content.startsWith('/');
@@ -601,6 +602,14 @@ function Bubble({ msg }) {
         }} />
       )}
       {msg.content}
+      {onRetry && (
+        <div style={{ marginTop: 8 }}>
+          <button onClick={onRetry} className="mono" style={{
+            fontSize: 10, letterSpacing: '0.15em', padding: '5px 12px', borderRadius: 999,
+            background: 'transparent', border: `1px solid ${COLORS.red}66`, color: COLORS.red, cursor: 'pointer',
+          }}>↻ {retryLabel}</button>
+        </div>
+      )}
     </div>
   );
 }
@@ -886,7 +895,7 @@ export default function MobileShell() {
     e.target.value = '';
   }
 
-  async function send(slashEntry, fromSlash = false) {
+  async function send(slashEntry, fromSlash = false, retry) {
     // Slash menu picked a /nav command → just route there
     if (slashEntry && slashEntry.kind === 'nav') {
       setInput('');
@@ -905,17 +914,20 @@ export default function MobileShell() {
       return;
     }
 
-    const q = input.trim();
-    if ((!q && !attached) || busy) return;
-    const used = attached;
+    const q = retry ? retry.prompt : input.trim();
+    const used = retry ? retry.image : attached;
+    if ((!q && !used) || busy) return;
 
-    setInput('');
-    setAttached(null);
-
-    setHistory((h) => ({
-      ...h,
-      chat: [...(h.chat || []), { role: 'user', content: q || '(image)', image: used?.dataUrl }],
-    }));
+    if (retry) {
+      setHistory((h) => ({ ...h, chat: (h.chat || []).filter((x) => !x.error) }));
+    } else {
+      setInput('');
+      setAttached(null);
+      setHistory((h) => ({
+        ...h,
+        chat: [...(h.chat || []), { role: 'user', content: q || '(image)', image: used?.dataUrl }],
+      }));
+    }
     setBusy(true);
     setBusyHint(used ? t('fab.analyzing') : t('fab.thinking'));
 
@@ -939,6 +951,8 @@ export default function MobileShell() {
           content: '◇ Still rendering — ' + (data.intent || 'job') + ' often exceeds 60s. Try again or shorten the prompt.',
           intent: data.intent,
         };
+      } else if (data.empty) {
+        assistantMsg = { role: 'assistant', content: '⚠ ' + t('fab.empty'), error: true, retry: { prompt: q, image: used } };
       } else {
         assistantMsg = { role: 'assistant', content: data.text || '', intent: data.intent || 'chat' };
       }
@@ -946,7 +960,7 @@ export default function MobileShell() {
     } catch (e) {
       setHistory((h) => ({
         ...h,
-        chat: [...(h.chat || []), { role: 'assistant', content: '⚠ ' + (e.message || 'error') }],
+        chat: [...(h.chat || []), { role: 'assistant', content: '⚠ ' + (e.message || 'error'), error: true, retry: { prompt: q, image: used } }],
       }));
     } finally {
       setBusy(false);
@@ -992,7 +1006,7 @@ export default function MobileShell() {
                 <DayDivider label={new Date().toLocaleDateString('en-GB', {
                   weekday: 'short', day: '2-digit', month: 'short',
                 }).toUpperCase()} />
-                {messages.map((m, i) => <Bubble key={i} msg={m} />)}
+                {messages.map((m, i) => <Bubble key={i} msg={m} onRetry={m.error && m.retry ? () => send(undefined, false, m.retry) : null} retryLabel={t('ai.retry')} />)}
                 {busy && <TypingBubble hint={busyHint} />}
               </>
             )}

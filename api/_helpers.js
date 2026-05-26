@@ -3,10 +3,10 @@
 // but allows them as importable modules.
 
 // ── Chat (yunwu OpenAI-compatible) ─────────────────────────────
-export async function callChat({ system, prompt, image, max_tokens = 1024, temperature = 0.7, jsonMode = false }) {
+export async function callChat({ system, prompt, image, max_tokens = 1024, temperature = 0.7, jsonMode = false, model }) {
   const apiKey = process.env.YUNWU_API_KEY;
   const baseUrl = process.env.YUNWU_BASE_URL || 'https://yunwu.ai/v1';
-  const model = process.env.YUNWU_CHAT_MODEL || 'gemini-3.1-flash-lite';
+  const chatModel = model || process.env.YUNWU_CHAT_MODEL || 'gemini-3.1-flash-lite';
   if (!apiKey) throw new Error('YUNWU_API_KEY not configured');
 
   const userContent = image
@@ -17,7 +17,7 @@ export async function callChat({ system, prompt, image, max_tokens = 1024, tempe
     : prompt;
 
   const body = {
-    model,
+    model: chatModel,
     messages: [
       ...(system ? [{ role: 'system', content: system }] : []),
       { role: 'user', content: userContent },

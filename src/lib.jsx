@@ -58,10 +58,12 @@ const I18N = {
     'fab.needHelp':    'Need help?',
     'fab.thinking':    'thinking',
     'fab.analyzing':   'analyzing image',
+    'fab.empty':       'Empty reply — retry below.',
 
     'ai.presets':            'PRESETS',
     'ai.send':               'Send',
     'ai.clear':              'Clear',
+    'ai.retry':              'Retry',
     'ai.attach':             'Attach image',
     'ai.preset.chat.label':       'Free chat',
     'ai.preset.chat.placeholder': 'Ask me anything…',
@@ -103,6 +105,20 @@ const I18N = {
     'mobile.try.image':     'render an image',
     'mobile.try.tldr':      'summarize an article',
     'mobile.try.code':      'debug a snippet',
+
+    'mobile.greeting.morning':   'good morning',
+    'mobile.greeting.afternoon': 'good afternoon',
+    'mobile.greeting.evening':   'good evening',
+    'mobile.greeting.late':      'still up',
+
+    'tools.short.name': 'Link shortener',    'tools.short.desc': 'URL shortener with custom alias',
+    'tools.pst.name':   'Pastebin',          'tools.pst.desc':   'Quick share snippets / notes',
+    'tools.game.name':  'Game resources',    'tools.game.desc':  'Cheat sheets, mods, saves',
+    'tools.imgc.name':  'Image Converter',   'tools.imgc.desc':  'PNG/JPG/WebP + compressor',
+    'tools.v2g.name':   'Video → GIF / MP3', 'tools.v2g.desc':   'Extract clips and audio',
+    'tools.thao.name':  'Thảo',              'tools.thao.desc':  'A letter for my love — cosmic',
+    'tools.srv.name':   'Server',            'tools.srv.desc':   'Home lab dashboard',
+    'tools.fin.name':   'Finance',           'tools.fin.desc':   'Net worth + tracking',
   },
   vi: {
     'topbar.experiment': 'Thí nghiệm',
@@ -158,10 +174,12 @@ const I18N = {
     'fab.needHelp':    'Cần giúp gì không?',
     'fab.thinking':    'đang nghĩ',
     'fab.analyzing':   'đang phân tích ảnh',
+    'fab.empty':       'Phản hồi rỗng — thử lại.',
 
     'ai.presets':            'CHẾ ĐỘ',
     'ai.send':               'Gửi',
     'ai.clear':              'Xoá',
+    'ai.retry':              'Thử lại',
     'ai.attach':             'Đính kèm ảnh',
     'ai.preset.chat.label':       'Trò chuyện tự do',
     'ai.preset.chat.placeholder': 'Hỏi mình bất cứ điều gì…',
@@ -203,6 +221,20 @@ const I18N = {
     'mobile.try.image':     'tạo ảnh',
     'mobile.try.tldr':      'tóm tắt bài dài',
     'mobile.try.code':      'debug code',
+
+    'mobile.greeting.morning':   'chào buổi sáng',
+    'mobile.greeting.afternoon': 'chào buổi chiều',
+    'mobile.greeting.evening':   'chào buổi tối',
+    'mobile.greeting.late':      'khuya rồi',
+
+    'tools.short.name': 'Rút gọn link',      'tools.short.desc': 'URL shortener với custom alias',
+    'tools.pst.name':   'Pastebin',          'tools.pst.desc':   'Chia sẻ nhanh snippet / ghi chú',
+    'tools.game.name':  'Game resources',    'tools.game.desc':  'Cheat sheet, mod, save',
+    'tools.imgc.name':  'Image Converter',   'tools.imgc.desc':  'PNG/JPG/WebP + nén ảnh',
+    'tools.v2g.name':   'Video → GIF / MP3', 'tools.v2g.desc':   'Trích clip và audio',
+    'tools.thao.name':  'Thảo',              'tools.thao.desc':  'Gửi em yêu — cosmic letter',
+    'tools.srv.name':   'Server',            'tools.srv.desc':   'Home lab dashboard',
+    'tools.fin.name':   'Tài chính',         'tools.fin.desc':   'Net worth + tracking',
   },
 };
 
@@ -214,9 +246,17 @@ try {
 
 export function currentLang() { return _currentLang; }
 
+function _i18nResolve(key, L) {
+  const v = I18N[L]?.[key] ?? I18N.en[key];
+  if (v === undefined) {
+    try { if (import.meta.env && import.meta.env.DEV) console.warn('[i18n] missing key: ' + key); } catch { /* non-vite env */ }
+    return key;
+  }
+  return v;
+}
+
 export function tStatic(key, lang) {
-  const L = lang || _currentLang;
-  return I18N[L]?.[key] ?? I18N.en[key] ?? key;
+  return _i18nResolve(key, lang || _currentLang);
 }
 
 const LangContext = createContext({
@@ -236,7 +276,7 @@ export function LangProvider({ children }) {
     try { document.documentElement.setAttribute('lang', next); } catch {}
   }, []);
   const toggle = useCallback(() => setLang(_currentLang === 'en' ? 'vi' : 'en'), [setLang]);
-  const t = useCallback((key) => I18N[lang]?.[key] ?? I18N.en[key] ?? key, [lang]);
+  const t = useCallback((key) => _i18nResolve(key, lang), [lang]);
   useEffect(() => { try { document.documentElement.setAttribute('lang', lang); } catch {} }, [lang]);
   const value = useMemo(() => ({ lang, setLang, toggle, t }), [lang, setLang, toggle, t]);
   return <LangContext.Provider value={value}>{children}</LangContext.Provider>;

@@ -50,6 +50,9 @@ async function classify(prompt, hasImage) {
       max_tokens: 200,
       temperature: 0.1,
       jsonMode: true,
+      // Routing is a cheap classification — keep it on a fast, non-reasoning
+      // model so it stays quick/cheap even when chat uses a reasoning model.
+      model: process.env.YUNWU_ROUTER_MODEL || 'gemini-3.1-flash-lite',
     });
     const parsed = tryParseJson(text) || {};
     if (!VALID_TOOLS.has(parsed.tool)) parsed.tool = 'chat';
@@ -124,13 +127,21 @@ export default async function handler(req, res) {
       return res.status(200).json({ kind: 'image', image: url, intent: cls.tool });
     }
 
-    // Default: chat (with vision if image attached)
+    // Default: chat (with vision if image attached). Mirrors the AI Playground:
+    // gemini-3.1-pro-preview with a large budget so the reasoning model has
+    // room for hidden thinking + a full answer (otherwise it returns empty).
     const text = await callChat({
       system: SE77N_SYSTEM,
       prompt,
       image,
-      max_tokens: 1024,
+      max_tokens: 8000,
+      model: 'gemini-3.1-pro-preview',
     });
+    if (!text || !text.trim()) {
+      // Reasoning model can burn the whole budget on thinking → empty reply.
+      // Flag it so the client shows a retry affordance instead of a blank bubble.
+      return res.status(200).json({ kind: 'chat', text: '', empty: true, intent: 'chat' });
+    }
     return res.status(200).json({ kind: 'chat', text, intent: 'chat' });
   } catch (e) {
     return res.status(e.status || 502).json({ error: String(e.message || e), upstream: e.upstream });

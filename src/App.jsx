@@ -284,10 +284,10 @@ function TopBar({ phase, now, geo, nav, ambient, ambientOn }) {
           fontSize: 9, letterSpacing: '0.24em', color: COLORS.muted, lineHeight: 1,
           textTransform: 'uppercase',
         }}>
-          {'Experiment'}&nbsp;<span style={{
+          {t('topbar.experiment')}&nbsp;<span style={{
             color: COLORS.red, fontWeight: 700,
             textShadow: `0 0 4px ${COLORS.red}aa, 0 0 10px ${COLORS.red}55`,
-          }}>{EXPERIMENT_NUMBER}</span> / Desktop
+          }}>{EXPERIMENT_NUMBER}</span> / {t('topbar.desktop')}
         </div>
       </button>
 
@@ -1296,16 +1296,20 @@ function ChatFab({ open, onOpen, onClose, ambient, nav }) {
     }
   }, [open, messages.length, busy]);
 
-  async function send() {
-    const q = input.trim();
-    if ((!q && !imgRef) || busy) return;
-    const used = imgRef;
-    setInput('');
-    setImgRef(null);
-    setHistory((h) => ({
-      ...h,
-      chat: [...(h.chat || []), { role: 'user', content: q || '(image)', image: used?.dataUrl }],
-    }));
+  async function send(retry) {
+    const q = retry ? retry.prompt : input.trim();
+    const used = retry ? retry.image : imgRef;
+    if ((!q && !used) || busy) return;
+    if (retry) {
+      setHistory((h) => ({ ...h, chat: (h.chat || []).filter((x) => !x.error) }));
+    } else {
+      setInput('');
+      setImgRef(null);
+      setHistory((h) => ({
+        ...h,
+        chat: [...(h.chat || []), { role: 'user', content: q || '(image)', image: used?.dataUrl }],
+      }));
+    }
     setBusy(true);
     setBusyHint(used ? t('fab.analyzing') : t('fab.thinking'));
     try {
@@ -1328,6 +1332,8 @@ function ChatFab({ open, onOpen, onClose, ambient, nav }) {
           content: '◇ Still rendering — ' + (data.intent || 'job') + ' often exceeds 60s. Try again or shorten the prompt.',
           intent: data.intent,
         };
+      } else if (data.empty) {
+        assistantMsg = { role: 'assistant', content: '⚠ ' + t('fab.empty'), error: true, retry: { prompt: q, image: used } };
       } else {
         assistantMsg = { role: 'assistant', content: data.text || '', intent: data.intent || 'chat' };
       }
@@ -1335,7 +1341,7 @@ function ChatFab({ open, onOpen, onClose, ambient, nav }) {
     } catch (e) {
       setHistory((h) => ({
         ...h,
-        chat: [...(h.chat || []), { role: 'assistant', content: '⚠ ' + (e.message || 'error') }],
+        chat: [...(h.chat || []), { role: 'assistant', content: '⚠ ' + (e.message || 'error'), error: true, retry: { prompt: q, image: used } }],
       }));
     } finally {
       setBusy(false);
@@ -1428,7 +1434,7 @@ function ChatFab({ open, onOpen, onClose, ambient, nav }) {
             Need help?
           </div>
         ) : (
-          recent.map((m, i) => <ChatBubble key={i} msg={m} accent={accent} />)
+          recent.map((m, i) => <ChatBubble key={i} msg={m} accent={accent} onRetry={m.error && m.retry ? () => send(m.retry) : null} retryLabel={t('ai.retry')} />)
         )}
         {busy && <ChatBubble msg={{ role: 'assistant', content: busyHint + '…' }} accent={accent} typing />}
       </div>
@@ -1532,7 +1538,7 @@ const INTENT_BADGE = {
   video_gen:  { label: '▶ Video · generated', color: '#D4A858' },
 };
 
-function ChatBubble({ msg, accent, typing }) {
+function ChatBubble({ msg, accent, typing, onRetry, retryLabel }) {
   const isUser = msg.role === 'user';
   const badge = !isUser && msg.intent ? INTENT_BADGE[msg.intent] : null;
   return (
@@ -1596,6 +1602,14 @@ function ChatBubble({ msg, accent, typing }) {
           )}
         </span>
       ) : msg.content}
+      {onRetry && (
+        <div style={{ marginTop: 8 }}>
+          <button onClick={onRetry} className="mono" style={{
+            fontSize: 10, letterSpacing: '0.15em', padding: '4px 10px', borderRadius: 999,
+            background: 'transparent', border: `1px solid ${COLORS.red}66`, color: COLORS.red, cursor: 'pointer',
+          }}>↻ {retryLabel}</button>
+        </div>
+      )}
     </div>
   );
 }
