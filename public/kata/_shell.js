@@ -428,6 +428,8 @@
     a.className = 'h-8 pl-1 pr-3 rounded-full border border-line flex items-center gap-2 mono text-[11px]';
     a.style.color = '#f5ede0';
     a.style.textDecoration = 'none';
+    a.style.position = 'relative';
+    a.style.cursor = 'pointer';
 
     var initialBubble = document.createElement('span');
     initialBubble.className = 'w-[26px] h-[26px] rounded-full grid place-items-center text-[11px] font-extrabold';
@@ -435,6 +437,7 @@
     initialBubble.style.color = 'var(--accent)';
     initialBubble.textContent = '?';
     var name = document.createElement('span');
+    name.id = 'kata-user-name';
     name.style.maxWidth = '120px';
     name.style.overflow = 'hidden';
     name.style.textOverflow = 'ellipsis';
@@ -458,15 +461,95 @@
         })
         .catch(function () {});
     }
+
+    // Real interactive control: guest → OAuth start, authed → account menu.
+    a.addEventListener('click', function (e) {
+      var authed = !!(window.__kataMe && window.__kataMe.user);
+      if (!authed) {
+        if (!a.getAttribute('href')) { e.preventDefault(); window.location.href = '/api/auth/discord/start'; }
+        return; // href present → let the link navigate
+      }
+      e.preventDefault();
+      e.stopPropagation();
+      if (a._menu) closeUserMenu(a); else openUserMenu(a);
+    });
+
     return a;
   }
+
+  function openUserMenu(anchor) {
+    var u = (window.__kataMe && window.__kataMe.user) || {};
+    var vi = state.lang === 'vi';
+    var box = document.createElement('div');
+    box.style.cssText = [
+      'position:absolute', 'right:0', 'top:calc(100% + 8px)', 'z-index:120',
+      'min-width:220px', 'max-width:80vw',
+      'background:rgba(13,10,8,0.96)', 'border:1px solid rgba(255,255,255,0.10)',
+      'border-radius:12px', 'padding:12px', 'backdrop-filter:blur(8px)',
+      'box-shadow:0 16px 40px rgba(0,0,0,0.5)',
+    ].join(';');
+
+    var kicker = document.createElement('div');
+    kicker.style.cssText = 'font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:rgba(245,237,224,0.5);margin-bottom:8px';
+    kicker.textContent = (vi ? 'Đã đăng nhập' : 'Signed in') + (u.provider ? ' · ' + String(u.provider).toUpperCase() : '');
+    box.appendChild(kicker);
+
+    var nm = document.createElement('div');
+    nm.style.cssText = 'font-family:"JetBrains Mono",ui-monospace,monospace;font-size:13px;font-weight:700;color:#f5ede0';
+    nm.textContent = u.displayName || u.username || '—';
+    box.appendChild(nm);
+
+    if (u.email) {
+      var em = document.createElement('div');
+      em.style.cssText = 'font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10px;color:rgba(245,237,224,0.5);margin-top:3px;word-break:break-all';
+      em.textContent = u.email;
+      box.appendChild(em);
+    }
+
+    var out = document.createElement('button');
+    out.type = 'button';
+    out.textContent = '↩ ' + (vi ? 'Đăng xuất' : 'Sign out');
+    out.style.cssText = [
+      'margin-top:12px', 'width:100%', 'text-align:left',
+      'padding:10px 12px', 'border-radius:8px',
+      'background:transparent', 'border:1px solid rgba(255,255,255,0.10)',
+      'color:#f5ede0', 'cursor:pointer',
+      'font-family:"JetBrains Mono",ui-monospace,monospace', 'font-size:11px', 'letter-spacing:0.08em',
+    ].join(';');
+    out.addEventListener('mouseenter', function () { out.style.background = 'rgba(224,69,69,0.12)'; out.style.borderColor = 'rgba(224,69,69,0.4)'; out.style.color = '#E04545'; });
+    out.addEventListener('mouseleave', function () { out.style.background = 'transparent'; out.style.borderColor = 'rgba(255,255,255,0.10)'; out.style.color = '#f5ede0'; });
+    out.addEventListener('click', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      out.disabled = true;
+      out.textContent = vi ? 'Đang đăng xuất…' : 'Signing out…';
+      fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' })
+        .catch(function () {})
+        .then(function () { window.location.reload(); });
+    });
+    box.appendChild(out);
+
+    anchor.appendChild(box);
+    anchor._menu = box;
+    anchor._onOutside = function (ev) {
+      if (box.contains(ev.target) || anchor.contains(ev.target)) return;
+      closeUserMenu(anchor);
+    };
+    setTimeout(function () { document.addEventListener('click', anchor._onOutside, true); }, 0);
+  }
+  function closeUserMenu(anchor) {
+    if (anchor._menu && anchor._menu.parentElement) anchor._menu.parentElement.removeChild(anchor._menu);
+    anchor._menu = null;
+    if (anchor._onOutside) { document.removeEventListener('click', anchor._onOutside, true); anchor._onOutside = null; }
+  }
+
   function hydrateChip(a, data) {
     var user = data && data.user;
     if (!user) return;
     a.removeAttribute('href');
-    a.style.cursor = 'default';
+    a.style.cursor = 'pointer';
     var bubble = a.firstChild;
-    var name = a.lastChild;
+    var name = document.getElementById('kata-user-name') || a.querySelector('#kata-user-name') || a.lastChild;
     var label = user.displayName || user.username || '—';
     name.textContent = label;
     if (user.avatarUrl) {
@@ -924,7 +1007,7 @@
       '  #kata-theme-btn button > span:nth-child(2) { display: none !important; }',
       '  #kata-lang-btn span { padding-left: 6px; padding-right: 6px; }',
       '  #kata-user-chip { padding-right: 3px !important; }',
-      '  #kata-user-chip > :last-child { display: none !important; }',
+      '  #kata-user-name { display: none !important; }',
       '  aside.kata-drawer { transform: translateX(-100%); transition: transform 240ms cubic-bezier(.22,1,.36,1); width: 280px; max-width: 86vw; box-shadow: 0 24px 60px rgba(0,0,0,0.6); }',
       '  body.kata-nav-open aside.kata-drawer { transform: none; }',
       '  #kata-nav-scrim { position: fixed; inset: 0; z-index: 39; background: rgba(0,0,0,0.55); }',
