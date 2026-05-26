@@ -77,6 +77,20 @@
     .tv-card .tv-actions .btn, .tv-card .tv-actions a.btn { flex: 1; }
     /* story log unsticks + uncaps so it flows under the editor instead of overlapping */
     .row.sticky { position: static !important; max-height: none !important; }
+
+    /* header: shrink so the action cluster stops overflowing off-screen */
+    header > div:first-child { gap: 10px; }
+    .hdr-logo { font-size: 19px !important; }
+    .hdr-kata, .hdr-sub { display: none; }
+    #kata-header-actions { gap: 7px !important; }
+    /* theme chip → just the colour dot + caret (drop the WHITE/RED label) */
+    #kata-theme-btn button { padding-left: 8px !important; padding-right: 8px !important; gap: 4px !important; }
+    #kata-theme-btn button > span:nth-child(2) { display: none; }
+    /* lang toggle tighter */
+    #kata-lang-btn span { padding-left: 6px; padding-right: 6px; }
+    /* user chip → avatar only (drop the name) */
+    #kata-user-chip { padding-right: 3px !important; }
+    #kata-user-chip > :last-child { display: none; }
   }
 </style>
 </head>
@@ -89,10 +103,12 @@
 
 <header class="fixed top-0 inset-x-0 h-16 z-50 flex items-center justify-between px-6 backdrop-blur-md border-b border-line" style="background:rgba(13,10,8,0.7)">
   <div class="flex items-center gap-5">
-    <button id="nav-toggle" aria-label="menu" class="btn" style="width:38px;height:38px;padding:0;border-radius:10px;font-size:16px;letter-spacing:0">☰</button>
+    <button id="nav-toggle" aria-label="menu" class="btn" style="width:40px;height:40px;padding:0;border-radius:11px">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+    </button>
     <a href="/" class="flex flex-col items-start gap-1 leading-none" title="Về se77n.com">
-      <div class="mono text-[24px] font-extrabold tracking-[-0.025em]">se<span class="text-red glow77">77</span>n<span class="text-mute font-normal"> / kata</span></div>
-      <div class="mono text-[9px] uppercase tracking-kicker text-mute">tavern · roleplay</div>
+      <div class="hdr-logo mono text-[24px] font-extrabold tracking-[-0.025em]">se<span class="text-red glow77">77</span>n<span class="hdr-kata text-mute font-normal"> / kata</span></div>
+      <div class="hdr-sub mono text-[9px] uppercase tracking-kicker text-mute">tavern · roleplay</div>
     </a>
     <div id="hdr-breadcrumb" class="flex items-center gap-2 ml-3 mono text-[10px] tracking-label uppercase">
       <a href="index.html" class="text-mute hover:text-ink">se77n</a><span class="text-mute2">/</span>
