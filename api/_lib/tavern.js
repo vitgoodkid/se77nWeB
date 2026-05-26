@@ -95,12 +95,11 @@ const DEFAULT_SUBJECT_MODEL = 'grok-4-fast';
 const DEFAULT_SCENE_IMAGE_MODELS = ['fal-ai/nano-banana-pro', 'fal-ai/flux/schnell'];
 const DEFAULT_COVER_IMAGE_MODELS = ['fal-ai/nano-banana-pro', 'fal-ai/flux/schnell'];
 const DEFAULT_TURN_TEMPERATURE = 0.85;
-// The default storyteller model (gemini-3.1-pro-preview) is a reasoning model:
-// on the OpenAI-compatible API the token budget is shared with hidden thinking
-// tokens. At 1200 the reasoning ate most of the budget, leaving a tiny, cut-off
-// reply (and no <<SUGGESTIONS>> block). 4000 leaves room for thinking + a full
-// scene. Owners can tune this per-world or globally (override range 1..32000).
-const DEFAULT_TURN_MAX_TOKENS = 4000;
+// gemini-3.1-pro-preview is a reasoning model: hidden thinking tokens share
+// the max_tokens budget. Give it a large budget so thinking never starves the
+// visible scene (which truncated → empty / no <<SUGGESTIONS>> block at low
+// caps). Owners can still tune per-world / globally (override range 1..32000).
+const DEFAULT_TURN_MAX_TOKENS = 16000;
 const DEFAULT_MEMORY_WINDOW_SIZE = 50;
 
 // ── Layered config resolution ─────────────────────────────────
@@ -308,6 +307,12 @@ function ensureNoMinorSexualization(ctx) {
 // contract (`<<SUGGESTIONS>>` marker line, then numbered list).
 
 const REPLY_MARKER_RE = /\n*<<\s*SUGGESTIONS\s*>>\n+([\s\S]*)$/i;
+// Lenient fallback: some models decorate the marker line (e.g. **SUGGESTIONS**,
+// __SUGGESTIONS__, "SUGGESTIONS:", even __HEREDOC__SUGGESTIONS__APPEND__).
+// Match any single line carrying the word SUGGESTIONS that is followed by at
+// least two numbered lines — the numbered-list requirement keeps prose that
+// merely mentions "suggestions" from being treated as the marker.
+const REPLY_MARKER_LENIENT_RE = /\n+[^\n]*SUGGESTIONS[^\n]*\n+((?:\s*\d+[).\s-].*(?:\n|$)){2,})/i;
 const NUMBERED_LINE_RE = /^\s*\d+[).\s-]+\s*(.+?)\s*$/;
 const BULLET_LINE_RE = /^\s*[•\-*–—]\s*(.+?)\s*$/;
 const MAX_SUGGESTION_LEN = 200;
@@ -315,7 +320,7 @@ const MAX_SUGGESTIONS = 4;
 
 function parseStorytellerReply(raw) {
   if (!raw) return { prose: '', suggestions: [], hadMarker: false };
-  const m = REPLY_MARKER_RE.exec(raw);
+  const m = REPLY_MARKER_RE.exec(raw) || REPLY_MARKER_LENIENT_RE.exec(raw);
   if (!m) return { prose: raw.trim(), suggestions: [], hadMarker: false };
   const prose = raw.slice(0, m.index).trim();
   const tail = m[1] ?? '';
