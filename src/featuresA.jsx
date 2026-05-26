@@ -154,7 +154,7 @@ export function AIPlayground() {
         const res = await fetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ system: preset.system, prompt: q, image: usedImage?.dataUrl }),
+          body: JSON.stringify({ system: preset.system, prompt: q, image: usedImage?.dataUrl, model: 'gemini-3.1-pro-preview' }),
         });
         const data = await safeJson(res, 'chat');
         assistantMsg = { role: 'assistant', content: data.text };
