@@ -1761,6 +1761,11 @@ async function handleKataTavern(req, res, sub) {
   const turnMatch = path.match(/^world\/([a-f0-9]{24})\/turn$/i);
   if (turnMatch && req.method === 'POST') return tavernWorldTurn(req, res, turnMatch[1]);
 
+  // Scene illustration for the latest narrator turn. Generated in a separate
+  // request (after /turn returns text) so it never blocks / times out the turn.
+  const sceneImgMatch = path.match(/^world\/([a-f0-9]{24})\/scene-image$/i);
+  if (sceneImgMatch && req.method === 'POST') return tavernWorldSceneImage(req, res, sceneImgMatch[1]);
+
   return res.status(404).json({ error: 'tavern_not_found', path });
 }
 
@@ -2675,6 +2680,140 @@ async function tavernWorldTurn(req, res, id) {
     tokensIn: completion.tokensIn,
     tokensOut: completion.tokensOut,
   });
+}
+
+// ── Scene illustration (web) ──────────────────────────────────
+//
+// POST /api/kata/tavern/world/:id/scene-image  body: { text }
+// Turns the latest narrator prose into an image and persists its URL onto
+// the last assistant message so it renders between the prose and the option
+// buttons. Gated by world.imageGenEnabled. Runs as its own request so the
+// /turn endpoint stays fast.
+
+const SCENE_SUBJECT_SYS = [
+  'You convert a roleplay scene into a concise image-generation prompt.',
+  'Read the scene and output ONLY a comma-separated list of visual descriptors',
+  '(booru / Stable-Diffusion style) capturing: the character(s) present and their',
+  'appearance, what they are doing, the setting / location, lighting, and mood.',
+  'Output the prompt only — no explanation, no quotes, no full sentences.',
+  'Keep it under ~50 tokens. Everyone depicted is an adult; never describe a minor.',
+].join(' ');
+
+async function falGenScene(apiKey, model, input, deadline) {
+  const submit = await fetch(`https://queue.fal.run/${model}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Key ${apiKey}` },
+    body: JSON.stringify(input),
+  });
+  const submitData = await submit.json();
+  if (!submit.ok) throw new Error('fal submit ' + submit.status);
+  const requestId = submitData.request_id;
+  const statusUrl = submitData.status_url || `https://queue.fal.run/${model}/requests/${requestId}/status`;
+  const resultUrl = submitData.response_url || `https://queue.fal.run/${model}/requests/${requestId}`;
+  while (Date.now() < deadline) {
+    await new Promise((r) => setTimeout(r, 1500));
+    const s = await fetch(statusUrl, { headers: { Authorization: `Key ${apiKey}` } });
+    const sd = await s.json();
+    if (sd.status === 'COMPLETED') {
+      const fr = await fetch(resultUrl, { headers: { Authorization: `Key ${apiKey}` } });
+      const final = await fr.json();
+      return final?.images?.[0]?.url || final?.image?.url || final?.url || null;
+    }
+    if (sd.status === 'FAILED' || sd.status === 'CANCELLED') throw new Error('fal ' + sd.status);
+  }
+  return null; // timed out → caller tries the next model in the chain
+}
+
+async function tavernWorldSceneImage(req, res, id) {
+  const auth = await requireUser(req);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  let body = req.body;
+  if (typeof body === 'string') {
+    try { body = JSON.parse(body); } catch { return res.status(400).json({ error: 'invalid_json' }); }
+  }
+  const sceneText = (body?.text ?? '').toString().trim();
+  if (!sceneText) return res.status(400).json({ error: 'text_required' });
+
+  const apiKey = process.env.FAL_API_KEY;
+  if (!apiKey) return res.status(500).json({ error: 'fal_not_configured' });
+
+  const kataDb = await getKataDb();
+  let worldOid;
+  try { worldOid = new ObjectId(id); } catch { return res.status(400).json({ error: 'invalid_id' }); }
+  const world = await kataDb.collection('tavern_worlds').findOne({ _id: worldOid });
+  if (!world) return res.status(404).json({ error: 'not_found' });
+
+  const myDiscordId = auth.user.providerUserId;
+  if (world.userId !== myDiscordId && world.participation === 'creator_only' && !auth.isOwner) {
+    return res.status(403).json({ error: 'forbidden' });
+  }
+  if (!world.imageGenEnabled) return res.status(200).json({ ok: true, skipped: 'image_gen_disabled' });
+
+  const globalDoc = await kataDb.collection('globalconfigs').findOne({ scope: GLOBAL_SCOPE }, { projection: { tavern: 1 } });
+  const cfg = tavernResolvePromptConfig(world.overrides, globalDoc?.tavern);
+
+  const character = world.characterId
+    ? await kataDb.collection('tavern_characters').findOne({ _id: world.characterId })
+    : null;
+  const charBase = (character?.imageBasePrompt || character?.appearance || world.characterInline?.appearance || '').toString().trim();
+  const style = (world.imageStyle || 'cinematic detailed').toString().trim();
+
+  // 1) Extract a concise visual prompt from the prose (fast model).
+  let keywords = '';
+  try {
+    const ext = await callTavernChat(SCENE_SUBJECT_SYS, [], sceneText.slice(0, 4000), cfg.subjectModel, 0.4, 220);
+    keywords = (ext.text || '').replace(/\s+/g, ' ').trim().slice(0, 600);
+  } catch { /* fall back to a trimmed slice of the prose */ keywords = sceneText.replace(/\s+/g, ' ').slice(0, 200); }
+
+  // 2) Assemble the final prompt from the world's template.
+  let prompt = (cfg.imagePromptTemplate || '{character_base}, {keywords}, {style}')
+    .replace('{character_base}', charBase)
+    .replace('{keywords}', keywords)
+    .replace('{style}', style);
+  prompt = prompt.split(',').map((s) => s.trim()).filter(Boolean).join(', ');
+  if (!prompt) return res.status(200).json({ ok: true, skipped: 'empty_prompt' });
+
+  // 3) Generate via the world's fal model chain (fallback in order).
+  const models = (cfg.sceneImageModels && cfg.sceneImageModels.length) ? cfg.sceneImageModels : ['fal-ai/flux/schnell'];
+  const deadline = Date.now() + 50_000;
+  let url = null;
+  let usedModel = null;
+  let lastErr = null;
+  for (const model of models) {
+    if (Date.now() > deadline) break;
+    try {
+      const input = { prompt };
+      if (cfg.imageNegativePrompt) input.negative_prompt = cfg.imageNegativePrompt;
+      const r = await falGenScene(apiKey, model, input, deadline);
+      if (r) { url = r; usedModel = model; break; }
+    } catch (e) { lastErr = e; }
+  }
+  if (!url) return res.status(502).json({ error: 'image_failed', message: lastErr?.message?.slice(0, 200) });
+
+  // 4) Persist onto the most-recent narrator message so it survives reload.
+  const session = await kataDb.collection('tavern_sessions').findOne({ worldId: world._id }, { projection: { messages: 1 } });
+  if (session && Array.isArray(session.messages)) {
+    let lastIdx = -1;
+    for (let i = session.messages.length - 1; i >= 0; i--) {
+      if (session.messages[i].role === 'assistant' && !session.messages[i].isOOC) { lastIdx = i; break; }
+    }
+    if (lastIdx >= 0) {
+      await kataDb.collection('tavern_sessions').updateOne(
+        { _id: session._id },
+        { $set: { ['messages.' + lastIdx + '.imageUrl']: url } },
+      );
+    }
+  }
+
+  try {
+    await kataDb.collection('costentries').insertOne({
+      guildId: world.guildId, userId: myDiscordId,
+      service: 'fal', model: usedModel, command: '/tavern-web-image',
+      imagesGen: 1, timestamp: new Date(),
+    });
+  } catch { /* best-effort */ }
+
+  return res.status(200).json({ ok: true, url, model: usedModel });
 }
 
 // ── Admin tavern engine defaults (owner-only) ─────────────────

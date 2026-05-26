@@ -202,6 +202,11 @@ function renderMessage(m, opts = {}) {
   const img = m.imageUrl
     ? `<div class="mt-3"><img src="${escapeHtml(m.imageUrl)}" alt="" class="rounded-[10px] max-h-[420px]" /></div>`
     : '';
+  // While the scene illustration is rendering, show a subtle placeholder
+  // (sits between the prose and the option buttons).
+  const imgPending = (m._imgPending && !m.imageUrl)
+    ? `<div class="mono text-[10px] text-mute2 mt-3" style="opacity:.85">🎨 đang vẽ minh hoạ…</div>`
+    : '';
   // Suggestions are rendered ONLY on the latest narrator message — when
   // the player advances the story, older suggestions disappear (clicking a
   // stale one would just send the same text again, but it's confusing).
@@ -217,6 +222,7 @@ function renderMessage(m, opts = {}) {
       <div class="msg-meta">${escapeHtml(who)}${ts ? ' · ' + escapeHtml(ts) : ''}</div>
       <div style="white-space: pre-wrap">${escapeHtml(m.content ?? '')}</div>
       ${img}
+      ${imgPending}
       ${suggestions}
     </div>`;
 }
@@ -331,7 +337,28 @@ async function sendTurn() {
     return;
   }
 
-  messages.push({ role: 'assistant', content: r.replyText, timestamp: Date.now(), isOOC: false, suggestions: Array.isArray(r.suggestions) ? r.suggestions : [] });
+  const aMsg = { role: 'assistant', content: r.replyText, timestamp: Date.now(), isOOC: false, suggestions: Array.isArray(r.suggestions) ? r.suggestions : [] };
+  messages.push(aMsg);
+  paint();
+  // Kick off the scene illustration (only if the world enabled it). Runs in a
+  // separate request so the turn already feels instant; the image drops in
+  // above the option buttons when ready.
+  if (world && world.imageGenEnabled && r.replyText) genSceneImage(aMsg, r.replyText);
+}
+
+async function genSceneImage(msgRef, text) {
+  msgRef._imgPending = true;
+  paint();
+  try {
+    const r = await fetch(`/api/kata/tavern/world/${worldId}/scene-image`, {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text }),
+    });
+    const data = await r.json().catch(() => null);
+    if (data && data.url) msgRef.imageUrl = data.url;
+  } catch { /* leave without an image */ }
+  msgRef._imgPending = false;
   paint();
 }
 
