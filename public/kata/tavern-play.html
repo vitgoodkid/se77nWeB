@@ -316,6 +316,18 @@ async function sendTurn() {
     return;
   }
 
+  if (r.emptyReply) {
+    // Model returned no usable prose — roll back the echo, restore the input
+    // so the player can just resend.
+    messages.pop();
+    paint();
+    elInput.value = text;
+    if (window.KataShell && window.KataShell.toast) {
+      window.KataShell.toast('Model trả về rỗng — thử gửi lại', { kind: 'error' });
+    }
+    return;
+  }
+
   if (r.isOOC) {
     // Replace optimistic isOOC=false guess with the actual ack from server.
     messages[messages.length - 1].isOOC = true;

@@ -2599,8 +2599,38 @@ async function tavernWorldTurn(req, res, id) {
   } catch (err) {
     return res.status(502).json({ error: 'llm_failed', message: err?.message?.slice(0, 500) });
   }
-  const rawReply = completion.text;
-  const parsedReply = tavernParseStorytellerReply(rawReply);
+  let parsedReply = tavernParseStorytellerReply(completion.text);
+
+  // Empty reply guard. Reasoning models (e.g. gemini-3.1-pro-preview) can burn
+  // the whole token budget on hidden thinking and return no visible prose. If
+  // the configured model gave us nothing usable, retry once with a reliable
+  // non-reasoning model so the player still gets a scene.
+  if (!parsedReply.prose || !parsedReply.prose.trim()) {
+    const FALLBACK_MODEL = 'grok-4-fast';
+    if (promptConfig.chatModel !== FALLBACK_MODEL) {
+      try {
+        const retry = await callTavernChat(
+          systemContent,
+          window.messages,
+          userText,
+          FALLBACK_MODEL,
+          promptConfig.turnTemperature,
+          Math.min(promptConfig.turnMaxTokens || 2000, 2000),
+        );
+        const retryParsed = tavernParseStorytellerReply(retry.text);
+        if (retryParsed.prose && retryParsed.prose.trim()) {
+          completion = retry;
+          parsedReply = retryParsed;
+        }
+      } catch { /* keep the empty result; handled below */ }
+    }
+  }
+
+  // Still nothing → don't persist a blank turn. Tell the client to let the
+  // player resend rather than leaving an empty narrator bubble.
+  if (!parsedReply.prose || !parsedReply.prose.trim()) {
+    return res.status(200).json({ ok: true, isOOC: false, emptyReply: true });
+  }
 
   // Child-safety post-process — silent hard rule.
   const protagonistAppearance = character?.appearance ?? world.characterInline?.appearance ?? null;
