@@ -880,6 +880,39 @@ export default function MobileShell() {
     return () => window.removeEventListener('keydown', h);
   }, [drawerOpen]);
 
+  // Edge-swipe gestures for the left drawer: swipe right from the left edge
+  // opens it; swipe left (while open) closes it. Opening is gated to the left
+  // edge so it doesn't hijack horizontal scrolls in the content.
+  useEffect(() => {
+    const EDGE = 32;    // px from left edge to start an "open" swipe
+    const THRESH = 56;  // min horizontal travel to count as a swipe
+    let startX = 0, startY = 0, tracking = false;
+    const onStart = (e) => {
+      const tch = e.touches[0];
+      if (!tch) { tracking = false; return; }
+      startX = tch.clientX;
+      startY = tch.clientY;
+      tracking = drawerOpen || startX <= EDGE;
+    };
+    const onEnd = (e) => {
+      if (!tracking) return;
+      tracking = false;
+      const tch = e.changedTouches[0];
+      if (!tch) return;
+      const dx = tch.clientX - startX;
+      const dy = tch.clientY - startY;
+      if (Math.abs(dx) < THRESH || Math.abs(dx) <= Math.abs(dy)) return; // not a horizontal swipe
+      if (!drawerOpen && dx > 0 && startX <= EDGE) setDrawerOpen(true);
+      else if (drawerOpen && dx < 0) setDrawerOpen(false);
+    };
+    window.addEventListener('touchstart', onStart, { passive: true });
+    window.addEventListener('touchend', onEnd, { passive: true });
+    return () => {
+      window.removeEventListener('touchstart', onStart);
+      window.removeEventListener('touchend', onEnd);
+    };
+  }, [drawerOpen]);
+
   // auto-scroll on new messages
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
