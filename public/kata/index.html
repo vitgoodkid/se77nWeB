@@ -7,21 +7,21 @@
 <title>katas · se77n</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Unbounded:wght@400;500;700&family=Archivo:wght@400;600;800&family=JetBrains+Mono:wght@400;500;600;700;800&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
   tailwind.config = {
     theme: {
       extend: {
         colors: {
-          bg:    '#0d0a08',
+          bg:    '#08050a',
           panel: '#15110d',
           panel2:'#1c1813',
           line:  'rgba(255,255,255,0.08)',
           line2: 'rgba(255,255,255,0.15)',
-          ink:   '#f5ede0',
-          mute:  'rgba(245,237,224,0.5)',
-          mute2: 'rgba(245,237,224,0.3)',
+          ink:   '#f5e8e8',
+          mute:  'rgba(245,232,232,0.5)',
+          mute2: 'rgba(245,232,232,0.3)',
           red:   '#E04545',
           green: '#5BA868',
           gold:  '#D4A858',
@@ -32,143 +32,518 @@
         fontFamily: {
           sans: ['Geist', 'system-ui', 'sans-serif'],
           mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+          display: ['"Space Grotesk"', 'Inter', 'system-ui', 'sans-serif'],
         },
-        letterSpacing: { kicker: '0.15em', label: '0.18em', tag: '0.12em' },
+        letterSpacing: { kicker: '0.22em', label: '0.18em', tag: '0.12em' },
       },
     },
   };
 </script>
 <style>
-  html, body { background: #0d0a08; color: #f5ede0; font-family: Geist, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
-  .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
-
-  /* Typography scale — single source of truth */
-  .t-hero      { font-size: clamp(96px, 12vw, 132px); font-weight: 700; line-height: 0.9; letter-spacing: -0.045em; }
-  .t-tagline   { font-size: 18px; font-weight: 400; line-height: 1.55; opacity: 0.7; }
-  .t-section   { font-size: 13px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; opacity: 0.7; }
-  .t-card-title{ font-size: 16px; font-weight: 600; line-height: 1.3; }
-  .t-card-desc { font-size: 14px; line-height: 1.55; opacity: 0.65; }
-  .t-meta      { font-size: 11px; opacity: 0.5; }
-
-  @keyframes pulse77 { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .55; transform: scale(.82); } }
-  .dot-pulse { animation: pulse77 2s ease-in-out infinite; }
-  @keyframes breath { 0%,100% { transform: scale(1); opacity:.65; } 50% { transform: scale(1.025); opacity:.85; } }
-  .breath { animation: breath 6s ease-in-out infinite; }
-  @keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-  .ticker { animation: ticker 60s linear infinite; }
-  .glow77 { text-shadow: 0 0 6px #E04545cc, 0 0 18px #E0454566, 0 0 36px #E0454533; }
-  .grain { background-image: radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px); background-size: 3px 3px; }
-  .ambient {
-    background-image:
-      radial-gradient(60% 50% at 18% 12%, #E0454526 0%, transparent 65%),
-      radial-gradient(50% 45% at 90% 88%, #5BA86828 0%, transparent 70%),
-      radial-gradient(35% 30% at 60% 50%, #D4A85810 0%, transparent 75%);
+  /* ==============  katas. cyberpunk neon — adapted from design bundle  ============== */
+  :root {
+    --bg: #08050a;
+    --bg-2: #0d080e;
+    --ink: #f5e8e8;
+    --ink-dim: #8b7a7a;
+    --ink-mute: #5a4f4f;
+    --line:        color-mix(in srgb, var(--accent, #E04545) 14%, transparent);
+    --line-strong: color-mix(in srgb, var(--accent, #E04545) 32%, transparent);
+    --accent-glow: color-mix(in srgb, var(--accent, #E04545) 55%, transparent);
+    --accent-soft: color-mix(in srgb, var(--accent, #E04545) 12%, transparent);
+    --violet: #b56bff;
+    --amber:  #D4A858;
+    --cyan:   #5ee7ff;
+    --mono: 'JetBrains Mono', 'Geist Mono', ui-monospace, monospace;
+    --display: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+    --grid-size: 56px;
+    --anim-mult: 1;
   }
 
-  /* Dashboard tile in hero — bento-ish stat cards. Each card carries
-     - a big focal number (the actual metric)
-     - a glyph in the corner instead of the bland ↗
-     - a per-tile accent (--tile-accent) that drives the border, the
-       corner glyph color, and the cursor-follow spotlight gradient.
-     The spotlight is wired up via a couple of CSS vars (--mx, --my)
-     that JS pokes from a single mousemove handler.
-  */
-  .tile {
-    --tile-accent: #E04545;
-    --tile-accent-soft: rgba(224,69,69,0.08);
-    --mx: 50%;
-    --my: 50%;
-    position: relative;
-    isolation: isolate;
-    overflow: hidden;
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 14px;
-    background: linear-gradient(180deg, rgba(21,17,13,0.92) 0%, rgba(13,10,8,0.85) 100%);
-    padding: 20px 20px 18px;
-    transition: transform 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
-    display: flex; flex-direction: column;
-    min-height: 158px;
-  }
-  /* Spotlight — radial gradient pinned at the cursor, tinted by the
-     tile's accent. Fades in on hover so the resting state stays clean. */
-  .tile::before {
-    content: '';
+  html, body { background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased; }
+  html { background-color: var(--bg); }
+  body { background-color: transparent !important; font-family: var(--mono); }
+
+  .mono { font-family: var(--mono); }
+  .display { font-family: var(--display); }
+
+  .t-meta      { font-size: 11px; opacity: 0.55; }
+
+  /* ==============  Background layers (particles preset by default)  ============== */
+  .bg-stack { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+
+  .bg-vignette {
     position: absolute; inset: 0;
-    border-radius: inherit;
+    background:
+      radial-gradient(ellipse 60% 50% at 30% 20%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 60%),
+      radial-gradient(ellipse 50% 60% at 80% 80%, rgba(181, 107, 255, 0.06), transparent 60%),
+      radial-gradient(ellipse 80% 60% at 50% 100%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 70%);
+  }
+
+  .bg-noise {
+    position: absolute; inset: 0; opacity: 0.05;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='2.4' numOctaves='2'/></filter><rect width='200' height='200' filter='url(%23n)' opacity='1'/></svg>");
+  }
+
+  .bg-particles { position: absolute; inset: 0; }
+  .bg-particles .p {
+    position: absolute; width: 2px; height: 2px; border-radius: 50%;
+    background: var(--accent); box-shadow: 0 0 8px var(--accent-glow);
+    animation: rise calc(var(--d) * 1s / var(--anim-mult)) linear infinite;
+    animation-delay: calc(var(--dl) * -1s);
+    left: calc(var(--x) * 1%);
+    opacity: 0.6;
+  }
+  @keyframes rise {
+    from { transform: translateY(110vh); opacity: 0; }
+    10%  { opacity: 0.6; }
+    90%  { opacity: 0.6; }
+    to   { transform: translateY(-10vh); opacity: 0; }
+  }
+
+  .bg-spotlight {
+    position: absolute; width: 600px; height: 600px;
+    background: radial-gradient(circle, color-mix(in srgb, var(--accent) 10%, transparent), transparent 60%);
     pointer-events: none;
-    background: radial-gradient(220px circle at var(--mx) var(--my),
-      var(--tile-accent-soft) 0%, transparent 70%);
-    opacity: 0;
-    transition: opacity 200ms ease;
-    z-index: 0;
+    transform: translate(-50%, -50%);
+    transition: transform 0.6s cubic-bezier(.2,.7,.2,1);
   }
-  /* Faint accent rule on the left edge — gives every tile a vertical
-     identity strip without screaming. Strengthens on hover. */
-  .tile::after {
-    content: '';
-    position: absolute;
-    left: 0; top: 14%; bottom: 14%;
-    width: 2px;
-    border-radius: 2px;
-    background: var(--tile-accent);
-    opacity: 0.35;
-    transition: opacity 220ms ease, top 220ms ease, bottom 220ms ease;
-    z-index: 0;
-  }
-  .tile > * { position: relative; z-index: 1; }
-  .tile:hover {
-    transform: translateY(-2px);
-    border-color: color-mix(in srgb, var(--tile-accent) 35%, rgba(255,255,255,0.15));
-    box-shadow: 0 8px 28px -12px color-mix(in srgb, var(--tile-accent) 60%, transparent);
-  }
-  .tile:hover::before { opacity: 1; }
-  .tile:hover::after { opacity: 0.85; top: 8%; bottom: 8%; }
 
-  /* Per-tile accent themes */
-  .tile-servers { --tile-accent: #E04545; --tile-accent-soft: rgba(224,69,69,0.10); }
-  .tile-admin   { --tile-accent: #D4A858; --tile-accent-soft: rgba(212,168,88,0.12);
-                  background: linear-gradient(180deg, rgba(28,22,12,0.95) 0%, rgba(13,10,8,0.88) 100%); }
-  .tile-logs    { --tile-accent: #B97AA8; --tile-accent-soft: rgba(185,122,168,0.10); }
-  .tile-cost    { --tile-accent: #5BA868; --tile-accent-soft: rgba(91,168,104,0.10); }
+  .bg-watermark {
+    position: absolute; right: -2vw; bottom: -6vw;
+    font-family: var(--display); font-weight: 700;
+    font-size: clamp(360px, 38vw, 720px);
+    line-height: 0.8;
+    color: transparent;
+    -webkit-text-stroke: 1px color-mix(in srgb, var(--accent) 6%, transparent);
+    letter-spacing: -0.04em;
+    user-select: none;
+  }
 
-  /* Big focal number — fills most of the card height */
-  .tile-metric {
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
+  /* ==============  Layout  ============== */
+  .shell { position: relative; z-index: 1; min-height: 100vh; display: flex; flex-direction: column; }
+
+  /* Header — replaces the original .nav block; keeps brand on left, kata-header-actions slot on right */
+  .kata-nav {
+    position: sticky; top: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 40px; gap: 24px;
+    border-bottom: 1px solid var(--line);
+    backdrop-filter: blur(8px);
+    background: linear-gradient(to bottom, rgba(8,5,10,0.78), rgba(8,5,10,0.32));
+  }
+  .kata-nav .brand {
+    font-family: var(--display); font-weight: 700; font-size: 22px;
+    display: flex; align-items: center; gap: 10px; letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  .kata-nav .brand .se { color: var(--ink); }
+  .kata-nav .brand .sev { color: var(--accent); text-shadow: 0 0 12px var(--accent-glow); }
+  .kata-nav .brand .slash { color: var(--ink-mute); font-weight: 300; }
+  .kata-nav .brand .kata { color: var(--ink); font-weight: 500; }
+  .kata-nav .nav-meta { font-size: 10px; letter-spacing: 0.22em; color: var(--ink-mute); text-transform: uppercase; margin-top: 4px; }
+  .kata-nav .nav-meta .num { color: var(--accent); font-weight: 700; }
+
+  /* Hero — 2-col on desktop, stack on tablet/phone */
+  .main {
+    flex: 1;
+    display: grid; grid-template-columns: 1.05fr 1fr; gap: 56px;
+    padding: 64px 56px 36px;
+    align-items: start;
+    position: relative;
+    max-width: 1480px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .eyebrow {
+    font-size: 11px; letter-spacing: 0.35em; text-transform: uppercase;
+    color: var(--ink-mute); display: flex; align-items: center; gap: 12px;
+    margin-bottom: 28px;
+  }
+  .eyebrow::before, .eyebrow::after {
+    content: ''; height: 1px; flex: 0 0 24px; background: var(--line-strong);
+  }
+  .eyebrow .live-dot {
+    display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent); box-shadow: 0 0 8px var(--accent-glow);
+    animation: pulse calc(2s / var(--anim-mult)) ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
+  }
+
+  /* Logo lockup */
+  .logo-lockup {
+    position: relative;
+    display: inline-block;
+    padding: 22px 28px 18px;
+    margin-left: -12px;
+  }
+  .bracket { position: absolute; width: 18px; height: 18px; border-color: var(--accent); border-style: solid; border-width: 0; opacity: 0.85; }
+  .bracket.tl { top: 0; left: 0;     border-top-width: 1px;    border-left-width: 1px; }
+  .bracket.tr { top: 0; right: 0;    border-top-width: 1px;    border-right-width: 1px; }
+  .bracket.bl { bottom: 0; left: 0;  border-bottom-width: 1px; border-left-width: 1px; }
+  .bracket.br { bottom: 0; right: 0; border-bottom-width: 1px; border-right-width: 1px; }
+
+  .logo-meta {
+    display: flex; align-items: center; gap: 10px;
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--ink-mute);
+  }
+  .logo-meta .tick { width: 6px; height: 6px; background: var(--accent); box-shadow: 0 0 6px var(--accent-glow); }
+  .logo-meta .rule { flex: 1; height: 1px; background: linear-gradient(90deg, var(--line-strong), transparent); }
+  .logo-meta.bottom .rule { background: linear-gradient(90deg, transparent, var(--line-strong)); }
+  .logo-meta .serial { color: var(--ink-dim); letter-spacing: 0.18em; }
+  .logo-meta .serial .dim { color: var(--ink-mute); margin: 0 4px; }
+  .logo-meta .reg { width: 16px; height: 16px; border: 1px solid var(--line-strong); display: grid; place-items: center; font-size: 9px; color: var(--ink-dim); }
+  .logo-meta.top { margin-bottom: 8px; }
+  .logo-meta.bottom { margin-top: 8px; }
+
+  /* Hero wordmark — layered fill + outline + glitch */
+  .hero-title {
+    position: relative;
+    font-family: var(--display);
     font-weight: 700;
-    font-size: 44px;
-    line-height: 1;
-    letter-spacing: -0.03em;
-    color: #f5ede0;
-    margin-top: auto;
-    text-shadow: 0 0 24px color-mix(in srgb, var(--tile-accent) 35%, transparent);
+    font-size: clamp(120px, 15vw, 220px);
+    line-height: 0.85;
+    letter-spacing: -0.07em;
+    color: var(--accent);
+    display: inline-flex; align-items: baseline; gap: 0.05em;
+    margin: 0;
+    cursor: default; user-select: none;
   }
-  .tile-metric .unit {
-    font-size: 16px;
-    color: rgba(245,237,224,0.45);
-    margin-left: 4px;
-    letter-spacing: 0;
+  .hero-title .layer { display: inline-flex; align-items: baseline; position: relative; }
+  .hero-title .layer.fill {
+    color: var(--accent);
+    text-shadow:
+      0 0 30px var(--accent-glow),
+      0 0 70px color-mix(in srgb, var(--accent) 32%, transparent),
+      0 0 120px color-mix(in srgb, var(--accent) 15%, transparent);
+    animation: titlePulse calc(4s / var(--anim-mult)) ease-in-out infinite;
   }
-  .tile-glyph {
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
-    font-size: 22px;
-    line-height: 1;
-    color: var(--tile-accent);
-    opacity: 0.75;
-    transition: transform 220ms ease, opacity 220ms ease;
+  .hero-title .layer.outline {
+    position: absolute; inset: 0;
+    color: transparent;
+    -webkit-text-stroke: 1px color-mix(in srgb, var(--accent) 55%, transparent);
+    text-shadow: none;
+    transform: translate(8px, 8px);
+    opacity: 0.45;
+    letter-spacing: -0.07em;
   }
-  .tile:hover .tile-glyph { transform: translate(2px,-2px) scale(1.05); opacity: 1; }
-  .tile-owner-pill {
-    display: inline-flex; align-items: center; gap: 4px;
-    padding: 1px 8px;
+  @keyframes titlePulse {
+    0%, 100% { text-shadow: 0 0 30px var(--accent-glow), 0 0 70px color-mix(in srgb, var(--accent) 32%, transparent), 0 0 120px color-mix(in srgb, var(--accent) 15%, transparent); }
+    50%      { text-shadow: 0 0 22px var(--accent-glow), 0 0 50px color-mix(in srgb, var(--accent) 24%, transparent), 0 0 100px color-mix(in srgb, var(--accent) 12%, transparent); }
+  }
+  .hero-title::before, .hero-title::after {
+    content: attr(data-text);
+    position: absolute; left: 28px; top: 30px;
+    font: inherit; letter-spacing: inherit; line-height: inherit;
+    pointer-events: none; opacity: 0;
+  }
+  .hero-title::before { color: var(--cyan);   animation: glitchA calc(7s / var(--anim-mult)) steps(1) infinite; }
+  .hero-title::after  { color: var(--violet); animation: glitchB calc(7s / var(--anim-mult)) steps(1) infinite; }
+  @keyframes glitchA {
+    0%, 96%, 100% { opacity: 0; transform: translate(0,0); clip-path: inset(0); }
+    96.5% { opacity: 0.7; transform: translate(-4px, 2px); clip-path: inset(20% 0 60% 0); }
+    97.5% { opacity: 0.7; transform: translate(3px, -2px); clip-path: inset(50% 0 10% 0); }
+    98.5% { opacity: 0.5; transform: translate(-1px, 0); clip-path: inset(10% 0 75% 0); }
+  }
+  @keyframes glitchB {
+    0%, 96%, 100% { opacity: 0; transform: translate(0,0); clip-path: inset(0); }
+    96.5% { opacity: 0.7; transform: translate(4px, -1px); clip-path: inset(60% 0 20% 0); }
+    97.5% { opacity: 0.7; transform: translate(-2px, 3px); clip-path: inset(15% 0 50% 0); }
+    98.5% { opacity: 0.5; transform: translate(1px, 0); clip-path: inset(75% 0 5% 0); }
+  }
+
+  /* Aperture dot */
+  .hero-title .aperture {
+    display: inline-block; width: 0.7em; height: 0.7em;
+    align-self: flex-end; margin-left: 0.08em; margin-bottom: 0.05em;
+    position: relative; filter: drop-shadow(0 0 12px var(--accent-glow));
+  }
+  .hero-title .aperture svg { width: 100%; height: 100%; display: block; overflow: visible; }
+  .hero-title .aperture .ring { fill: none; stroke: var(--accent); stroke-width: 4; }
+  .hero-title .aperture .ring.outer { stroke-width: 3; stroke-dasharray: 28 14; transform-origin: 50% 50%; animation: aperSpin calc(8s / var(--anim-mult)) linear infinite; opacity: 0.85; }
+  .hero-title .aperture .ring.mid   { stroke-width: 2.5; stroke-dasharray: 8 6; transform-origin: 50% 50%; animation: aperSpin calc(10s / var(--anim-mult)) linear infinite reverse; opacity: 0.7; }
+  .hero-title .aperture .ring.core  { fill: var(--accent); stroke: none; animation: aperPulse calc(2s / var(--anim-mult)) ease-in-out infinite; }
+  .hero-title .aperture .blades     { fill: var(--accent); transform-origin: 50% 50%; animation: aperSpin calc(14s / var(--anim-mult)) linear infinite; opacity: 0.9; }
+  .hero-title .aperture .ticks      { stroke: var(--accent); stroke-width: 3; }
+  @keyframes aperSpin  { to { transform: rotate(360deg); } }
+  @keyframes aperPulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(0.7); opacity: 0.7; } }
+
+  .hero-tag {
+    margin-top: 36px; max-width: 540px;
+    font-family: var(--mono);
+    font-size: 17px; line-height: 1.6; color: var(--ink-dim);
+  }
+  .hero-tag .hi { color: var(--ink); }
+  .hero-tag .cur {
+    display: inline-block; width: 9px; height: 18px;
+    background: var(--accent); vertical-align: -3px; margin-left: 2px;
+    box-shadow: 0 0 8px var(--accent-glow);
+    animation: blink calc(1s / var(--anim-mult)) steps(2) infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* Buttons — softened, glass / glow primary */
+  .cta-row { margin-top: 40px; display: flex; gap: 14px; flex-wrap: wrap; }
+  .btn {
+    position: relative; display: inline-flex; align-items: center; gap: 12px;
+    padding: 15px 24px;
+    border-radius: 12px;
+    font-family: var(--mono); font-size: 12px; letter-spacing: 0.22em; text-transform: uppercase;
+    border: 1px solid transparent; background: none; color: inherit;
+    transition: all 0.25s cubic-bezier(.2,.7,.2,1);
+    overflow: hidden; font-weight: 600;
+    text-decoration: none;
+  }
+  .btn-primary {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 100%, white 12%), color-mix(in srgb, var(--accent) 92%, black 8%));
+    color: #ffffff;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.3),
+      inset 0 -1px 0 rgba(0,0,0,0.18),
+      0 8px 22px color-mix(in srgb, var(--accent) 28%, transparent),
+      0 0 0 1px color-mix(in srgb, var(--accent) 70%, transparent);
+  }
+  .btn-primary::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+    transform: translateX(-100%); transition: transform 0.7s; pointer-events: none;
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -1px 0 rgba(0,0,0,0.2), 0 14px 30px color-mix(in srgb, var(--accent) 40%, transparent), 0 0 30px var(--accent-glow); }
+  .btn-primary:hover::before { transform: translateX(100%); }
+
+  .btn-ghost {
+    border-color: var(--line-strong); color: var(--ink);
+    background: rgba(255, 255, 255, 0.025);
+    backdrop-filter: blur(4px);
+  }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); box-shadow: 0 0 0 1px var(--accent-soft), 0 8px 20px color-mix(in srgb, var(--accent) 15%, transparent); }
+  .btn .arrow { transition: transform 0.3s; }
+  .btn:hover .arrow { transform: translateX(4px); }
+
+  /* TRY IT block */
+  .try-it { margin-top: 56px; max-width: 620px; }
+  .try-it .label {
+    font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--ink-mute);
+    display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+  }
+  .try-it .label .sq  { width: 6px; height: 6px; background: var(--accent); box-shadow: 0 0 6px var(--accent-glow); }
+  .try-it .label .dim { color: var(--ink-mute); }
+
+  .prompt {
+    display: flex; align-items: center; gap: 14px;
+    padding: 16px 20px;
+    border-radius: 12px;
+    border: 1px solid var(--line-strong);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 6%, transparent), color-mix(in srgb, var(--accent) 2%, transparent));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.03), 0 6px 20px rgba(0,0,0,0.3);
+    position: relative; font-size: 14px; overflow: hidden;
+  }
+  .prompt::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
+    background: var(--accent); box-shadow: 0 0 10px var(--accent-glow);
+    animation: scanY calc(3s / var(--anim-mult)) ease-in-out infinite;
+  }
+  @keyframes scanY { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+  .prompt .cmd  { color: var(--accent); font-weight: 700; }
+  .prompt .input { color: var(--ink-dim); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .prompt .enter {
+    font-size: 10px; letter-spacing: 0.25em; padding: 6px 12px;
+    border-radius: 6px; border: 1px solid var(--line-strong);
+    color: var(--ink-mute); text-transform: uppercase; background: rgba(255,255,255,0.02);
+    flex-shrink: 0;
+  }
+  .prompt .enter kbd { font-family: inherit; color: var(--accent); margin-left: 6px; }
+
+  .chips { display: flex; gap: 8px; margin-top: 14px; align-items: center; flex-wrap: wrap; }
+  .chip {
+    padding: 7px 14px; border-radius: 999px;
+    border: 1px solid var(--line);
+    font-size: 11px; color: var(--ink-dim);
+    background: rgba(255,255,255,0.02);
+    transition: all 0.2s;
+  }
+  .chip:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); cursor: pointer; }
+  .chips .more {
+    margin-left: auto; font-size: 11px; color: var(--accent);
+    display: inline-flex; align-items: center; gap: 6px; text-decoration: none;
+  }
+  .chips .more:hover { text-shadow: 0 0 8px var(--accent-glow); }
+
+  /* Dashboard cards */
+  .dash { display: flex; flex-direction: column; gap: 14px; align-self: stretch; }
+  .dash-head {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--ink-dim);
+  }
+  .dash-head .right { display: flex; align-items: center; gap: 12px; }
+  .dash-head .pill { display: inline-flex; align-items: center; gap: 6px; color: var(--ink); }
+  .dash-head .pill .live {
+    width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 6px var(--accent-glow);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  .dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  .card {
+    position: relative; padding: 22px;
+    border-radius: 14px;
+    border: 1px solid color-mix(in srgb, var(--card-accent, var(--accent)) 22%, transparent);
+    background:
+      radial-gradient(120% 80% at 0% 0%, color-mix(in srgb, var(--card-accent, var(--accent)) 10%, transparent), transparent 55%),
+      linear-gradient(180deg, rgba(20, 12, 16, 0.85), rgba(12, 8, 12, 0.7));
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.04),
+      0 10px 30px rgba(0,0,0,0.35),
+      0 0 0 1px rgba(255,255,255,0.02);
+    backdrop-filter: blur(6px);
+    overflow: hidden;
+    transition: all 0.3s;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+    display: flex; flex-direction: column;
+  }
+  .card::before {
+    content: ''; position: absolute; left: 14px; right: 14px; top: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--card-accent, var(--accent)), transparent);
+    opacity: 0.5; transition: opacity 0.3s;
+  }
+  .card:hover {
+    border-color: var(--card-accent, var(--accent));
+    transform: translateY(-3px);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 18px 40px rgba(0,0,0,0.45), 0 0 30px color-mix(in srgb, var(--card-accent, var(--accent)) 25%, transparent);
+  }
+  .card:hover::before { opacity: 1; }
+  .card .scan {
+    position: absolute; left: 0; right: 0; height: 60%; top: -60%;
+    background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--card-accent, var(--accent)) 12%, transparent), transparent);
+    transition: top 0.6s; pointer-events: none;
+  }
+  .card:hover .scan { top: 100%; }
+  .card.full { grid-column: 1 / -1; }
+
+  .card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--ink-dim); }
+  .card-head .icon {
+    width: 28px; height: 28px; border-radius: 8px;
+    display: grid; place-items: center;
+    border: 1px solid color-mix(in srgb, var(--card-accent, var(--accent)) 35%, transparent);
+    background: color-mix(in srgb, var(--card-accent, var(--accent)) 10%, transparent);
+    color: var(--card-accent, var(--accent));
+    box-shadow: 0 0 12px color-mix(in srgb, var(--card-accent, var(--accent)) 20%, transparent);
+  }
+  .card-title { font-family: var(--display); font-size: 26px; font-weight: 600; color: var(--ink); margin: 0 0 8px; letter-spacing: -0.02em; }
+  .card-desc  { font-size: 13px; color: var(--ink); opacity: 0.78; line-height: 1.55; margin: 0 0 20px; min-height: 36px; }
+  .card-foot  { display: flex; align-items: center; justify-content: space-between; font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; }
+  .card-foot .status { display: inline-flex; align-items: center; gap: 10px; color: var(--ink-dim); }
+  .card-foot .status .bar {
+    display: inline-block; width: 24px; height: 4px; border-radius: 2px;
+    background: var(--card-accent, var(--accent));
+    box-shadow: 0 0 8px var(--card-accent, var(--accent-glow));
+  }
+  .card-foot .tags { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+  .card-foot .tags > .dot { color: var(--ink-mute); }
+  .card-foot .tags > .pill {
+    padding: 4px 8px; border-radius: 6px;
+    background: color-mix(in srgb, var(--card-accent, var(--accent)) 14%, transparent);
+    border: 1px solid color-mix(in srgb, var(--card-accent, var(--accent)) 28%, transparent);
+    color: var(--card-accent, var(--accent));
+    font-weight: 600;
+  }
+  .card .owner-pill {
+    display: inline-block; padding: 5px 12px; font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase;
     border-radius: 999px;
-    border: 1px solid color-mix(in srgb, var(--tile-accent) 50%, transparent);
-    background: color-mix(in srgb, var(--tile-accent) 12%, transparent);
-    color: var(--tile-accent);
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
-    font-size: 9px;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    font-weight: 700;
+    color: var(--amber); border: 1px solid color-mix(in srgb, var(--amber) 40%, transparent); background: color-mix(in srgb, var(--amber) 12%, transparent);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--amber) 25%, transparent);
+    font-weight: 600;
+  }
+
+  /* Commands section */
+  .cmd-section {
+    position: relative; z-index: 1;
+    padding: 100px 56px 80px;
+    border-top: 1px solid var(--line);
+    background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--accent) 2%, transparent));
+    max-width: 1480px; margin: 0 auto; width: 100%;
+  }
+  .cmd-head { display: flex; align-items: end; justify-content: space-between; margin-bottom: 48px; gap: 32px; flex-wrap: wrap; }
+  .cmd-head h2 { font-family: var(--display); font-weight: 600; font-size: 64px; line-height: 0.95; letter-spacing: -0.03em; margin: 0; max-width: 720px; }
+  .cmd-head h2 .red { color: var(--accent); text-shadow: 0 0 20px var(--accent-glow); }
+  .cmd-head .num { font-family: var(--mono); font-size: 11px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--ink-mute); display: flex; gap: 18px; align-items: center; }
+  .cmd-head .num .big { font-family: var(--display); font-size: 56px; color: var(--accent); text-shadow: 0 0 16px var(--accent-glow); line-height: 1; }
+
+  .cmd-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+  .cmd-cell {
+    background: var(--bg);
+    padding: 22px; position: relative;
+    transition: all 0.3s; cursor: pointer; min-height: 168px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    overflow: hidden; text-decoration: none; color: inherit;
+  }
+  .cmd-cell::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(circle at center, var(--accent-soft), transparent 70%);
+    opacity: 0; transition: opacity 0.4s; pointer-events: none;
+  }
+  .cmd-cell:hover { background: color-mix(in srgb, var(--accent) 4%, var(--bg)); }
+  .cmd-cell:hover::before { opacity: 1; }
+  .cmd-cell:hover .cmd-name { color: var(--accent); text-shadow: 0 0 12px var(--accent-glow); }
+  .cmd-cell:hover .cmd-arrow { transform: translateX(4px) translateY(-4px); opacity: 1; }
+  .cmd-num  { font-size: 10px; letter-spacing: 0.2em; color: var(--ink-mute); position: absolute; top: 14px; right: 14px; }
+  .cmd-name { font-family: var(--mono); font-size: 22px; font-weight: 500; color: var(--ink); transition: all 0.3s; }
+  .cmd-name .slash { color: var(--accent); }
+  .cmd-desc { font-size: 12px; color: var(--ink-dim); line-height: 1.5; margin-top: 8px; }
+  .cmd-meta { font-size: 10px; letter-spacing: 0.2em; color: var(--ink-mute); text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; margin-top: 14px; }
+  .cmd-arrow { width: 16px; height: 16px; opacity: 0.3; transition: all 0.3s; position: absolute; bottom: 16px; right: 16px; }
+
+  /* Footer strip */
+  .strip {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 56px; border-top: 1px solid var(--line);
+    font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--ink-mute);
+    background: rgba(0,0,0,0.4);
+    max-width: 1480px; margin: 0 auto; width: 100%;
+  }
+  .strip .left { display: flex; gap: 24px; align-items: center; flex-wrap: wrap; }
+  .strip .left .live { color: var(--accent); display: inline-flex; align-items: center; gap: 8px; }
+  .strip .left .live .d { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 6px var(--accent-glow); animation: pulse 2s ease-in-out infinite; }
+  .strip .right { display: flex; gap: 24px; align-items: center; flex-wrap: wrap; }
+  .strip .right .v { color: var(--ink-dim); }
+
+  /* reveal animation */
+  .reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.8s ease-out, transform 0.8s cubic-bezier(.2,.7,.2,1); }
+  .reveal.in { opacity: 1; transform: none; }
+  .reveal.d1 { transition-delay: 0.10s; }
+  .reveal.d2 { transition-delay: 0.20s; }
+  .reveal.d3 { transition-delay: 0.30s; }
+  .reveal.d4 { transition-delay: 0.40s; }
+  .reveal.d5 { transition-delay: 0.50s; }
+
+  /* Responsive */
+  @media (max-width: 1180px) {
+    .main { grid-template-columns: 1fr; gap: 40px; padding: 56px 32px; }
+    .cmd-grid { grid-template-columns: repeat(2, 1fr); }
+    .cmd-section { padding: 80px 32px 60px; }
+    .cmd-head h2 { font-size: 44px; }
+    .kata-nav { padding: 14px 24px; }
+    .strip { padding: 14px 24px; }
+  }
+  @media (max-width: 640px) {
+    .hero-title { font-size: 22vw; }
+    .logo-lockup { padding: 16px 18px 14px; margin-left: -4px; }
+    .logo-meta { font-size: 8px; gap: 6px; }
+    .cmd-grid { grid-template-columns: 1fr; }
+    .main { padding: 40px 20px; }
+    .cmd-section { padding: 60px 20px; }
+    .cmd-head h2 { font-size: 36px; }
+    .strip { flex-direction: column; gap: 8px; text-align: center; padding: 16px; }
+    .strip .left, .strip .right { gap: 16px; flex-wrap: wrap; justify-content: center; }
+    .kata-nav .nav-meta { display: none; }
   }
 
   ::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -190,525 +565,376 @@
   }
 </style>
 </head>
-<body class="bg-bg text-ink min-h-screen overflow-x-hidden">
+<body class="text-ink min-h-screen overflow-x-hidden">
 <script src="_strings.js"></script>
 <script src="_shell.js"></script>
 
-<!-- ambient layers (no constellation / no three.js — only gradient + grain) -->
-<div aria-hidden class="fixed inset-0 z-0 pointer-events-none ambient"></div>
-<div aria-hidden class="fixed inset-0 z-0 pointer-events-none grain opacity-50"></div>
+<!-- Particles preset background — vignette + particles + noise + spotlight + 007 watermark -->
+<div class="bg-stack" aria-hidden="true" id="bg-stack">
+  <div class="bg-vignette"></div>
+  <div class="bg-particles" id="bg-particles"></div>
+  <div class="bg-noise"></div>
+  <div class="bg-spotlight" id="bg-spotlight"></div>
+  <div class="bg-watermark">007</div>
+</div>
 
-<!-- top bar -->
-<header class="fixed top-0 inset-x-0 h-16 z-50 flex items-center justify-between px-6 backdrop-blur-md border-b border-line" style="background:rgba(13,10,8,0.7)">
-  <a href="/" class="flex flex-col items-start gap-1 leading-none" title="Về se77n.com">
-    <div class="mono text-[28px] font-extrabold tracking-[-0.025em]">se<span class="text-red glow77">77</span>n<span class="text-mute font-normal"> / kata</span></div>
-    <div class="mono t-meta uppercase tracking-kicker">Experiment <span class="text-red font-bold glow77 opacity-100">007</span> · katas module</div>
+<!-- Header — brand + #kata-header-actions slot (lang / theme / user, injected by _shell.js) -->
+<header class="kata-nav">
+  <a href="/" class="flex flex-col items-start leading-none" style="text-decoration:none" title="Về se77n.com">
+    <div class="brand">
+      <span class="se">se</span><span class="sev">77</span><span class="se">n</span>
+      <span class="slash">/</span>
+      <span class="kata">kata</span>
+    </div>
+    <div class="nav-meta">EXPERIMENT <span class="num">007</span> · KATAS MODULE</div>
   </a>
 
   <div id="kata-header-actions" class="flex items-center gap-2.5"></div>
 </header>
 
-<main class="relative z-10 pt-16">
+<main class="shell">
+  <div class="main">
+    <!-- LEFT · hero pitch -->
+    <section>
+      <div class="eyebrow reveal d0 in">
+        <span class="live-dot"></span>
+        EXP 007 · KATAS MODULE
+      </div>
 
-  <!-- ════════════════════════════════════════════════════════
-       HERO · 100vh, 2 cols: pitch (left) + DASHBOARD (right)
-       ════════════════════════════════════════════════════════ -->
-  <section class="relative mx-auto max-w-[1440px] px-10" style="min-height: calc(100vh - 64px); display: flex; flex-direction: column; justify-content: center;">
-    <!-- 007 watermark — sits behind dashboard column, contained in hero -->
-    <div aria-hidden class="absolute top-1/2 right-[5%] -translate-y-1/2 pointer-events-none breath mono select-none z-0" style="font-size:clamp(220px,26vw,360px);font-weight:800;letter-spacing:-0.04em;line-height:1;color:transparent;-webkit-text-stroke:1px #E0454522;opacity:.55">007</div>
+      <div class="logo-lockup reveal d1">
+        <span class="bracket tl"></span><span class="bracket tr"></span>
+        <span class="bracket bl"></span><span class="bracket br"></span>
 
-    <div class="relative z-10 grid grid-cols-1 lg:grid-cols-[1.15fr_1fr] gap-12 lg:gap-16 items-center py-12">
-
-      <!-- LEFT · pitch -->
-      <div>
-        <div class="mono t-meta uppercase tracking-kicker mb-6">
-          EXP 007 · KATAS MODULE
+        <div class="logo-meta top">
+          <span class="tick"></span>
+          <span class="serial">KTS<span class="dim">—</span>007<span class="dim">·</span>v0.4b</span>
+          <span class="rule"></span>
+          <span class="reg">®</span>
         </div>
 
-        <h1 class="mono t-hero lowercase">
-          <span class="text-red glow77">katas</span><span class="text-red glow77">.</span>
+        <h1 class="hero-title" data-text="katas">
+          <span class="layer outline" aria-hidden="true">katas</span>
+          <span class="layer fill">katas</span>
+          <span class="aperture" aria-hidden="true">
+            <svg viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="42" class="ring outer"></circle>
+              <circle cx="50" cy="50" r="30" class="ring mid"></circle>
+              <circle cx="50" cy="50" r="14" class="ring core"></circle>
+              <g class="blades">
+                <path d="M50 6 L56 22 L44 22 Z"></path>
+                <path d="M50 94 L56 78 L44 78 Z"></path>
+                <path d="M6 50 L22 56 L22 44 Z"></path>
+                <path d="M94 50 L78 56 L78 44 Z"></path>
+              </g>
+              <g class="ticks">
+                <line x1="50" y1="2" x2="50" y2="8"></line>
+                <line x1="50" y1="92" x2="50" y2="98"></line>
+                <line x1="2" y1="50" x2="8" y2="50"></line>
+                <line x1="92" y1="50" x2="98" y2="50"></line>
+              </g>
+            </svg>
+          </span>
         </h1>
 
-        <p class="t-tagline mt-7 max-w-[540px]">
-          Bot Discord: chat, ảnh, video. Một dòng lệnh, mọi thứ chạy.
-        </p>
-
-        <div class="mt-9 flex gap-3 flex-wrap">
-          <a href="https://discord.com/oauth2/authorize?client_id=1505598795738644701&permissions=8&scope=bot+applications.commands" target="_blank" rel="noopener" class="mono inline-flex items-center gap-2 h-11 px-5 rounded-[10px] text-[12px] tracking-label uppercase font-bold text-bg" style="background:#E04545">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.865-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.74 19.74 0 0 0 3.677 4.37a.07.07 0 0 0-.032.028C.533 9.046-.32 13.58.099 18.058a.082.082 0 0 0 .031.056 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.873-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.1 13.1 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.126-.094.252-.192.372-.291a.074.074 0 0 1 .078-.01c3.928 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .079.01c.12.099.246.197.373.291a.077.077 0 0 1-.006.128 12.3 12.3 0 0 1-1.873.891.076.076 0 0 0-.04.107c.36.698.772 1.363 1.225 1.993a.076.076 0 0 0 .084.028 19.84 19.84 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.029zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
-            mời vào server
-          </a>
-          <a href="/api/auth/discord/start" class="mono inline-flex items-center gap-2 h-11 px-5 rounded-[10px] text-[12px] tracking-label uppercase font-medium text-ink border border-line2 hover:border-ink/30">
-            đăng nhập với discord <span class="text-mute">↗</span>
-          </a>
-        </div>
-
-        <!-- inline command preview · slim -->
-        <div class="mt-12 max-w-[560px]">
-          <div class="mono t-meta uppercase tracking-kicker mb-3">
-            try it · in any discord channel
-          </div>
-          <div class="rounded-[10px] border border-line bg-panel/70 px-4 py-3 flex items-center gap-3 mono text-[13px]">
-            <span class="text-red font-bold">/img</span>
-            <span class="text-ink truncate flex-1">a vietnamese pho cart at midnight, neon, photorealistic</span>
-            <span class="t-meta tracking-label uppercase">enter ↵</span>
-          </div>
-          <div class="mt-2.5 flex items-center justify-between gap-2 mono text-[10px] tracking-label uppercase">
-            <div class="flex gap-1.5">
-              <span class="px-2.5 py-1 rounded-[6px] text-mute" style="border:1px solid rgba(255,255,255,0.15)">/chat</span>
-              <span class="px-2.5 py-1 rounded-[6px] text-mute" style="border:1px solid rgba(255,255,255,0.15)">/edit</span>
-              <span class="px-2.5 py-1 rounded-[6px] text-mute" style="border:1px solid rgba(255,255,255,0.15)">/t2v</span>
-            </div>
-            <a href="#commands" class="text-red hover:underline normal-case tracking-normal text-[12px]">xem tất cả 12 lệnh →</a>
-          </div>
+        <div class="logo-meta bottom">
+          <span class="rule"></span>
+          <span class="serial">
+            <span class="dim">W</span>—1440<span class="dim">·</span><span class="dim">H</span>—240<span class="dim">·</span><span class="dim">RGB</span>—<span id="rgb-readout">224.69.69</span>
+          </span>
+          <span class="tick"></span>
         </div>
       </div>
 
-      <!-- RIGHT · DASHBOARD as primary nav (2x2) -->
-      <div class="relative">
-        <div class="flex items-center justify-between mb-5">
-          <div class="t-section mono">DASHBOARD</div>
-          <div class="mono t-meta uppercase tracking-label flex items-center gap-2">
-            <span class="dot-pulse w-1.5 h-1.5 rounded-full bg-green inline-block"></span>
-            <span>2 surfaces · live</span>
-          </div>
+      <p class="hero-tag reveal d2">
+        <span class="hi">Bot Discord:</span> chat, ảnh, video.<br />
+        Một dòng lệnh, mọi thứ chạy.<span class="cur"></span>
+      </p>
+
+      <div class="cta-row reveal d3">
+        <a href="https://discord.com/oauth2/authorize?client_id=1505598795738644701&permissions=8&scope=bot+applications.commands"
+           target="_blank" rel="noopener" class="btn btn-primary">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19.27 5.33C17.94 4.71 16.5 4.26 15 4a.09.09 0 0 0-.07.03c-.18.33-.39.76-.53 1.09a16.09 16.09 0 0 0-4.8 0c-.14-.34-.35-.76-.54-1.09-.01-.02-.04-.03-.07-.03c-1.5.26-2.93.71-4.27 1.33c-.01 0-.02.01-.03.02c-2.72 4.07-3.47 8.03-3.1 11.95c0 .02.01.04.03.05c1.8 1.32 3.53 2.12 5.24 2.65c.03.01.06 0 .07-.02c.4-.55.76-1.13 1.07-1.74c.02-.04 0-.08-.04-.09c-.57-.22-1.11-.48-1.64-.78c-.04-.02-.04-.08-.01-.11c.11-.08.22-.17.33-.25c.02-.02.05-.02.07-.01c3.44 1.57 7.15 1.57 10.55 0c.02-.01.05-.01.07.01c.11.09.22.17.33.26c.04.03.04.09-.01.11c-.52.31-1.07.56-1.64.78c-.04.01-.05.06-.04.09c.32.61.68 1.19 1.07 1.74c.03.01.06.02.09.01c1.72-.53 3.45-1.33 5.25-2.65c.02-.01.03-.03.03-.05c.44-4.53-.73-8.46-3.1-11.95c-.01-.01-.02-.02-.04-.02zM8.52 14.91c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12c0 1.17-.84 2.12-1.89 2.12zm6.97 0c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12c0 1.17-.83 2.12-1.89 2.12z"/></svg>
+          MỜI VÀO SERVER
+        </a>
+        <a href="/api/auth/discord/start" id="login-cta" class="btn btn-ghost">
+          ĐĂNG NHẬP VỚI DISCORD
+          <svg class="arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H8M17 7V16"/></svg>
+        </a>
+      </div>
+
+      <div class="try-it reveal d4">
+        <div class="label">
+          <span class="sq"></span>
+          TRY IT · <span class="dim">IN ANY DISCORD CHANNEL</span>
         </div>
+        <div class="prompt">
+          <span class="cmd">/img</span>
+          <span class="input" id="typed-prompt">a vietnamese pho cart at midnight, neon, photoreali...</span>
+          <span class="enter">ENTER <kbd>↵</kbd></span>
+        </div>
+        <div class="chips">
+          <span class="chip">/chat</span>
+          <span class="chip">/edit</span>
+          <span class="chip">/t2v</span>
+          <span class="chip">/upscale</span>
+          <span class="chip">/remix</span>
+          <a class="more" href="#commands">xem tất cả 12 lệnh →</a>
+        </div>
+      </div>
+    </section>
 
-        <div class="grid grid-cols-2 gap-3" id="dashboard-tiles">
-          <a href="servers.html" class="tile tile-servers group">
-            <div class="flex items-start justify-between mb-2">
-              <span class="mono t-meta tracking-label uppercase text-mute" data-i18n="index.tile.servers.tag">surface · 01</span>
-              <span class="tile-glyph">▤</span>
-            </div>
-            <div class="t-card-title lowercase text-ink" data-i18n="index.tile.servers">servers list</div>
-            <div class="t-card-desc mt-1 text-[13px]" data-i18n="index.tile.servers.desc">Server bot đang phục vụ — vào từng server để xem logs / cost.</div>
-            <div class="tile-metric pt-3" id="tile-servers-metric">— <span class="unit">active</span></div>
-          </a>
-
-          <a href="tavern.html" class="tile tile-tavern group" style="--tile-accent:#8a4fff">
-            <div class="flex items-start justify-between mb-2">
-              <span class="mono t-meta tracking-label uppercase text-mute">surface · 02</span>
-              <span class="tile-glyph">⌑</span>
-            </div>
-            <div class="t-card-title lowercase text-ink">tavern</div>
-            <div class="t-card-desc mt-1 text-[13px]">My worlds, character library, lore AI assist.</div>
-            <div class="mt-auto pt-3 mono text-[11px] tracking-label uppercase" style="color:var(--tile-accent)">roleplay · engine</div>
-          </a>
-
-          <a id="tile-admin" href="admin.html" class="tile tile-admin group">
-            <div class="flex items-start justify-between mb-2">
-              <span class="tile-owner-pill" data-i18n="index.tile.admin.tag">owner</span>
-              <span class="tile-glyph">⌬</span>
-            </div>
-            <div class="t-card-title lowercase text-ink" data-i18n="index.tile.admin">admin console</div>
-            <div class="t-card-desc mt-1 text-[13px]" data-i18n="index.tile.admin.desc">Sysprompt, models, global logs + cost cho mọi server.</div>
-            <div class="mt-auto pt-3 mono text-[11px] tracking-label uppercase" style="color:var(--tile-accent)">global · settings</div>
-          </a>
+    <!-- RIGHT · DASHBOARD as primary nav -->
+    <section class="dash">
+      <div class="dash-head reveal d0">
+        <span>DASHBOARD</span>
+        <div class="right">
+          <span class="pill"><span class="live"></span> 2 SURFACES · LIVE</span>
         </div>
       </div>
 
+      <div class="dash-grid">
+        <a class="card reveal d1" href="servers.html" style="--card-accent: var(--accent);">
+          <div class="scan"></div>
+          <div class="card-head">
+            <span data-i18n="index.tile.servers.tag">SURFACE · 01</span>
+            <span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="3"/><rect x="3" y="11" width="18" height="3"/><rect x="3" y="17" width="12" height="3"/></svg></span>
+          </div>
+          <h3 class="card-title" data-i18n="index.tile.servers">servers list</h3>
+          <p class="card-desc" data-i18n="index.tile.servers.desc">Danh sách server bot đang phục vụ.</p>
+          <div class="card-foot">
+            <span class="status"><span class="bar"></span><span class="dim">active</span></span>
+            <span class="tags" id="tile-servers-tags">
+              <span class="pill" id="tile-servers-count">— SERVERS</span>
+              <span class="dot">·</span>
+              <span class="pill">LIVE</span>
+            </span>
+          </div>
+        </a>
+
+        <a class="card reveal d2" href="tavern.html" style="--card-accent: var(--violet);">
+          <div class="scan"></div>
+          <div class="card-head">
+            <span>SURFACE · 02</span>
+            <span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span>
+          </div>
+          <h3 class="card-title">tavern</h3>
+          <p class="card-desc">Worlds, character library, lore AI assist.</p>
+          <div class="card-foot">
+            <span class="status"><span class="bar"></span><span class="dim">engine</span></span>
+            <span class="tags">
+              <span class="pill">ROLEPLAY</span>
+              <span class="dot">·</span>
+              <span class="pill">ENGINE</span>
+            </span>
+          </div>
+        </a>
+
+        <a class="card full reveal d3" id="tile-admin" href="admin.html" style="--card-accent: var(--amber);">
+          <div class="scan"></div>
+          <div class="card-head">
+            <span class="owner-pill" data-i18n="index.tile.admin.tag">OWNER</span>
+            <span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5"/></svg></span>
+          </div>
+          <h3 class="card-title" data-i18n="index.tile.admin">admin console</h3>
+          <p class="card-desc" data-i18n="index.tile.admin.desc">Cấu hình toàn bộ bot, sysprompt và model dùng cho mọi server.</p>
+          <div class="card-foot">
+            <span class="status"><span class="bar"></span><span class="dim">global</span></span>
+            <span class="tags">
+              <span class="pill">GLOBAL</span>
+              <span class="dot">·</span>
+              <span class="pill">SETTINGS</span>
+            </span>
+          </div>
+        </a>
+      </div>
+    </section>
+  </div>
+
+  <!-- ════════════ COMMANDS · 12 ════════════ -->
+  <section class="cmd-section" id="commands">
+    <div class="cmd-head">
+      <h2>
+        12 lệnh<span class="red">.</span><br/>
+        Một bot. <span class="red">Mọi thứ chạy.</span>
+      </h2>
+      <div class="num">
+        <span>COMMANDS · TOTAL</span>
+        <span class="big">12</span>
+      </div>
     </div>
+    <div class="cmd-grid" id="cmd-grid"></div>
   </section>
 
-  <!-- ════════════════════════════════════════════════════════
-       CAPABILITIES · 4 cards, single tonal palette
-       ════════════════════════════════════════════════════════ -->
-  <section id="commands" class="relative mx-auto max-w-[1440px] px-10 pt-[40px] pb-[120px]">
-    <div class="t-section mono mb-7">CAPABILITIES</div>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-      <!-- chat -->
-      <div class="rounded-[14px] border border-line bg-panel p-5">
-        <div class="flex items-center justify-between mb-4">
-          <span class="inline-flex items-center justify-center w-7 h-7 rounded-md text-ink/70 text-[16px]" style="border:1px solid rgba(255,255,255,0.10)">∞</span>
-          <span class="mono t-meta tracking-label uppercase">rail · 01</span>
-        </div>
-        <div class="mono lowercase t-card-title text-ink mb-2">chat</div>
-        <div class="t-card-desc mb-4">Trò chuyện tự nhiên với vision, function calling, multi-user context.</div>
-        <div class="flex flex-wrap gap-1.5 mono text-[10px] tracking-label uppercase">
-          <span class="px-2 py-0.5 rounded-full text-mute" style="border:1px solid rgba(255,255,255,0.15); background:transparent">gemini-3-flash</span>
-          <span class="px-2 py-0.5 rounded-full text-mute" style="border:1px solid rgba(255,255,255,0.15); background:transparent">claude</span>
-          <span class="px-2 py-0.5 rounded-full text-mute" style="border:1px solid rgba(255,255,255,0.15); background:transparent">grok-4</span>
-        </div>
-      </div>
-
-      <!-- image -->
-      <div class="rounded-[14px] border border-line bg-panel p-5">
-        <div class="flex items-center justify-between mb-4">
-          <span class="inline-flex items-center justify-center w-7 h-7 rounded-md text-ink/70 text-[16px]" style="border:1px solid rgba(255,255,255,0.10)">◧</span>
-          <span class="mono t-meta tracking-label uppercase">rail · 02</span>
-        </div>
-        <div class="mono lowercase t-card-title text-ink mb-2">image</div>
-        <div class="t-card-desc mb-4">Tạo, sửa, xoá nền · nsfw safeguard với fallback chain.</div>
-        <div class="flex flex-wrap gap-1.5 mono text-[10px] tracking-label uppercase">
-          <span class="px-2 py-0.5 rounded-full text-mute" style="border:1px solid rgba(255,255,255,0.15); background:transparent">nano-banana</span>
-          <span class="px-2 py-0.5 rounded-full text-mute" style="border:1px solid rgba(255,255,255,0.15); background:transparent">gpt-image-2</span>
-          <span class="px-2 py-0.5 rounded-full text-mute" style="border:1px solid rgba(255,255,255,0.15); background:transparent">flux/dev</span>
-        </div>
-      </div>
-
-      <!-- video -->
-      <div class="rounded-[14px] border border-line bg-panel p-5">
-        <div class="flex items-center justify-between mb-4">
-          <span class="inline-flex items-center justify-center w-7 h-7 rounded-md text-ink/70 text-[16px]" style="border:1px solid rgba(255,255,255,0.10)">▷</span>
-          <span class="mono t-meta tracking-label uppercase">rail · 03</span>
-        </div>
-        <div class="mono lowercase t-card-title text-ink mb-2">video</div>
-        <div class="t-card-desc mb-4">Text/image → video, tải từ url qua yt-dlp với stream-mode.</div>
-        <div class="flex flex-wrap gap-1.5 mono text-[10px] tracking-label uppercase">
-          <span class="px-2 py-0.5 rounded-full text-mute" style="border:1px solid rgba(255,255,255,0.15); background:transparent">seedance-v2</span>
-          <span class="px-2 py-0.5 rounded-full text-mute" style="border:1px solid rgba(255,255,255,0.15); background:transparent">happy-horse</span>
-          <span class="px-2 py-0.5 rounded-full text-mute" style="border:1px solid rgba(255,255,255,0.15); background:transparent">yt-dlp</span>
-        </div>
-      </div>
-
-      <!-- ops -->
-      <div class="rounded-[14px] border border-line bg-panel p-5">
-        <div class="flex items-center justify-between mb-4">
-          <span class="inline-flex items-center justify-center w-7 h-7 rounded-md text-ink/70 text-[16px]" style="border:1px solid rgba(255,255,255,0.10)">⌬</span>
-          <span class="mono t-meta tracking-label uppercase">rail · 04 · admin</span>
-        </div>
-        <div class="mono lowercase t-card-title text-ink mb-2">ops</div>
-        <div class="t-card-desc mb-4">Role mgmt, emoji clone, audit log, member moderation.</div>
-        <div class="flex flex-wrap gap-1.5 mono text-[10px] tracking-label uppercase">
-          <span class="px-2 py-0.5 rounded-full text-mute" style="border:1px solid rgba(255,255,255,0.15); background:transparent">discord.js v14</span>
-          <span class="px-2 py-0.5 rounded-full text-mute" style="border:1px solid rgba(255,255,255,0.15); background:transparent">manage_guild</span>
-        </div>
-      </div>
+  <footer class="strip">
+    <div class="left">
+      <span class="live"><span class="d"></span> SYSTEM ONLINE</span>
+      <span>UPTIME 99.98%</span>
+      <span>BUILD 007.04.b</span>
     </div>
-  </section>
-
-  <!-- ════════════════════════════════════════════════════════
-       LIVE · ACTIVITY · stats + feed
-       ════════════════════════════════════════════════════════ -->
-  <section class="relative mx-auto max-w-[1440px] px-10 pb-[120px]">
-    <div class="t-section mono mb-7 flex items-center gap-3">
-      <span class="dot-pulse w-1.5 h-1.5 rounded-full bg-green inline-block"></span>
-      <span>LIVE · ACTIVITY</span>
+    <div class="right">
+      <span class="v" id="strip-clock">--:--:--</span>
+      <span>ICT</span>
     </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-[1.35fr_1fr] gap-3">
-
-      <!-- stats card -->
-      <div class="rounded-[14px] border border-line bg-panel p-6">
-        <div class="flex items-center gap-3 mb-5 flex-wrap">
-          <div class="mono t-meta uppercase tracking-label">5m polling · synced 12s ago</div>
-          <div class="flex-1"></div>
-          <div class="mono t-meta tracking-label">katas v0.3.1 · uptime 7d 04h</div>
-        </div>
-
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-x-5 gap-y-5">
-          <div>
-            <div class="mono t-meta uppercase tracking-label" data-i18n="index.stat.servers">servers</div>
-            <div id="stat-servers-value" class="mono text-[32px] font-bold mt-1 tracking-tight leading-none">—</div>
-            <div id="stat-servers-delta" class="mono text-[10px] text-mute tracking-label uppercase mt-1.5 opacity-80">—</div>
-          </div>
-          <div>
-            <div class="mono t-meta uppercase tracking-label" data-i18n="index.stat.msgs">tin nhắn · 30d</div>
-            <div id="stat-msgs-value" class="mono text-[32px] font-bold mt-1 tracking-tight leading-none">—</div>
-            <div id="stat-msgs-delta" class="mono text-[10px] text-mute tracking-label uppercase mt-1.5 opacity-80">—</div>
-          </div>
-          <div>
-            <div class="mono t-meta uppercase tracking-label" data-i18n="index.stat.media">media gen · 30d</div>
-            <div id="stat-media-value" class="mono text-[32px] font-bold mt-1 tracking-tight leading-none">—</div>
-            <div id="stat-media-delta" class="mono text-[10px] text-mute tracking-label uppercase mt-1.5">—</div>
-          </div>
-          <div>
-            <div class="mono t-meta uppercase tracking-label" data-i18n="index.stat.cost">cost · 30d</div>
-            <div id="stat-cost-value" class="mono text-[32px] font-bold mt-1 tracking-tight leading-none text-gold">—</div>
-            <div id="stat-cost-delta" class="mono text-[10px] text-mute tracking-label uppercase mt-1.5 opacity-80">—</div>
-          </div>
-        </div>
-
-        <!-- sparkline -->
-        <div class="mt-7 pt-5 border-t border-line">
-          <div class="mono t-meta uppercase tracking-label mb-2 flex items-baseline justify-between">
-            <span data-i18n="index.spark.title">msgs · last 7d</span>
-            <span id="spark-peak">—</span>
-          </div>
-          <svg id="spark-svg" viewBox="0 0 200 36" preserveAspectRatio="none" class="w-full h-9">
-            <defs>
-              <linearGradient id="hg" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%" stop-color="#E04545" stop-opacity="0.4"/>
-                <stop offset="100%" stop-color="#E04545" stop-opacity="0.02"/>
-              </linearGradient>
-            </defs>
-            <path id="spark-fill" d="M0 36 L200 36 Z" fill="url(#hg)"/>
-            <path id="spark-line" d="M0 36 L200 36" fill="none" stroke="#E04545" stroke-width="1.4" stroke-linejoin="round"/>
-          </svg>
-        </div>
-      </div>
-
-      <!-- right now feed -->
-      <div class="rounded-[14px] border border-line bg-panel/60 p-5">
-        <div class="mono t-meta uppercase tracking-kicker mb-4 flex items-center gap-2">
-          <span class="dot-pulse w-1.5 h-1.5 rounded-full bg-red"></span>
-          <span data-i18n="index.right-now">right now</span>
-        </div>
-        <div id="activity-feed" class="space-y-2 mono text-[11px]">
-          <div class="text-mute2 mono text-[11px]" data-i18n="index.activity-empty">— đăng nhập để xem hoạt động</div>
-        </div>
-        <div class="mt-4 pt-3 border-t border-line/60 mono t-meta tracking-label uppercase text-center">
-          <span data-i18n="index.full-stream">full stream</span> · <a href="me-history.html" class="text-red hover:underline" data-i18n="bc.history">my history</a>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ════════════════════════════════════════════════════════
-       RUNS ON · short tech stack near footer
-       ════════════════════════════════════════════════════════ -->
-  <section class="relative mx-auto max-w-[1440px] px-10 pb-[60px]">
-    <div class="grid grid-cols-1 md:grid-cols-[180px_1fr] gap-6 md:gap-12 items-baseline">
-      <div class="t-section mono">RUNS ON</div>
-      <div class="mono text-[13px] text-mute tracking-[0.04em] leading-[1.9] flex flex-wrap items-center gap-x-5 gap-y-1">
-        <span><span class="text-ink">yunwu.ai</span> <span class="text-mute2">— ai gateway</span></span>
-        <span class="text-mute2/40">·</span>
-        <span><span class="text-ink">fal.ai</span> <span class="text-mute2">— media gen</span></span>
-        <span class="text-mute2/40">·</span>
-        <span><span class="text-ink">sparkedhost</span> <span class="text-mute2">— bot host</span></span>
-      </div>
-    </div>
-  </section>
-
-  <!-- ticker (kept as-is, brand marquee before footer) -->
-  <section class="relative z-10 my-6">
-    <div class="overflow-hidden border-y border-line py-2.5" style="background:rgba(13,10,8,0.5); -webkit-mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent); mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent)">
-      <div id="kata-ticker" class="inline-flex gap-7 whitespace-nowrap ticker pl-7 mono text-[11px] tracking-label font-bold text-mute">
-        <span class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-mute"></span>KATAS · DASHBOARD LOADING…</span>
-      </div>
-    </div>
-  </section>
-
-  <!-- footer -->
-  <footer class="relative mx-auto max-w-[1440px] px-10 pb-16 pt-8 grid grid-cols-1 md:grid-cols-3 items-center gap-2 mono t-meta tracking-kicker">
-    <span class="text-left">A SE77N MODULE · 2026</span>
-    <span class="text-center">BUILD · 2026.05.18</span>
-    <a href="servers.html" class="text-left md:text-right text-red hover:underline">→ DASHBOARD MOCK</a>
   </footer>
 </main>
 
 <script>
-// Phase 11+ — landing wires:
-//   - DASHBOARD tile #1 ("servers list") reflects real bot guild count
-//   - hero stats card, sparkline, activity feed, ticker driven by /api/kata/me
-// (auth chip is rendered by _shell.js; user metadata comes from
-//  window.__kataMe cached by shell to avoid a duplicate /api/auth/me hit)
-(async () => {
+// ── Particles seed ─────────────────────────────────────────────
+(function seedParticles() {
+  const host = document.getElementById('bg-particles');
+  if (!host) return;
+  const N = 40;
+  const frag = document.createDocumentFragment();
+  for (let i = 0; i < N; i++) {
+    const p = document.createElement('div');
+    p.className = 'p';
+    p.style.setProperty('--x',  Math.random() * 100);
+    p.style.setProperty('--d',  8 + Math.random() * 14);
+    p.style.setProperty('--dl', Math.random() * 20);
+    frag.appendChild(p);
+  }
+  host.appendChild(frag);
+})();
+
+// ── Spotlight follows mouse ────────────────────────────────────
+(function wireSpotlight() {
+  const spot = document.getElementById('bg-spotlight');
+  if (!spot) return;
+  window.addEventListener('mousemove', (e) => {
+    spot.style.transform = `translate(${e.clientX - 300}px, ${e.clientY - 300}px)`;
+  });
+})();
+
+// ── Reveal on mount ────────────────────────────────────────────
+(function reveal() {
+  document.querySelectorAll('.reveal').forEach((el) => {
+    requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('in')));
+  });
+})();
+
+// ── RGB readout under wordmark — reflects active theme accent ──
+(function syncRgbReadout() {
+  const el = document.getElementById('rgb-readout');
+  if (!el) return;
+  const paint = () => {
+    const root = getComputedStyle(document.documentElement);
+    const r = root.getPropertyValue('--ambient-r').trim() || '224';
+    const g = root.getPropertyValue('--ambient-g').trim() || '69';
+    const b = root.getPropertyValue('--ambient-b').trim() || '69';
+    el.textContent = `${r}.${g}.${b}`;
+  };
+  paint();
+  document.addEventListener('kata:theme-change', paint);
+})();
+
+// ── Typewriter for the "TRY IT" prompt ─────────────────────────
+(function typewriter() {
+  const slot = document.getElementById('typed-prompt');
+  if (!slot) return;
+  const phrases = [
+    'a vietnamese pho cart at midnight, neon, photoreali...',
+    'cyberpunk samurai standing in rain, 4k, cinematic...',
+    'isometric pixel art of a tiny ramen shop at night...',
+    'a holographic dragon coiled around a tokyo tower...',
+  ];
+  let pi = 0;
+  function run(i) {
+    const phrase = phrases[pi];
+    let n = 0;
+    const type = () => {
+      if (n < phrase.length) {
+        slot.textContent = phrase.slice(0, ++n);
+        setTimeout(type, 35);
+      } else {
+        setTimeout(erase, 2200);
+      }
+    };
+    const erase = () => {
+      if (n > 0) {
+        slot.textContent = phrase.slice(0, --n);
+        setTimeout(erase, 18);
+      } else {
+        pi = (pi + 1) % phrases.length;
+        setTimeout(() => run(0), 200);
+      }
+    };
+    type();
+  }
+  run();
+})();
+
+// ── 12-command grid render ─────────────────────────────────────
+(function renderCommands() {
+  const COMMANDS = [
+    { n: '/img',     d: 'Generate ảnh từ prompt. Photoreal, anime, pixel.', m: 'IMAGE' },
+    { n: '/edit',    d: 'Inpaint, outpaint, sửa ảnh có sẵn bằng mask.',     m: 'IMAGE' },
+    { n: '/upscale', d: 'Upscale 4x, refine details, sharpen.',             m: 'IMAGE' },
+    { n: '/remix',   d: 'Variations từ một ảnh seed.',                      m: 'IMAGE' },
+    { n: '/chat',    d: 'Conversation với memory, persona tuỳ chọn.',       m: 'TEXT'  },
+    { n: '/ask',     d: 'Q&A nhanh, không lưu context.',                    m: 'TEXT'  },
+    { n: '/sum',     d: 'Tóm tắt link, tin nhắn, file đính kèm.',           m: 'TEXT'  },
+    { n: '/code',    d: 'Code assist: explain, fix, write.',                m: 'TEXT'  },
+    { n: '/t2v',     d: 'Text-to-video, max 10s, 720p.',                    m: 'VIDEO' },
+    { n: '/i2v',     d: 'Animate ảnh tĩnh thành clip.',                     m: 'VIDEO' },
+    { n: '/voice',   d: 'TTS, clone giọng, sub tự động.',                   m: 'AUDIO' },
+    { n: '/persona', d: 'Tạo & quản lý character cho /chat.',               m: 'SYSTEM'},
+  ];
+  const host = document.getElementById('cmd-grid');
+  if (!host) return;
+  host.innerHTML = COMMANDS.map((c, i) => `
+    <a class="cmd-cell" href="#" style="animation-delay:${i * 40}ms">
+      <span class="cmd-num">${String(i + 1).padStart(2, '0')}</span>
+      <div>
+        <div class="cmd-name"><span class="slash">/</span>${c.n.slice(1)}</div>
+        <div class="cmd-desc">${c.d}</div>
+      </div>
+      <div class="cmd-meta"><span>${c.m}</span><span>READY</span></div>
+      <svg class="cmd-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H8M17 7V16"/></svg>
+    </a>
+  `).join('');
+})();
+
+// ── Footer clock — local time, ICT ─────────────────────────────
+(function footerClock() {
+  const el = document.getElementById('strip-clock');
+  if (!el) return;
+  const tick = () => { el.textContent = new Date().toLocaleTimeString('en-GB', { hour12: false }); };
+  tick(); setInterval(tick, 1000);
+})();
+
+// ── Live wires: servers count, login state hides login button ──
+(async function liveWires() {
   try {
     let auth = window.__kataMe;
     if (!auth) {
       const r = await fetch('/api/auth/me', { credentials: 'same-origin' });
-      if (!r.ok) return;
-      auth = await r.json();
-      window.__kataMe = auth;
+      if (r.ok) {
+        auth = await r.json();
+        window.__kataMe = auth;
+      }
     }
-    const user = auth?.user;
-    if (!user) return;
 
-    // Only Discord users can hit /api/kata/me — Google login won't have guilds scope.
-    if (user.provider !== 'discord') return;
+    // Hide the big login CTA once authed (the user chip in the header
+    // takes over from there). Keeping the "MỜI VÀO SERVER" invite link.
+    if (auth?.user) {
+      const login = document.getElementById('login-cta');
+      if (login) login.style.display = 'none';
+    }
+
+    // Discord users get bot guild count; Google users skip /api/kata/me
+    // (no guilds scope).
+    const user = auth?.user;
+    if (!user || user.provider !== 'discord') return;
 
     const k = await fetch('/api/kata/me', { credentials: 'same-origin' });
     if (!k.ok) return;
     const data = await k.json();
-    const activeLine = document.querySelector('a[href="servers.html"] .mt-3.mono');
-    if (activeLine && data.counts) {
-      activeLine.innerHTML = `<span class="dot-pulse w-1 h-1 rounded-full bg-green inline-block"></span><span>${data.counts.managed} managed</span>`;
-    }
-
-    paintLandingStats(data);
-    paintTicker(data);
+    const managed = data?.counts?.managed ?? 0;
+    const tile = document.getElementById('tile-servers-count');
+    if (tile) tile.textContent = `${managed} ${managed === 1 ? 'SERVER' : 'SERVERS'}`;
   } catch (e) {
-    // Static landing — silent failure is fine, placeholders remain visible.
     console.warn('kata landing wire failed', e);
   }
-})();
-
-function fmtNum(n) {
-  if (n == null) return '—';
-  if (n >= 10_000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
-  return String(n);
-}
-function fmtNumK(n) {
-  if (n == null) return '—';
-  if (n >= 10_000) {
-    const k = (n / 1000).toFixed(1).replace(/\.0$/, '');
-    return `${k}<span class="text-mute text-[22px]">k</span>`;
-  }
-  return String(n);
-}
-function fmtUSD(n) { return n == null ? '—' : `$${Number(n).toFixed(2)}`; }
-function deltaArrow(n) {
-  if (n === 0 || n == null) return '<span class="text-mute">·</span>';
-  return n > 0 ? '<span class="text-green">▲</span>' : '<span class="text-red">▼</span>';
-}
-function deltaClass(n) {
-  if (n === 0 || n == null) return 'text-mute';
-  return n > 0 ? 'text-green' : 'text-red';
-}
-function fmtAgo(d) {
-  if (!d) return '—';
-  const diff = (Date.now() - new Date(d).getTime()) / 1000;
-  if (diff < 60) return 'just now';
-  if (diff < 3600) return `${Math.floor(diff/60)}p`;
-  if (diff < 86400) return `${Math.floor(diff/3600)}h`;
-  return `${Math.floor(diff/86400)}d`;
-}
-function escapeHtml(s) {
-  return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
-}
-function commandColor(cmd) {
-  const c = String(cmd ?? '').toLowerCase();
-  if (c.startsWith('/img') || c.startsWith('/edit') || c.startsWith('/wfi2i') || c.startsWith('/bgremove')) return 'text-red';
-  if (c.startsWith('/t2v') || c.startsWith('/i2v') || c.startsWith('/video')) return 'text-red';
-  if (c.startsWith('/search')) return 'text-gold';
-  if (c.startsWith('/chat') || c === 'mention') return 'text-green';
-  return 'text-mute';
-}
-
-function paintLandingStats(data) {
-  const summary = data.summary;
-  const managedCount = data?.counts?.managed ?? 0;
-
-  // Tile metric — only the servers tile remains on the homepage; logs &
-  // cost moved into per-server overview / admin console respectively.
-  const tileServersMetric = document.getElementById('tile-servers-metric');
-  if (tileServersMetric) {
-    tileServersMetric.innerHTML = `${fmtNum(managedCount)} <span class="unit">${managedCount === 1 ? 'server' : 'servers'}</span>`;
-  }
-
-  // Owner-only admin tile reveal
-  if (data?.user?.isOwner) {
-    const adminTile = document.getElementById('tile-admin');
-    if (adminTile) adminTile.classList.remove('hidden');
-  }
-
-  // Hero stats card
-  const sv = document.getElementById('stat-servers-value');
-  const sd = document.getElementById('stat-servers-delta');
-  if (sv) sv.textContent = String(managedCount);
-  if (sd) sd.innerHTML = data?.user?.isOwner
-    ? `<span class="text-info">owner · ${data.counts.botTotal} total</span>`
-    : `${managedCount} managed`;
-
-  const mv = document.getElementById('stat-msgs-value');
-  const md = document.getElementById('stat-msgs-delta');
-  if (mv) mv.innerHTML = fmtNumK(summary?.msgs30d);
-  if (md) md.innerHTML = summary
-    ? `${deltaArrow(summary.msgsDelta)} <span class="${deltaClass(summary.msgsDelta)}">${summary.msgsDelta > 0 ? '+' : ''}${summary.msgsDelta}% vs 30d trước</span>`
-    : '—';
-
-  const mediaV = document.getElementById('stat-media-value');
-  const mediaD = document.getElementById('stat-media-delta');
-  if (mediaV) mediaV.textContent = fmtNum((summary?.images30d ?? 0) + (summary?.videos30d ?? 0));
-  if (mediaD) mediaD.textContent = summary
-    ? `${summary.images30d ?? 0} img · ${summary.videos30d ?? 0} vid`
-    : '—';
-
-  const cv = document.getElementById('stat-cost-value');
-  const cd = document.getElementById('stat-cost-delta');
-  if (cv) cv.textContent = fmtUSD(summary?.cost30d ?? 0);
-  if (cd) cd.innerHTML = summary
-    ? `${deltaArrow(summary.costDelta)} <span class="${deltaClass(summary.costDelta)}">${summary.costDelta > 0 ? '+' : ''}${summary.costDelta}% vs T trước</span>`
-    : '—';
-
-  // Sparkline — 7d msg counts. SVG viewBox 200×36, stroke clamp top→6, bottom→32.
-  const spark = summary?.sparkline;
-  const peakEl = document.getElementById('spark-peak');
-  if (spark && spark.length > 0) {
-    const max = Math.max(1, ...spark.map((p) => p.msgs));
-    const w = 200, h = 36;
-    const step = w / Math.max(1, spark.length - 1);
-    const pts = spark.map((p, i) => {
-      const x = i * step;
-      const y = 32 - (p.msgs / max) * 26;
-      return `${x.toFixed(1)} ${y.toFixed(1)}`;
-    });
-    const linePath = 'M' + pts.join(' L');
-    const fillPath = `${linePath} L${w} ${h} L0 ${h} Z`;
-    const lineEl = document.getElementById('spark-line');
-    const fillEl = document.getElementById('spark-fill');
-    if (lineEl) lineEl.setAttribute('d', linePath);
-    if (fillEl) fillEl.setAttribute('d', fillPath);
-    if (peakEl && summary.peak?.date) {
-      const d = new Date(summary.peak.date + 'T00:00:00');
-      const dow = ['CN','T2','T3','T4','T5','T6','T7'][d.getDay()];
-      peakEl.textContent = summary.peak.msgs > 0
-        ? `peak · ${fmtNum(summary.peak.msgs)} ${dow}`
-        : 'peak · —';
-    }
-  } else if (peakEl) {
-    peakEl.textContent = '—';
-  }
-
-  // Activity feed
-  const feed = document.getElementById('activity-feed');
-  if (!feed) return;
-  const items = data.recentActivity ?? [];
-  if (items.length === 0) {
-    feed.innerHTML = '<div class="text-mute2 mono text-[11px]">— chưa có hoạt động trong các server bạn quản lý</div>';
-    return;
-  }
-  feed.innerHTML = items.map((r) => {
-    const cmd = r.command || '?';
-    const color = commandColor(cmd);
-    const who = r.userId ? `@${r.userId.slice(-4)}` : '';
-    const ago = fmtAgo(r.createdAt);
-    const isFirst = items.indexOf(r) === 0;
-    return `<div class="flex items-center gap-2.5">
-      <span class="${isFirst ? 'text-red' : 'text-mute2'} text-[9px] tracking-label uppercase w-[58px] flex-shrink-0">${escapeHtml(ago)}</span>
-      <span class="${color} text-[9px] tracking-label uppercase">${escapeHtml(cmd)}</span>
-      <span class="text-mute truncate flex-1">${escapeHtml(r.input ? '"' + r.input.slice(0, 80) + '"' : '')}</span>
-      <span class="text-mute2 text-[10px]">${escapeHtml(who)}</span>
-    </div>`;
-  }).join('');
-}
-
-function paintTicker(data) {
-  const ticker = document.getElementById('kata-ticker');
-  if (!ticker) return;
-  const segments = [];
-  const summary = data.summary;
-  const managedCount = data?.counts?.managed ?? 0;
-  if (managedCount > 0) {
-    segments.push({ color: 'red', label: `${managedCount} SERVER${managedCount === 1 ? '' : 'S'} · MANAGED` });
-  }
-  if (summary) {
-    if (summary.msgs30d > 0) {
-      segments.push({ color: 'green', label: `MSG · ${(summary.msgs30d).toLocaleString()} / 30D` });
-    }
-    segments.push({ color: 'gold', label: `COST · $${Number(summary.cost30d).toFixed(2)} / 30D` });
-    if ((summary.images30d ?? 0) + (summary.videos30d ?? 0) > 0) {
-      segments.push({ color: 'red', label: `MEDIA · ${summary.images30d} IMG · ${summary.videos30d} VID` });
-    }
-    if (summary.peak?.msgs > 0 && summary.peak?.date) {
-      const d = new Date(summary.peak.date + 'T00:00:00');
-      const dow = ['CN','T2','T3','T4','T5','T6','T7'][d.getDay()];
-      segments.push({ color: 'mute', label: `PEAK · ${summary.peak.msgs} MSG ${dow}` });
-    }
-  } else {
-    segments.push({ color: 'mute', label: 'KATAS · WAITING FOR ACTIVITY' });
-  }
-  // Duplicate segments so the marquee fills the row.
-  const doubled = [...segments, ...segments];
-  ticker.innerHTML = doubled.map((s) =>
-    `<span class="text-${s.color} flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-${s.color}"></span>${escapeHtml(s.label)}</span>`
-  ).join('');
-}
-
-// Cursor-follow spotlight on the dashboard tiles. Pokes --mx/--my CSS
-// vars (in px relative to the tile) so the ::before radial-gradient
-// tracks the cursor. One mousemove handler per tile; cheap.
-(function wireDashboardSpotlights() {
-  const tiles = document.querySelectorAll('#dashboard-tiles .tile');
-  tiles.forEach((el) => {
-    el.addEventListener('mousemove', (e) => {
-      const r = el.getBoundingClientRect();
-      el.style.setProperty('--mx', (e.clientX - r.left) + 'px');
-      el.style.setProperty('--my', (e.clientY - r.top) + 'px');
-    });
-  });
 })();
 </script>
 
