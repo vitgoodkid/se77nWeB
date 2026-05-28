@@ -289,20 +289,25 @@ async function handleKata(req, res) {
 
   if (kataPath === 'me') return handleKataMe(req, res);
   if (kataPath === 'me/history') return handleKataMeHistory(req, res);
-  // /api/kata/admin/<section> — owner-only aggregate dashboards
-  const adminMatch = kataPath.match(/^admin\/([a-z-]+)$/);
-  if (adminMatch && req.method === 'GET') {
-    return handleKataAdmin(req, res, adminMatch[1]);
+
+  // /api/kata/admin/tavern-config (GET, PATCH) — owner-only tavern engine
+  // defaults. MUST be matched before the generic /admin/<section> regex
+  // below; otherwise GET falls through into handleKataAdmin which only
+  // knows the dashboard sections (servers/logs/cost/...) and 404s with
+  // unknown_section.
+  if (kataPath === 'admin/tavern-config') {
+    if (req.method === 'GET') return handleKataAdminTavernConfigGet(req, res);
+    if (req.method === 'PATCH') return handleKataAdminTavernConfigPatch(req, res);
+    return res.status(405).json({ error: 'method_not_allowed' });
   }
   if (kataPath === 'admin/global-config' && req.method === 'PATCH') {
     return handleKataAdminGlobalConfigPatch(req, res);
   }
 
-  // /api/kata/admin/tavern-config (GET, PATCH) — owner-only tavern engine defaults
-  if (kataPath === 'admin/tavern-config') {
-    if (req.method === 'GET') return handleKataAdminTavernConfigGet(req, res);
-    if (req.method === 'PATCH') return handleKataAdminTavernConfigPatch(req, res);
-    return res.status(405).json({ error: 'method_not_allowed' });
+  // /api/kata/admin/<section> — owner-only aggregate dashboards
+  const adminMatch = kataPath.match(/^admin\/([a-z-]+)$/);
+  if (adminMatch && req.method === 'GET') {
+    return handleKataAdmin(req, res, adminMatch[1]);
   }
 
   // /api/kata/tavern/* — tavern-specific routes (worlds, characters, lore AI)
