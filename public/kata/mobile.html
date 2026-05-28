@@ -1000,20 +1000,16 @@
   overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !overlay.hidden) close(); });
 
-  // Edge-swipe gesture: swipe right from the left edge opens the drawer,
-  // swipe left while open closes it. Mirrors MobileShell.jsx behavior so
-  // the kata mobile page feels consistent with the main app.
+  // Swipe gesture: swipe right anywhere on the page opens the drawer,
+  // swipe left while open closes it.
   (function wireSwipe() {
-    const EDGE = 32;    // px from left edge to start an "open" swipe
     const THRESH = 56;  // min horizontal travel to count
     let startX = 0, startY = 0, tracking = false;
     window.addEventListener('touchstart', (e) => {
       const tch = e.touches[0];
       if (!tch) { tracking = false; return; }
       startX = tch.clientX; startY = tch.clientY;
-      // Track if the drawer is open OR the touch starts within the edge
-      const isOpen = !overlay.hidden;
-      tracking = isOpen || startX <= EDGE;
+      tracking = true;
     }, { passive: true });
     window.addEventListener('touchend', (e) => {
       if (!tracking) return;
@@ -1025,7 +1021,7 @@
       // Reject vertical swipes (scroll) — only react to mostly-horizontal ones
       if (Math.abs(dx) < THRESH || Math.abs(dx) <= Math.abs(dy)) return;
       const isOpen = !overlay.hidden;
-      if (!isOpen && dx > 0 && startX <= EDGE) open();
+      if (!isOpen && dx > 0) open();
       else if (isOpen && dx < 0) close();
     }, { passive: true });
   })();
