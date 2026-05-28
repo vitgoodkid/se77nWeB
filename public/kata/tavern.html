@@ -243,7 +243,10 @@ async function bootstrap() {
   const r = await fetch('/api/kata/me', { credentials: 'include' });
   if (r.ok) {
     me = await r.json();
-    isOwner = !!me?.isOwner;
+    // /api/kata/me wraps the owner flag inside `user`. The earlier check
+    // read `me.isOwner` (top level) which never existed, so isOwner stayed
+    // false even for the real owner.
+    isOwner = !!(me?.user?.isOwner);
   }
   setTabUI();
   switchTab(currentTab);
