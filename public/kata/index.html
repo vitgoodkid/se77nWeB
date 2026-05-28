@@ -132,17 +132,47 @@
     backdrop-filter: blur(8px);
     background: linear-gradient(to bottom, rgba(8,5,10,0.78), rgba(8,5,10,0.32));
   }
+  /* Brand block — mirrors the main se77n.com header (App.jsx:276–292):
+     mono 800, tight letter-spacing, "se77n" reads as ONE unit; the
+     "/ kata" suffix is muted/normal-weight so it sits behind the mark
+     instead of fighting it. */
   .kata-nav .brand {
-    font-family: var(--display); font-weight: 700; font-size: 22px;
-    display: flex; align-items: center; gap: 10px; letter-spacing: -0.02em;
+    font-family: var(--mono);
+    font-weight: 800;
+    font-size: 30px;
+    letter-spacing: -0.025em;
+    line-height: 0.95;
     color: var(--ink);
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0;
   }
-  .kata-nav .brand .se { color: var(--ink); }
-  .kata-nav .brand .sev { color: var(--accent); text-shadow: 0 0 12px var(--accent-glow); }
-  .kata-nav .brand .slash { color: var(--ink-mute); font-weight: 300; }
-  .kata-nav .brand .kata { color: var(--ink); font-weight: 500; }
-  .kata-nav .nav-meta { font-size: 10px; letter-spacing: 0.22em; color: var(--ink-mute); text-transform: uppercase; margin-top: 4px; }
-  .kata-nav .nav-meta .num { color: var(--accent); font-weight: 700; }
+  .kata-nav .brand .sev {
+    color: var(--accent);
+    text-shadow: 0 0 6px color-mix(in srgb, var(--accent) 80%, transparent),
+                 0 0 18px color-mix(in srgb, var(--accent) 40%, transparent),
+                 0 0 36px color-mix(in srgb, var(--accent) 20%, transparent);
+  }
+  .kata-nav .brand .suffix {
+    color: var(--ink-mute);
+    font-weight: 400;
+    margin-left: 10px;
+    letter-spacing: -0.01em;
+  }
+  .kata-nav .nav-meta {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.24em;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+    margin-top: 6px;
+    line-height: 1;
+  }
+  .kata-nav .nav-meta .num {
+    color: var(--accent); font-weight: 700;
+    text-shadow: 0 0 4px color-mix(in srgb, var(--accent) 65%, transparent),
+                 0 0 10px color-mix(in srgb, var(--accent) 33%, transparent);
+  }
 
   /* Hero — 2-col on desktop, stack on tablet/phone */
   .main {
@@ -582,9 +612,8 @@
 <header class="kata-nav">
   <a href="/" class="flex flex-col items-start leading-none" style="text-decoration:none" title="Về se77n.com">
     <div class="brand">
-      <span class="se">se</span><span class="sev">77</span><span class="se">n</span>
-      <span class="slash">/</span>
-      <span class="kata">kata</span>
+      <span>se<span class="sev">77</span>n</span>
+      <span class="suffix">/ kata</span>
     </div>
     <div class="nav-meta">EXPERIMENT <span class="num">007</span> · KATAS MODULE</div>
   </a>
