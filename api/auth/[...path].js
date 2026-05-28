@@ -42,6 +42,32 @@ function getPath(req) {
   return pathname.replace(/^\/api\/auth\/?/, '').replace(/^\/+|\/+$/g, '');
 }
 
+// ── Owner gate ──────────────────────────────────────────────────────
+//
+// `/kata` originally only treated the user as owner when their Discord ID
+// matched OWNER_DISCORD_ID. That breaks the (legit) case of an admin who
+// signs in with Google: same human, different account. We accept both:
+//   - Discord ID match (OWNER_DISCORD_ID, default 397342895327150080)
+//   - Email match against OWNER_EMAILS (comma-separated, default
+//     beliketp@gmail.com so existing local logins keep working)
+// One env var per surface; case-insensitive on the email side.
+const DEFAULT_OWNER_DISCORD_ID = '397342895327150080';
+const DEFAULT_OWNER_EMAILS = 'beliketp@gmail.com';
+
+function getOwnerEmails() {
+  const raw = process.env.OWNER_EMAILS?.trim() || DEFAULT_OWNER_EMAILS;
+  return raw.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
+}
+
+function isUserOwner(user) {
+  if (!user) return false;
+  const ownerId = process.env.OWNER_DISCORD_ID?.trim() || DEFAULT_OWNER_DISCORD_ID;
+  if (user.providerUserId && user.providerUserId === ownerId) return true;
+  const email = (user.email || '').trim().toLowerCase();
+  if (!email) return false;
+  return getOwnerEmails().includes(email);
+}
+
 function redirect(res, location, cookies) {
   if (cookies) res.setHeader('Set-Cookie', cookies);
   res.writeHead(302, { Location: location });
@@ -320,33 +346,43 @@ async function handleKataMe(req, res) {
   const users = await getUsers();
   const user = await users.findOne({ _id: userOid });
   if (!user) return res.status(401).json({ error: 'user_not_found' });
-  if (user.provider !== 'discord') {
-    return res.status(403).json({ error: 'discord_required', message: 'Sign in with Discord to use /kata' });
-  }
-  if (!user.discordAccessToken) {
-    // Old session pre-dating the guilds scope upgrade.
-    return res.status(403).json({ error: 'reauth_required', message: 'Please log out and sign in with Discord again' });
+
+  const isOwner = isUserOwner(user);
+
+  // Discord-signed owner / admin: pull their guild list + cross-reference.
+  // Email-signed owner (Google): skip the Discord round-trip and just expose
+  // the bot's full server roster as "managed" for the owner-view UX.
+  let userGuilds = [];
+  const usingDiscord = user.provider === 'discord' && !!user.discordAccessToken;
+  if (!usingDiscord && !isOwner) {
+    return res.status(403).json({
+      error: user.provider === 'discord' ? 'reauth_required' : 'discord_required',
+      message: user.provider === 'discord'
+        ? 'Please log out and sign in with Discord again'
+        : 'Sign in with Discord to use /kata',
+    });
   }
 
-  // Pull user's guild list from Discord. Discord returns up to 200 guilds in
-  // a single call; we don't paginate yet (assumption: a single user in 200+
-  // servers is rare and wouldn't be served well by this list view anyway).
-  let userGuilds;
-  try {
-    const r = await fetch('https://discord.com/api/v10/users/@me/guilds', {
-      headers: { Authorization: `Bearer ${user.discordAccessToken}` },
-    });
-    if (r.status === 401) {
-      return res.status(403).json({ error: 'reauth_required', message: 'Discord token expired — please sign in again' });
+  if (usingDiscord) {
+    try {
+      const r = await fetch('https://discord.com/api/v10/users/@me/guilds', {
+        headers: { Authorization: `Bearer ${user.discordAccessToken}` },
+      });
+      if (r.status === 401) {
+        // Owner-by-email can fall through; non-owners must reauth.
+        if (!isOwner) {
+          return res.status(403).json({ error: 'reauth_required', message: 'Discord token expired — please sign in again' });
+        }
+      } else if (!r.ok) {
+        console.error('discord guilds fetch failed', r.status, await r.text().catch(() => ''));
+        if (!isOwner) return res.status(502).json({ error: 'discord_unavailable' });
+      } else {
+        userGuilds = await r.json();
+      }
+    } catch (e) {
+      console.error('discord guilds fetch error', e);
+      if (!isOwner) return res.status(502).json({ error: 'discord_unavailable' });
     }
-    if (!r.ok) {
-      console.error('discord guilds fetch failed', r.status, await r.text().catch(() => ''));
-      return res.status(502).json({ error: 'discord_unavailable' });
-    }
-    userGuilds = await r.json();
-  } catch (e) {
-    console.error('discord guilds fetch error', e);
-    return res.status(502).json({ error: 'discord_unavailable' });
   }
 
   // Cross-reference with bot's known guilds (servers collection in the KataS
@@ -357,9 +393,6 @@ async function handleKataMe(req, res) {
     .find({ isActive: true }, { projection: { guildId: 1, name: 1, iconUrl: 1, ownerId: 1 } })
     .toArray();
   const botGuildIds = new Set(botServers.map((s) => s.guildId));
-
-  const owner = process.env.OWNER_DISCORD_ID?.trim() || '397342895327150080';
-  const isOwner = user.providerUserId === owner;
 
   // Surface only servers the user can actually manage (admin/owner) AND the
   // bot is in. Anything they don't admin doesn't appear at all — no "có thể
@@ -526,8 +559,7 @@ async function authorizeGuildAccess(req, guildId) {
   if (user.provider !== 'discord') return { error: 'discord_required', status: 403 };
   if (!user.discordAccessToken) return { error: 'reauth_required', status: 403 };
 
-  const owner = process.env.OWNER_DISCORD_ID?.trim() || '397342895327150080';
-  const isOwner = user.providerUserId === owner;
+  const isOwner = isUserOwner(user);
 
   // Verify the bot is in this guild before doing anything else.
   const kataDb = await getKataDb();
@@ -1280,15 +1312,11 @@ async function requireOwner(req) {
   const users = await getUsers();
   const user = await users.findOne({ _id: userOid });
   if (!user) return { error: 'user_not_found', status: 401 };
-  if (user.provider !== 'discord' || !user.providerUserId) {
-    return { error: 'discord_required', status: 403 };
-  }
 
-  const ownerId = process.env.OWNER_DISCORD_ID?.trim() || '397342895327150080';
-  if (user.providerUserId !== ownerId) {
+  if (!isUserOwner(user)) {
     return { error: 'forbidden', status: 403, message: 'Owner only' };
   }
-  return { user, ownerId };
+  return { user, ownerId: process.env.OWNER_DISCORD_ID?.trim() || DEFAULT_OWNER_DISCORD_ID };
 }
 
 async function handleKataAdmin(req, res, section) {
@@ -1711,11 +1739,18 @@ async function requireUser(req) {
   catch { return { error: 'bad_session', status: 401 }; }
   const user = await (await getUsers()).findOne({ _id: userOid });
   if (!user) return { error: 'user_not_found', status: 401 };
-  if (user.provider !== 'discord' || !user.providerUserId) {
+  const isOwner = isUserOwner(user);
+  // Tavern player paths still need a Discord identity (turns are written
+  // against providerUserId). Email-only owners can read but not write a
+  // player turn — that's fine, they're not playing.
+  if ((user.provider !== 'discord' || !user.providerUserId) && !isOwner) {
     return { error: 'discord_required', status: 403 };
   }
-  const ownerId = process.env.OWNER_DISCORD_ID?.trim() || '397342895327150080';
-  return { user, isOwner: user.providerUserId === ownerId, ownerId };
+  return {
+    user,
+    isOwner,
+    ownerId: process.env.OWNER_DISCORD_ID?.trim() || DEFAULT_OWNER_DISCORD_ID,
+  };
 }
 
 async function handleKataTavern(req, res, sub) {
