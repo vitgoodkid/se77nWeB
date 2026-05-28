@@ -118,14 +118,6 @@
     to   { transform: translateY(-10vh); opacity: 0; }
   }
 
-  .bg-spotlight {
-    position: absolute; width: 600px; height: 600px;
-    background: radial-gradient(circle, color-mix(in srgb, var(--accent) 10%, transparent), transparent 60%);
-    pointer-events: none;
-    transform: translate(-50%, -50%);
-    transition: transform 0.6s cubic-bezier(.2,.7,.2,1);
-  }
-
   .bg-watermark {
     position: absolute; right: -2vw; bottom: -6vw;
     font-family: var(--display); font-weight: 700;
@@ -616,12 +608,11 @@
 <script src="_strings.js"></script>
 <script src="_shell.js"></script>
 
-<!-- Particles preset background — vignette + particles + noise + spotlight + 007 watermark -->
+<!-- Particles preset background — vignette + particles + noise + 007 watermark -->
 <div class="bg-stack" aria-hidden="true" id="bg-stack">
   <div class="bg-vignette"></div>
   <div class="bg-particles" id="bg-particles"></div>
   <div class="bg-noise"></div>
-  <div class="bg-spotlight" id="bg-spotlight"></div>
   <div class="bg-watermark">007</div>
 </div>
 
@@ -840,15 +831,6 @@
     frag.appendChild(p);
   }
   host.appendChild(frag);
-})();
-
-// ── Spotlight follows mouse ────────────────────────────────────
-(function wireSpotlight() {
-  const spot = document.getElementById('bg-spotlight');
-  if (!spot) return;
-  window.addEventListener('mousemove', (e) => {
-    spot.style.transform = `translate(${e.clientX - 300}px, ${e.clientY - 300}px)`;
-  });
 })();
 
 // ── Reveal on mount ────────────────────────────────────────────
