@@ -880,11 +880,10 @@ export default function MobileShell() {
     return () => window.removeEventListener('keydown', h);
   }, [drawerOpen]);
 
-  // Edge-swipe gestures for the left drawer: swipe right from the left edge
-  // opens it; swipe left (while open) closes it. Opening is gated to the left
-  // edge so it doesn't hijack horizontal scrolls in the content.
+  // Swipe gestures for the left drawer: a right-swipe from anywhere on
+  // screen opens it; while open, a left-swipe closes it. We still reject
+  // mostly-vertical swipes so list scrolling isn't hijacked.
   useEffect(() => {
-    const EDGE = 32;    // px from left edge to start an "open" swipe
     const THRESH = 56;  // min horizontal travel to count as a swipe
     let startX = 0, startY = 0, tracking = false;
     const onStart = (e) => {
@@ -892,7 +891,7 @@ export default function MobileShell() {
       if (!tch) { tracking = false; return; }
       startX = tch.clientX;
       startY = tch.clientY;
-      tracking = drawerOpen || startX <= EDGE;
+      tracking = true;
     };
     const onEnd = (e) => {
       if (!tracking) return;
@@ -902,7 +901,7 @@ export default function MobileShell() {
       const dx = tch.clientX - startX;
       const dy = tch.clientY - startY;
       if (Math.abs(dx) < THRESH || Math.abs(dx) <= Math.abs(dy)) return; // not a horizontal swipe
-      if (!drawerOpen && dx > 0 && startX <= EDGE) setDrawerOpen(true);
+      if (!drawerOpen && dx > 0) setDrawerOpen(true);
       else if (drawerOpen && dx < 0) setDrawerOpen(false);
     };
     window.addEventListener('touchstart', onStart, { passive: true });
