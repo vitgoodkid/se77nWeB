@@ -1186,22 +1186,26 @@ function PastebinTool({ accent }) {
 }
 
 function ImageConverterTool({ accent }) {
-  const [src, setSrc] = useState(null);          // { name, size, dataUrl, w, h }
+  const [src, setSrc] = useState(null);          // { name, size, file, dataUrl, w, h }
   const [srcFmt, setSrcFmt] = useState('png');   // detected from upload
   const [target, setTarget] = useState('webp');
   const [quality, setQuality] = useState(80);
+  const [busy, setBusy] = useState(false);
+  const [stage, setStage] = useState('');
+  const [err, setErr] = useState('');
 
   // Crop state — null = no crop applied. cropRect is normalized 0..1.
   const [cropOpen, setCropOpen] = useState(false);
   const [cropRect, setCropRect] = useState(null); // { x, y, w, h } in 0..1
 
-  const FORMATS = ['png', 'jpg', 'webp'];
+  const FORMATS = ['png', 'jpg', 'webp', 'gif'];
 
   function detectFmt(name, mimeType) {
     const m = (mimeType || '').toLowerCase();
+    if (m.includes('gif'))  return 'gif';
     if (m.includes('webp')) return 'webp';
     if (m.includes('jpeg') || m.includes('jpg')) return 'jpg';
-    if (m.includes('png')) return 'png';
+    if (m.includes('png'))  return 'png';
     const ext = (name || '').toLowerCase().match(/\.([a-z0-9]+)$/)?.[1];
     if (ext === 'jpeg') return 'jpg';
     if (FORMATS.includes(ext)) return ext;
@@ -1217,17 +1221,22 @@ function ImageConverterTool({ accent }) {
       const url = ev.target.result;
       const img = new Image();
       img.onload = () => {
-        setSrc({ name: f.name, size: f.size, dataUrl: url, w: img.width, h: img.height });
+        setSrc({ name: f.name, size: f.size, file: f, dataUrl: url, w: img.width, h: img.height });
       };
+      // Browsers render the first frame of animated GIF / WebP into <img>,
+      // which is enough for the cropper preview.
       img.src = url;
     };
     reader.readAsDataURL(f);
     setSrcFmt(fmt);
-    // Pick a sensible default target: anything other than the source so
-    // converting is actually meaningful. Prefer webp, fall back to png.
-    setTarget(fmt === 'webp' ? 'png' : 'webp');
+    // Pick a sensible default target: GIF→WebP, WebP→GIF, otherwise WebP
+    // (or PNG if source is already WebP).
+    if (fmt === 'gif')        setTarget('webp');
+    else if (fmt === 'webp')  setTarget('gif');
+    else                      setTarget('webp');
     setCropRect(null);
     setCropOpen(false);
+    setErr(''); setStage('');
   }
 
   // Click swap → exchange source ↔ target. We can't change the *source
@@ -1241,7 +1250,9 @@ function ImageConverterTool({ accent }) {
   }
 
   // Render the (optionally cropped) source onto a canvas at full
-  // resolution and pull the encoded blob.
+  // resolution and return it. Used for the canvas-encoded formats
+  // (png/jpg/webp). Animated frames are lost here — that's fine, those
+  // formats are static when the canvas path is chosen.
   function renderToCanvas() {
     return new Promise((resolve, reject) => {
       if (!src) return reject(new Error('no source'));
@@ -1264,18 +1275,98 @@ function ImageConverterTool({ accent }) {
     });
   }
 
+  // FFmpeg path — handles GIF↔WebP↔anything while preserving animation.
+  // Quality slider maps to GIF dither quality / WebP -quality flag, and
+  // cropRect (if set) is applied via the ffmpeg `crop` filter so the
+  // output reflects the same rect the user dragged.
+  async function convertWithFFmpeg() {
+    const ff = await getFFmpeg();
+    const { fetchFile } = await import('@ffmpeg/util');
+    const inExt = src.name.match(/\.[a-z0-9]+$/i)?.[0] || ('.' + srcFmt);
+    const inputName  = 'in' + inExt;
+    const outputName = 'out.' + target;
+
+    setStage('Loading file…');
+    await ff.writeFile(inputName, await fetchFile(src.file));
+
+    // Build the filter chain. crop=w:h:x:y in source pixels.
+    const filters = [];
+    if (cropRect) {
+      const cw = Math.max(1, Math.round(cropRect.w * src.w));
+      const ch = Math.max(1, Math.round(cropRect.h * src.h));
+      const cx = Math.round(cropRect.x * src.w);
+      const cy = Math.round(cropRect.y * src.h);
+      filters.push(`crop=${cw}:${ch}:${cx}:${cy}`);
+    }
+
+    let args = ['-i', inputName];
+    if (target === 'gif') {
+      // High-quality GIF: split, palettegen, paletteuse. Cap fps at 20
+      // so file stays sane; users wanting full fps can convert offline.
+      const palette = 'palette.png';
+      const fpsFilter = 'fps=20';
+      const baseChain = [fpsFilter, ...filters].join(',');
+      // Pass 1: palette
+      await ff.exec(['-i', inputName, '-vf', `${baseChain},palettegen=stats_mode=diff`, '-y', palette]);
+      // Pass 2: encode
+      await ff.exec([
+        '-i', inputName, '-i', palette,
+        '-filter_complex', `${baseChain}[v];[v][1:v]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle`,
+        '-loop', '0',
+        '-y', outputName,
+      ]);
+    } else if (target === 'webp') {
+      // Animated WebP. -loop 0 = infinite. -lossless 0 + -q:v from slider.
+      const vfArg = filters.length ? ['-vf', filters.join(',')] : [];
+      args = [
+        '-i', inputName, ...vfArg,
+        '-c:v', 'libwebp', '-lossless', '0', '-q:v', String(quality),
+        '-loop', '0', '-an', '-vsync', '0',
+        '-y', outputName,
+      ];
+      await ff.exec(args);
+    } else {
+      // png / jpg from animated source → first frame.
+      const vfArg = filters.length ? ['-vf', filters.join(',')] : [];
+      args = ['-i', inputName, ...vfArg, '-frames:v', '1', '-y', outputName];
+      await ff.exec(args);
+    }
+
+    setStage('Reading output…');
+    const data = await ff.readFile(outputName);
+    const mime = target === 'gif'  ? 'image/gif'
+              : target === 'webp' ? 'image/webp'
+              : target === 'jpg'  ? 'image/jpeg'
+              : 'image/png';
+    return new Blob([data.buffer], { type: mime });
+  }
+
   async function download() {
-    if (!src) return;
+    if (!src || busy) return;
+    setBusy(true); setErr(''); setStage('');
     try {
-      const c = await renderToCanvas();
-      const mime = target === 'jpg' ? 'image/jpeg' : target === 'webp' ? 'image/webp' : 'image/png';
-      c.toBlob((blob) => {
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = src.name.replace(/\.[^.]+$/, '') + (cropRect ? '-cropped' : '') + '.' + target;
-        a.click();
-      }, mime, quality / 100);
-    } catch (_) {}
+      // Animated paths (gif involved either way) need FFmpeg.
+      const needsFFmpeg = srcFmt === 'gif' || target === 'gif' || (srcFmt === 'webp' && target === 'webp');
+      let blob;
+      if (needsFFmpeg) {
+        setStage('Loading FFmpeg…');
+        blob = await convertWithFFmpeg();
+      } else {
+        const c = await renderToCanvas();
+        const mime = target === 'jpg' ? 'image/jpeg' : target === 'webp' ? 'image/webp' : 'image/png';
+        blob = await new Promise((resolve) => c.toBlob(resolve, mime, quality / 100));
+      }
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = src.name.replace(/\.[^.]+$/, '') + (cropRect ? '-cropped' : '') + '.' + target;
+      a.click();
+      setStage('Done');
+    } catch (e) {
+      console.error('[imgc] convert failed', e);
+      setErr(String(e?.message || e));
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -1285,7 +1376,7 @@ function ImageConverterTool({ accent }) {
         padding: 32, textAlign: 'center', borderRadius: 12,
         border: `2px dashed ${COLORS.line}`, cursor: 'pointer', background: COLORS.bg,
       }}>
-        <input type="file" accept="image/*" onChange={onFile} style={{ display: 'none' }} />
+        <input type="file" accept="image/*,.gif,.webp" onChange={onFile} style={{ display: 'none' }} />
         {src ? (
           <div style={{ display: 'flex', gap: 16, alignItems: 'center', justifyContent: 'center' }}>
             <img src={src.dataUrl} style={{ height: 80, borderRadius: 8 }} alt="" />
@@ -1309,7 +1400,7 @@ function ImageConverterTool({ accent }) {
       {/* Source → Target swap row */}
       <div>
         <Kicker style={{ marginBottom: 8 }}>FORMAT</Kicker>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
           <FmtPills value={srcFmt} options={FORMATS} accent={accent} onChange={setSrcFmt} dim />
           <button
             type="button"
@@ -1330,6 +1421,11 @@ function ImageConverterTool({ accent }) {
           >⇄</button>
           <FmtPills value={target} options={FORMATS} accent={accent} onChange={setTarget} />
         </div>
+        {(srcFmt === 'gif' || target === 'gif') && (
+          <div className="mono" style={{ fontSize: 10, color: COLORS.muted, marginTop: 8, letterSpacing: '0.08em' }}>
+            ◇ GIF ↔ WebP giữ animation. Lần đầu chạy sẽ tải FFmpeg ~25MB (cache trình duyệt).
+          </div>
+        )}
       </div>
 
       <div>
@@ -1370,9 +1466,14 @@ function ImageConverterTool({ accent }) {
         </div>
       )}
 
-      <Btn variant="solid" color={accent} onClick={download} disabled={!src}>
-        Convert {cropRect ? '+ Crop' : ''} & Download
+      <Btn variant="solid" color={accent} onClick={download} disabled={!src || busy}>
+        {busy ? (stage || 'Working…') : `Convert ${cropRect ? '+ Crop ' : ''}& Download`}
       </Btn>
+      {err && (
+        <div className="mono" style={{ fontSize: 11, color: '#c46868', whiteSpace: 'pre-wrap' }}>
+          {err}
+        </div>
+      )}
     </div>
   );
 }
