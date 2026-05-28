@@ -468,6 +468,127 @@
   .reveal-m.d5 { animation-delay: 0.36s; }
   @keyframes revealUp { to { opacity: 1; transform: none; } }
 
+  /* ============== Settings bottom-sheet ============== */
+  .m-sheet-overlay {
+    position: fixed; inset: 0; z-index: 60;
+    background: rgba(8, 5, 10, 0.7);
+    backdrop-filter: blur(8px);
+    display: flex; align-items: flex-end;
+    animation: sheetFadeIn 180ms ease;
+  }
+  .m-sheet-overlay[hidden] { display: none; }
+  @keyframes sheetFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .m-sheet {
+    width: 100%;
+    max-width: 480px; margin: 0 auto;
+    background: linear-gradient(180deg, rgba(28,18,22,0.98), rgba(15,9,12,0.98));
+    border-top: 1px solid var(--line-strong);
+    border-radius: 24px 24px 0 0;
+    padding: 12px 18px calc(28px + env(safe-area-inset-bottom, 0px));
+    max-height: 86vh; overflow-y: auto;
+    animation: sheetSlideUp 240ms cubic-bezier(.2,.7,.2,1);
+    box-shadow: 0 -20px 60px rgba(0,0,0,0.6);
+  }
+  @keyframes sheetSlideUp { from { transform: translateY(100%); } to { transform: none; } }
+
+  .m-sheet-handle {
+    width: 44px; height: 5px; border-radius: 999px;
+    background: var(--line-strong);
+    margin: 4px auto 18px;
+  }
+
+  .m-sheet-user {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: rgba(255,255,255,0.02);
+    margin-bottom: 18px;
+  }
+  .m-sheet-user .av {
+    width: 42px; height: 42px; border-radius: 999px;
+    display: grid; place-items: center;
+    background: linear-gradient(135deg, var(--accent), var(--violet));
+    color: #fff; font-family: var(--mono); font-weight: 800; font-size: 16px;
+    border: 1px solid var(--line-strong); flex-shrink: 0;
+    overflow: hidden;
+  }
+  .m-sheet-user .av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .m-sheet-user .meta { min-width: 0; flex: 1; }
+  .m-sheet-user .name { color: var(--ink); font-size: 14px; font-weight: 500; }
+  .m-sheet-user .sub { color: var(--ink-mute); font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; margin-top: 2px; }
+
+  .m-sheet-row {
+    padding: 12px 0 18px;
+    border-bottom: 1px solid var(--line);
+  }
+  .m-sheet-row + .m-sheet-row { padding-top: 18px; }
+  .m-sheet-label {
+    font-family: var(--mono); font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--ink-mute); display: block; margin-bottom: 10px;
+  }
+
+  .m-segment {
+    display: inline-flex; gap: 2px; padding: 3px;
+    border: 1px solid var(--line); border-radius: 10px;
+    background: rgba(255,255,255,0.02);
+  }
+  .m-segment button {
+    border: 0; background: transparent; cursor: pointer;
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--ink-mute);
+    padding: 8px 16px; border-radius: 8px;
+    transition: all 160ms ease;
+  }
+  .m-segment button.active {
+    background: color-mix(in srgb, var(--accent) 18%, transparent);
+    color: var(--accent);
+    box-shadow: inset 0 0 0 1px var(--line-strong);
+  }
+
+  .m-theme-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+  }
+  .m-theme-cell {
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.02);
+    border-radius: 12px;
+    padding: 10px 8px;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    cursor: pointer;
+    transition: all 160ms ease;
+    font-family: var(--mono); font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--ink-mute);
+  }
+  .m-theme-cell .swatch {
+    width: 22px; height: 22px; border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  .m-theme-cell.active {
+    border-color: var(--accent);
+    color: var(--ink);
+    background: var(--accent-soft);
+  }
+
+  .m-sheet-nav { display: flex; flex-direction: column; gap: 4px; padding: 14px 0 4px; }
+  .m-sheet-link {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 4px;
+    color: var(--ink); text-decoration: none;
+    font-family: var(--mono); font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase;
+    border-bottom: 1px solid var(--line);
+  }
+  .m-sheet-link:active { color: var(--accent); }
+  .m-sheet-link .arrow { color: var(--ink-mute); }
+
+  .m-sheet-foot {
+    text-align: center;
+    margin-top: 18px;
+    color: var(--ink-mute);
+    font-family: var(--mono); font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase;
+  }
+
   /* On larger screens center-and-clamp the mobile shell so this is also a
      usable preview from a desktop browser without forcing a phone bezel. */
   @media (min-width: 720px) {
@@ -646,7 +767,7 @@
   </div>
 </main>
 
-<!-- Bottom tab bar — real links to existing pages -->
+<!-- Bottom tab bar — fixed; SETTINGS opens a drawer -->
 <nav class="m-tabbar" aria-label="primary">
   <a class="m-tab active" href="mobile.html" aria-current="page">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l9-9 9 9v9a2 2 0 0 1-2 2h-3v-7H10v7H7a2 2 0 0 1-2-2z"/></svg>
@@ -660,11 +781,59 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8z"/></svg>
     TAVERN
   </a>
-  <a class="m-tab" href="admin.html" id="tab-admin">
+  <button class="m-tab" id="tab-settings" type="button">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-    ADMIN
-  </a>
+    SETTINGS
+  </button>
 </nav>
+
+<!-- Settings bottom-sheet drawer -->
+<div id="settings-overlay" class="m-sheet-overlay" hidden>
+  <div class="m-sheet" role="dialog" aria-label="Settings" aria-modal="true">
+    <div class="m-sheet-handle"></div>
+
+    <!-- User header -->
+    <div class="m-sheet-user" id="sheet-user">
+      <div class="av" id="sheet-av">?</div>
+      <div class="meta">
+        <div class="name" id="sheet-name">guest</div>
+        <div class="sub" id="sheet-sub">chưa đăng nhập</div>
+      </div>
+    </div>
+
+    <!-- Language -->
+    <div class="m-sheet-row">
+      <span class="m-sheet-label">NGÔN NGỮ</span>
+      <div class="m-segment" id="seg-lang">
+        <button type="button" data-lang="en">EN</button>
+        <button type="button" data-lang="vi">VI</button>
+      </div>
+    </div>
+
+    <!-- Theme -->
+    <div class="m-sheet-row">
+      <span class="m-sheet-label">THEME</span>
+      <div class="m-theme-grid" id="theme-grid"></div>
+    </div>
+
+    <!-- Nav links -->
+    <div class="m-sheet-nav">
+      <a href="me-history.html" class="m-sheet-link">
+        <span>MY HISTORY</span><span class="arrow">→</span>
+      </a>
+      <a href="admin.html" class="m-sheet-link" id="sheet-admin-link">
+        <span>ADMIN CONSOLE</span><span class="arrow">→</span>
+      </a>
+    </div>
+
+    <!-- Auth action -->
+    <a id="sheet-auth-btn" class="m-btn m-btn-ghost" style="margin-top:14px" href="/api/auth/discord/start">
+      ĐĂNG NHẬP VỚI DISCORD
+    </a>
+
+    <div class="m-sheet-foot">katas · v0.4b · build 2026.05</div>
+  </div>
+</div>
 
 <script>
 // ── Particles seed (fewer than desktop for perf on mobile) ──
@@ -779,13 +948,6 @@
       if (login) login.style.display = 'none';
     }
 
-    // Admin tab visibility (the /admin endpoint owner-gates server-side
-    // either way — we just hide the link for non-owners to keep the bar
-    // clean. Keeping the tile in dashboard since the desktop kept it).
-    const isOwner = !!auth?.user?.isOwner;
-    const adminTab = document.getElementById('tab-admin');
-    if (adminTab && !isOwner) adminTab.style.display = 'none';
-
     // Servers count on the SURFACE · 01 card
     const user = auth?.user;
     if (!user || user.provider !== 'discord') return;
@@ -798,6 +960,140 @@
   } catch (e) {
     console.warn('kata mobile wire failed', e);
   }
+})();
+
+// ── Settings bottom-sheet (theme + lang + nav + auth) ──────────
+// _shell.js owns the canonical state (lockIdx + lang). We mirror its
+// public API instead of reimplementing storage, so the desktop chip and
+// the mobile sheet stay in sync.
+(function settingsSheet() {
+  const TRACKS = [
+    { idx: 0, name: 'RED',         hex: '#E04545' },
+    { idx: 1, name: 'GREEN',       hex: '#5BA868' },
+    { idx: 2, name: 'GOLD',        hex: '#D4A858' },
+    { idx: 3, name: 'RED · GREEN', hex: 'linear-gradient(135deg,#E04545,#5BA868)' },
+    { idx: 4, name: 'GOLD · RED',  hex: 'linear-gradient(135deg,#D4A858,#E04545)' },
+    { idx: 5, name: 'WHITE',       hex: '#FAFAF7' },
+  ];
+
+  const overlay = document.getElementById('settings-overlay');
+  const tab     = document.getElementById('tab-settings');
+  const tabs    = document.querySelectorAll('.m-tabbar .m-tab');
+  if (!overlay || !tab) return;
+
+  function open() {
+    paintAll();
+    overlay.hidden = false;
+    document.body.style.overflow = 'hidden';
+    tabs.forEach((x) => x.classList.remove('active'));
+    tab.classList.add('active');
+  }
+  function close() {
+    overlay.hidden = true;
+    document.body.style.overflow = '';
+    // Restore the original "active" tab — HOME on this page.
+    tabs.forEach((x) => x.classList.remove('active'));
+    const home = document.querySelector('.m-tabbar a[aria-current="page"]');
+    if (home) home.classList.add('active');
+  }
+  tab.addEventListener('click', open);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !overlay.hidden) close(); });
+
+  // Lang segment
+  const seg = document.getElementById('seg-lang');
+  seg.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-lang]');
+    if (!btn) return;
+    const lang = btn.dataset.lang;
+    if (window.KataShell && typeof window.KataShell.setLang === 'function') {
+      window.KataShell.setLang(lang);
+    }
+    paintLang();
+  });
+  function paintLang() {
+    const cur = (window.KataShell && window.KataShell.getLang && window.KataShell.getLang()) || 'vi';
+    seg.querySelectorAll('button').forEach((b) => {
+      b.classList.toggle('active', b.dataset.lang === cur);
+    });
+  }
+
+  // Theme grid: AUTO + 6 tracks
+  const grid = document.getElementById('theme-grid');
+  function buildGrid() {
+    grid.innerHTML = '';
+    const cells = [{ idx: null, name: 'AUTO', hex: 'conic-gradient(#E04545,#5BA868,#D4A858,#E04545)' }, ...TRACKS];
+    cells.forEach((c) => {
+      const el = document.createElement('button');
+      el.type = 'button';
+      el.className = 'm-theme-cell';
+      el.dataset.idx = c.idx == null ? 'auto' : String(c.idx);
+      el.innerHTML = `<span class="swatch" style="background:${c.hex}"></span><span>${c.name}</span>`;
+      el.addEventListener('click', () => {
+        if (window.KataShell && typeof window.KataShell.setLockIdx === 'function') {
+          window.KataShell.setLockIdx(c.idx);
+        }
+        paintTheme();
+      });
+      grid.appendChild(el);
+    });
+  }
+  function paintTheme() {
+    const cur = window.KataShell && typeof window.KataShell.getLockIdx === 'function' ? window.KataShell.getLockIdx() : null;
+    grid.querySelectorAll('.m-theme-cell').forEach((el) => {
+      const want = el.dataset.idx;
+      const isActive = cur == null ? want === 'auto' : String(cur) === want;
+      el.classList.toggle('active', isActive);
+    });
+  }
+
+  // Auth header in the sheet
+  function paintAuth() {
+    const auth = window.__kataMe;
+    const user = auth?.user;
+    const av    = document.getElementById('sheet-av');
+    const name  = document.getElementById('sheet-name');
+    const sub   = document.getElementById('sheet-sub');
+    const btn   = document.getElementById('sheet-auth-btn');
+    const adminLink = document.getElementById('sheet-admin-link');
+
+    if (user) {
+      const label = user.displayName || user.username || '—';
+      name.textContent = label;
+      sub.textContent  = user.provider === 'discord' ? 'discord · đã đăng nhập' : (user.provider || 'guest');
+      if (user.avatarUrl) {
+        av.innerHTML = '';
+        const img = document.createElement('img');
+        img.src = user.avatarUrl; img.alt = '';
+        av.appendChild(img);
+      } else {
+        av.textContent = label.slice(0, 1).toUpperCase();
+      }
+      btn.textContent = 'ĐĂNG XUẤT';
+      btn.setAttribute('href', '/api/auth/logout');
+      // Admin link visible only to owner
+      if (adminLink) adminLink.style.display = user.isOwner ? '' : 'none';
+    } else {
+      name.textContent = 'guest';
+      sub.textContent  = 'chưa đăng nhập';
+      av.textContent = '?';
+      btn.textContent = 'ĐĂNG NHẬP VỚI DISCORD';
+      btn.setAttribute('href', '/api/auth/discord/start');
+      if (adminLink) adminLink.style.display = 'none';
+    }
+  }
+
+  function paintAll() { paintLang(); paintTheme(); paintAuth(); }
+
+  buildGrid();
+  // Repaint when shell broadcasts changes (e.g. user toggles theme on
+  // another tab via storage event, or from the desktop chip).
+  document.addEventListener('kata:theme-change', paintTheme);
+  document.addEventListener('kata:lang-change',  paintLang);
+  document.addEventListener('kata:auth',         paintAuth);
+
+  // Initial paint after a tick so _shell.js has had a chance to inject.
+  setTimeout(paintAll, 60);
 })();
 </script>
 </body>
