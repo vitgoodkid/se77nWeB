@@ -742,12 +742,11 @@ function TypingDots({ kind }) {
 // 2. TOOLBOX — Public / Private (PIN 7777)
 // ═════════════════════════════════════════════════════════════
 const PUBLIC_TOOLS = [
-  { id: 'short', nameKey: 'tools.short.name', descKey: 'tools.short.desc', icon: '/' },
-  { id: 'pst',   nameKey: 'tools.pst.name',   descKey: 'tools.pst.desc',   icon: '¶' },
-  { id: 'game',  nameKey: 'tools.game.name',  descKey: 'tools.game.desc',  icon: '◉' },
-  { id: 'imgc',  nameKey: 'tools.imgc.name',  descKey: 'tools.imgc.desc',  icon: '◐' },
-  { id: 'v2g',   nameKey: 'tools.v2g.name',   descKey: 'tools.v2g.desc',   icon: '▶' },
-  { id: 'thao',  nameKey: 'tools.thao.name',  descKey: 'tools.thao.desc',  icon: '♥' },
+  { id: 'short',   nameKey: 'tools.short.name',   descKey: 'tools.short.desc',   icon: '/' },
+  { id: 'pst',     nameKey: 'tools.pst.name',     descKey: 'tools.pst.desc',     icon: '¶' },
+  { id: 'game',    nameKey: 'tools.game.name',    descKey: 'tools.game.desc',    icon: '◉' },
+  { id: 'convert', nameKey: 'tools.convert.name', descKey: 'tools.convert.desc', icon: '⇄' },
+  { id: 'thao',    nameKey: 'tools.thao.name',    descKey: 'tools.thao.desc',    icon: '♥' },
 ];
 const PRIVATE_TOOLS = [
   { id: 'srv', nameKey: 'tools.srv.name', descKey: 'tools.srv.desc', icon: '⌬' },
@@ -946,13 +945,12 @@ function ToolDetail({ tool, accent, onBack }) {
       <div style={{
         border: '1px solid ' + COLORS.line, borderRadius: 12, padding: 22, background: COLORS.bg,
       }}>
-        {tool.id === 'short' ? <ShortenerTool accent={accent} /> :
-         tool.id === 'pst'   ? <PastebinTool accent={accent} /> :
-         tool.id === 'imgc'  ? <ImageConverterTool accent={accent} /> :
-         tool.id === 'v2g'   ? <VideoToTool accent={accent} /> :
-         tool.id === 'fin'   ? <FinanceTool accent={accent} /> :
-         tool.id === 'game'  ? <GameResourcesTool accent={accent} /> :
-         tool.id === 'thao'  ? <ThaoTool onClose={onBack} /> :
+        {tool.id === 'short'   ? <ShortenerTool accent={accent} /> :
+         tool.id === 'pst'     ? <PastebinTool accent={accent} /> :
+         tool.id === 'convert' ? <ConverterTool accent={accent} /> :
+         tool.id === 'fin'     ? <FinanceTool accent={accent} /> :
+         tool.id === 'game'    ? <GameResourcesTool accent={accent} /> :
+         tool.id === 'thao'    ? <ThaoTool onClose={onBack} /> :
          <PlaceholderTool tool={tool} accent={accent} />}
       </div>
     </div>
@@ -1181,6 +1179,56 @@ function PastebinTool({ accent }) {
           <Btn variant="tinted" color={accent} onClick={() => copyText(saved.url)}>Copy</Btn>
         </div>
       )}
+    </div>
+  );
+}
+
+// Combined Image / Video converter under a single tool entry. The two
+// implementations stay separate components — they have different state
+// shapes (canvas-encoded for image, ffmpeg-only for video) — but share
+// one tile and one tab strip so users find both via "Converter".
+function ConverterTool({ accent }) {
+  const [mode, setMode] = useState('image'); // 'image' | 'video'
+  const TABS = [
+    { id: 'image', label: 'IMAGE', sub: 'PNG · JPG · WEBP · GIF' },
+    { id: 'video', label: 'VIDEO', sub: 'MP4 → GIF / MP3' },
+  ];
+  return (
+    <div style={{ display: 'grid', gap: 18 }}>
+      <div role="tablist" aria-label="Converter mode" style={{
+        display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8,
+      }}>
+        {TABS.map((tab) => {
+          const active = tab.id === mode;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={() => setMode(tab.id)}
+              className="mono"
+              style={{
+                cursor: 'pointer', textAlign: 'left',
+                padding: '12px 14px',
+                borderRadius: 10,
+                border: `1px solid ${active ? accent : COLORS.line}`,
+                background: active ? accent + '14' : 'transparent',
+                color: active ? COLORS.text : COLORS.muted,
+                transition: 'all 160ms ease',
+              }}
+              onMouseEnter={(e) => { if (!active) e.currentTarget.style.borderColor = accent + '55'; }}
+              onMouseLeave={(e) => { if (!active) e.currentTarget.style.borderColor = COLORS.line; }}
+            >
+              <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.18em', marginBottom: 2 }}>
+                {tab.label}
+              </div>
+              <div style={{ fontSize: 10, letterSpacing: '0.1em', opacity: 0.7 }}>{tab.sub}</div>
+            </button>
+          );
+        })}
+      </div>
+      {mode === 'image' ? <ImageConverterTool accent={accent} /> : <VideoToTool accent={accent} />}
     </div>
   );
 }
