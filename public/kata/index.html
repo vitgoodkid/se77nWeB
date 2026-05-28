@@ -5,6 +5,22 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <base href="/kata/" />
 <title>katas · se77n</title>
+<script>
+  // Send phones to the dedicated mobile landing immediately. Anything
+  // ≤ 720px viewport-width is treated as mobile; the user can append
+  // ?desktop=1 to override (handy for QA on a small window).
+  (function maybeRedirectToMobile() {
+    try {
+      var url = new URL(window.location.href);
+      if (url.searchParams.get('desktop') === '1') return;
+      if (sessionStorage.getItem('kata.forceDesktop') === '1') return;
+      var w = window.innerWidth || document.documentElement.clientWidth || 0;
+      if (w > 0 && w <= 720) {
+        window.location.replace('mobile.html' + url.search + url.hash);
+      }
+    } catch (_) {}
+  })();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Unbounded:wght@400;500;700&family=Archivo:wght@400;600;800&family=JetBrains+Mono:wght@400;500;600;700;800&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
