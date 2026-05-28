@@ -1186,35 +1186,98 @@ function PastebinTool({ accent }) {
 }
 
 function ImageConverterTool({ accent }) {
-  const [src, setSrc] = useState(null);
+  const [src, setSrc] = useState(null);          // { name, size, dataUrl, w, h }
+  const [srcFmt, setSrcFmt] = useState('png');   // detected from upload
   const [target, setTarget] = useState('webp');
   const [quality, setQuality] = useState(80);
+
+  // Crop state — null = no crop applied. cropRect is normalized 0..1.
+  const [cropOpen, setCropOpen] = useState(false);
+  const [cropRect, setCropRect] = useState(null); // { x, y, w, h } in 0..1
+
+  const FORMATS = ['png', 'jpg', 'webp'];
+
+  function detectFmt(name, mimeType) {
+    const m = (mimeType || '').toLowerCase();
+    if (m.includes('webp')) return 'webp';
+    if (m.includes('jpeg') || m.includes('jpg')) return 'jpg';
+    if (m.includes('png')) return 'png';
+    const ext = (name || '').toLowerCase().match(/\.([a-z0-9]+)$/)?.[1];
+    if (ext === 'jpeg') return 'jpg';
+    if (FORMATS.includes(ext)) return ext;
+    return 'png';
+  }
 
   function onFile(e) {
     const f = e.target.files?.[0];
     if (!f) return;
+    const fmt = detectFmt(f.name, f.type);
     const reader = new FileReader();
-    reader.onload = (ev) => setSrc({ name: f.name, size: f.size, dataUrl: ev.target.result });
+    reader.onload = (ev) => {
+      const url = ev.target.result;
+      const img = new Image();
+      img.onload = () => {
+        setSrc({ name: f.name, size: f.size, dataUrl: url, w: img.width, h: img.height });
+      };
+      img.src = url;
+    };
     reader.readAsDataURL(f);
+    setSrcFmt(fmt);
+    // Pick a sensible default target: anything other than the source so
+    // converting is actually meaningful. Prefer webp, fall back to png.
+    setTarget(fmt === 'webp' ? 'png' : 'webp');
+    setCropRect(null);
+    setCropOpen(false);
   }
-  function download() {
+
+  // Click swap → exchange source ↔ target. We can't change the *source
+  // file* the user uploaded, so swap means: keep the file, but make the
+  // *converted output* match what was previously the source format
+  // (effectively the inverse direction). Visually the SRC → TGT chip
+  // flips — useful when you want to undo a target choice quickly.
+  function swap() {
+    setSrcFmt(target);
+    setTarget(srcFmt);
+  }
+
+  // Render the (optionally cropped) source onto a canvas at full
+  // resolution and pull the encoded blob.
+  function renderToCanvas() {
+    return new Promise((resolve, reject) => {
+      if (!src) return reject(new Error('no source'));
+      const img = new Image();
+      img.onload = () => {
+        const c = document.createElement('canvas');
+        let sx = 0, sy = 0, sw = img.width, sh = img.height;
+        if (cropRect) {
+          sx = Math.round(cropRect.x * img.width);
+          sy = Math.round(cropRect.y * img.height);
+          sw = Math.max(1, Math.round(cropRect.w * img.width));
+          sh = Math.max(1, Math.round(cropRect.h * img.height));
+        }
+        c.width = sw; c.height = sh;
+        c.getContext('2d').drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+        resolve(c);
+      };
+      img.onerror = reject;
+      img.src = src.dataUrl;
+    });
+  }
+
+  async function download() {
     if (!src) return;
-    const img = new Image();
-    img.onload = () => {
-      const c = document.createElement('canvas');
-      c.width = img.width;
-      c.height = img.height;
-      c.getContext('2d').drawImage(img, 0, 0);
+    try {
+      const c = await renderToCanvas();
       const mime = target === 'jpg' ? 'image/jpeg' : target === 'webp' ? 'image/webp' : 'image/png';
       c.toBlob((blob) => {
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = src.name.replace(/\.[^.]+$/, '') + '.' + target;
+        a.download = src.name.replace(/\.[^.]+$/, '') + (cropRect ? '-cropped' : '') + '.' + target;
         a.click();
       }, mime, quality / 100);
-    };
-    img.src = src.dataUrl;
+    } catch (_) {}
   }
+
   return (
     <div style={{ display: 'grid', gap: 16 }}>
       <Kicker>UPLOAD IMAGE</Kicker>
@@ -1229,7 +1292,7 @@ function ImageConverterTool({ accent }) {
             <div style={{ textAlign: 'left' }}>
               <div className="mono" style={{ fontSize: 12, fontWeight: 700 }}>{src.name}</div>
               <div className="mono" style={{ fontSize: 10, color: COLORS.muted, marginTop: 4 }}>
-                {(src.size / 1024).toFixed(1)} KB
+                {(src.size / 1024).toFixed(1)} KB · {src.w}×{src.h}{cropRect ? ` → ${Math.round(cropRect.w * src.w)}×${Math.round(cropRect.h * src.h)}` : ''}
               </div>
             </div>
           </div>
@@ -1242,27 +1305,246 @@ function ImageConverterTool({ accent }) {
           </div>
         )}
       </label>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-        <div>
-          <Kicker style={{ marginBottom: 8 }}>TARGET FORMAT</Kicker>
-          <div style={{ display: 'flex', gap: 6 }}>
-            {['webp', 'jpg', 'png'].map((f) => (
-              <Btn key={f} variant={target === f ? 'tinted' : 'ghost'} color={accent} onClick={() => setTarget(f)}>
-                {f.toUpperCase()}
-              </Btn>
-            ))}
-          </div>
-        </div>
-        <div>
-          <Kicker style={{ marginBottom: 8 }}>QUALITY · {quality}</Kicker>
-          <input
-            type="range" min="20" max="100" value={quality}
-            onChange={(e) => setQuality(+e.target.value)}
-            style={{ width: '100%', accentColor: accent }}
-          />
+
+      {/* Source → Target swap row */}
+      <div>
+        <Kicker style={{ marginBottom: 8 }}>FORMAT</Kicker>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <FmtPills value={srcFmt} options={FORMATS} accent={accent} onChange={setSrcFmt} dim />
+          <button
+            type="button"
+            onClick={swap}
+            title="Đảo chiều SRC ↔ TGT"
+            aria-label="Swap formats"
+            style={{
+              border: `1px solid ${COLORS.line}`,
+              background: 'transparent',
+              color: accent,
+              width: 36, height: 36, borderRadius: 999,
+              cursor: 'pointer', fontSize: 16, lineHeight: 1,
+              display: 'grid', placeItems: 'center',
+              transition: 'all 160ms ease',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.borderColor = accent; e.currentTarget.style.background = accent + '14'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.borderColor = COLORS.line; e.currentTarget.style.background = 'transparent'; }}
+          >⇄</button>
+          <FmtPills value={target} options={FORMATS} accent={accent} onChange={setTarget} />
         </div>
       </div>
-      <Btn variant="solid" color={accent} onClick={download} disabled={!src}>Convert & Download</Btn>
+
+      <div>
+        <Kicker style={{ marginBottom: 8 }}>QUALITY · {quality}</Kicker>
+        <input
+          type="range" min="20" max="100" value={quality}
+          onChange={(e) => setQuality(+e.target.value)}
+          style={{ width: '100%', accentColor: accent }}
+        />
+      </div>
+
+      {/* Crop controls — opens an inline cropper that renders the source
+          and lets the user drag a rectangle. cropRect is in 0..1 so it
+          survives quality / format changes without re-clipping. */}
+      {src && (
+        <div>
+          <Kicker style={{ marginBottom: 8 }}>CROP {cropRect ? '· APPLIED' : '· OFF'}</Kicker>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <Btn variant={cropOpen ? 'tinted' : 'ghost'} color={accent} onClick={() => setCropOpen((v) => !v)}>
+              {cropOpen ? 'Đóng cropper' : 'Mở crop'}
+            </Btn>
+            {cropRect && (
+              <Btn variant="ghost" color={accent} onClick={() => setCropRect(null)}>
+                Xoá vùng crop
+              </Btn>
+            )}
+          </div>
+          {cropOpen && (
+            <div style={{ marginTop: 12 }}>
+              <CropCanvas
+                src={src}
+                value={cropRect}
+                onChange={setCropRect}
+                accent={accent}
+              />
+            </div>
+          )}
+        </div>
+      )}
+
+      <Btn variant="solid" color={accent} onClick={download} disabled={!src}>
+        Convert {cropRect ? '+ Crop' : ''} & Download
+      </Btn>
+    </div>
+  );
+}
+
+// Compact pill row for source / target format. `dim` styles the source
+// chip a touch lower-key so the visual hierarchy reads "SRC → TGT".
+function FmtPills({ value, options, onChange, accent, dim }) {
+  return (
+    <div style={{ display: 'flex', gap: 6, opacity: dim ? 0.85 : 1 }}>
+      {options.map((f) => (
+        <Btn key={f} variant={value === f ? 'tinted' : 'ghost'} color={accent} onClick={() => onChange(f)}>
+          {f.toUpperCase()}
+        </Btn>
+      ))}
+    </div>
+  );
+}
+
+// Inline cropper — preview-sized canvas with a drag-and-resize rectangle.
+// Outputs a normalized rect (0..1) so the parent can apply it at the
+// source's full resolution at convert time.
+function CropCanvas({ src, value, onChange, accent }) {
+  const wrapRef = React.useRef(null);
+  const [box, setBox] = React.useState(value || { x: 0.1, y: 0.1, w: 0.8, h: 0.8 });
+  const [drag, setDrag] = React.useState(null); // { mode: 'move'|'tl'|'tr'|'bl'|'br'|'new', startX, startY, start: box }
+
+  React.useEffect(() => { onChange(box); }, [box]);
+
+  // Convert pointer coords (in CSS px relative to the wrapper) to 0..1.
+  function toNorm(e) {
+    const r = wrapRef.current.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width;
+    const y = (e.clientY - r.top)  / r.height;
+    return { x: Math.max(0, Math.min(1, x)), y: Math.max(0, Math.min(1, y)) };
+  }
+
+  function clamp(b) {
+    const minSide = 0.02;
+    let { x, y, w, h } = b;
+    w = Math.max(minSide, w);
+    h = Math.max(minSide, h);
+    x = Math.max(0, Math.min(1 - w, x));
+    y = Math.max(0, Math.min(1 - h, y));
+    return { x, y, w, h };
+  }
+
+  function onPointerDown(e, mode) {
+    e.preventDefault();
+    const p = toNorm(e);
+    if (mode === 'new') {
+      // Start a fresh rectangle from this point.
+      setBox({ x: p.x, y: p.y, w: 0.001, h: 0.001 });
+      setDrag({ mode: 'br', startX: p.x, startY: p.y, start: { x: p.x, y: p.y, w: 0, h: 0 } });
+    } else {
+      setDrag({ mode, startX: p.x, startY: p.y, start: { ...box } });
+    }
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp, { once: true });
+  }
+
+  function onPointerMove(e) {
+    setDrag((d) => {
+      if (!d) return d;
+      const p = toNorm(e);
+      const dx = p.x - d.startX;
+      const dy = p.y - d.startY;
+      let next = { ...d.start };
+      if (d.mode === 'move') {
+        next.x = d.start.x + dx;
+        next.y = d.start.y + dy;
+      } else {
+        // Resize handles: each corner anchors the opposite corner.
+        let x1 = d.start.x, y1 = d.start.y, x2 = d.start.x + d.start.w, y2 = d.start.y + d.start.h;
+        if (d.mode === 'tl') { x1 = d.start.x + dx; y1 = d.start.y + dy; }
+        if (d.mode === 'tr') { x2 = d.start.x + d.start.w + dx; y1 = d.start.y + dy; }
+        if (d.mode === 'bl') { x1 = d.start.x + dx; y2 = d.start.y + d.start.h + dy; }
+        if (d.mode === 'br') { x2 = d.start.x + d.start.w + dx; y2 = d.start.y + d.start.h + dy; }
+        if (x2 < x1) [x1, x2] = [x2, x1];
+        if (y2 < y1) [y2, y1] = [y1, y2];
+        next = { x: x1, y: y1, w: x2 - x1, h: y2 - y1 };
+      }
+      setBox(clamp(next));
+      return d;
+    });
+  }
+  function onPointerUp() {
+    setDrag(null);
+    window.removeEventListener('pointermove', onPointerMove);
+  }
+
+  // Compute display dims so the cropper fits a comfy max width while
+  // preserving the source aspect ratio.
+  const maxW = 560;
+  const ratio = src.w / src.h;
+  const dispW = Math.min(maxW, src.w);
+  const dispH = dispW / ratio;
+
+  const pct = (n) => `${(n * 100).toFixed(2)}%`;
+
+  return (
+    <div style={{ display: 'grid', gap: 8 }}>
+      <div
+        ref={wrapRef}
+        onPointerDown={(e) => {
+          // Start a fresh rect only if the user clicked the empty image
+          // area (not on the existing rect or its handles).
+          if (e.target === wrapRef.current || e.target.tagName === 'IMG') {
+            onPointerDown(e, 'new');
+          }
+        }}
+        style={{
+          position: 'relative',
+          width: dispW, maxWidth: '100%',
+          aspectRatio: `${src.w} / ${src.h}`,
+          background: '#000',
+          borderRadius: 10,
+          overflow: 'hidden',
+          touchAction: 'none',
+          userSelect: 'none',
+          border: `1px solid ${COLORS.line}`,
+        }}
+      >
+        <img
+          src={src.dataUrl}
+          alt=""
+          draggable={false}
+          style={{ width: '100%', height: '100%', display: 'block', objectFit: 'cover', pointerEvents: 'none' }}
+        />
+        {/* Dimming mask outside the rect — 4 strips so we don't fight
+            the crop rect's own pointer events. */}
+        <div style={{ position: 'absolute', left: 0, top: 0, right: 0, height: pct(box.y), background: 'rgba(0,0,0,0.55)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', left: 0, top: pct(box.y + box.h), right: 0, bottom: 0, background: 'rgba(0,0,0,0.55)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', left: 0, top: pct(box.y), width: pct(box.x), height: pct(box.h), background: 'rgba(0,0,0,0.55)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', left: pct(box.x + box.w), top: pct(box.y), right: 0, height: pct(box.h), background: 'rgba(0,0,0,0.55)', pointerEvents: 'none' }} />
+
+        {/* Rect itself */}
+        <div
+          onPointerDown={(e) => { e.stopPropagation(); onPointerDown(e, 'move'); }}
+          style={{
+            position: 'absolute',
+            left: pct(box.x), top: pct(box.y),
+            width: pct(box.w), height: pct(box.h),
+            border: `1.5px solid ${accent}`,
+            boxShadow: `0 0 0 1px ${accent}55, 0 0 0 9999px transparent inset`,
+            cursor: 'move',
+          }}
+        >
+          {/* Handles */}
+          {[
+            { k: 'tl', s: { left: -6, top: -6, cursor: 'nwse-resize' } },
+            { k: 'tr', s: { right: -6, top: -6, cursor: 'nesw-resize' } },
+            { k: 'bl', s: { left: -6, bottom: -6, cursor: 'nesw-resize' } },
+            { k: 'br', s: { right: -6, bottom: -6, cursor: 'nwse-resize' } },
+          ].map(({ k, s }) => (
+            <div
+              key={k}
+              onPointerDown={(e) => { e.stopPropagation(); onPointerDown(e, k); }}
+              style={{
+                position: 'absolute',
+                width: 12, height: 12,
+                background: accent,
+                border: '2px solid #0d0a08',
+                borderRadius: 2,
+                ...s,
+              }}
+            />
+          ))}
+        </div>
+      </div>
+      <div className="mono" style={{ fontSize: 10, color: COLORS.muted, letterSpacing: '0.1em' }}>
+        {Math.round(box.x * src.w)},{Math.round(box.y * src.h)} · {Math.round(box.w * src.w)}×{Math.round(box.h * src.h)} px
+      </div>
     </div>
   );
 }
