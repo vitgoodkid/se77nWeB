@@ -2,918 +2,803 @@
 <html lang="vi">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <base href="/kata/" />
 <title>katas · mobile · se77n</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700;800&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
-  tailwind.config = { theme: { extend: {
-    colors: { bg:'#0d0a08', panel:'#15110d', panel2:'#1c1813', line:'rgba(255,255,255,0.08)', line2:'rgba(255,255,255,0.14)', ink:'#f5ede0', mute:'rgba(245,237,224,0.5)', mute2:'rgba(245,237,224,0.3)', red:'#E04545', green:'#5BA868', gold:'#D4A858', info:'#7a9eb5', warn:'#c9a653', err:'#c46868' },
-    fontFamily: { sans:['Geist','system-ui','sans-serif'], mono:['"JetBrains Mono"','ui-monospace','monospace'] },
-    letterSpacing: { kicker:'0.22em', label:'0.18em', tag:'0.12em' },
-  }}};
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          bg:    '#08050a',
+          panel: '#15110d',
+          panel2:'#1c1813',
+          line:  'rgba(255,255,255,0.08)',
+          line2: 'rgba(255,255,255,0.15)',
+          ink:   '#f5e8e8',
+          mute:  'rgba(245,232,232,0.5)',
+          mute2: 'rgba(245,232,232,0.3)',
+          red:   '#E04545',
+          green: '#5BA868',
+          gold:  '#D4A858',
+        },
+        fontFamily: {
+          sans: ['Geist', 'system-ui', 'sans-serif'],
+          mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+          display: ['"Space Grotesk"', 'system-ui', 'sans-serif'],
+        },
+        letterSpacing: { kicker: '0.22em', label: '0.18em' },
+      },
+    },
+  };
 </script>
 <style>
-  html, body { background:#0a0807; color:#f5ede0; font-family: Geist, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
-  .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
-  @keyframes pulse77 { 0%,100% { opacity:1; transform: scale(1); } 50% { opacity:.55; transform: scale(.82); } }
-  .dot-pulse { animation: pulse77 2s ease-in-out infinite; }
-  .glow77 { text-shadow: 0 0 6px #E04545cc, 0 0 18px #E0454566, 0 0 36px #E0454533; }
-  .grain { background-image: radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px); background-size: 3px 3px; }
-  ::-webkit-scrollbar { width: 10px; height: 10px; }
-  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 5px; }
-  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
+  /* ============== katas. mobile · cyberpunk neon (particles preset) ============== */
+  :root {
+    --bg: #08050a;
+    --ink: #f5e8e8;
+    --ink-dim: #8b7a7a;
+    --ink-mute: #5a4f4f;
+    --line:        color-mix(in srgb, var(--accent, #E04545) 14%, transparent);
+    --line-strong: color-mix(in srgb, var(--accent, #E04545) 32%, transparent);
+    --accent-glow: color-mix(in srgb, var(--accent, #E04545) 55%, transparent);
+    --accent-soft: color-mix(in srgb, var(--accent, #E04545) 12%, transparent);
+    --violet: #b56bff;
+    --amber:  #D4A858;
+    --cyan:   #5ee7ff;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --display: 'Space Grotesk', system-ui, sans-serif;
+    --anim-mult: 1;
+  }
 
-  /* iPhone frame */
-  .phone {
-    width: 390px;
-    height: 844px;
-    border-radius: 56px;
-    background: #0d0a08;
-    border: 1px solid rgba(255,255,255,0.06);
-    padding: 12px;
-    box-shadow:
-      0 0 0 2px #1a1a1a,
-      0 0 0 14px #0a0a0a,
-      0 50px 80px -20px rgba(0,0,0,0.6),
-      0 0 0 15px rgba(255,255,255,0.04);
-    position: relative;
-    flex-shrink: 0;
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html { background-color: var(--bg); }
+  body { background-color: transparent !important; color: var(--ink); font-family: var(--mono); margin: 0; }
+  body { -webkit-font-smoothing: antialiased; min-height: 100vh; min-height: 100svh; }
+
+  /* ============== Particles preset (matches desktop) ============== */
+  .bg-stack { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+  .bg-vignette {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 50% 18%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 60%),
+      radial-gradient(ellipse 100% 60% at 50% 100%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 70%);
   }
-  .phone-screen {
-    width: 100%; height: 100%;
-    border-radius: 44px;
-    overflow: hidden;
-    background: #0d0a08;
-    position: relative;
-    isolation: isolate;
+  .bg-noise {
+    position: absolute; inset: 0; opacity: 0.045;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='2.4' numOctaves='2'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");
   }
-  /* dynamic island */
-  .phone-island {
-    position: absolute;
-    top: 24px; left: 50%; transform: translateX(-50%);
-    width: 116px; height: 32px;
-    border-radius: 999px;
-    background: #000;
-    z-index: 60;
+  .bg-particles { position: absolute; inset: 0; }
+  .bg-particles .p {
+    position: absolute; width: 2px; height: 2px; border-radius: 50%;
+    background: var(--accent); box-shadow: 0 0 8px var(--accent-glow);
+    animation: rise calc(var(--d) * 1s / var(--anim-mult)) linear infinite;
+    animation-delay: calc(var(--dl) * -1s);
+    left: calc(var(--x) * 1%);
+    opacity: 0.55;
   }
-  /* status bar */
-  .status-bar {
-    height: 50px;
-    padding: 18px 28px 0 28px;
+  @keyframes rise {
+    from { transform: translateY(110vh); opacity: 0; }
+    10%  { opacity: 0.55; }
+    90%  { opacity: 0.55; }
+    to   { transform: translateY(-10vh); opacity: 0; }
+  }
+  .bg-watermark {
+    position: absolute; right: -10vw; bottom: -8vw;
+    font-family: var(--display); font-weight: 700;
+    font-size: clamp(280px, 70vw, 460px);
+    line-height: 0.8; color: transparent;
+    -webkit-text-stroke: 1px color-mix(in srgb, var(--accent) 6%, transparent);
+    letter-spacing: -0.04em; user-select: none;
+  }
+
+  /* ============== Header (uses _shell.js #kata-header-actions slot) ============== */
+  .m-nav {
+    position: sticky; top: 0; z-index: 50;
     display: flex; align-items: center; justify-content: space-between;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 14px; font-weight: 600;
-    color: #f5ede0;
-    flex-shrink: 0;
+    padding: 12px 16px;
+    gap: 12px;
+    border-bottom: 1px solid var(--line);
+    backdrop-filter: blur(10px);
+    background: linear-gradient(to bottom, rgba(8,5,10,0.85), rgba(8,5,10,0.45));
   }
-  /* home indicator */
-  .home-indicator {
-    position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
-    width: 134px; height: 5px; border-radius: 999px;
-    background: rgba(245,237,224,0.5);
-    z-index: 60;
+  .m-brand {
+    font-family: var(--mono); font-weight: 800; font-size: 18px;
+    letter-spacing: -0.025em; line-height: 1; color: var(--ink);
+    display: inline-flex; align-items: baseline; text-decoration: none;
+  }
+  .m-brand .sev {
+    color: var(--accent);
+    text-shadow: 0 0 6px color-mix(in srgb, var(--accent) 80%, transparent),
+                 0 0 18px color-mix(in srgb, var(--accent) 40%, transparent);
+  }
+  .m-brand .suffix { color: var(--ink-mute); font-weight: 400; margin-left: 6px; }
+  .m-nav-meta {
+    font-family: var(--mono); font-size: 8px; letter-spacing: 0.24em;
+    color: var(--ink-mute); text-transform: uppercase; margin-top: 4px; line-height: 1;
+  }
+  .m-nav-meta .num { color: var(--accent); font-weight: 700; }
+
+  /* Compact action chips so the slot fits on a 390px-wide screen.
+     The shell renders 8px text by default which is fine; we just clip
+     padding/heights for mobile breathing room. */
+  #kata-header-actions { gap: 6px !important; }
+  #kata-header-actions > * { transform: scale(0.92); transform-origin: right center; }
+
+  /* ============== Page shell + scroll ============== */
+  .m-shell { position: relative; z-index: 1; padding-bottom: 96px; }
+  .m-content { padding: 24px 22px 0; max-width: 480px; margin: 0 auto; }
+
+  /* ============== Hero lockup ============== */
+  .m-eye {
+    font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--ink-mute);
+    display: flex; align-items: center; gap: 10px; margin-bottom: 18px;
+  }
+  .m-eye::before, .m-eye::after { content: ''; flex: 0 0 18px; height: 1px; background: var(--line-strong); }
+  .m-eye .live {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent); box-shadow: 0 0 6px var(--accent-glow);
+    animation: mPulse 2s ease-in-out infinite;
+  }
+  @keyframes mPulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
   }
 
-  /* phone scroll content */
-  .phone-content {
-    height: calc(100% - 50px - 80px); /* status + tabbar */
-    overflow-y: auto;
-    overflow-x: hidden;
-    scrollbar-width: none;
+  .m-lockup {
+    position: relative;
+    padding: 16px 14px 12px;
+    margin: 4px -4px 12px;
+    display: inline-block;
   }
-  .phone-content::-webkit-scrollbar { display: none; }
+  .m-bracket {
+    position: absolute; width: 12px; height: 12px;
+    border-color: var(--accent); border-style: solid; border-width: 0;
+    opacity: 0.85;
+  }
+  .m-bracket.tl { top: 0; left: 0;     border-top-width: 1px;    border-left-width: 1px; }
+  .m-bracket.tr { top: 0; right: 0;    border-top-width: 1px;    border-right-width: 1px; }
+  .m-bracket.bl { bottom: 0; left: 0;  border-bottom-width: 1px; border-left-width: 1px; }
+  .m-bracket.br { bottom: 0; right: 0; border-bottom-width: 1px; border-right-width: 1px; }
 
-  /* phone tabbar bottom */
-  .tabbar {
-    position: absolute; left: 0; right: 0; bottom: 0;
-    height: 80px;
-    padding: 8px 8px 24px 8px;
-    background: rgba(13,10,8,0.92);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    border-top: 1px solid rgba(255,255,255,0.08);
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 4px;
-    z-index: 50;
+  .m-logo-meta {
+    display: flex; align-items: center; gap: 8px;
+    font-family: var(--mono); font-size: 8px; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--ink-mute); margin-bottom: 6px;
   }
-  .tabbar a {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 4px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
-    color: rgba(245,237,224,0.5);
+  .m-logo-meta.bottom { margin: 6px 0 0; }
+  .m-logo-meta .tick { width: 5px; height: 5px; background: var(--accent); box-shadow: 0 0 5px var(--accent-glow); }
+  .m-logo-meta .rule { flex: 1; height: 1px; background: linear-gradient(90deg, var(--line-strong), transparent); }
+  .m-logo-meta.bottom .rule { background: linear-gradient(90deg, transparent, var(--line-strong)); }
+  .m-logo-meta .serial { color: var(--ink-dim); }
+  .m-logo-meta .serial .dim { color: var(--ink-mute); margin: 0 3px; }
+
+  .m-title {
+    font-family: var(--display); font-weight: 700;
+    font-size: 22vw; line-height: 0.85; letter-spacing: -0.06em;
+    margin: 0;
+    position: relative;
+    display: inline-flex; align-items: baseline; gap: 0.05em;
+    color: var(--accent);
+    user-select: none;
+  }
+  @media (min-width: 480px) { .m-title { font-size: 96px; } }
+  .m-title .layer.fill {
+    color: var(--accent);
+    text-shadow:
+      0 0 22px var(--accent-glow),
+      0 0 50px color-mix(in srgb, var(--accent) 28%, transparent);
+    animation: mTitlePulse 4s ease-in-out infinite;
+  }
+  .m-title .layer.outline {
+    position: absolute; inset: 0;
+    color: transparent;
+    -webkit-text-stroke: 1px color-mix(in srgb, var(--accent) 55%, transparent);
+    transform: translate(5px, 5px);
+    opacity: 0.45;
+  }
+  @keyframes mTitlePulse {
+    0%, 100% { text-shadow: 0 0 22px var(--accent-glow), 0 0 50px color-mix(in srgb, var(--accent) 28%, transparent); }
+    50%      { text-shadow: 0 0 16px var(--accent-glow), 0 0 38px color-mix(in srgb, var(--accent) 18%, transparent); }
+  }
+  .m-title .aperture {
+    display: inline-block; width: 0.65em; height: 0.65em;
+    align-self: flex-end; margin-bottom: 0.04em;
+    filter: drop-shadow(0 0 8px var(--accent-glow));
+  }
+  .m-title .aperture svg { width: 100%; height: 100%; overflow: visible; display: block; }
+  .m-title .aperture .ring { fill: none; stroke: var(--accent); stroke-width: 4; }
+  .m-title .aperture .ring.outer { stroke-width: 3; stroke-dasharray: 28 14; transform-origin: 50% 50%; animation: aperSpin 8s linear infinite; opacity: 0.85; }
+  .m-title .aperture .ring.mid   { stroke-width: 2.5; stroke-dasharray: 8 6; transform-origin: 50% 50%; animation: aperSpin 10s linear infinite reverse; opacity: 0.7; }
+  .m-title .aperture .ring.core  { fill: var(--accent); stroke: none; animation: aperPulse 2s ease-in-out infinite; }
+  .m-title .aperture .blades     { fill: var(--accent); transform-origin: 50% 50%; animation: aperSpin 14s linear infinite; opacity: 0.9; }
+  @keyframes aperSpin  { to { transform: rotate(360deg); } }
+  @keyframes aperPulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(0.7); opacity: 0.7; } }
+
+  .m-tag {
+    font-size: 14px; line-height: 1.55; color: var(--ink-dim);
+    margin: 14px 0 24px; max-width: 320px;
+  }
+  .m-tag .hi { color: var(--ink); }
+  .m-tag .cur {
+    display: inline-block; width: 7px; height: 14px; vertical-align: -2px;
+    background: var(--accent); margin-left: 2px;
+    box-shadow: 0 0 6px var(--accent-glow);
+    animation: blink 1s steps(2) infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* ============== Buttons ============== */
+  .m-cta { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+  .m-btn {
+    position: relative;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    padding: 16px;
+    border-radius: 12px;
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase;
+    font-weight: 600; text-decoration: none;
+    transition: all 0.25s; overflow: hidden; color: inherit;
+  }
+  .m-btn-primary {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 100%, white 12%), color-mix(in srgb, var(--accent) 92%, black 8%));
+    color: #ffffff;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.3),
+      inset 0 -1px 0 rgba(0,0,0,0.2),
+      0 8px 22px color-mix(in srgb, var(--accent) 32%, transparent),
+      0 0 0 1px color-mix(in srgb, var(--accent) 70%, transparent);
+  }
+  .m-btn-primary:active { transform: scale(0.98); }
+  .m-btn-ghost {
+    border: 1px solid var(--line-strong); color: var(--ink);
+    background: rgba(255,255,255,0.025);
+    backdrop-filter: blur(4px);
+  }
+  .m-btn-ghost:active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+
+  /* ============== Try-it block ============== */
+  .m-tryit-label {
+    font-size: 9px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--ink-mute);
+    display: flex; align-items: center; gap: 6px; margin-bottom: 10px;
+  }
+  .m-tryit-label .sq { width: 5px; height: 5px; background: var(--accent); box-shadow: 0 0 5px var(--accent-glow); }
+  .m-prompt {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--line-strong);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 7%, transparent), color-mix(in srgb, var(--accent) 2%, transparent));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.03), 0 6px 18px rgba(0,0,0,0.3);
+    position: relative; font-size: 12px; overflow: hidden;
+  }
+  .m-prompt::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
+    background: var(--accent); box-shadow: 0 0 8px var(--accent-glow);
+  }
+  .m-prompt .cmd { color: var(--accent); font-weight: 700; flex: 0 0 auto; }
+  .m-prompt .input { color: var(--ink-dim); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .m-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+  .m-chip {
+    padding: 6px 11px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    font-size: 10px; color: var(--ink-dim);
+    background: rgba(255,255,255,0.02);
+  }
+
+  /* ============== Section heads ============== */
+  .m-section-head {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--ink-dim);
+    margin: 36px 0 14px;
+  }
+  .m-section-head .live { color: var(--accent); display: inline-flex; align-items: center; gap: 6px; }
+  .m-section-head .live .d { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 5px var(--accent-glow); animation: mPulse 2s infinite; }
+
+  /* ============== Dashboard cards ============== */
+  .m-cards { display: flex; flex-direction: column; gap: 10px; }
+  .m-card {
+    position: relative;
+    padding: 18px;
+    border-radius: 14px;
+    border: 1px solid color-mix(in srgb, var(--card-accent, var(--accent)) 22%, transparent);
+    background:
+      radial-gradient(120% 80% at 0% 0%, color-mix(in srgb, var(--card-accent, var(--accent)) 12%, transparent), transparent 55%),
+      linear-gradient(180deg, rgba(20, 12, 16, 0.85), rgba(12, 8, 12, 0.7));
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.04),
+      0 8px 24px rgba(0,0,0,0.4);
+    overflow: hidden;
+    transition: all 0.2s;
+    text-decoration: none; color: inherit;
+    display: block;
+  }
+  .m-card:active { transform: scale(0.99); border-color: var(--card-accent, var(--accent)); }
+  .m-card .scan {
+    position: absolute; left: 0; right: 0; height: 60%; top: -60%;
+    background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--card-accent, var(--accent)) 14%, transparent), transparent);
+    animation: cardScan 5s ease-in-out infinite;
+    animation-delay: var(--delay, 0s);
+    pointer-events: none;
+  }
+  @keyframes cardScan {
+    0%, 60%, 100% { top: -60%; opacity: 0; }
+    10% { opacity: 1; }
+    50% { top: 100%; opacity: 0; }
+  }
+  .m-card-head {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-dim);
+    margin-bottom: 12px;
+  }
+  .m-card-head .icon {
+    width: 26px; height: 26px;
+    border-radius: 8px;
+    display: grid; place-items: center;
+    border: 1px solid color-mix(in srgb, var(--card-accent, var(--accent)) 35%, transparent);
+    background: color-mix(in srgb, var(--card-accent, var(--accent)) 10%, transparent);
+    color: var(--card-accent, var(--accent));
+    box-shadow: 0 0 10px color-mix(in srgb, var(--card-accent, var(--accent)) 20%, transparent);
+  }
+  .m-card-title {
+    font-family: var(--display); font-size: 22px; font-weight: 600; color: var(--ink);
+    margin: 0 0 6px; letter-spacing: -0.02em;
+  }
+  .m-card-desc { font-size: 12px; color: var(--ink); opacity: 0.78; line-height: 1.55; margin: 0 0 14px; }
+  .m-card-foot {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase;
+    flex-wrap: wrap; gap: 8px;
+  }
+  .m-card-foot .status { display: inline-flex; align-items: center; gap: 8px; color: var(--ink-dim); }
+  .m-card-foot .status .bar {
+    display: inline-block; width: 20px; height: 4px; border-radius: 2px;
+    background: var(--card-accent, var(--accent));
+    box-shadow: 0 0 6px var(--card-accent, var(--accent-glow));
+  }
+  .m-card-foot .tags { display: flex; gap: 6px; align-items: center; }
+  .m-card-foot .tags span {
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--card-accent, var(--accent)) 14%, transparent);
+    border: 1px solid color-mix(in srgb, var(--card-accent, var(--accent)) 28%, transparent);
+    color: var(--card-accent, var(--accent));
+    font-weight: 600;
+  }
+  .m-card .owner-pill {
+    display: inline-block; padding: 4px 10px; font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase;
+    border-radius: 999px;
+    color: var(--amber); border: 1px solid color-mix(in srgb, var(--amber) 40%, transparent); background: color-mix(in srgb, var(--amber) 12%, transparent);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--amber) 25%, transparent);
+    margin-bottom: 10px;
+    font-weight: 600;
+  }
+
+  /* ============== Commands list ============== */
+  .m-commands { display: flex; flex-direction: column; gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  .m-cmd {
+    background: var(--bg); padding: 14px 16px;
+    display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 14px;
+    position: relative;
+    transition: all 0.2s;
+    text-decoration: none; color: inherit;
+  }
+  .m-cmd:active { background: var(--accent-soft); }
+  .m-cmd .name {
+    font-size: 15px; font-weight: 500; color: var(--ink); flex: 0 0 auto;
+  }
+  .m-cmd .name .slash { color: var(--accent); }
+  .m-cmd .desc { font-size: 10px; color: var(--ink-dim); text-align: right; line-height: 1.4; }
+  .m-cmd .tag { font-size: 9px; letter-spacing: 0.2em; color: var(--ink-mute); }
+  .m-cmd .num {
+    position: absolute; top: 4px; right: 8px; font-size: 8px; color: var(--ink-mute); letter-spacing: 0.15em;
+  }
+
+  /* ============== CTA banner at bottom ============== */
+  .m-banner {
+    margin: 28px 0 0;
+    padding: 22px 18px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 15%, transparent), rgba(181,107,255,0.08));
+    border: 1px solid var(--line-strong);
+    position: relative; overflow: hidden;
+  }
+  .m-banner::before {
+    content: ''; position: absolute; inset: 0;
+    background-image: linear-gradient(to right, var(--line) 1px, transparent 1px);
+    background-size: 24px 24px;
+    opacity: 0.5;
+  }
+  .m-banner h3 {
+    position: relative;
+    font-family: var(--display); font-size: 24px; font-weight: 600; line-height: 1.05; letter-spacing: -0.02em;
+    margin: 0 0 8px; color: var(--ink);
+  }
+  .m-banner h3 .red { color: var(--accent); text-shadow: 0 0 12px var(--accent-glow); }
+  .m-banner p {
+    position: relative;
+    font-size: 12px; color: var(--ink-dim); margin: 0 0 14px; line-height: 1.5;
+  }
+  .m-banner .m-btn { position: relative; }
+
+  /* ============== Bottom tab bar — fixed, real links ============== */
+  .m-tabbar {
+    position: fixed;
+    left: 12px; right: 12px;
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    padding: 8px;
+    border: 1px solid var(--line-strong);
+    background: rgba(8, 5, 10, 0.88);
+    backdrop-filter: blur(16px);
+    z-index: 40;
+    border-radius: 18px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+  .m-tab {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    padding: 8px 0;
+    color: var(--ink-mute);
+    font-family: var(--mono); font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+    cursor: pointer;
+    position: relative;
+    transition: color 0.2s;
     text-decoration: none;
-    border-radius: 10px;
-    padding: 6px 4px;
+    border: 0; background: none;
   }
-  .tabbar a.active { color: #E04545; background: rgba(224,69,69,0.10); }
-  .tabbar a .icn { font-size: 18px; line-height: 1; }
-
-  /* phone label */
-  .phone-label {
-    text-align: center;
-    margin-top: 18px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase;
-    color: rgba(245,237,224,0.5);
+  .m-tab.active { color: var(--accent); }
+  .m-tab.active::before {
+    content: ''; position: absolute; top: -8px; left: 50%; transform: translateX(-50%);
+    width: 24px; height: 2px; background: var(--accent); box-shadow: 0 0 8px var(--accent-glow);
   }
-  .phone-label .num { color: #E04545; font-weight: 700; margin-right: 8px; }
+  .m-tab svg { width: 18px; height: 18px; }
 
-  /* ambient */
-  .ambient-row {
-    background-image:
-      radial-gradient(40% 30% at 20% 10%, #E0454515 0%, transparent 60%),
-      radial-gradient(40% 30% at 80% 90%, #5BA86810 0%, transparent 60%);
+  /* Reveal */
+  .reveal-m { opacity: 0; transform: translateY(12px); animation: revealUp 0.6s ease-out forwards; }
+  .reveal-m.d1 { animation-delay: 0.05s; }
+  .reveal-m.d2 { animation-delay: 0.12s; }
+  .reveal-m.d3 { animation-delay: 0.20s; }
+  .reveal-m.d4 { animation-delay: 0.28s; }
+  .reveal-m.d5 { animation-delay: 0.36s; }
+  @keyframes revealUp { to { opacity: 1; transform: none; } }
+
+  /* On larger screens center-and-clamp the mobile shell so this is also a
+     usable preview from a desktop browser without forcing a phone bezel. */
+  @media (min-width: 720px) {
+    .m-shell { max-width: 480px; margin: 0 auto; }
+    .m-tabbar { left: 50%; transform: translateX(-50%); width: min(456px, calc(100vw - 24px)); }
   }
-
-  /* image placeholders */
-  .ph-a { background: linear-gradient(135deg,#2a3a5c,#6b7fa8 30%,#e0c891 65%,#c46868); }
-  .ph-b { background: linear-gradient(135deg,#5a4012,#D4A858); }
-  .ph-c { background: linear-gradient(135deg,#1f3a26,#5BA868 50%,#c9d4a8); }
-  .ph-d { background: linear-gradient(135deg,#3a1f1f,#7a2e2e 40%,#E04545); }
-  .ph-e { background: linear-gradient(135deg,#2a1a3a,#5a3a7a 40%,#c46868); }
 </style>
 </head>
-<body class="min-h-screen relative overflow-x-auto">
+<body>
+<script src="_strings.js"></script>
+<script src="_shell.js"></script>
 
-<div aria-hidden class="fixed inset-0 z-0 pointer-events-none ambient-row"></div>
-<div aria-hidden class="fixed inset-0 z-0 pointer-events-none grain opacity-30"></div>
-
-<!-- HEADER -->
-<header class="relative z-10 max-w-[1640px] mx-auto px-10 pt-14 pb-10">
-  <div class="flex items-baseline gap-5 flex-wrap">
-    <div class="mono text-[10px] uppercase tracking-kicker text-mute">─── mobile spec · 6 screens · iPhone 14 / 390×844</div>
-  </div>
-  <div class="mt-3 flex items-end justify-between gap-6 flex-wrap">
-    <div>
-      <h1 class="mono text-[48px] leading-none font-extrabold tracking-[-0.04em] lowercase">
-        <span class="text-red glow77">katas</span><span class="text-mute font-extrabold"> / mobile</span><span class="text-red glow77">.</span>
-      </h1>
-      <p class="text-mute text-[14px] mt-3 max-w-[680px] leading-[1.6]">
-        bottom-tab nav · single-column dense layouts · all features từ desktop có thể access. swipe-down để filter, sheet patterns thay cho dropdown. minimum tap target 44px.
-      </p>
-    </div>
-    <div class="flex gap-2 mono text-[10px] tracking-label uppercase">
-      <a href="_index.html" class="px-4 h-9 rounded-[10px] border border-line text-mute hover:text-ink flex items-center">← all mockups</a>
-      <a href="index.html" class="px-4 h-9 rounded-[10px] border border-line text-mute hover:text-ink flex items-center">desktop landing</a>
-    </div>
-  </div>
-</header>
-
-<!-- horizontal scroll of phones -->
-<div class="relative z-10 overflow-x-auto pb-20">
-  <div class="flex gap-12 px-10 pb-6" style="width: max-content;">
-
-    <!-- ═════════ 01 · LANDING (signed out) ═════════ -->
-    <div>
-      <div class="phone">
-        <div class="phone-island"></div>
-        <div class="phone-screen">
-          <div class="status-bar">
-            <span>9:41</span>
-            <div class="flex items-center gap-1.5">
-              <svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><rect x="0" y="6" width="3" height="5" rx="1"/><rect x="4" y="4" width="3" height="7" rx="1"/><rect x="8" y="2" width="3" height="9" rx="1"/><rect x="12" y="0" width="3" height="11" rx="1"/></svg>
-              <span class="text-[12px]">5G</span>
-              <svg width="22" height="11" viewBox="0 0 22 11" fill="none"><rect x="0.5" y="0.5" width="18" height="10" rx="2.5" stroke="currentColor"/><rect x="2" y="2" width="13" height="7" rx="1" fill="currentColor"/><rect x="19" y="3.5" width="2" height="4" rx="0.5" fill="currentColor"/></svg>
-            </div>
-          </div>
-          <div class="phone-content">
-            <!-- top header -->
-            <div class="px-5 pt-2 pb-3 flex items-center justify-between">
-              <div class="flex items-center gap-2 leading-none">
-                <button class="w-9 h-9 rounded-[9px] border border-line grid place-items-center text-ink">
-                  <svg width="14" height="12" viewBox="0 0 14 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="1" y1="2" x2="13" y2="2"/><line x1="1" y1="6" x2="13" y2="6"/><line x1="1" y1="10" x2="9" y2="10"/></svg>
-                </button>
-                <div class="mono text-[18px] font-extrabold tracking-[-0.02em]">se<span class="text-red glow77">77</span>n<span class="text-mute font-normal">/kata</span></div>
-              </div>
-              <button class="mono h-9 px-3 rounded-[9px] text-[10px] tracking-label uppercase font-bold text-red" style="background:#E0454514;border:1px solid #E0454555">đăng nhập</button>
-            </div>
-
-            <!-- hero -->
-            <div class="px-5 pt-6 pb-4 relative">
-              <div aria-hidden class="absolute top-0 right-[-20px] pointer-events-none mono select-none" style="font-size:180px;font-weight:800;letter-spacing:-0.04em;line-height:1;color:transparent;-webkit-text-stroke:1px #E0454522;opacity:.6">007</div>
-              <div class="relative">
-                <div class="mono text-[9px] uppercase tracking-kicker text-mute mb-3 flex items-center gap-2">
-                  <span class="dot-pulse w-1.5 h-1.5 rounded-full bg-green"></span>
-                  online · 4 servers · v0.3.1
-                </div>
-                <h1 class="mono text-[64px] leading-[0.85] font-extrabold tracking-[-0.045em] lowercase">
-                  <span class="text-red glow77">katas</span><span class="text-red glow77">.</span>
-                </h1>
-                <p class="text-mute mt-4 text-[13px] leading-[1.55]">
-                  bot discord cho chat, ảnh, video, ops. <span class="text-ink">command surface trên mọi server.</span>
-                </p>
-              </div>
-            </div>
-
-            <!-- CTAs -->
-            <div class="px-5 pb-5 space-y-2">
-              <a class="mono flex items-center justify-center gap-2 h-12 rounded-[12px] text-[12px] tracking-label uppercase font-bold text-bg" style="background:#E04545">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.79 19.79 0 0 0-4.885-1.515c-.21.375-.444.865-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25A19.74 19.74 0 0 0 3.677 4.37C.533 9.046-.32 13.58.099 18.058a19.9 19.9 0 0 0 5.993 3.03c.462-.63.873-1.295 1.226-1.994a13.1 13.1 0 0 1-1.872-.892c.126-.094.252-.192.372-.291 3.928 1.793 8.18 1.793 12.061 0 .12.099.246.197.373.291a12.3 12.3 0 0 1-1.873.891c.36.698.772 1.363 1.225 1.993a19.84 19.84 0 0 0 6.002-3.03c.5-5.177-.838-9.674-3.549-13.66zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
-                mời vào server
-              </a>
-              <a class="mono flex items-center justify-center gap-2 h-12 rounded-[12px] text-[12px] tracking-label uppercase font-medium text-ink border border-line2">
-                đăng nhập với discord <span class="text-mute">↗</span>
-              </a>
-            </div>
-
-            <!-- live stats card -->
-            <div class="mx-5 mb-4 rounded-[14px] border border-line bg-panel p-4">
-              <div class="flex items-center gap-2 mb-3">
-                <span class="dot-pulse w-1.5 h-1.5 rounded-full bg-green"></span>
-                <div class="mono text-[9px] uppercase tracking-kicker text-mute">live · 5p</div>
-                <div class="flex-1"></div>
-                <div class="mono text-[8px] text-mute2 tracking-label">12s ago</div>
-              </div>
-              <div class="grid grid-cols-2 gap-3">
-                <div>
-                  <div class="mono text-[9px] tracking-label uppercase text-mute2">servers</div>
-                  <div class="mono text-[22px] font-bold tracking-tight">4</div>
-                </div>
-                <div>
-                  <div class="mono text-[9px] tracking-label uppercase text-mute2">tin nhắn</div>
-                  <div class="mono text-[22px] font-bold tracking-tight">12.4<span class="text-mute text-[16px]">k</span></div>
-                </div>
-                <div>
-                  <div class="mono text-[9px] tracking-label uppercase text-mute2">media gen</div>
-                  <div class="mono text-[22px] font-bold tracking-tight">248</div>
-                </div>
-                <div>
-                  <div class="mono text-[9px] tracking-label uppercase text-mute2">cost · 30d</div>
-                  <div class="mono text-[22px] font-bold tracking-tight text-gold">$18.40</div>
-                </div>
-              </div>
-            </div>
-
-            <!-- caps quick list -->
-            <div class="px-5 pb-4">
-              <div class="mono text-[9px] uppercase tracking-kicker text-mute mb-3">─── nó làm gì</div>
-              <div class="space-y-3 text-[13px]">
-                <div class="flex gap-3"><span class="mono text-red w-12 flex-shrink-0">chat</span><span class="text-mute">vision, function calling, multi-user</span></div>
-                <div class="flex gap-3"><span class="mono text-gold w-12 flex-shrink-0">image</span><span class="text-mute">tạo, sửa, xoá nền · nsfw safeguard</span></div>
-                <div class="flex gap-3"><span class="mono text-green w-12 flex-shrink-0">video</span><span class="text-mute">t2v · i2v · yt-dlp stream</span></div>
-                <div class="flex gap-3"><span class="mono w-12 flex-shrink-0" style="color:#7a9eb5">ops</span><span class="text-mute">role · emoji · audit · moderation</span></div>
-              </div>
-            </div>
-
-            <!-- dashboard pages nav -->
-            <div class="px-5 pb-6">
-              <div class="mono text-[9px] uppercase tracking-kicker text-mute mb-3">─── dashboard pages</div>
-              <div class="grid grid-cols-2 gap-2">
-                <a class="rounded-[12px] border border-line bg-panel/80 p-3"><div class="flex items-center justify-between mb-1"><span class="mono text-[9px] tracking-label uppercase text-green">02</span><span class="text-mute2 text-[10px]">↗</span></div><div class="text-[12px] lowercase text-ink">servers list</div></a>
-                <a class="rounded-[12px] border border-line bg-panel/80 p-3"><div class="flex items-center justify-between mb-1"><span class="mono text-[9px] tracking-label uppercase text-red">03</span><span class="text-mute2 text-[10px]">↗</span></div><div class="text-[12px] lowercase text-ink">server overview</div></a>
-                <a class="rounded-[12px] border border-line bg-panel/80 p-3"><div class="flex items-center justify-between mb-1"><span class="mono text-[9px] tracking-label uppercase text-gold">04</span><span class="text-mute2 text-[10px]">↗</span></div><div class="text-[12px] lowercase text-ink">logs · image</div></a>
-                <a class="rounded-[12px] border border-line bg-panel/80 p-3"><div class="flex items-center justify-between mb-1"><span class="mono text-[9px] tracking-label uppercase text-gold">05</span><span class="text-mute2 text-[10px]">↗</span></div><div class="text-[12px] lowercase text-ink">cost</div></a>
-              </div>
-            </div>
-          </div>
-          <!-- no tabbar on signed-out landing -->
-          <div class="home-indicator"></div>
-        </div>
-      </div>
-      <div class="phone-label"><span class="num">01</span>landing · public</div>
-    </div>
-
-    <!-- ═════════ 02 · SERVERS LIST ═════════ -->
-    <div>
-      <div class="phone">
-        <div class="phone-island"></div>
-        <div class="phone-screen">
-          <div class="status-bar"><span>9:41</span><div class="flex items-center gap-1.5"><svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><rect x="0" y="6" width="3" height="5" rx="1"/><rect x="4" y="4" width="3" height="7" rx="1"/><rect x="8" y="2" width="3" height="9" rx="1"/><rect x="12" y="0" width="3" height="11" rx="1"/></svg><span class="text-[12px]">5G</span><svg width="22" height="11" viewBox="0 0 22 11" fill="none"><rect x="0.5" y="0.5" width="18" height="10" rx="2.5" stroke="currentColor"/><rect x="2" y="2" width="13" height="7" rx="1" fill="currentColor"/><rect x="19" y="3.5" width="2" height="4" rx="0.5" fill="currentColor"/></svg></div></div>
-
-          <!-- sticky top bar -->
-          <div class="px-5 pt-2 pb-3 flex items-center justify-between sticky top-0 z-10 backdrop-blur-md" style="background:rgba(13,10,8,0.8);border-bottom:1px solid rgba(255,255,255,0.06)">
-            <div class="flex items-center gap-2">
-              <button class="w-9 h-9 rounded-[9px] border border-line grid place-items-center"><svg width="14" height="12" viewBox="0 0 14 12" fill="none" stroke="#f5ede0" stroke-width="1.6" stroke-linecap="round"><line x1="1" y1="2" x2="13" y2="2"/><line x1="1" y1="6" x2="13" y2="6"/><line x1="1" y1="10" x2="9" y2="10"/></svg></button>
-              <div class="mono text-[14px] font-bold">servers</div>
-            </div>
-            <div class="flex items-center gap-2">
-              <button class="w-9 h-9 rounded-[9px] border border-line grid place-items-center text-mute"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></button>
-              <div class="w-9 h-9 rounded-full grid place-items-center mono text-[12px] font-extrabold" style="background:#E0454522;color:#E04545">M</div>
-            </div>
-          </div>
-
-          <div class="phone-content">
-            <!-- title row -->
-            <div class="px-5 pt-4 pb-2">
-              <div class="mono text-[28px] font-extrabold tracking-[-0.035em] lowercase">servers<span class="text-red glow77">.</span></div>
-              <div class="mono text-[10px] text-mute mt-1">4 managed · 5 invite · 12 member</div>
-            </div>
-
-            <!-- section: managed -->
-            <div class="px-5 pt-4 pb-2">
-              <div class="mono text-[9px] uppercase tracking-kicker text-mute flex items-center gap-2">
-                <span class="text-mute2">───</span><span>managed · 4</span>
-                <span class="dot-pulse w-1.5 h-1.5 rounded-full bg-green"></span>
-              </div>
-            </div>
-            <div class="px-5 space-y-2">
-              <a class="flex items-center gap-3 p-3 rounded-[12px] border border-line bg-panel">
-                <div class="w-10 h-10 rounded-[8px] grid place-items-center flex-shrink-0 mono text-[13px] font-extrabold" style="background:linear-gradient(135deg,#E04545,#7a1e1e);color:#0d0a08">SA</div>
-                <div class="flex-1 min-w-0">
-                  <div class="flex items-center gap-1.5"><span class="text-ink text-[14px] font-medium truncate">Server Alpha</span><span class="w-1.5 h-1.5 rounded-full bg-green dot-pulse flex-shrink-0"></span></div>
-                  <div class="mono text-[10px] text-mute mt-1">1,245 · 84/day · <span class="text-gold">$4.20</span></div>
-                </div>
-                <span class="text-red mono text-[14px]">→</span>
-              </a>
-              <a class="flex items-center gap-3 p-3 rounded-[12px] border border-line bg-panel">
-                <div class="w-10 h-10 rounded-[8px] grid place-items-center flex-shrink-0 mono text-[13px] font-extrabold" style="background:linear-gradient(135deg,#D4A858,#5a4012);color:#0d0a08">SB</div>
-                <div class="flex-1 min-w-0">
-                  <div class="flex items-center gap-1.5"><span class="text-ink text-[14px] font-medium truncate">Sĩ tử bay color</span><span class="w-1.5 h-1.5 rounded-full bg-green dot-pulse flex-shrink-0"></span></div>
-                  <div class="mono text-[10px] text-mute mt-1">328 · 42/day · <span class="text-gold">$1.80</span></div>
-                </div>
-                <span class="text-red mono text-[14px]">→</span>
-              </a>
-              <a class="flex items-center gap-3 p-3 rounded-[12px] border border-line bg-panel">
-                <div class="w-10 h-10 rounded-[8px] grid place-items-center flex-shrink-0 mono text-[13px] font-extrabold" style="background:linear-gradient(135deg,#5BA868,#1f3a26);color:#0d0a08">DV</div>
-                <div class="flex-1 min-w-0">
-                  <div class="flex items-center gap-1.5"><span class="text-ink text-[14px] font-medium truncate">dev · sandbox</span><span class="w-1.5 h-1.5 rounded-full flex-shrink-0" style="background:#c9a653"></span></div>
-                  <div class="mono text-[10px] text-mute mt-1">12 · <span class="text-warn">degraded · 2p</span></div>
-                </div>
-                <span class="text-red mono text-[14px]">→</span>
-              </a>
-              <a class="flex items-center gap-3 p-3 rounded-[12px] border border-line bg-panel">
-                <div class="w-10 h-10 rounded-[8px] grid place-items-center flex-shrink-0 mono text-[13px] font-extrabold" style="background:linear-gradient(135deg,#7a9eb5,#1f2f3a);color:#0d0a08">NT</div>
-                <div class="flex-1 min-w-0">
-                  <div class="flex items-center gap-1.5"><span class="text-ink text-[14px] font-medium truncate">night terminal</span><span class="w-1.5 h-1.5 rounded-full bg-green dot-pulse flex-shrink-0"></span></div>
-                  <div class="mono text-[10px] text-mute mt-1">87 · 21/day · <span class="text-gold">$1.20</span></div>
-                </div>
-                <span class="text-red mono text-[14px]">→</span>
-              </a>
-            </div>
-
-            <!-- section: can invite -->
-            <div class="px-5 pt-6 pb-2">
-              <div class="mono text-[9px] uppercase tracking-kicker text-mute flex items-center gap-2">
-                <span class="text-mute2">───</span><span>có thể mời · 5</span>
-              </div>
-            </div>
-            <div class="px-5 space-y-2">
-              <a class="flex items-center gap-3 p-3 rounded-[12px] border border-line bg-panel">
-                <div class="w-9 h-9 rounded-[8px] grid place-items-center flex-shrink-0 mono text-[12px] font-extrabold" style="background:linear-gradient(135deg,#9bb4ff,#1f2f5a);color:#0d0a08">SX</div>
-                <div class="flex-1 min-w-0">
-                  <div class="text-ink text-[13px] font-medium truncate">Server X · creators</div>
-                  <div class="mono text-[10px] text-mute mt-0.5">2,400 thành viên</div>
-                </div>
-                <button class="mono h-8 px-2.5 rounded-[8px] text-[9px] tracking-label uppercase font-bold text-red flex-shrink-0" style="background:#E0454514;border:1px solid #E0454555">+ mời</button>
-              </a>
-              <a class="flex items-center gap-3 p-3 rounded-[12px] border border-line bg-panel">
-                <div class="w-9 h-9 rounded-[8px] grid place-items-center flex-shrink-0 mono text-[12px] font-extrabold" style="background:linear-gradient(135deg,#D4A858,#5a4012);color:#0d0a08">YT</div>
-                <div class="flex-1 min-w-0">
-                  <div class="text-ink text-[13px] font-medium truncate">Server Y · gaming</div>
-                  <div class="mono text-[10px] text-mute mt-0.5">512 thành viên</div>
-                </div>
-                <button class="mono h-8 px-2.5 rounded-[8px] text-[9px] tracking-label uppercase font-bold text-red flex-shrink-0" style="background:#E0454514;border:1px solid #E0454555">+ mời</button>
-              </a>
-              <button class="w-full mono text-[10px] tracking-label uppercase text-mute py-2">+ 3 servers · expand</button>
-            </div>
-
-            <!-- section: member only collapsed -->
-            <div class="px-5 pt-4 pb-2">
-              <div class="mono text-[9px] uppercase tracking-kicker text-mute flex items-center gap-2">
-                <span class="text-mute2">───</span><span>thành viên · 12</span>
-                <span class="text-red ml-auto">▸</span>
-              </div>
-            </div>
-
-            <div class="h-4"></div>
-          </div>
-
-          <div class="tabbar">
-            <a><span class="icn">⌂</span><span>home</span></a>
-            <a class="active"><span class="icn">⌬</span><span>servers</span></a>
-            <a><span class="icn">≡</span><span>logs</span></a>
-            <a><span class="icn">$</span><span>cost</span></a>
-            <a><span class="icn">☰</span><span>more</span></a>
-          </div>
-          <div class="home-indicator"></div>
-        </div>
-      </div>
-      <div class="phone-label"><span class="num">02</span>servers list</div>
-    </div>
-
-    <!-- ═════════ 03 · SERVER OVERVIEW ═════════ -->
-    <div>
-      <div class="phone">
-        <div class="phone-island"></div>
-        <div class="phone-screen">
-          <div class="status-bar"><span>9:41</span><div class="flex items-center gap-1.5"><svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><rect x="0" y="6" width="3" height="5" rx="1"/><rect x="4" y="4" width="3" height="7" rx="1"/><rect x="8" y="2" width="3" height="9" rx="1"/><rect x="12" y="0" width="3" height="11" rx="1"/></svg><span class="text-[12px]">5G</span><svg width="22" height="11" viewBox="0 0 22 11" fill="none"><rect x="0.5" y="0.5" width="18" height="10" rx="2.5" stroke="currentColor"/><rect x="2" y="2" width="13" height="7" rx="1" fill="currentColor"/><rect x="19" y="3.5" width="2" height="4" rx="0.5" fill="currentColor"/></svg></div></div>
-
-          <!-- top bar with back + server -->
-          <div class="px-4 pt-2 pb-3 flex items-center gap-2 sticky top-0 z-10 backdrop-blur-md" style="background:rgba(13,10,8,0.8);border-bottom:1px solid rgba(255,255,255,0.06)">
-            <button class="w-9 h-9 rounded-[9px] border border-line grid place-items-center mono text-[14px] text-ink">←</button>
-            <div class="w-9 h-9 rounded-[8px] grid place-items-center flex-shrink-0 mono text-[12px] font-extrabold" style="background:linear-gradient(135deg,#E04545,#7a1e1e);color:#0d0a08">SA</div>
-            <div class="flex-1 min-w-0">
-              <div class="text-ink text-[13px] font-medium leading-tight truncate">Server Alpha</div>
-              <div class="mono text-[9px] text-mute mt-0.5 flex items-center gap-1.5"><span class="w-1 h-1 rounded-full bg-green dot-pulse"></span>online · 7d 04h</div>
-            </div>
-            <button class="w-9 h-9 rounded-[9px] border border-line grid place-items-center text-mute mono text-[14px]">⋯</button>
-          </div>
-
-          <!-- tab pills -->
-          <div class="px-4 pt-3 pb-3 flex gap-1.5 overflow-x-auto sticky top-[60px] z-[9] backdrop-blur-md" style="background:rgba(13,10,8,0.8)">
-            <button class="mono text-[10px] tracking-label uppercase px-3 h-8 rounded-[8px] text-red flex-shrink-0" style="background:#E0454514;border:1px solid #E0454555">overview</button>
-            <button class="mono text-[10px] tracking-label uppercase px-3 h-8 rounded-[8px] border border-line text-mute flex-shrink-0">logs</button>
-            <button class="mono text-[10px] tracking-label uppercase px-3 h-8 rounded-[8px] border border-line text-mute flex-shrink-0">settings</button>
-            <button class="mono text-[10px] tracking-label uppercase px-3 h-8 rounded-[8px] border border-line text-mute flex-shrink-0">cost</button>
-            <button class="mono text-[10px] tracking-label uppercase px-3 h-8 rounded-[8px] border border-line text-mute flex-shrink-0">playground</button>
-          </div>
-
-          <div class="phone-content" style="height: calc(100% - 50px - 60px - 56px - 80px)">
-            <!-- KPIs 2x2 -->
-            <div class="px-4 pt-4 pb-2 grid grid-cols-2 gap-2">
-              <div class="rounded-[12px] border border-line bg-panel p-3">
-                <div class="flex items-baseline justify-between">
-                  <div class="mono text-[8px] uppercase tracking-label text-mute2">msgs · 24h</div>
-                  <div class="mono text-[8px] text-green">+12%</div>
-                </div>
-                <div class="mono text-[26px] font-bold tracking-tight mt-1 leading-none">84</div>
-              </div>
-              <div class="rounded-[12px] border border-line bg-panel p-3">
-                <div class="flex items-baseline justify-between">
-                  <div class="mono text-[8px] uppercase tracking-label text-mute2">image · 24h</div>
-                  <div class="mono text-[8px] text-mute2">±0%</div>
-                </div>
-                <div class="mono text-[26px] font-bold tracking-tight mt-1 leading-none">7</div>
-              </div>
-              <div class="rounded-[12px] border border-line bg-panel p-3">
-                <div class="flex items-baseline justify-between">
-                  <div class="mono text-[8px] uppercase tracking-label text-mute2">video · 24h</div>
-                  <div class="mono text-[8px]" style="color:#c46868">-50%</div>
-                </div>
-                <div class="mono text-[26px] font-bold tracking-tight mt-1 leading-none">1</div>
-              </div>
-              <div class="rounded-[12px] border border-line bg-panel p-3">
-                <div class="flex items-baseline justify-between">
-                  <div class="mono text-[8px] uppercase tracking-label text-mute2">cost · 30d</div>
-                  <div class="mono text-[8px] text-warn">+15%</div>
-                </div>
-                <div class="mono text-[20px] font-bold tracking-tight mt-1 leading-none text-gold">$4.20</div>
-              </div>
-            </div>
-
-            <!-- activity chart compact -->
-            <div class="px-4 pt-3">
-              <div class="rounded-[12px] border border-line bg-panel p-4">
-                <div class="flex items-baseline justify-between mb-3">
-                  <div class="mono text-[9px] uppercase tracking-kicker text-mute">activity · 24h</div>
-                  <span class="dot-pulse w-1.5 h-1.5 rounded-full bg-green"></span>
-                </div>
-                <div class="flex items-end gap-[3px] h-[80px]">
-                  <div class="flex-1 rounded-t-sm" style="height:18%;background:#E04545"></div>
-                  <div class="flex-1 rounded-t-sm" style="height:8%;background:#E04545"></div>
-                  <div class="flex-1 rounded-t-sm" style="height:14%;background:#E04545"></div>
-                  <div class="flex-1 rounded-t-sm" style="height:28%;background:#E04545"></div>
-                  <div class="flex-1 rounded-t-sm" style="height:42%;background:#E04545"></div>
-                  <div class="flex-1 rounded-t-sm" style="height:46%;background:#E04545"></div>
-                  <div class="flex-1 rounded-t-sm" style="height:62%;background:#E04545"></div>
-                  <div class="flex-1 rounded-t-sm" style="height:58%;background:#E04545"></div>
-                  <div class="flex-1 rounded-t-sm" style="height:72%;background:#E04545"></div>
-                  <div class="flex-1 rounded-t-sm" style="height:80%;background:#E04545"></div>
-                  <div class="flex-1 rounded-t-sm" style="height:88%;background:#E04545"></div>
-                  <div class="flex-1 rounded-t-sm" style="height:96%;background:#E04545"></div>
-                  <div class="flex-1 rounded-t-sm" style="height:84%;background:#E04545"></div>
-                  <div class="flex-1 rounded-t-sm" style="height:78%;background:#E04545"></div>
-                  <div class="flex-1 rounded-t-sm" style="height:64%;background:#E04545"></div>
-                  <div class="flex-1 rounded-t-sm" style="height:42%;background:#E04545"></div>
-                  <div class="flex-1 rounded-t-sm" style="height:38%;background:#E04545;box-shadow:0 0 6px #E04545aa"></div>
-                </div>
-                <div class="flex items-baseline justify-between mt-2 mono text-[8px] tracking-label uppercase text-mute2">
-                  <span>06:00</span><span>12:00</span><span>18:00</span><span class="text-red">now</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- recent activity -->
-            <div class="px-4 pt-4 pb-2">
-              <div class="mono text-[9px] uppercase tracking-kicker text-mute mb-2 flex items-center gap-2"><span>recent</span><span class="dot-pulse w-1.5 h-1.5 rounded-full bg-green"></span></div>
-              <div class="rounded-[12px] border border-line bg-panel divide-y divide-line/60">
-                <div class="p-3 flex items-start gap-2.5" style="background:#E0454508">
-                  <span class="w-6 h-6 rounded-full grid place-items-center mono text-[10px] font-extrabold flex-shrink-0" style="background:#E0454522;color:#E04545">A</span>
-                  <div class="flex-1 min-w-0">
-                    <div class="flex items-baseline gap-2"><span class="text-ink text-[11px] font-medium">@lambo_ai</span><span class="text-red mono text-[8px] tracking-label uppercase">/img</span><span class="mono text-[8px] text-mute2 ml-auto">just now</span></div>
-                    <div class="text-mute text-[11px] mt-0.5 truncate">"cyberpunk pho cart neon"</div>
-                  </div>
-                </div>
-                <div class="p-3 flex items-start gap-2.5">
-                  <span class="w-6 h-6 rounded-full grid place-items-center mono text-[10px] font-extrabold flex-shrink-0" style="background:#5BA86822;color:#5BA868">N</span>
-                  <div class="flex-1 min-w-0">
-                    <div class="flex items-baseline gap-2"><span class="text-ink text-[11px] font-medium">@nha.que</span><span class="text-green mono text-[8px] tracking-label uppercase">chat</span><span class="mono text-[8px] text-mute2 ml-auto">2p</span></div>
-                    <div class="text-mute text-[11px] mt-0.5 truncate">"ai có thể giúp viết unit test…"</div>
-                  </div>
-                </div>
-                <div class="p-3 flex items-start gap-2.5" style="background:#c4686810">
-                  <span class="w-6 h-6 rounded-full grid place-items-center mono text-[10px] font-extrabold flex-shrink-0" style="background:#c4686822;color:#c46868">?</span>
-                  <div class="flex-1 min-w-0">
-                    <div class="flex items-baseline gap-2"><span class="text-ink text-[11px] font-medium">@throwaway</span><span class="mono text-[8px] tracking-label uppercase" style="color:#c46868">blocked</span><span class="mono text-[8px] text-mute2 ml-auto">24p</span></div>
-                    <div class="text-[11px] mt-0.5 italic" style="color:#c46868">nsfw safe ch · 0.84</div>
-                  </div>
-                </div>
-                <div class="p-3 flex items-start gap-2.5">
-                  <span class="w-6 h-6 rounded-full grid place-items-center mono text-[10px] font-extrabold flex-shrink-0" style="background:#D4A85822;color:#D4A858">K</span>
-                  <div class="flex-1 min-w-0">
-                    <div class="flex items-baseline gap-2"><span class="text-ink text-[11px] font-medium">@kuro</span><span class="text-gold mono text-[8px] tracking-label uppercase">/search</span><span class="mono text-[8px] text-mute2 ml-auto">5p</span></div>
-                    <div class="text-mute text-[11px] mt-0.5 truncate">"claude 4.7 review"</div>
-                  </div>
-                </div>
-              </div>
-              <button class="w-full mono text-[10px] tracking-label uppercase text-red py-3">view all logs →</button>
-            </div>
-
-            <div class="h-4"></div>
-          </div>
-
-          <div class="tabbar">
-            <a><span class="icn">⌂</span><span>home</span></a>
-            <a><span class="icn">⌬</span><span>servers</span></a>
-            <a class="active"><span class="icn">≡</span><span>logs</span></a>
-            <a><span class="icn">$</span><span>cost</span></a>
-            <a><span class="icn">☰</span><span>more</span></a>
-          </div>
-          <div class="home-indicator"></div>
-        </div>
-      </div>
-      <div class="phone-label"><span class="num">03</span>server · overview</div>
-    </div>
-
-    <!-- ═════════ 04 · LOGS · IMAGE ═════════ -->
-    <div>
-      <div class="phone">
-        <div class="phone-island"></div>
-        <div class="phone-screen">
-          <div class="status-bar"><span>9:41</span><div class="flex items-center gap-1.5"><svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><rect x="0" y="6" width="3" height="5" rx="1"/><rect x="4" y="4" width="3" height="7" rx="1"/><rect x="8" y="2" width="3" height="9" rx="1"/><rect x="12" y="0" width="3" height="11" rx="1"/></svg><span class="text-[12px]">5G</span><svg width="22" height="11" viewBox="0 0 22 11" fill="none"><rect x="0.5" y="0.5" width="18" height="10" rx="2.5" stroke="currentColor"/><rect x="2" y="2" width="13" height="7" rx="1" fill="currentColor"/><rect x="19" y="3.5" width="2" height="4" rx="0.5" fill="currentColor"/></svg></div></div>
-
-          <!-- top bar -->
-          <div class="px-4 pt-2 pb-3 flex items-center gap-2 sticky top-0 z-10 backdrop-blur-md" style="background:rgba(13,10,8,0.8);border-bottom:1px solid rgba(255,255,255,0.06)">
-            <button class="w-9 h-9 rounded-[9px] border border-line grid place-items-center mono text-[14px] text-ink">←</button>
-            <div class="flex-1 min-w-0">
-              <div class="text-ink text-[13px] font-medium leading-tight">logs · image</div>
-              <div class="mono text-[9px] text-mute mt-0.5 flex items-center gap-1.5"><span class="w-1 h-1 rounded-full bg-green dot-pulse"></span>live · 145 trong tháng này</div>
-            </div>
-            <button class="w-9 h-9 rounded-[9px] border border-line grid place-items-center text-mute"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><line x1="4" y1="6" x2="20" y2="6"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="10" y1="18" x2="14" y2="18"/></svg></button>
-          </div>
-
-          <!-- log type pills -->
-          <div class="px-4 pt-3 pb-3 flex gap-1.5 overflow-x-auto sticky top-[60px] z-[9] backdrop-blur-md" style="background:rgba(13,10,8,0.8)">
-            <button class="mono text-[10px] tracking-label uppercase px-3 h-8 rounded-[8px] border border-line text-mute flex-shrink-0">chat <span class="text-mute2 ml-1">2.4k</span></button>
-            <button class="mono text-[10px] tracking-label uppercase px-3 h-8 rounded-[8px] text-red flex-shrink-0" style="background:#E0454514;border:1px solid #E0454555">image <span class="text-mute2 ml-1">145</span></button>
-            <button class="mono text-[10px] tracking-label uppercase px-3 h-8 rounded-[8px] border border-line text-mute flex-shrink-0">video <span class="text-mute2 ml-1">18</span></button>
-            <button class="mono text-[10px] tracking-label uppercase px-3 h-8 rounded-[8px] border border-line text-mute flex-shrink-0">cmd <span class="text-mute2 ml-1">412</span></button>
-          </div>
-
-          <div class="phone-content" style="height: calc(100% - 50px - 60px - 56px - 80px)">
-            <!-- entry: new (live) -->
-            <div class="px-4 pt-3 space-y-3">
-              <article class="rounded-[14px] border bg-panel overflow-hidden" style="border-color:#E0454544">
-                <div class="grid grid-cols-2 gap-px bg-line">
-                  <div class="aspect-square ph-a relative"><div class="absolute top-2 left-2 mono text-[8px] tracking-label uppercase text-bg/80 bg-bg/40 px-1.5 py-0.5 rounded">input</div></div>
-                  <div class="aspect-square ph-d relative"><div class="absolute top-2 left-2 mono text-[8px] tracking-label uppercase text-bg/80 bg-bg/40 px-1.5 py-0.5 rounded">output</div></div>
-                </div>
-                <div class="p-3">
-                  <div class="flex items-center gap-2 mb-2 mono text-[10px]">
-                    <span class="w-5 h-5 rounded-full grid place-items-center text-[9px] font-extrabold" style="background:#E0454522;color:#E04545">A</span>
-                    <span class="text-ink">@lambo_ai</span>
-                    <span class="text-red text-[9px] tracking-label uppercase ml-auto">/edit</span>
-                    <span class="dot-pulse w-1.5 h-1.5 rounded-full bg-red"></span>
-                  </div>
-                  <div class="text-ink text-[12px] leading-[1.5]">"make the sky purple at golden hour, add 2 zeppelins, keep skyline"</div>
-                  <div class="flex items-center gap-2 mt-2 mono text-[9px] tracking-label uppercase text-mute2 flex-wrap">
-                    <span>nano-banana</span><span>·</span><span>28.4s</span><span>·</span><span class="text-gold">$0.04</span>
-                  </div>
-                </div>
-              </article>
-
-              <!-- entry: /img single output -->
-              <article class="rounded-[14px] border border-line bg-panel overflow-hidden">
-                <div class="aspect-[4/3] ph-b"></div>
-                <div class="p-3">
-                  <div class="flex items-center gap-2 mb-2 mono text-[10px]">
-                    <span class="w-5 h-5 rounded-full grid place-items-center text-[9px] font-extrabold" style="background:#5BA86822;color:#5BA868">N</span>
-                    <span class="text-ink">@nha.que</span>
-                    <span class="text-red text-[9px] tracking-label uppercase ml-auto">/img</span>
-                  </div>
-                  <div class="text-ink text-[12px] leading-[1.5]">"vietnamese pho cart at midnight, neon signs, steam rising"</div>
-                  <div class="flex items-center gap-2 mt-2 mono text-[9px] tracking-label uppercase text-mute2 flex-wrap">
-                    <span>nano-banana</span><span>·</span><span>22.1s</span><span>·</span><span class="text-gold">$0.04</span><span class="ml-auto text-mute">14p</span>
-                  </div>
-                </div>
-              </article>
-
-              <!-- entry: fallback -->
-              <article class="rounded-[14px] border border-line bg-panel overflow-hidden">
-                <div class="grid grid-cols-2 gap-px bg-line">
-                  <div class="aspect-square ph-c"></div>
-                  <div class="aspect-square ph-e"></div>
-                </div>
-                <div class="p-3">
-                  <div class="flex items-center gap-2 mb-2 mono text-[10px] flex-wrap">
-                    <span class="w-5 h-5 rounded-full grid place-items-center text-[9px] font-extrabold" style="background:#D4A85822;color:#D4A858">K</span>
-                    <span class="text-ink">@kuro</span>
-                    <span class="mono text-[8px] tracking-label uppercase px-1.5 py-0.5 rounded-full" style="background:#c9a65318;border:1px solid #c9a65340;color:#c9a653">FALLBACK</span>
-                    <span class="text-red text-[9px] tracking-label uppercase ml-auto">/wfi2i</span>
-                  </div>
-                  <div class="text-ink text-[12px] leading-[1.5]">"turn this dog into baroque oil painting"</div>
-                  <div class="flex items-center gap-2 mt-2 mono text-[9px] tracking-label uppercase text-mute2 flex-wrap">
-                    <span>flux/dev → wan-2.6</span><span>·</span><span class="text-gold">$0.04</span><span class="ml-auto text-mute">38p</span>
-                  </div>
-                </div>
-              </article>
-
-              <!-- entry: nsfw block -->
-              <article class="rounded-[14px] border overflow-hidden" style="background:#c4686808;border-color:#c4686844">
-                <div class="aspect-[4/3] grid place-items-center" style="background:#0a0807">
-                  <div class="text-center">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#c46868" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 14.14 14.14"/></svg>
-                    <div class="mono text-[9px] tracking-label uppercase mt-2" style="color:#c46868">blocked · 0.84</div>
-                  </div>
-                </div>
-                <div class="p-3">
-                  <div class="flex items-center gap-2 mb-2 mono text-[10px]">
-                    <span class="w-5 h-5 rounded-full grid place-items-center text-[9px] font-extrabold" style="background:#c4686822;color:#c46868">?</span>
-                    <span class="text-ink">@throwaway_2</span>
-                    <span class="text-[9px] tracking-label uppercase ml-auto" style="color:#c46868">nsfw block</span>
-                  </div>
-                  <div class="text-[12px] italic" style="color:#c46868">[prompt hidden · classifier 0.84 in non-nsfw ch]</div>
-                </div>
-              </article>
-            </div>
-            <div class="h-4"></div>
-          </div>
-
-          <div class="tabbar">
-            <a><span class="icn">⌂</span><span>home</span></a>
-            <a><span class="icn">⌬</span><span>servers</span></a>
-            <a class="active"><span class="icn">≡</span><span>logs</span></a>
-            <a><span class="icn">$</span><span>cost</span></a>
-            <a><span class="icn">☰</span><span>more</span></a>
-          </div>
-          <div class="home-indicator"></div>
-        </div>
-      </div>
-      <div class="phone-label"><span class="num">04</span>logs · image</div>
-    </div>
-
-    <!-- ═════════ 05 · COST ═════════ -->
-    <div>
-      <div class="phone">
-        <div class="phone-island"></div>
-        <div class="phone-screen">
-          <div class="status-bar"><span>9:41</span><div class="flex items-center gap-1.5"><svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><rect x="0" y="6" width="3" height="5" rx="1"/><rect x="4" y="4" width="3" height="7" rx="1"/><rect x="8" y="2" width="3" height="9" rx="1"/><rect x="12" y="0" width="3" height="11" rx="1"/></svg><span class="text-[12px]">5G</span><svg width="22" height="11" viewBox="0 0 22 11" fill="none"><rect x="0.5" y="0.5" width="18" height="10" rx="2.5" stroke="currentColor"/><rect x="2" y="2" width="13" height="7" rx="1" fill="currentColor"/><rect x="19" y="3.5" width="2" height="4" rx="0.5" fill="currentColor"/></svg></div></div>
-
-          <div class="px-4 pt-2 pb-3 flex items-center gap-2 sticky top-0 z-10 backdrop-blur-md" style="background:rgba(13,10,8,0.8);border-bottom:1px solid rgba(255,255,255,0.06)">
-            <button class="w-9 h-9 rounded-[9px] border border-line grid place-items-center mono text-[14px] text-ink">←</button>
-            <div class="flex-1">
-              <div class="text-ink text-[13px] font-medium">cost · server alpha</div>
-              <div class="mono text-[9px] text-mute mt-0.5 flex items-center gap-1.5"><span class="w-1 h-1 rounded-full bg-green dot-pulse"></span>live · 6s sync</div>
-            </div>
-            <button class="w-9 h-9 rounded-[9px] border border-line grid place-items-center text-mute mono text-[11px] tracking-label">30d</button>
-            <button class="w-9 h-9 rounded-[9px] border border-line grid place-items-center text-mute mono text-[13px]" title="đổi theme">☾</button>
-          </div>
-
-          <div class="phone-content" style="height: calc(100% - 50px - 60px - 80px)">
-            <!-- hero -->
-            <div class="px-4 pt-4">
-              <div class="mono text-[10px] uppercase tracking-kicker text-mute mb-2">tổng · tháng này</div>
-              <div class="flex items-baseline gap-3">
-                <div class="mono text-[44px] font-bold tracking-[-0.03em] leading-none text-gold">$12.40</div>
-                <div class="mono text-[10px] text-warn">▲ 15%</div>
-              </div>
-              <div class="mono text-[10px] text-mute mt-2">dự đoán cuối tháng · <span class="text-ink">$18.60</span></div>
-              <div class="mt-3 h-1.5 rounded-full overflow-hidden bg-panel2">
-                <div class="h-full" style="width:50%;background:#D4A858"></div>
-              </div>
-              <div class="flex items-baseline justify-between mt-1 mono text-[8px] tracking-label uppercase text-mute2">
-                <span>$0</span><span>$12.40 / $25 · 50%</span><span>$25</span>
-              </div>
-            </div>
-
-            <!-- breakdown stacked -->
-            <div class="px-4 pt-5 grid grid-cols-3 gap-2">
-              <div class="rounded-[12px] border border-line bg-panel p-3 text-center">
-                <div class="mono text-[8px] uppercase tracking-label text-mute2">tokens</div>
-                <div class="mono text-[18px] font-bold tracking-tight mt-1">2.5M</div>
-                <div class="mono text-[8px] text-mute2 mt-0.5">in</div>
-              </div>
-              <div class="rounded-[12px] border border-line bg-panel p-3 text-center">
-                <div class="mono text-[8px] uppercase tracking-label text-mute2">images</div>
-                <div class="mono text-[18px] font-bold tracking-tight mt-1">145</div>
-                <div class="mono text-[8px] text-gold mt-0.5">$5.80</div>
-              </div>
-              <div class="rounded-[12px] border border-line bg-panel p-3 text-center">
-                <div class="mono text-[8px] uppercase tracking-label text-mute2">video</div>
-                <div class="mono text-[18px] font-bold tracking-tight mt-1">18</div>
-                <div class="mono text-[8px] text-gold mt-0.5">$2.80</div>
-              </div>
-            </div>
-
-            <!-- donut -->
-            <div class="px-4 pt-5">
-              <div class="rounded-[14px] border border-line bg-panel p-4">
-                <div class="mono text-[9px] uppercase tracking-kicker text-mute mb-3">by model · 30d</div>
-                <div class="grid grid-cols-[110px_1fr] gap-3 items-center">
-                  <div class="relative w-[110px] h-[110px]">
-                    <svg width="110" height="110" viewBox="0 0 42 42">
-                      <circle cx="21" cy="21" r="15.91" fill="transparent" stroke="rgba(255,255,255,0.05)" stroke-width="6"/>
-                      <circle cx="21" cy="21" r="15.91" fill="transparent" stroke="#E04545" stroke-width="6" stroke-dasharray="52 48" stroke-dashoffset="25" transform="rotate(-90 21 21)"/>
-                      <circle cx="21" cy="21" r="15.91" fill="transparent" stroke="#D4A858" stroke-width="6" stroke-dasharray="22 78" stroke-dashoffset="-27" transform="rotate(-90 21 21)"/>
-                      <circle cx="21" cy="21" r="15.91" fill="transparent" stroke="#5BA868" stroke-width="6" stroke-dasharray="17 83" stroke-dashoffset="-49" transform="rotate(-90 21 21)"/>
-                      <circle cx="21" cy="21" r="15.91" fill="transparent" stroke="#7a9eb5" stroke-width="6" stroke-dasharray="9 91" stroke-dashoffset="-66" transform="rotate(-90 21 21)"/>
-                    </svg>
-                    <div class="absolute inset-0 grid place-items-center text-center">
-                      <div><div class="mono text-[7px] tracking-label uppercase text-mute2">total</div><div class="mono text-[14px] font-bold mt-0.5">$12.40</div></div>
-                    </div>
-                  </div>
-                  <div class="space-y-1.5 mono text-[10px]">
-                    <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-sm" style="background:#E04545"></span><span class="text-ink truncate flex-1">gemini-3</span><span class="text-gold">$6.40</span></div>
-                    <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-sm" style="background:#D4A858"></span><span class="text-ink truncate flex-1">nano-banana</span><span class="text-gold">$2.73</span></div>
-                    <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-sm" style="background:#5BA868"></span><span class="text-ink truncate flex-1">seedance</span><span class="text-gold">$2.07</span></div>
-                    <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-sm" style="background:#7a9eb5"></span><span class="text-ink truncate flex-1">grok-4</span><span class="text-gold">$1.20</span></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- daily mini chart -->
-            <div class="px-4 pt-3">
-              <div class="rounded-[14px] border border-line bg-panel p-4">
-                <div class="mono text-[9px] uppercase tracking-kicker text-mute mb-3">daily · 30d</div>
-                <svg viewBox="0 0 300 80" preserveAspectRatio="none" class="w-full h-[60px]">
-                  <defs><linearGradient id="cm" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#D4A858" stop-opacity="0.4"/><stop offset="100%" stop-color="#D4A858" stop-opacity="0.02"/></linearGradient></defs>
-                  <path d="M0 68 L20 64 L40 60 L60 56 L80 50 L100 54 L120 46 L140 40 L160 36 L180 30 L200 32 L220 24 L240 22 L260 18 L280 16 L300 12 L300 80 L0 80 Z" fill="url(#cm)"/>
-                  <path d="M0 68 L20 64 L40 60 L60 56 L80 50 L100 54 L120 46 L140 40 L160 36 L180 30 L200 32 L220 24 L240 22 L260 18 L280 16 L300 12" fill="none" stroke="#D4A858" stroke-width="1.5"/>
-                  <circle cx="300" cy="12" r="3" fill="#D4A858" stroke="#0d0a08" stroke-width="2"/>
-                </svg>
-              </div>
-            </div>
-
-            <div class="h-4"></div>
-          </div>
-
-          <div class="tabbar">
-            <a><span class="icn">⌂</span><span>home</span></a>
-            <a><span class="icn">⌬</span><span>servers</span></a>
-            <a><span class="icn">≡</span><span>logs</span></a>
-            <a class="active"><span class="icn">$</span><span>cost</span></a>
-            <a><span class="icn">☰</span><span>more</span></a>
-          </div>
-          <div class="home-indicator"></div>
-        </div>
-      </div>
-      <div class="phone-label"><span class="num">05</span>cost</div>
-    </div>
-
-    <!-- ═════════ 06 · MENU DRAWER ═════════ -->
-    <div>
-      <div class="phone">
-        <div class="phone-island"></div>
-        <div class="phone-screen">
-          <div class="status-bar"><span>9:41</span><div class="flex items-center gap-1.5"><svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><rect x="0" y="6" width="3" height="5" rx="1"/><rect x="4" y="4" width="3" height="7" rx="1"/><rect x="8" y="2" width="3" height="9" rx="1"/><rect x="12" y="0" width="3" height="11" rx="1"/></svg><span class="text-[12px]">5G</span><svg width="22" height="11" viewBox="0 0 22 11" fill="none"><rect x="0.5" y="0.5" width="18" height="10" rx="2.5" stroke="currentColor"/><rect x="2" y="2" width="13" height="7" rx="1" fill="currentColor"/><rect x="19" y="3.5" width="2" height="4" rx="0.5" fill="currentColor"/></svg></div></div>
-
-          <!-- backdrop blur over dimmed servers screen behind -->
-          <div class="absolute inset-0" style="background:rgba(13,10,8,0.7);backdrop-filter:blur(8px);"></div>
-
-          <!-- drawer sheet -->
-          <div class="relative h-full flex flex-col">
-            <div class="flex-1"></div>
-            <div class="rounded-t-[24px] border-t border-line bg-panel pt-3 pb-6 px-4 max-h-[85%] overflow-y-auto" style="background:#15110d">
-              <!-- handle -->
-              <div class="mx-auto w-12 h-1.5 rounded-full bg-line2 mb-5"></div>
-
-              <!-- user header -->
-              <div class="flex items-center gap-3 p-3 rounded-[12px] border border-line bg-panel2 mb-4">
-                <div class="w-11 h-11 rounded-full grid place-items-center mono text-[16px] font-extrabold flex-shrink-0" style="background:#E0454522;color:#E04545">M</div>
-                <div class="flex-1 min-w-0">
-                  <div class="text-ink text-[14px] font-medium">m</div>
-                  <div class="mono text-[10px] text-mute2 truncate">397342895327150080 · owner</div>
-                </div>
-                <button class="mono text-[10px] tracking-label uppercase text-red">⊗</button>
-              </div>
-
-              <!-- nav -->
-              <div class="mono text-[9px] uppercase tracking-kicker text-mute2 mb-2 px-1">navigate</div>
-              <div class="space-y-1 mb-4">
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-[10px] hover:bg-ink/[0.03]"><span class="text-red text-[16px] w-6 text-center">⌂</span><span class="text-ink text-[13px]">trang chủ</span><span class="ml-auto mono text-[9px] text-mute2 tracking-label uppercase">⌘ G H</span></a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-[10px] hover:bg-ink/[0.03]"><span class="text-red text-[16px] w-6 text-center">⌬</span><span class="text-ink text-[13px]">tất cả servers</span><span class="ml-auto mono text-[9px] text-mute2 tracking-label uppercase">⌘ G S</span></a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-[10px] hover:bg-ink/[0.03]"><span class="text-red text-[16px] w-6 text-center">⊙</span><span class="text-ink text-[13px]">lịch sử của tôi</span></a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-[10px] hover:bg-ink/[0.03]"><span class="text-red text-[16px] w-6 text-center">▸</span><span class="text-ink text-[13px]">playground</span></a>
-                <a class="flex items-center gap-3 px-3 py-2.5 rounded-[10px]" style="background:#E0454510"><span class="text-red text-[16px] w-6 text-center">◐</span><span class="text-ink text-[13px]">owner panel</span><span class="ml-auto mono text-[9px] text-red tracking-label uppercase">owner</span></a>
-              </div>
-
-              <!-- preferences -->
-              <div class="mono text-[9px] uppercase tracking-kicker text-mute2 mb-2 px-1">preferences</div>
-              <div class="space-y-1 mb-4">
-                <div class="flex items-center gap-3 px-3 py-2.5">
-                  <span class="text-mute text-[14px] w-6 text-center">🌐</span>
-                  <span class="text-ink text-[13px] flex-1">ngôn ngữ</span>
-                  <div class="flex items-center gap-0.5 p-0.5 rounded-[8px] border border-line bg-bg mono text-[9px] tracking-label uppercase">
-                    <span class="px-2 py-1 rounded-[6px] text-mute">EN</span>
-                    <span class="px-2 py-1 rounded-[6px] text-ink" style="background:#1c1813">VI</span>
-                  </div>
-                </div>
-                <div class="flex items-center gap-3 px-3 py-2.5">
-                  <span class="text-mute text-[14px] w-6 text-center">☾</span>
-                  <span class="text-ink text-[13px] flex-1">theme</span>
-                  <div class="flex items-center gap-0.5 p-0.5 rounded-[8px] border border-line bg-bg mono text-[9px] tracking-label uppercase">
-                    <span class="px-2 py-1 rounded-[6px] text-ink" style="background:#1c1813">dark</span>
-                    <span class="px-2 py-1 rounded-[6px] text-mute">light</span>
-                    <span class="px-2 py-1 rounded-[6px] text-mute">auto</span>
-                  </div>
-                </div>
-                <div class="flex items-center gap-3 px-3 py-2.5">
-                  <span class="text-mute text-[14px] w-6 text-center">▣</span>
-                  <span class="text-ink text-[13px] flex-1">live updates</span>
-                  <div class="w-10 h-6 rounded-full relative flex-shrink-0" style="background:#E0454555">
-                    <div class="absolute top-0.5 right-0.5 w-5 h-5 rounded-full bg-ink"></div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- danger -->
-              <div class="mt-3">
-                <button class="w-full mono text-[11px] tracking-label uppercase font-bold text-mute py-3 rounded-[10px] border border-line">đăng xuất</button>
-              </div>
-
-              <div class="mt-4 mono text-[9px] text-mute2 text-center tracking-kicker uppercase">katas · v0.3.1 · build 2026.05.18</div>
-            </div>
-          </div>
-          <div class="home-indicator"></div>
-        </div>
-      </div>
-      <div class="phone-label"><span class="num">06</span>menu · bottom sheet</div>
-    </div>
-
-  </div>
+<!-- Particles preset background -->
+<div class="bg-stack" aria-hidden="true">
+  <div class="bg-vignette"></div>
+  <div class="bg-particles" id="bg-particles"></div>
+  <div class="bg-noise"></div>
+  <div class="bg-watermark">007</div>
 </div>
 
-<!-- spec notes -->
-<section class="relative z-10 max-w-[1640px] mx-auto px-10 pb-16">
-  <div class="mono text-[10px] uppercase tracking-kicker text-mute mb-4">─── mobile principles ───────────────────────────</div>
-  <div class="grid grid-cols-4 gap-3">
-    <div class="rounded-[14px] border border-line bg-panel p-5">
-      <div class="mono text-[10px] uppercase tracking-kicker text-red mb-2">tap target</div>
-      <div class="text-[13px] text-ink leading-[1.55]">Mọi nút ≥ 44×44px (status dot 44px hit-area dù visible 12px). Cards có tap-affordance border.</div>
-    </div>
-    <div class="rounded-[14px] border border-line bg-panel p-5">
-      <div class="mono text-[10px] uppercase tracking-kicker text-red mb-2">filter → sheet</div>
-      <div class="text-[13px] text-ink leading-[1.55]">Desktop dropdowns chuyển thành bottom sheets. Filter button trên top bar mở sheet với options.</div>
-    </div>
-    <div class="rounded-[14px] border border-line bg-panel p-5">
-      <div class="mono text-[10px] uppercase tracking-kicker text-red mb-2">bottom tab nav</div>
-      <div class="text-[13px] text-ink leading-[1.55]">5 tabs cố định: home / servers / logs / cost / more. "more" chứa playground, settings, đăng xuất.</div>
-    </div>
-    <div class="rounded-[14px] border border-line bg-panel p-5">
-      <div class="mono text-[10px] uppercase tracking-kicker text-red mb-2">image-forward logs</div>
-      <div class="text-[13px] text-ink leading-[1.55]">Image/video logs có thumbnail to full-width (4:3). NSFW block có placeholder X icon, prompt hidden.</div>
-    </div>
-    <div class="rounded-[14px] border border-line bg-panel p-5">
-      <div class="mono text-[10px] uppercase tracking-kicker text-gold mb-2">⌘K → fab</div>
-      <div class="text-[13px] text-ink leading-[1.55]">Command palette không khả dụng. Search bar visible trên list pages. Hamburger mở drawer nav.</div>
-    </div>
-    <div class="rounded-[14px] border border-line bg-panel p-5">
-      <div class="mono text-[10px] uppercase tracking-kicker text-gold mb-2">three.js · off</div>
-      <div class="text-[13px] text-ink leading-[1.55]">Ambient three.js disabled trên mobile (performance + battery). Chỉ giữ radial gradient + grain.</div>
-    </div>
-    <div class="rounded-[14px] border border-line bg-panel p-5">
-      <div class="mono text-[10px] uppercase tracking-kicker text-gold mb-2">density · 4px grid</div>
-      <div class="text-[13px] text-ink leading-[1.55]">KPI cards 2×2 thay vì 5×1. Charts compact heights (80-120px). Recent activity tối đa 4 items inline.</div>
-    </div>
-    <div class="rounded-[14px] border border-line bg-panel p-5">
-      <div class="mono text-[10px] uppercase tracking-kicker text-gold mb-2">live indicator</div>
-      <div class="text-[13px] text-ink leading-[1.55]">Pulse dot trong top bar khi WebSocket connected. Pause toggle trong long-running pages (logs).</div>
-    </div>
-  </div>
+<header class="m-nav">
+  <a href="/" class="m-brand" title="Về se77n.com">
+    <span style="display:flex;flex-direction:column;align-items:flex-start;gap:0;">
+      <span><span>se</span><span class="sev">77</span><span>n</span><span class="suffix">/ kata</span></span>
+      <span class="m-nav-meta">EXP <span class="num">007</span> · KATAS</span>
+    </span>
+  </a>
 
-  <div class="mt-10 grid grid-cols-2 gap-3">
-    <div class="rounded-[14px] border border-line bg-panel p-5">
-      <div class="mono text-[10px] uppercase tracking-kicker text-mute mb-3">feature parity check</div>
-      <div class="space-y-2 mono text-[12px]">
-        <div class="flex items-center gap-3"><span class="w-1.5 h-1.5 rounded-full bg-green flex-shrink-0"></span><span class="text-ink flex-1">overview · logs · cost · settings · playground</span><span class="text-green text-[10px] tracking-label uppercase">full</span></div>
-        <div class="flex items-center gap-3"><span class="w-1.5 h-1.5 rounded-full bg-green flex-shrink-0"></span><span class="text-ink flex-1">3-section servers list (managed / invite / member)</span><span class="text-green text-[10px] tracking-label uppercase">full</span></div>
-        <div class="flex items-center gap-3"><span class="w-1.5 h-1.5 rounded-full bg-green flex-shrink-0"></span><span class="text-ink flex-1">live activity stream + nsfw blocked rows</span><span class="text-green text-[10px] tracking-label uppercase">full</span></div>
-        <div class="flex items-center gap-3"><span class="w-1.5 h-1.5 rounded-full bg-warn flex-shrink-0"></span><span class="text-ink flex-1">cost donut + 30d chart</span><span class="text-warn text-[10px] tracking-label uppercase">compact</span></div>
-        <div class="flex items-center gap-3"><span class="w-1.5 h-1.5 rounded-full bg-warn flex-shrink-0"></span><span class="text-ink flex-1">command palette ⌘K</span><span class="text-warn text-[10px] tracking-label uppercase">drawer + search</span></div>
-        <div class="flex items-center gap-3"><span class="w-1.5 h-1.5 rounded-full bg-err flex-shrink-0"></span><span class="text-ink flex-1">three.js ambient</span><span class="text-err text-[10px] tracking-label uppercase">disabled</span></div>
+  <div id="kata-header-actions"></div>
+</header>
+
+<main class="m-shell">
+  <div class="m-content">
+
+    <!-- HERO -->
+    <div class="m-eye reveal-m">
+      <span class="live"></span>
+      EXP 007 · KATAS MODULE
+    </div>
+
+    <div class="m-lockup reveal-m d1">
+      <span class="m-bracket tl"></span><span class="m-bracket tr"></span>
+      <span class="m-bracket bl"></span><span class="m-bracket br"></span>
+
+      <div class="m-logo-meta">
+        <span class="tick"></span>
+        <span class="serial">KTS<span class="dim">—</span>007<span class="dim">·</span>v0.4b</span>
+        <span class="rule"></span>
+      </div>
+
+      <h1 class="m-title" data-text="katas">
+        <span class="layer outline" aria-hidden="true">katas</span>
+        <span class="layer fill">katas</span>
+        <span class="aperture" aria-hidden="true">
+          <svg viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="42" class="ring outer"></circle>
+            <circle cx="50" cy="50" r="30" class="ring mid"></circle>
+            <circle cx="50" cy="50" r="14" class="ring core"></circle>
+            <g class="blades">
+              <path d="M50 6 L56 22 L44 22 Z"></path>
+              <path d="M50 94 L56 78 L44 78 Z"></path>
+              <path d="M6 50 L22 56 L22 44 Z"></path>
+              <path d="M94 50 L78 56 L78 44 Z"></path>
+            </g>
+          </svg>
+        </span>
+      </h1>
+
+      <div class="m-logo-meta bottom">
+        <span class="rule"></span>
+        <span class="serial"><span class="dim">RGB</span>—<span id="rgb-readout">224.69.69</span></span>
+        <span class="tick"></span>
       </div>
     </div>
-    <div class="rounded-[14px] border border-line bg-panel p-5">
-      <div class="mono text-[10px] uppercase tracking-kicker text-mute mb-3">implementation note · phase 15</div>
-      <div class="text-[12px] text-mute leading-[1.7]">
-        Trong Next.js 14, dùng <span class="mono text-ink">useMediaQuery('(max-width: 768px)')</span> như parent `MobileShell.jsx` để switch shell. Bottom tab bar dùng shadcn <span class="mono text-ink">&lt;Tabs&gt;</span> hoặc custom với <span class="mono text-ink">framer-motion</span> spring transitions. Bottom sheets dùng <span class="mono text-ink">vaul</span> (drawer lib chuyên cho mobile). Safe-area: <span class="mono text-ink">env(safe-area-inset-bottom)</span> trên tabbar padding.
+
+    <p class="m-tag reveal-m d2">
+      <span class="hi">Bot Discord:</span> chat, ảnh, video.<br/>
+      Một dòng lệnh, mọi thứ chạy.<span class="cur"></span>
+    </p>
+
+    <!-- CTAs -->
+    <div class="m-cta reveal-m d3">
+      <a href="https://discord.com/oauth2/authorize?client_id=1505598795738644701&permissions=8&scope=bot+applications.commands"
+         target="_blank" rel="noopener" class="m-btn m-btn-primary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19.27 5.33C17.94 4.71 16.5 4.26 15 4a.09.09 0 0 0-.07.03c-.18.33-.39.76-.53 1.09a16.09 16.09 0 0 0-4.8 0c-.14-.34-.35-.76-.54-1.09-.01-.02-.04-.03-.07-.03c-1.5.26-2.93.71-4.27 1.33c-.01 0-.02.01-.03.02c-2.72 4.07-3.47 8.03-3.1 11.95c0 .02.01.04.03.05c1.8 1.32 3.53 2.12 5.24 2.65c.03.01.06 0 .07-.02c.4-.55.76-1.13 1.07-1.74c.02-.04 0-.08-.04-.09c-.57-.22-1.11-.48-1.64-.78c-.04-.02-.04-.08-.01-.11c.11-.08.22-.17.33-.25c.02-.02.05-.02.07-.01c3.44 1.57 7.15 1.57 10.55 0c.02-.01.05-.01.07.01c.11.09.22.17.33.26c.04.03.04.09-.01.11c-.52.31-1.07.56-1.64.78c-.04.01-.05.06-.04.09c.32.61.68 1.19 1.07 1.74c.03.01.06.02.09.01c1.72-.53 3.45-1.33 5.25-2.65c.02-.01.03-.03.03-.05c.44-4.53-.73-8.46-3.1-11.95c-.01-.01-.02-.02-.04-.02z"/></svg>
+        MỜI VÀO SERVER
+      </a>
+      <a id="login-cta" href="/api/auth/discord/start" class="m-btn m-btn-ghost">
+        ĐĂNG NHẬP VỚI DISCORD
+      </a>
+    </div>
+
+    <!-- TRY IT -->
+    <div class="reveal-m d4">
+      <div class="m-tryit-label"><span class="sq"></span> TRY IT · ANY CHANNEL</div>
+      <div class="m-prompt">
+        <span class="cmd">/img</span>
+        <span class="input" id="typed-prompt">a vietnamese pho cart at midnight, neon...</span>
+      </div>
+      <div class="m-chips">
+        <a href="#commands" class="m-chip">/chat</a>
+        <a href="#commands" class="m-chip">/edit</a>
+        <a href="#commands" class="m-chip">/t2v</a>
+        <a href="#commands" class="m-chip">/upscale</a>
+        <a href="#commands" class="m-chip">+8</a>
       </div>
     </div>
+
+    <!-- DASHBOARD -->
+    <div class="m-section-head reveal-m d4">
+      <span data-i18n="bc.kata">DASHBOARD</span>
+      <span class="live"><span class="d"></span> 2 LIVE</span>
+    </div>
+
+    <div class="m-cards">
+      <a class="m-card reveal-m d4" href="servers.html" style="--card-accent: var(--accent); --delay: 0s;">
+        <div class="scan"></div>
+        <div class="m-card-head">
+          <span data-i18n="index.tile.servers.tag">SURFACE · 01</span>
+          <span class="icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="3"/><rect x="3" y="11" width="18" height="3"/><rect x="3" y="17" width="12" height="3"/></svg></span>
+        </div>
+        <h3 class="m-card-title" data-i18n="index.tile.servers">servers list</h3>
+        <p class="m-card-desc" data-i18n="index.tile.servers.desc">Danh sách server bot đang phục vụ.</p>
+        <div class="m-card-foot">
+          <span class="status"><span class="bar"></span>active</span>
+          <span class="tags"><span id="tile-servers-count">— SRV</span><span>LIVE</span></span>
+        </div>
+      </a>
+
+      <a class="m-card reveal-m d5" href="tavern.html" style="--card-accent: var(--violet); --delay: 1.5s;">
+        <div class="scan"></div>
+        <div class="m-card-head">
+          <span>SURFACE · 02</span>
+          <span class="icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span>
+        </div>
+        <h3 class="m-card-title">tavern</h3>
+        <p class="m-card-desc">Worlds, characters, lore AI assist.</p>
+        <div class="m-card-foot">
+          <span class="status"><span class="bar"></span>engine</span>
+          <span class="tags"><span>ROLEPLAY</span><span>ENGINE</span></span>
+        </div>
+      </a>
+
+      <a class="m-card reveal-m d5" id="tile-admin" href="admin.html" style="--card-accent: var(--amber); --delay: 3s;">
+        <div class="scan"></div>
+        <span class="owner-pill" data-i18n="index.tile.admin.tag">OWNER</span>
+        <div class="m-card-head">
+          <span>ADMIN</span>
+          <span class="icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5"/></svg></span>
+        </div>
+        <h3 class="m-card-title" data-i18n="index.tile.admin">admin console</h3>
+        <p class="m-card-desc" data-i18n="index.tile.admin.desc">Sysprompt, model, global config.</p>
+        <div class="m-card-foot">
+          <span class="status"><span class="bar"></span>ready</span>
+          <span class="tags"><span>GLOBAL</span><span>SETTINGS</span></span>
+        </div>
+      </a>
+    </div>
+
+    <!-- COMMANDS -->
+    <div class="m-section-head" id="commands">
+      <span>12 COMMANDS</span>
+      <span style="color: var(--accent);">ALL</span>
+    </div>
+    <div class="m-commands" id="cmd-list"></div>
+
+    <!-- BANNER -->
+    <div class="m-banner reveal-m d5">
+      <h3>Sẵn sàng?<br/><span class="red">Mời katas vào server.</span></h3>
+      <p>2 phút setup, hoạt động ngay trên mọi kênh.</p>
+      <a href="https://discord.com/oauth2/authorize?client_id=1505598795738644701&permissions=8&scope=bot+applications.commands"
+         target="_blank" rel="noopener" class="m-btn m-btn-primary">
+        MỜI VÀO SERVER →
+      </a>
+    </div>
   </div>
-</section>
+</main>
 
-<footer class="relative z-10 grid grid-cols-3 items-center mono text-[10px] tracking-kicker text-mute max-w-[1640px] mx-auto px-10 py-6 border-t border-line">
-  <span class="text-left">KATAS MOBILE · 6 SCREENS</span>
-  <span class="text-center flex items-center gap-2 justify-center"><span class="w-1.5 h-1.5 rounded-full bg-green dot-pulse"></span>iPHONE 14 · 390×844</span>
-  <a href="_index.html" class="text-right text-red hover:underline">← INDEX</a>
-</footer>
+<!-- Bottom tab bar — real links to existing pages -->
+<nav class="m-tabbar" aria-label="primary">
+  <a class="m-tab active" href="mobile.html" aria-current="page">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l9-9 9 9v9a2 2 0 0 1-2 2h-3v-7H10v7H7a2 2 0 0 1-2-2z"/></svg>
+    HOME
+  </a>
+  <a class="m-tab" href="servers.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M8 4v16"/></svg>
+    SERVERS
+  </a>
+  <a class="m-tab" href="tavern.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8z"/></svg>
+    TAVERN
+  </a>
+  <a class="m-tab" href="admin.html" id="tab-admin">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    ADMIN
+  </a>
+</nav>
 
+<script>
+// ── Particles seed (fewer than desktop for perf on mobile) ──
+(function seedParticles() {
+  const host = document.getElementById('bg-particles');
+  if (!host) return;
+  const N = 25;
+  const frag = document.createDocumentFragment();
+  for (let i = 0; i < N; i++) {
+    const p = document.createElement('div');
+    p.className = 'p';
+    p.style.setProperty('--x',  Math.random() * 100);
+    p.style.setProperty('--d',  10 + Math.random() * 14);
+    p.style.setProperty('--dl', Math.random() * 20);
+    frag.appendChild(p);
+  }
+  host.appendChild(frag);
+})();
+
+// ── RGB readout follows the active accent ──
+(function syncRgbReadout() {
+  const el = document.getElementById('rgb-readout');
+  if (!el) return;
+  const paint = () => {
+    const root = getComputedStyle(document.documentElement);
+    const r = root.getPropertyValue('--ambient-r').trim() || '224';
+    const g = root.getPropertyValue('--ambient-g').trim() || '69';
+    const b = root.getPropertyValue('--ambient-b').trim() || '69';
+    el.textContent = `${r}.${g}.${b}`;
+  };
+  paint();
+  document.addEventListener('kata:theme-change', paint);
+})();
+
+// ── Typewriter for /img prompt ──
+(function typewriter() {
+  const slot = document.getElementById('typed-prompt');
+  if (!slot) return;
+  const phrases = [
+    'a vietnamese pho cart at midnight, neon...',
+    'cyberpunk samurai standing in rain, 4k...',
+    'isometric pixel ramen shop at night...',
+    'holographic dragon coiled around tokyo tower...',
+  ];
+  let pi = 0;
+  function run() {
+    const phrase = phrases[pi];
+    let n = 0;
+    const type = () => {
+      if (n < phrase.length) {
+        slot.textContent = phrase.slice(0, ++n);
+        setTimeout(type, 38);
+      } else {
+        setTimeout(erase, 1800);
+      }
+    };
+    const erase = () => {
+      if (n > 0) {
+        slot.textContent = phrase.slice(0, --n);
+        setTimeout(erase, 18);
+      } else {
+        pi = (pi + 1) % phrases.length;
+        setTimeout(run, 250);
+      }
+    };
+    type();
+  }
+  run();
+})();
+
+// ── 12-command list render ──
+(function renderCommands() {
+  const COMMANDS = [
+    { n: '/img',     d: 'Generate ảnh từ prompt',     m: 'IMG' },
+    { n: '/edit',    d: 'Inpaint, sửa ảnh',           m: 'IMG' },
+    { n: '/upscale', d: 'Upscale 4x',                 m: 'IMG' },
+    { n: '/remix',   d: 'Variations từ seed',         m: 'IMG' },
+    { n: '/chat',    d: 'Conversation có memory',     m: 'TXT' },
+    { n: '/ask',     d: 'Q&A nhanh',                  m: 'TXT' },
+    { n: '/sum',     d: 'Tóm tắt link, file',         m: 'TXT' },
+    { n: '/code',    d: 'Code: explain, fix, write',  m: 'TXT' },
+    { n: '/t2v',     d: 'Text-to-video 10s',          m: 'VID' },
+    { n: '/i2v',     d: 'Animate ảnh tĩnh',           m: 'VID' },
+    { n: '/voice',   d: 'TTS, clone giọng',           m: 'AUD' },
+    { n: '/persona', d: 'Manage characters',          m: 'SYS' },
+  ];
+  const host = document.getElementById('cmd-list');
+  if (!host) return;
+  host.innerHTML = COMMANDS.map((c, i) => `
+    <a class="m-cmd" href="#commands">
+      <span class="num">${String(i + 1).padStart(2, '0')}</span>
+      <span class="name"><span class="slash">/</span>${c.n.slice(1)}</span>
+      <span class="desc">${c.d}</span>
+      <span class="tag">${c.m}</span>
+    </a>
+  `).join('');
+})();
+
+// ── Live wires: hide login CTA when authed; gate admin tab to owner ──
+(async function liveWires() {
+  try {
+    let auth = window.__kataMe;
+    if (!auth) {
+      const r = await fetch('/api/auth/me', { credentials: 'same-origin' });
+      if (r.ok) {
+        auth = await r.json();
+        window.__kataMe = auth;
+      }
+    }
+    if (auth?.user) {
+      const login = document.getElementById('login-cta');
+      if (login) login.style.display = 'none';
+    }
+
+    // Admin tab visibility (the /admin endpoint owner-gates server-side
+    // either way — we just hide the link for non-owners to keep the bar
+    // clean. Keeping the tile in dashboard since the desktop kept it).
+    const isOwner = !!auth?.user?.isOwner;
+    const adminTab = document.getElementById('tab-admin');
+    if (adminTab && !isOwner) adminTab.style.display = 'none';
+
+    // Servers count on the SURFACE · 01 card
+    const user = auth?.user;
+    if (!user || user.provider !== 'discord') return;
+    const k = await fetch('/api/kata/me', { credentials: 'same-origin' });
+    if (!k.ok) return;
+    const data = await k.json();
+    const managed = data?.counts?.managed ?? 0;
+    const tile = document.getElementById('tile-servers-count');
+    if (tile) tile.textContent = `${managed} ${managed === 1 ? 'SRV' : 'SRV'}`;
+  } catch (e) {
+    console.warn('kata mobile wire failed', e);
+  }
+})();
+</script>
 </body>
 </html>
