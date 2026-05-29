@@ -78,6 +78,43 @@ function App() {
     document.documentElement.style.setProperty('--tiltX', t.tilt + 'deg');
   }, [t.tilt]);
 
+  // ---- right-click drag to adjust board tilt ----
+  // Hold the right mouse button and drag vertically to tilt the board (drag up
+  // = flatter/lower angle, down = steeper). Keeps the Tweaks slider in sync.
+  // tiltRef mirrors t.tilt so the drag handler never reads a stale closure.
+  const tiltRef = useRef(t.tilt);
+  useEffect(() => { tiltRef.current = t.tilt; }, [t.tilt]);
+  const TILT_MIN = 30, TILT_MAX = 68;
+  useEffect(() => {
+    const onContext = (e) => e.preventDefault(); // suppress the browser menu
+    const onDown = (e) => {
+      if (e.button !== 2) return; // right button only
+      e.preventDefault();
+      const startY = e.clientY;
+      const startTilt = tiltRef.current;
+      document.body.style.cursor = 'ns-resize';
+      const onMove = (ev) => {
+        // 0.35°/px feels natural across the 30–68 range
+        const next = Math.round(startTilt + (ev.clientY - startY) * 0.35);
+        const clamped = Math.max(TILT_MIN, Math.min(TILT_MAX, next));
+        if (clamped !== tiltRef.current) setTweak('tilt', clamped);
+      };
+      const onUp = () => {
+        document.body.style.cursor = '';
+        window.removeEventListener('mousemove', onMove);
+        window.removeEventListener('mouseup', onUp);
+      };
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onUp);
+    };
+    window.addEventListener('contextmenu', onContext);
+    window.addEventListener('mousedown', onDown);
+    return () => {
+      window.removeEventListener('contextmenu', onContext);
+      window.removeEventListener('mousedown', onDown);
+    };
+  }, [setTweak]);
+
   // ---- fit-to-viewport scaling ----
   const fit = useCallback(() => {
     const el = sceneRef.current, box = fitRef.current;
