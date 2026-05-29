@@ -50,6 +50,81 @@
   .msg-bubble { background: rgba(21,17,13,0.55); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 12px 16px; line-height: 1.55; font-size: 14px; }
   .msg-bubble.assistant { background: rgba(138,79,255,0.04); border-color: rgba(138,79,255,0.20); }
 
+  /* ── Tavern Setting (owner) — two-column editor + live resolved rail ── */
+  .set-grid { display: grid; grid-template-columns: minmax(0,1fr) 380px; gap: 24px; align-items: start; }
+  .set-main { display: flex; flex-direction: column; gap: 16px; }
+  .set-card { background: rgba(21,17,13,0.45); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 22px; }
+  .set-sec { display: flex; align-items: center; gap: 11px; margin-bottom: 18px; }
+  .set-num { flex: 0 0 auto; width: 26px; height: 26px; display: grid; place-items: center; border-radius: 7px;
+    background: rgba(138,79,255,0.12); border: 1px solid rgba(138,79,255,0.30); color: #8a4fff;
+    font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; }
+  .set-sec-h { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: #f5ede0; }
+  .set-rule { height: 1px; background: rgba(255,255,255,0.08); margin: 20px 0; }
+  .set-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .set-grid3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
+  .set-flabel { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+  .set-flabel .l { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(245,237,224,0.5); }
+  .set-flabel .h { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 9px; letter-spacing: 0.04em; color: rgba(245,237,224,0.3); text-align: right; }
+
+  /* model trigger reuses .field; just add affordance */
+  .mp-trigger { cursor: pointer; }
+  .mp-trigger:hover { border-color: rgba(138,79,255,0.4); }
+
+  /* image fallback chain builder */
+  .chain { display: flex; flex-direction: column; gap: 8px; }
+  .chain-row { display: flex; align-items: center; gap: 10px; padding: 9px 11px; border-radius: 10px;
+    background: rgba(13,10,8,0.5); border: 1px solid rgba(255,255,255,0.08); transition: border-color 120ms ease; }
+  .chain-row:hover { border-color: rgba(255,255,255,0.16); }
+  .chain-rank { flex: 0 0 auto; width: 20px; height: 20px; display: grid; place-items: center; border-radius: 6px;
+    background: rgba(138,79,255,0.12); color: #8a4fff; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 10px; }
+  .chain-model { flex: 1; min-width: 0; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .chain-prov { flex: 0 0 auto; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 8.5px; letter-spacing: 0.1em; color: rgba(245,237,224,0.5); border: 1px solid rgba(255,255,255,0.14); border-radius: 5px; padding: 3px 7px; }
+  .chain-ctl { flex: 0 0 auto; display: flex; gap: 3px; }
+  .chain-ctl button { width: 24px; height: 24px; border-radius: 6px; color: rgba(245,237,224,0.5); font-size: 12px; display: grid; place-items: center; border: none; background: transparent; cursor: pointer; transition: all 120ms ease; }
+  .chain-ctl button:hover { background: rgba(255,255,255,0.06); color: #8a4fff; }
+  .chain-ctl button:disabled { opacity: 0.25; cursor: default; }
+  .chain-ctl .x:hover { color: #E04545; }
+  .chain-empty { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(245,237,224,0.3); padding: 11px 13px; border: 1px dashed rgba(255,255,255,0.14); border-radius: 10px; }
+  .chain-add { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 10px; margin-top: 2px;
+    border: 1px dashed rgba(138,79,255,0.30); border-radius: 10px; color: rgba(245,237,224,0.5); background: transparent;
+    font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; letter-spacing: 0.1em; cursor: pointer; transition: all 120ms ease; }
+  .chain-add:hover { border-color: rgba(138,79,255,0.5); color: #8a4fff; background: rgba(138,79,255,0.06); border-style: solid; }
+
+  /* live resolved preview rail */
+  .resolved { position: sticky; top: 88px; background: rgba(21,17,13,0.55); border: 1px solid rgba(138,79,255,0.20);
+    border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 16px; max-height: calc(100vh - 108px); overflow-y: auto; }
+  .rv-head { display: flex; flex-direction: column; gap: 2px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  .rv-kicker { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: #8a4fff; }
+  .rv-title { font-size: 14px; font-weight: 600; color: #f5ede0; }
+  .rv-block { display: flex; flex-direction: column; gap: 8px; }
+  .rv-bh { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(245,237,224,0.3); display: flex; justify-content: space-between; align-items: center; }
+  .rv-bh .c { color: #8a4fff; }
+  .rv-prompt { margin: 0; font-size: 12.5px; line-height: 1.55; color: rgba(245,237,224,0.7); background: rgba(13,10,8,0.5);
+    border-left: 2px solid #8a4fff; border-radius: 0 8px 8px 0; padding: 10px 12px; max-height: 140px; overflow-y: auto; white-space: pre-wrap; }
+  .rv-empty { margin: 0; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(245,237,224,0.3); padding: 10px 12px; border: 1px dashed rgba(255,255,255,0.14); border-radius: 8px; }
+  .rv-route { display: flex; flex-direction: column; gap: 6px; }
+  .rv-rrow { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 4px 10px; padding: 8px 11px; background: rgba(13,10,8,0.5); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; }
+  .rv-rl { grid-column: 1; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 9px; letter-spacing: 0.04em; text-transform: uppercase; color: rgba(245,237,224,0.3); }
+  .rv-rv { grid-column: 1; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11.5px; color: #f5ede0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rv-rp { grid-row: 1/3; grid-column: 2; align-self: center; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 8px; letter-spacing: 0.1em; color: rgba(245,237,224,0.5); border: 1px solid rgba(255,255,255,0.14); border-radius: 5px; padding: 3px 6px; }
+  .rv-chain { display: flex; flex-direction: column; gap: 5px; }
+  .rv-cnode { display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: rgba(245,237,224,0.7); background: rgba(13,10,8,0.5); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 6px 10px; }
+  .rv-cnode b { flex: 0 0 auto; width: 16px; height: 16px; display: grid; place-items: center; font-size: 9px; color: #8a4fff; background: rgba(138,79,255,0.12); border-radius: 4px; }
+  .rv-cnode .m { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rv-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.08); }
+  .rv-stat { display: flex; flex-direction: column; gap: 2px; }
+  .rv-sv { font-size: 20px; font-weight: 600; color: #f5ede0; line-height: 1; }
+  .rv-sl { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(245,237,224,0.3); }
+  .set-savebar { display: flex; align-items: center; justify-content: space-between; gap: 14px;
+    position: sticky; bottom: 12px; background: rgba(21,17,13,0.85); backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.10); border-radius: 12px; padding: 14px 18px; }
+  .set-savenote { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: 0.04em; color: rgba(245,237,224,0.5); }
+
+  @media (max-width: 1180px) {
+    .set-grid { grid-template-columns: 1fr; }
+    .resolved { position: static; max-height: none; }
+  }
+
   /* ── Mobile (≤768px): sidebar becomes a slide-in drawer, content goes single-column ── */
   #nav-toggle { display: none; }
   #nav-scrim { display: none; }
@@ -129,7 +204,7 @@
   <nav class="px-3 py-4 mono text-[11px] tracking-label uppercase">
     <a data-tab="worlds" class="block px-3 py-2 rounded-[8px] border border-transparent text-mute hover:text-ink cursor-pointer mb-1">▸ my worlds</a>
     <a data-tab="characters" class="block px-3 py-2 rounded-[8px] border border-transparent text-mute hover:text-ink cursor-pointer mb-1">▸ characters</a>
-    <a data-tab="defaults" id="nav-defaults" class="block px-3 py-2 rounded-[8px] border border-transparent text-mute hover:text-ink cursor-pointer mb-1">▸ tavern defaults <span class="text-gold">(owner)</span></a>
+    <a data-tab="defaults" id="nav-defaults" class="block px-3 py-2 rounded-[8px] border border-transparent text-mute hover:text-ink cursor-pointer mb-1">▸ tavern setting <span class="text-gold">(owner)</span></a>
   </nav>
   <div class="px-5 py-4 border-t border-line">
     <a href="index.html" class="mono text-[10px] tracking-label uppercase text-mute hover:text-ink">← my servers</a>
@@ -175,7 +250,7 @@ const elAuthMsg = document.getElementById('auth-warning-msg');
 const elAuthLogin = document.getElementById('auth-login-btn');
 const elNavDefaults = document.getElementById('nav-defaults');
 
-const TAB_LABEL = { worlds: 'my worlds', characters: 'characters', defaults: 'tavern defaults' };
+const TAB_LABEL = { worlds: 'my worlds', characters: 'characters', defaults: 'tavern setting' };
 
 function setTabUI() {
   document.querySelectorAll('[data-tab]').forEach(a => {
@@ -1004,7 +1079,35 @@ function openCharForm(existing) {
   });
 }
 
-// ── Tavern Defaults (owner-only) ─────────────────────────────
+// ── Tavern Setting (owner-only) ──────────────────────────────
+// Redesigned per the Claude Design handoff:
+//   - system prompt as a free textarea
+//   - model picks as provider-tabbed dropdowns (reuse KataShell.modelPicker)
+//   - scene / cover image as an ordered fal.ai fallback CHAIN (add/reorder/remove)
+//   - a live "resolved · what the engine sees" rail filling the right side
+// Mode-chat / mode-rpg / output-rules were removed from the UI on purpose
+// (they fall through to engine defaults; the PATCH simply omits them, so any
+// previously-stored values are left untouched rather than wiped).
+
+// Engine-default placeholders (mirror api/_lib/tavern.js).
+const SET_DEFAULTS = {
+  chatModel: 'gemini-3.1-pro-preview',
+  loreModel: 'grok-4-fast',
+  worldGenModel: 'grok-4-fast',
+  subjectModel: 'grok-4-fast',
+  turnTemperature: '0.85',
+  turnMaxTokens: '16000',
+  memoryWindowSize: '50',
+  sceneImageModels: ['fal-ai/nano-banana-pro', 'fal-ai/flux/schnell'],
+  coverImageModels: ['fal-ai/nano-banana-pro', 'fal-ai/flux/schnell'],
+};
+const SET_MODEL_ROWS = [
+  { key: 'chatModel', label: 'storyteller', hint: 'drives every roleplay turn' },
+  { key: 'loreModel', label: 'lore / rules', hint: 'keeps canon & rules straight' },
+  { key: 'worldGenModel', label: 'whole-world', hint: 'expands the world between scenes' },
+  { key: 'subjectModel', label: 'scene subject', hint: 'pulls subjects for image prompts' },
+];
+
 async function renderDefaults() {
   if (!isOwner) {
     elContent.innerHTML = '<div class="row text-mute">Owner only.</div>';
@@ -1015,100 +1118,190 @@ async function renderDefaults() {
   if (!data) return;
   clearAuthWarn();
   const t = data.tavern ?? {};
-  elCounts.textContent = 'global tavern defaults · áp dụng cho mọi world (per-world override vẫn thắng)';
+  elCounts.textContent = 'global tavern setting · áp dụng cho mọi world (per-world override vẫn thắng)';
 
-  function fld(name, label, hint, big) {
-    const tag = big ? 'textarea' : 'input';
-    const valAttr = big ? '' : ` value="${escapeHtml(t[name] ?? '')}"`;
-    const inner = big ? escapeHtml(t[name] ?? '') : '';
-    const rows = big ? ' rows="8"' : '';
-    return `
-      <label class="block">
-        <div class="flex items-center justify-between mb-1">
-          <div class="mono text-[10px] tracking-label uppercase text-mute">${escapeHtml(label)}</div>
-          <span class="mono text-[9px] text-mute2">${escapeHtml(hint)}</span>
-        </div>
-        <${tag} class="field" data-t="${escapeHtml(name)}"${valAttr}${rows}>${inner}</${tag}>
-      </label>`;
-  }
+  // Image fallback chains live in JS state (edited via the chain builder).
+  const chains = {
+    sceneImageModels: Array.isArray(t.sceneImageModels) ? t.sceneImageModels.slice() : [],
+    coverImageModels: Array.isArray(t.coverImageModels) ? t.coverImageModels.slice() : [],
+  };
+
+  const provDisplay = (v) => (v && v.includes(':') ? v.split(':').slice(1).join(':') : v);
+  const provName = (v) => (!v ? 'default' : v.includes(':') ? v.split(':')[0] : 'yunwu');
 
   elContent.innerHTML = `
-    <div class="row max-w-4xl space-y-4">
-      <div class="mono text-[11px] text-mute">
-        Bỏ trống / xoá rỗng → field đó rơi xuống engine code default. Per-world override luôn thắng. Mọi roleplay turn dùng giá trị resolved này.
-      </div>
-      ${fld('storytellerSystemPrompt', 'storyteller system prompt', 'thay nguyên skeleton novelist', true)}
-      <div class="grid grid-cols-2 gap-3">
-        ${fld('modeInstructionChat', 'mode · chat', '', true)}
-        ${fld('modeInstructionRpg', 'mode · rpg', '', true)}
-      </div>
-      ${fld('outputRules', 'output rules', 'no-prefix, pacing, length...', true)}
-      <div class="grid grid-cols-2 gap-3">
-        ${fld('imagePromptTemplate', 'image prompt template', '{character_base}, {keywords}, {style}', false)}
-        ${fld('imageNegativePrompt', 'image negative prompt', 'low quality, blurry...', false)}
+    <div class="set-grid">
+      <div class="set-main">
+        <div class="mono text-[11px] text-mute" style="line-height:1.6">
+          Baseline áp dụng cho mọi world. Bỏ trống → field rơi xuống engine code default · per-world override luôn thắng.
+        </div>
+
+        <section class="set-card">
+          <div class="set-sec"><span class="set-num">01</span><span class="set-sec-h">narration</span></div>
+          <div class="set-flabel"><span class="l">system prompt</span><span class="h">empty → engine novelist default</span></div>
+          <textarea class="field" data-t="storytellerSystemPrompt" rows="9" placeholder="Describe how the storyteller should narrate, stay in character, pace scenes…">${escapeHtml(t.storytellerSystemPrompt ?? '')}</textarea>
+        </section>
+
+        <section class="set-card">
+          <div class="set-sec"><span class="set-num">02</span><span class="set-sec-h">models</span></div>
+          <div class="set-grid2">
+            ${SET_MODEL_ROWS.map((m) => `
+              <div>
+                <div class="set-flabel"><span class="l">${escapeHtml(m.label)}</span><span class="h">${escapeHtml(m.hint)}</span></div>
+                ${modelPickerHtml({ scope: 'tmp', key: m.key }, t[m.key], SET_DEFAULTS[m.key],
+                  m.key === 'subjectModel' ? TAVERN_SUBJECT_MODELS_BY_PROVIDER : TAVERN_CHAT_MODELS_BY_PROVIDER)}
+              </div>`).join('')}
+          </div>
+
+          <div class="set-rule"></div>
+
+          <div class="set-flabel"><span class="l">scene image chain</span><span class="h">fal.ai · tried top → bottom, first success wins</span></div>
+          <div data-chain="sceneImageModels"></div>
+
+          <div style="height:14px"></div>
+
+          <div class="set-flabel"><span class="l">cover image chain</span><span class="h">fal.ai · tried top → bottom, first success wins</span></div>
+          <div data-chain="coverImageModels"></div>
+        </section>
+
+        <section class="set-card">
+          <div class="set-sec"><span class="set-num">03</span><span class="set-sec-h">scene imagery</span></div>
+          <div class="set-grid2">
+            <div>
+              <div class="set-flabel"><span class="l">image prompt template</span><span class="h">{character_base}, {keywords}, {style}</span></div>
+              <input class="field" data-t="imagePromptTemplate" value="${escapeHtml(t.imagePromptTemplate ?? '')}" placeholder="{character_base}, {keywords}, {style}" />
+            </div>
+            <div>
+              <div class="set-flabel"><span class="l">image negative prompt</span><span class="h">low quality, blurry…</span></div>
+              <input class="field" data-t="imageNegativePrompt" value="${escapeHtml(t.imageNegativePrompt ?? '')}" placeholder="low quality, blurry, extra fingers…" />
+            </div>
+          </div>
+        </section>
+
+        <section class="set-card">
+          <div class="set-sec"><span class="set-num">04</span><span class="set-sec-h">tuning</span></div>
+          <div class="set-grid3">
+            <div>
+              <div class="set-flabel"><span class="l">turn temperature</span><span class="h">0 – 2</span></div>
+              <input class="field" data-tnum="turnTemperature" type="number" step="0.05" min="0" max="2" value="${typeof t.turnTemperature === 'number' ? t.turnTemperature : ''}" placeholder="${SET_DEFAULTS.turnTemperature}" />
+            </div>
+            <div>
+              <div class="set-flabel"><span class="l">turn max tokens</span><span class="h">per reply</span></div>
+              <input class="field" data-tnum="turnMaxTokens" type="number" min="1" max="32000" value="${typeof t.turnMaxTokens === 'number' ? t.turnMaxTokens : ''}" placeholder="${SET_DEFAULTS.turnMaxTokens}" />
+            </div>
+            <div>
+              <div class="set-flabel"><span class="l">memory window</span><span class="h">turns kept</span></div>
+              <input class="field" data-tnum="memoryWindowSize" type="number" min="1" max="500" value="${typeof t.memoryWindowSize === 'number' ? t.memoryWindowSize : ''}" placeholder="${SET_DEFAULTS.memoryWindowSize}" />
+            </div>
+          </div>
+        </section>
+
+        <div class="set-savebar">
+          <span class="set-savenote" id="set-savenote">unsaved · per-world override still wins</span>
+          <button id="defaults-save" class="btn btn-primary">save setting</button>
+        </div>
       </div>
 
-      <div class="row" style="background:rgba(138,79,255,0.04);border-color:rgba(138,79,255,0.25)">
-        <div class="mono text-[10px] tracking-label uppercase text-purple mb-3">models · global default</div>
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <div class="mono text-[10px] tracking-label uppercase text-mute mb-1">storyteller model</div>
-            ${modelPickerHtml({ scope: 'tmp', key: 'chatModel' }, t.chatModel, 'gemini-3.1-pro-preview', TAVERN_CHAT_MODELS_BY_PROVIDER)}
-          </div>
-          <div>
-            <div class="mono text-[10px] tracking-label uppercase text-mute mb-1">lore/rules AI model</div>
-            ${modelPickerHtml({ scope: 'tmp', key: 'loreModel' }, t.loreModel, 'grok-4-fast', TAVERN_CHAT_MODELS_BY_PROVIDER)}
-          </div>
-        </div>
-        <div class="grid grid-cols-2 gap-3 mt-3">
-          <div>
-            <div class="mono text-[10px] tracking-label uppercase text-mute mb-1">whole-world AI model</div>
-            ${modelPickerHtml({ scope: 'tmp', key: 'worldGenModel' }, t.worldGenModel, 'grok-4-fast', TAVERN_CHAT_MODELS_BY_PROVIDER)}
-          </div>
-          <div>
-            <div class="mono text-[10px] tracking-label uppercase text-mute mb-1">scene-subject extractor</div>
-            ${modelPickerHtml({ scope: 'tmp', key: 'subjectModel' }, t.subjectModel, 'grok-4-fast', TAVERN_SUBJECT_MODELS_BY_PROVIDER)}
-          </div>
-        </div>
-        <label class="block mt-3">
-          <div class="flex items-center justify-between mb-1">
-            <div class="mono text-[10px] tracking-label uppercase text-mute">scene image fal models (comma-separated chain, fallback in order)</div>
-            <span class="mono text-[9px] text-mute2">default: fal-ai/flux/schnell, fal-ai/fast-sdxl</span>
-          </div>
-          <input class="field" data-tarr="sceneImageModels" value="${escapeHtml((t.sceneImageModels ?? []).join(', '))}" placeholder="fal-ai/flux/schnell, fal-ai/fast-sdxl" />
-        </label>
-        <label class="block mt-3">
-          <div class="flex items-center justify-between mb-1">
-            <div class="mono text-[10px] tracking-label uppercase text-mute">cover image fal models</div>
-            <span class="mono text-[9px] text-mute2">default: fal-ai/flux/schnell, fal-ai/fast-sdxl</span>
-          </div>
-          <input class="field" data-tarr="coverImageModels" value="${escapeHtml((t.coverImageModels ?? []).join(', '))}" placeholder="fal-ai/flux/schnell, fal-ai/fast-sdxl" />
-        </label>
-      </div>
-
-      <div class="row" style="background:rgba(138,79,255,0.04);border-color:rgba(138,79,255,0.25)">
-        <div class="mono text-[10px] tracking-label uppercase text-purple mb-3">tuning</div>
-        <div class="grid grid-cols-3 gap-3">
-          <label class="block">
-            <div class="mono text-[10px] tracking-label uppercase text-mute mb-1">turn temperature (0..2)</div>
-            <input class="field" data-tnum="turnTemperature" type="number" step="0.05" min="0" max="2" value="${typeof t.turnTemperature === 'number' ? t.turnTemperature : ''}" placeholder="0.85" />
-          </label>
-          <label class="block">
-            <div class="mono text-[10px] tracking-label uppercase text-mute mb-1">turn max tokens</div>
-            <input class="field" data-tnum="turnMaxTokens" type="number" min="1" max="32000" value="${typeof t.turnMaxTokens === 'number' ? t.turnMaxTokens : ''}" placeholder="1200" />
-          </label>
-          <label class="block">
-            <div class="mono text-[10px] tracking-label uppercase text-mute mb-1">memory window (turns)</div>
-            <input class="field" data-tnum="memoryWindowSize" type="number" min="1" max="500" value="${typeof t.memoryWindowSize === 'number' ? t.memoryWindowSize : ''}" placeholder="50" />
-          </label>
-        </div>
-      </div>
-
-      <div class="flex justify-end pt-3 border-t border-line">
-        <button id="defaults-save" class="btn btn-primary">save defaults</button>
-      </div>
+      <div class="resolved" id="resolved-rail"></div>
     </div>`;
 
+  // ── live resolved preview ───────────────────────────────────
+  const rail = document.getElementById('resolved-rail');
+  function refreshPreview() {
+    const sys = (elContent.querySelector('[data-t="storytellerSystemPrompt"]')?.value ?? '').trim();
+    const modelVal = (k) => (elContent.querySelector(`input[data-tmp="${k}"]`)?.value ?? '').trim();
+    const numVal = (k) => {
+      const v = (elContent.querySelector(`[data-tnum="${k}"]`)?.value ?? '').trim();
+      return v || SET_DEFAULTS[k];
+    };
+    const overridden = SET_MODEL_ROWS.filter((m) => modelVal(m.key)).length;
+
+    const routeRows = SET_MODEL_ROWS.map((m) => {
+      const v = modelVal(m.key);
+      const disp = v ? provDisplay(v) : `default · ${SET_DEFAULTS[m.key]}`;
+      return `<div class="rv-rrow">
+        <span class="rv-rl">${escapeHtml(m.label)}</span>
+        <span class="rv-rv">${escapeHtml(disp)}</span>
+        <span class="rv-rp">${escapeHtml(provName(v))}</span>
+      </div>`;
+    }).join('');
+
+    const sceneChain = chains.sceneImageModels;
+    const chainHtml = sceneChain.length === 0
+      ? '<span class="rv-empty">engine default</span>'
+      : sceneChain.map((m, i) => `<span class="rv-cnode"><b>${i + 1}</b><span class="m">${escapeHtml(m)}</span><i style="font-style:normal;font-size:8px;letter-spacing:0.1em;color:rgba(245,237,224,0.3)">fal.ai</i></span>`).join('');
+
+    rail.innerHTML = `
+      <div class="rv-head"><span class="rv-kicker">resolved</span><span class="rv-title">what the engine sees</span></div>
+      <div class="rv-block">
+        <div class="rv-bh">system prompt</div>
+        ${sys ? `<p class="rv-prompt">${escapeHtml(sys)}</p>` : '<p class="rv-empty">empty → falls through to engine code default</p>'}
+      </div>
+      <div class="rv-block">
+        <div class="rv-bh">model routing <span class="c">${overridden}/4 overridden</span></div>
+        <div class="rv-route">${routeRows}</div>
+      </div>
+      <div class="rv-block">
+        <div class="rv-bh">scene image chain</div>
+        <div class="rv-chain">${chainHtml}</div>
+      </div>
+      <div class="rv-stats">
+        <div class="rv-stat"><span class="rv-sv">${escapeHtml(numVal('turnTemperature'))}</span><span class="rv-sl">temperature</span></div>
+        <div class="rv-stat"><span class="rv-sv">${escapeHtml(numVal('turnMaxTokens'))}</span><span class="rv-sl">max tokens</span></div>
+        <div class="rv-stat"><span class="rv-sv">${escapeHtml(numVal('memoryWindowSize'))}</span><span class="rv-sl">memory</span></div>
+      </div>`;
+  }
+
+  // ── image fallback chain builder ────────────────────────────
+  function renderChain(key) {
+    const host = elContent.querySelector(`[data-chain="${key}"]`);
+    if (!host) return;
+    const arr = chains[key];
+    const rows = arr.map((m, i) => `
+      <div class="chain-row">
+        <span class="chain-rank">${i + 1}</span>
+        <span class="chain-model">${escapeHtml(m)}</span>
+        <span class="chain-prov">fal.ai</span>
+        <div class="chain-ctl">
+          <button type="button" data-mv="up" data-i="${i}" ${i === 0 ? 'disabled' : ''} aria-label="up">↑</button>
+          <button type="button" data-mv="down" data-i="${i}" ${i === arr.length - 1 ? 'disabled' : ''} aria-label="down">↓</button>
+          <button type="button" class="x" data-rm="${i}" aria-label="remove">×</button>
+        </div>
+      </div>`).join('');
+    host.innerHTML = `
+      <div class="chain">${arr.length ? rows : '<div class="chain-empty">no models · engine default sẽ được dùng</div>'}</div>
+      <button type="button" class="chain-add" data-add="${key}">+ add image model</button>`;
+
+    host.querySelectorAll('[data-rm]').forEach((b) => b.addEventListener('click', () => {
+      chains[key].splice(Number(b.dataset.rm), 1); renderChain(key); refreshPreview();
+    }));
+    host.querySelectorAll('[data-mv]').forEach((b) => b.addEventListener('click', () => {
+      const i = Number(b.dataset.i); const j = b.dataset.mv === 'up' ? i - 1 : i + 1;
+      if (j < 0 || j >= chains[key].length) return;
+      const a = chains[key]; [a[i], a[j]] = [a[j], a[i]]; renderChain(key); refreshPreview();
+    }));
+    const addBtn = host.querySelector('[data-add]');
+    if (addBtn) addBtn.addEventListener('click', () => {
+      window.KataShell.modelPicker(addBtn, {
+        byProvider: TAVERN_FAL_IMAGE_MODELS_BY_PROVIDER,
+        placeholder: '',
+        onApply: (v) => {
+          const id = (v || '').trim();
+          if (!id || chains[key].includes(id)) return;
+          if (chains[key].length >= 8) { flash('tối đa 8 model / chain', 'error'); return; }
+          chains[key].push(id); renderChain(key); refreshPreview();
+        },
+      });
+    });
+  }
+
+  renderChain('sceneImageModels');
+  renderChain('coverImageModels');
+  wireModelPickers(refreshPreview);
+  elContent.querySelectorAll('[data-t], [data-tnum]').forEach((el) => el.addEventListener('input', refreshPreview));
+  refreshPreview();
+
+  // ── save ────────────────────────────────────────────────────
   document.getElementById('defaults-save').addEventListener('click', async () => {
     const body = {};
     elContent.querySelectorAll('[data-t]').forEach((el) => {
@@ -1119,21 +1312,24 @@ async function renderDefaults() {
       const v = (el.value ?? '').trim();
       body[el.dataset.tmp] = v || null;
     });
-    elContent.querySelectorAll('[data-tarr]').forEach((el) => {
-      const arr = el.value.split(',').map((s) => s.trim()).filter(Boolean);
-      body[el.dataset.tarr] = arr.length ? arr : null;
-    });
+    body.sceneImageModels = chains.sceneImageModels.length ? chains.sceneImageModels.slice() : null;
+    body.coverImageModels = chains.coverImageModels.length ? chains.coverImageModels.slice() : null;
     elContent.querySelectorAll('[data-tnum]').forEach((el) => {
       const v = el.value.trim();
       if (!v) { body[el.dataset.tnum] = null; return; }
       const n = Number(v);
       body[el.dataset.tnum] = Number.isFinite(n) ? n : null;
     });
+    const btn = document.getElementById('defaults-save');
+    btn.disabled = true; btn.textContent = 'saving…';
     const r = await fetchJson('/api/kata/admin/tavern-config', { method: 'PATCH', body });
-    if (r) flash('defaults saved', 'success');
+    btn.disabled = false; btn.textContent = 'save setting';
+    if (r) {
+      flash('setting saved', 'success');
+      const note = document.getElementById('set-savenote');
+      if (note) note.textContent = '✓ saved · applied to every world';
+    }
   });
-
-  wireModelPickers();
 }
 
 function flash(msg, kind) { window.KataShell?.toast(msg, kind ? { kind } : undefined); }
@@ -1209,7 +1405,9 @@ function modelPickerHtml(field, currentValue, placeholder, byProvider) {
 }
 
 // Wire all model-picker triggers in elContent (idempotent).
-function wireModelPickers() {
+// `onApply` (optional) fires after a pick so callers (e.g. the Setting page's
+// live preview) can react; the picker still writes hiddenInput + labelEl itself.
+function wireModelPickers(onApply) {
   elContent.querySelectorAll('[data-mp-trigger]').forEach((btn) => {
     if (btn.dataset.mpWired) return;
     btn.dataset.mpWired = '1';
@@ -1226,6 +1424,7 @@ function wireModelPickers() {
         placeholder: btn.dataset.mpPlaceholder || '',
         hiddenInput,
         labelEl,
+        onApply: typeof onApply === 'function' ? onApply : undefined,
       });
     });
   });
