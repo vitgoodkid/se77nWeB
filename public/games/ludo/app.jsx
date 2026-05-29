@@ -1,7 +1,7 @@
 /* global React, ReactDOM, Engine, Board, THEMES,
    useTweaks, TweaksPanel, TweakSection, TweakSelect, TweakSlider, TweakToggle, TweakButton */
 const { useState, useRef, useReducer, useEffect, useLayoutEffect, useCallback } = React;
-const { PLAYERS, cellOf, STEP_DONE, SAFE, CENTER } = Engine;
+const { cellOf, STEP_DONE, HOME_DOOR_STEP, CENTER, FACTIONS, FACTION_ORDER, START_IDX, RING, RING_LEN } = Engine;
 
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 const PIPS = { 1:[4], 2:[0,8], 3:[0,4,8], 4:[0,2,6,8], 5:[0,2,4,6,8], 6:[0,2,3,5,6,8] };
@@ -13,28 +13,63 @@ function Die({ value, rolling }) {
       React.createElement('div', { key: i, className: 'pip' + (on.has(i) ? ' on' : '') })));
 }
 
-function HUD({ state, mode }) {
-  const order = ['tl','tr','br','bl'];
-  return PLAYERS.map((pl, p) => {
+// ---------- HUD player cards (4 corners) ----------
+function HUD({ state, mode, onHover }) {
+  const order = ['tl', 'tr', 'br', 'bl'];
+  return state.seats.map((st, p) => {
     const homeCount = state.horses[p].filter(h => h.step >= STEP_DONE).length;
     const active = state.turn === p && state.winner == null;
     const you = mode === 'hotseat' ? false : p === 0;
-    const cls = ['pcard']; if (active) cls.push('active'); else cls.push('dimmed');
+    const stt = state.status[p];
+    const cls = ['pcard']; cls.push(active ? 'active' : 'dimmed');
+    const debuffs = [];
+    if (stt.skip > 0) debuffs.push('⏭️');
+    if (stt.curse > 0) debuffs.push('⛓️');
     return React.createElement('div', { key: p, className: 'hud-corner ' + order[p] },
-      React.createElement('div', { className: cls.join(' '), style: { ['--pc']: pl.hue } },
+      React.createElement('div', { className: cls.join(' '), style: { ['--pc']: st.hue },
+        onMouseEnter: onHover ? (e) => onHover({ seat: p, faction: st.faction }, e) : undefined,
+        onMouseMove: onHover ? (e) => onHover({ seat: p, faction: st.faction }, e) : undefined,
+        onMouseLeave: onHover ? () => onHover(null) : undefined },
         React.createElement('div', { className: 'top' },
-          React.createElement('div', { className: 'crest' }),
+          React.createElement('div', { className: 'crest' }, st.icon),
           React.createElement('div', {},
-            React.createElement('div', { className: 'nm' }, pl.name),
-            React.createElement('div', { className: 'sub' }, ['Hỏa','Quang','Mộc','Băng'][p] + ' tộc'))),
+            React.createElement('div', { className: 'nm' }, st.name),
+            React.createElement('div', { className: 'sub' }, st.skill))),
         React.createElement('div', { className: 'pips' },
           state.horses[p].map((h, i) =>
             React.createElement('div', { key: i, className: 'p' + (h.step >= STEP_DONE ? ' home' : '') },
               h.step >= STEP_DONE ? '★' : ''))),
         React.createElement('div', { className: 'bot' },
-          React.createElement('div', { className: 'tag' + (you ? ' you' : '') }, you ? 'Bạn' : (mode==='hotseat'?'Người':'AI')),
-          React.createElement('div', { className: 'sub' }, 'Về đích ' + homeCount + '/4'))));
+          React.createElement('div', { className: 'tag' + (you ? ' you' : '') }, you ? 'Bạn' : (mode === 'hotseat' ? 'Người' : 'AI')),
+          React.createElement('div', { className: 'sub' },
+            debuffs.length ? debuffs.join(' ') + ' ' : '', 'Đích ' + homeCount + '/4'))));
   });
+}
+
+// ---------- Hero Wiki modal ----------
+function HeroWiki({ open, onClose, seats }) {
+  if (!open) return null;
+  const inPlay = new Set((seats || []).map(s => s.faction));
+  return React.createElement('div', { className: 'wiki-overlay', onClick: onClose },
+    React.createElement('div', { className: 'wiki', onClick: (e) => e.stopPropagation() },
+      React.createElement('div', { className: 'wiki-head' },
+        React.createElement('h2', {}, '📖 Từ Điển Hệ Phái'),
+        React.createElement('button', { className: 'wiki-x', onClick: onClose }, '✕')),
+      React.createElement('div', { className: 'wiki-grid' },
+        FACTION_ORDER.map((k) => {
+          const f = FACTIONS[k];
+          return React.createElement('div', { key: k, className: 'wiki-card' + (inPlay.has(k) ? ' active' : ''),
+            style: { ['--pc']: f.hue } },
+            React.createElement('div', { className: 'wiki-card-top' },
+              React.createElement('div', { className: 'wiki-chip' }, f.icon),
+              React.createElement('div', {},
+                React.createElement('div', { className: 'wiki-name' }, f.name),
+                React.createElement('div', { className: 'wiki-skill' }, f.skill))),
+            React.createElement('div', { className: 'wiki-desc' }, f.desc),
+            inPlay.has(k) && React.createElement('div', { className: 'wiki-badge' }, 'Đang chơi'));
+        })),
+      React.createElement('div', { className: 'wiki-foot' },
+        'Luật chung: ra 6 để xuất quân & đi thêm lượt · ba lần 6 = Thiên Lôi (trừ Quý Tộc) · cửa chuồng cần ra 6 · ra 1 = Nhót về Đỉnh · không nhảy qua đầu quân khác.')));
 }
 
 const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
@@ -55,16 +90,23 @@ function App() {
   const [rolling, setRolling] = useState(false);
   const [busy, setBusy] = useState(false);
   const [movable, setMovable] = useState({ horses: new Set(), landing: null });
-  const [status, setStatus] = useState('Bấm “Đổ xúc xắc” để bắt đầu');
+  const [status, setStatus] = useState('Bấm "Đổ xúc xắc" để bắt đầu');
   const [toast, setToast] = useState(null);
-  const [poofs, setPoofs] = useState([]);
+  const [fx, setFx] = useState([]);
+  const [badges, setBadges] = useState({});       // {id: 'bleed'|'dizzy'|'frozen'|'curse'}
+  const [logOpen, setLogOpen] = useState(true);
+  const [wikiOpen, setWikiOpen] = useState(false);
+  const [tip, setTip] = useState(null);           // {x,y,faction}
   const fitRef = useRef(null);
   const sceneRef = useRef(null);
-  const poofId = useRef(0);
+  const fxId = useRef(0);
 
   const mode = t.opponents;
   const isAI = (p) => mode === 'ai' && p !== 0;
-  const aiDelay = { 'nhanh': 260, 'vừa': 480, 'chậm': 820 }[t.aiSpeed] || 480;
+  const aiDelay = { 'nhanh': 240, 'vừa': 460, 'chậm': 800 }[t.aiSpeed] || 460;
+
+  // expose the Hero Wiki toggle to the HTML toolbar button
+  useEffect(() => { window.__openWiki = () => setWikiOpen(o => !o); return () => { delete window.__openWiki; }; }, []);
 
   // ---- theme ----
   useEffect(() => {
@@ -74,123 +116,159 @@ function App() {
     root.dataset.mat = th.vars['--standee'];
     root.style.setProperty('--center-glow-strength', t.extraGlow ? '1' : '0');
   }, [t.variant, t.extraGlow]);
-  useEffect(() => {
-    document.documentElement.style.setProperty('--tiltX', t.tilt + 'deg');
-  }, [t.tilt]);
+  useEffect(() => { document.documentElement.style.setProperty('--tiltX', t.tilt + 'deg'); }, [t.tilt]);
 
-  // ---- right-click drag to orbit the board ----
-  // Hold the right mouse button and drag to orbit the board: kéo dọc đổi độ
-  // nghiêng (lên = phẳng hơn, xuống = dựng hơn), kéo ngang xoay quanh trục đứng.
-  // tiltRef/rotRef mirror the live values so the drag handler never reads a
-  // stale closure. Tốc độ đã giảm nhẹ cho dễ canh hướng.
+  // ---- right-click drag to orbit ----
   const tiltRef = useRef(t.tilt);
   useEffect(() => { tiltRef.current = t.tilt; }, [t.tilt]);
-  const rotRef = useRef(45); // matches --rotZ default in styles.css
+  const rotRef = useRef(45);
   const TILT_MIN = 30, TILT_MAX = 68;
   useEffect(() => {
-    const onContext = (e) => e.preventDefault(); // suppress the browser menu
+    const onContext = (e) => e.preventDefault();
     const onDown = (e) => {
-      if (e.button !== 2) return; // right button only
+      if (e.button !== 2) return;
       e.preventDefault();
-      const startX = e.clientX, startY = e.clientY;
-      const startTilt = tiltRef.current;
-      const startRot = rotRef.current;
+      const startX = e.clientX, startY = e.clientY, startTilt = tiltRef.current, startRot = rotRef.current;
       document.body.style.cursor = 'grabbing';
       const onMove = (ev) => {
-        // 0.12°/px — chậm hơn trước, kéo mượt qua dải 30–68°
-        const nextTilt = Math.round(startTilt + (ev.clientY - startY) * 0.12);
-        const clampedTilt = Math.max(TILT_MIN, Math.min(TILT_MAX, nextTilt));
-        if (clampedTilt !== tiltRef.current) setTweak('tilt', clampedTilt);
-        // kéo ngang → xoay quanh trục đứng của bàn cờ (rotateZ), tự do mọi hướng.
-        // Không gọi fit() ở đây: khung bao lớn nhất ở 45° (đã fit sẵn), mọi góc
-        // khác chỉ nhỏ hơn nên không tràn — gọi fit() chỉ gây phóng to nhấp nháy
-        // khiến tưởng là không xoay.
+        const nextTilt = Math.max(TILT_MIN, Math.min(TILT_MAX, Math.round(startTilt + (ev.clientY - startY) * 0.12)));
+        if (nextTilt !== tiltRef.current) setTweak('tilt', nextTilt);
         const nextRot = Math.round(startRot + (ev.clientX - startX) * 0.12);
-        if (nextRot !== rotRef.current) {
-          rotRef.current = nextRot;
-          document.documentElement.style.setProperty('--rotZ', nextRot + 'deg');
-        }
+        if (nextRot !== rotRef.current) { rotRef.current = nextRot; document.documentElement.style.setProperty('--rotZ', nextRot + 'deg'); }
       };
-      const onUp = () => {
-        document.body.style.cursor = '';
-        window.removeEventListener('mousemove', onMove);
-        window.removeEventListener('mouseup', onUp);
-      };
-      window.addEventListener('mousemove', onMove);
-      window.addEventListener('mouseup', onUp);
+      const onUp = () => { document.body.style.cursor = ''; window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
+      window.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp);
     };
-    window.addEventListener('contextmenu', onContext);
-    window.addEventListener('mousedown', onDown);
-    return () => {
-      window.removeEventListener('contextmenu', onContext);
-      window.removeEventListener('mousedown', onDown);
-    };
+    window.addEventListener('contextmenu', onContext); window.addEventListener('mousedown', onDown);
+    return () => { window.removeEventListener('contextmenu', onContext); window.removeEventListener('mousedown', onDown); };
   }, [setTweak]);
 
-  // ---- fit-to-viewport scaling ----
+  // ---- fit-to-viewport ----
   const fit = useCallback(() => {
     const el = sceneRef.current, box = fitRef.current;
     if (!el || !box) return;
     box.style.transform = 'scale(1)';
     const r = el.getBoundingClientRect();
-    const s = Math.min((window.innerWidth * 0.98) / r.width,
-                       (window.innerHeight * 0.98) / (r.height + 70));
+    const s = Math.min((window.innerWidth * 0.96) / r.width, (window.innerHeight * 0.96) / (r.height + 90));
     box.style.transform = 'scale(' + Math.max(0.3, Math.min(s, 2.1)) + ')';
   }, []);
   useLayoutEffect(() => { fit(); }, [t.tilt]);
-  useEffect(() => {
-    fit();
-    window.addEventListener('resize', fit);
-    return () => window.removeEventListener('resize', fit);
-  }, [fit]);
+  useEffect(() => { fit(); window.addEventListener('resize', fit); return () => window.removeEventListener('resize', fit); }, [fit]);
 
-  const flash = (msg) => { setToast(msg); setTimeout(() => setToast(null), 1600); };
+  const flash = (msg) => { setToast(msg); setTimeout(() => setToast(null), 1500); };
 
-  // ---- capture resolution at a horse's final cell ----
-  function resolveCapture(g, h) {
-    if (h.step < 0 || h.step > 50) return [];
-    const cell = cellOf(h.player, h.step);
-    if (SAFE.has(cell.join(','))) return [];
-    const enemies = Engine.horseAt(g, cell, h).filter(o => o.player !== h.player);
-    const out = enemies.map(o => ({ o, cell: cellOf(o.player, o.step) }));
-    enemies.forEach(o => { o.step = -1; });
-    return out;
+  function pushLog(line) {
+    const g = gameRef.current;
+    if (!line) return;
+    g.log.unshift({ id: ++fxId.current, line });
+    if (g.log.length > 40) g.log.length = 40;
+  }
+  function spawnFx(type, cell, extra) {
+    const id = ++fxId.current;
+    const f = { id, type, r: cell[0], c: cell[1], ...(extra || {}) };
+    setFx(list => [...list, f]);
+    setTimeout(() => setFx(list => list.filter(x => x.id !== id)), 900);
+  }
+  function setBadge(id, kind, turns) {
+    setBadges(b => ({ ...b, [id]: kind }));
+    setTimeout(() => setBadges(b => { const n = { ...b }; if (n[id] === kind) delete n[id]; return n; }), (turns || 1) * 1500 + 600);
   }
 
-  const landingSet = (g, moves) => {
+  const landingSet = (moves) => {
     const s = new Set();
     for (const m of moves) {
-      const cell = m.to >= STEP_DONE ? CENTER : cellOf(m.horse.player, m.to);
-      s.add(cell[0] + ',' + cell[1]);
+      const cell = m.to >= STEP_DONE ? CENTER : cellOf(m.horse.seat, m.to);
+      if (cell) s.add(cell[0] + ',' + cell[1]);
     }
     return s;
   };
 
+  // ---- play out an event list with VFX + log ----
+  async function playEvents(events) {
+    const g = gameRef.current;
+    for (const ev of events) {
+      const line = Engine.describeEvent(g, ev);
+      if (line) pushLog(line);
+      switch (ev.t) {
+        case 'capture':
+          if (ev.cell) spawnFx(ev.attackerSeat != null && g.seats[ev.attackerSeat].faction === 'red' ? 'slash' : 'poof', ev.cell);
+          break;
+        case 'shield': if (ev.cell) spawnFx('shatter', ev.cell); flash('🛡️ Khiên vỡ!'); break;
+        case 'bleed':  setBadge(ev.victimSeat + '-' + ev.victimIdx, 'bleed', 1); break;
+        case 'curse':  flash('⛓️ Nhân Quả!'); break;
+        case 'stun':   flash('🌀 Choáng!'); break;
+        case 'pushback': if (ev.fromCell) spawnFx('dust', ev.fromCell); break;
+        case 'domino':  if (ev.cell) { spawnFx('strike', ev.cell); flash('🎳 Domino!'); } break;
+        case 'trap-set': if (ev.cell) spawnFx('frost', ev.cell); break;
+        case 'freeze':  if (ev.cell) spawnFx('iceblock', ev.cell); flash('🧊 Đóng băng!'); break;
+        case 'nhot':    if (ev.cell) spawnFx('warp', ev.cell); flash('✨ Nhót!'); break;
+        case 'finish':  flash('✦ Về đích!'); break;
+        default: break;
+      }
+      render();
+      await sleep(120);
+    }
+  }
+
   // ---- core turn flow ----
   async function doRoll() {
     const g = gameRef.current;
-    if (busy || rolling || g.winner != null) return;
+    if (busy || rolling || g.winner != null || g.phase !== 'roll') return;
     setBusy(true); setRolling(true); setMovable({ horses: new Set(), landing: null });
-    const v = 1 + Math.floor(Math.random() * 6);
-    await sleep(620); setRolling(false); setDie(v);
-    g.die = v; g.sixStreak = v === 6 ? g.sixStreak + 1 : 0; render();
 
-    if (g.sixStreak >= 3) {
-      setStatus('Ba số 6 liên tiếp — mất lượt! 🎲'); await sleep(950);
+    const seat = g.turn;
+    const stt = g.status[seat];
+    const fac = Engine.factionKey(g, seat);
+
+    // skip-turn debuffs (Trọng Thương / Choáng / Đóng băng) consume the roll
+    if (stt.skip > 0) {
+      stt.skip -= 1;
+      setRolling(false);
+      setStatus(g.seats[seat].name + ' bị khống chế — mất lượt! ');
+      pushLog('⏸️ ' + g.seats[seat].icon + ' ' + g.seats[seat].name + ' bị khống chế, mất lượt.');
+      render(); await sleep(950);
       setBusy(false); endTurn(); return;
     }
+
+    let v = 1 + Math.floor(Math.random() * 6);
+    await sleep(600); setRolling(false);
+    g.rawDie = v;
+
+    // ⚪ Nhân Quả curse: −2 to this roll
+    let cursed = false;
+    if (stt.curse > 0) { stt.curse -= 1; v = Math.max(0, v - 2); cursed = true; }
+    setDie(g.rawDie); g.die = v;
+    g.sixStreak = (g.rawDie === 6) ? g.sixStreak + 1 : 0;
+    render();
+
+    if (cursed) { setStatus('⛓️ Nhân Quả! ' + g.rawDie + ' − 2 = ' + v); await sleep(800); }
+
+    // 🌩️ Thiên Lôi — 3 sixes (Gold is immune)
+    if (g.sixStreak >= 3 && fac !== 'gold') {
+      const lost = Engine.sendFurthestToBase(g, seat);
+      if (lost) spawnFx('poof', lost.cell);
+      pushLog('🌩️ Thiên Lôi! ' + g.seats[seat].icon + ' ' + g.seats[seat].name + ' đổ ba lần 6 — quân xa nhất về chuồng, mất lượt.');
+      setStatus('Ba số 6 liên tiếp — Thiên Lôi! Mất lượt.'); render(); await sleep(1100);
+      setBusy(false); endTurn(); return;
+    }
+
+    if (v < 1) { // cursed to 0 → wasted
+      setStatus(g.seats[seat].name + ': điểm về 0 — mất lượt'); await sleep(850);
+      setBusy(false); endTurn(); return;
+    }
+
     const moves = Engine.legalMoves(g);
     if (!moves.length) {
-      setStatus(PLAYERS[g.turn].name + ': không có nước đi hợp lệ'); await sleep(950);
+      setStatus(g.seats[seat].name + ': không có nước đi hợp lệ (đổ ' + v + ')'); await sleep(950);
       setBusy(false); endTurn(); return;
     }
-    if (isAI(g.turn)) {
+    if (isAI(seat)) {
       const m = Engine.aiChoose(g, moves);
-      await sleep(aiDelay);
-      await execMove(m);
+      await sleep(aiDelay); await execMove(m);
     } else {
-      setMovable({ horses: new Set(moves.map(m => m.horse.player + '-' + m.horse.idx)), landing: landingSet(g, moves) });
-      setStatus('Đổ ' + v + ' — chọn quân phát sáng để di chuyển');
+      setMovable({ horses: new Set(moves.map(m => m.horse.seat + '-' + m.horse.idx)), landing: landingSet(moves) });
+      const hasNhot = moves.some(m => m.kind === 'nhot');
+      setStatus('Đổ ' + v + (hasNhot ? ' — có thể Nhót! ' : ' — ') + 'chọn quân phát sáng');
       g.phase = 'select'; setBusy(false); render();
     }
   }
@@ -199,8 +277,10 @@ function App() {
     const g = gameRef.current;
     if (g.phase !== 'select' || busy) return;
     const moves = Engine.legalMoves(g);
-    const m = moves.find(mv => mv.horse === h);
-    if (!m) return;
+    // a horse may have both a normal ring move and a Nhót — prefer Nhót (more value, player intent)
+    const mine = moves.filter(mv => mv.horse === h);
+    if (!mine.length) return;
+    const m = mine.find(mv => mv.kind === 'nhot') || mine[0];
     setBusy(true);
     await execMove(m);
   }
@@ -209,36 +289,41 @@ function App() {
     const g = gameRef.current;
     const h = m.horse;
     setMovable({ horses: new Set(), landing: null });
-    if (m.deploy) {
-      h.step = 0; render(); await sleep(280);
-    } else {
-      for (let s = h.step + 1; s <= m.to; s++) { h.step = s; render(); await sleep(165); }
-    }
-    // capture
-    const caps = resolveCapture(g, h);
-    if (caps.length) {
-      const np = caps.map(c => ({ id: ++poofId.current, r: c.cell[0], c: c.cell[1] }));
-      setPoofs(p => [...p, ...np]); render();
-      setTimeout(() => setPoofs(p => p.filter(x => !np.find(n => n.id === x.id))), 520);
-      flash('⚔️ Hạ gục!');
-    }
-    const finished = h.step >= STEP_DONE;
-    if (finished) flash('✦ Về đích!');
-    render();
+    g.phase = 'anim'; render();
 
-    // win?
-    if (Engine.playerDone(g, h.player)) {
-      g.winner = h.player; render(); setBusy(false); return;
+    // animate the travel before mutating state, so steps walk visibly
+    if (m.kind === 'deploy') {
+      // handled in applyMove; just a small beat
+    } else if (m.kind === 'nhot') {
+      const fromCell = cellOf(h.seat, h.step);
+      if (fromCell) spawnFx('warp', fromCell);
+      await sleep(260);
+    } else {
+      for (let s = h.step + 1; s < m.to; s++) { const c = cellOf(h.seat, s); h.step = s; render(); await sleep(150); if (!c) break; }
     }
-    const extra = (g.die === 6 && g.sixStreak < 3) || caps.length > 0 || finished;
+
+    const res = Engine.applyMove(g, m);
+    render();
+    await playEvents(res.events);
+
+    // win check
+    if (Engine.playerDone(g, h.seat)) { g.winner = h.seat; render(); setBusy(false); return; }
+
+    // extra turn: a six (and not blocked by special no-extra rules), OR a finish.
+    // 🔴 Đỏ does NOT get an extra turn from a capture. Others do.
+    const aFac = res.attackerFaction;
+    const sixExtra = g.rawDie === 6 && g.sixStreak < 3;
+    const capExtra = res.capturedSomeone && aFac !== 'red';
+    const extra = sixExtra || capExtra || res.finished;
+
     setBusy(false);
     if (extra) continueTurn(); else endTurn();
   }
 
   function continueTurn() {
     const g = gameRef.current;
-    g.die = null; g.phase = 'roll'; setDie(null);
-    setStatus((isAI(g.turn) ? PLAYERS[g.turn].name : 'Bạn') + ' được đi tiếp!');
+    g.die = null; g.rawDie = null; g.phase = 'roll'; setDie(null);
+    setStatus((isAI(g.turn) ? g.seats[g.turn].name : 'Bạn') + ' được đi tiếp!');
     render(); scheduleTurn();
   }
   function endTurn() {
@@ -248,51 +333,61 @@ function App() {
     setStatus(turnPrompt(g)); render(); scheduleTurn();
   }
   function turnPrompt(g) {
-    return isAI(g.turn)
-      ? 'Lượt của ' + PLAYERS[g.turn].name + ' (AI)…'
-      : 'Lượt của bạn — đổ xúc xắc';
+    return isAI(g.turn) ? 'Lượt của ' + g.seats[g.turn].name + ' (AI)…' : 'Lượt của bạn — đổ xúc xắc';
   }
   function scheduleTurn() {
     const g = gameRef.current;
     if (g.winner != null) return;
-    if (isAI(g.turn)) setTimeout(() => doRoll(), 650);
+    if (isAI(g.turn)) setTimeout(() => doRoll(), 620);
   }
 
   function newGame() {
     gameRef.current = Engine.newGame();
     setDie(null); setBusy(false); setRolling(false);
     setMovable({ horses: new Set(), landing: null });
-    setStatus('Ván mới! Bấm “Đổ xúc xắc”'); setPoofs([]); render();
+    setFx([]); setBadges({});
+    setStatus('Ván mới! Hệ phái đã được bốc ngẫu nhiên. Bấm "Đổ xúc xắc"'); render();
     setTimeout(scheduleTurn, 400);
   }
 
-  // kick off AI if first player is AI (won't be, human is 0) — and on mount fit
   useEffect(() => { scheduleTurn(); /* eslint-disable-next-line */ }, []);
   useEffect(() => { setTimeout(fit, 60); /* eslint-disable-next-line */ }, [t.variant]);
 
   const g = gameRef.current;
   const canRoll = !isAI(g.turn) && g.phase === 'roll' && !busy && !rolling && g.winner == null;
 
-  // ambient particles
-  const particles = React.useMemo(() =>
-    Array.from({ length: 26 }, (_, i) => ({
-      left: Math.random() * 100, size: 3 + Math.random() * 6,
-      dur: 9 + Math.random() * 10, delay: -Math.random() * 16,
-    })), []);
+  const onHover = (info, e) => {
+    if (!info) { setTip(null); return; }
+    setTip({ x: e.clientX, y: e.clientY, faction: info.faction });
+  };
+
+  const particles = React.useMemo(() => Array.from({ length: 24 }, () => ({
+    left: Math.random() * 100, size: 3 + Math.random() * 6, dur: 9 + Math.random() * 10, delay: -Math.random() * 16,
+  })), []);
 
   return React.createElement('div', { className: 'wrap' },
     React.createElement('div', { className: 'ambient' },
       particles.map((p, i) => React.createElement('i', { key: i, style: {
         left: p.left + '%', bottom: '-20px', width: p.size, height: p.size,
-        animationDuration: p.dur + 's', animationDelay: p.delay + 's',
-      } }))),
+        animationDuration: p.dur + 's', animationDelay: p.delay + 's' } }))),
 
     React.createElement('div', { className: 'stage-fit', ref: fitRef },
       React.createElement('div', { ref: sceneRef, style: { display: 'inline-block' } },
-        React.createElement(Board, { state: g, movable, onPick, poofs }))),
+        React.createElement(Board, { state: g, movable, onPick, onHover, fx, badges }))),
 
-    React.createElement(HUD, { state: g, mode }),
+    React.createElement(HUD, { state: g, mode, onHover }),
 
+    // ---- game log panel ----
+    React.createElement('div', { className: 'log-panel' + (logOpen ? '' : ' collapsed') },
+      React.createElement('div', { className: 'log-head', onClick: () => setLogOpen(o => !o) },
+        React.createElement('span', {}, '📜 Diễn biến'),
+        React.createElement('span', { className: 'log-toggle' }, logOpen ? '▾' : '▸')),
+      logOpen && React.createElement('div', { className: 'log-body' },
+        g.log.length === 0
+          ? React.createElement('div', { className: 'log-empty' }, 'Chưa có sự kiện nào…')
+          : g.log.map(e => React.createElement('div', { key: e.id, className: 'log-line' }, e.line)))),
+
+    // ---- dice dock ----
     React.createElement('div', { className: 'die-dock' },
       React.createElement('div', { className: 'status' }, status),
       React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 16 } },
@@ -302,9 +397,19 @@ function App() {
 
     toast && React.createElement('div', { className: 'toast show' }, toast),
 
+    // ---- hover tooltip ----
+    tip && (function () {
+      const f = FACTIONS[tip.faction];
+      return React.createElement('div', { className: 'hero-tip', style: { left: tip.x + 14, top: tip.y + 14, ['--pc']: f.hue } },
+        React.createElement('div', { className: 'hero-tip-name' }, f.icon + ' ' + f.name),
+        React.createElement('div', { className: 'hero-tip-skill' }, '【' + f.skill + '】 ' + f.short));
+    })(),
+
+    React.createElement(HeroWiki, { open: wikiOpen, onClose: () => setWikiOpen(false), seats: g.seats }),
+
     g.winner != null && React.createElement('div', { className: 'win-overlay' },
-      React.createElement('div', { className: 'win-card', style: { ['--pc']: PLAYERS[g.winner].hue } },
-        React.createElement('h1', { style: { color: PLAYERS[g.winner].hue } }, PLAYERS[g.winner].name + ' chiến thắng!'),
+      React.createElement('div', { className: 'win-card', style: { ['--pc']: g.seats[g.winner].hue } },
+        React.createElement('h1', { style: { color: g.seats[g.winner].hue } }, g.seats[g.winner].icon + ' ' + g.seats[g.winner].name + ' chiến thắng!'),
         React.createElement('p', {}, 'Đưa cả 4 quân về Thánh Tích trung tâm.'),
         React.createElement('button', { className: 'roll-btn', onClick: newGame }, 'Chơi ván mới'))),
 
@@ -315,6 +420,14 @@ function App() {
         onChange: v => setTweak('variant', v) }),
       React.createElement('div', { style: { fontSize: 11, opacity: .7, padding: '0 2px 6px', lineHeight: 1.4 } },
         (THEMES[t.variant] || THEMES.dawn).blurb),
+      React.createElement(TweakSection, { label: 'Đối thủ' }),
+      React.createElement(TweakSelect, { label: 'Chế độ', value: t.opponents,
+        options: [{ value: 'ai', label: 'Đấu với AI' }, { value: 'hotseat', label: 'Cùng máy (hotseat)' }],
+        onChange: v => setTweak('opponents', v) }),
+      React.createElement(TweakSelect, { label: 'Tốc độ AI', value: t.aiSpeed,
+        options: [{ value: 'nhanh', label: 'Nhanh' }, { value: 'vừa', label: 'Vừa' }, { value: 'chậm', label: 'Chậm' }],
+        onChange: v => setTweak('aiSpeed', v) }),
+      React.createElement(TweakButton, { label: 'Ván mới', onClick: newGame }),
       React.createElement(TweakSection, { label: 'Góc nhìn' }),
       React.createElement(TweakSlider, { label: 'Độ nghiêng', value: t.tilt, min: 30, max: 68, step: 1, unit: '°',
         onChange: v => setTweak('tilt', v) })

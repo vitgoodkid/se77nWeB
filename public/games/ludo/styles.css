@@ -96,6 +96,34 @@ body{
 .cell.start .tile{ box-shadow:inset 0 0 0 2px rgba(255,255,255,.7), 0 0 14px var(--cell-tint); }
 .cell .tint{ position:absolute; inset:3px; border-radius:7px; background:var(--cell-tint); opacity:.5; mix-blend-mode:multiply; }
 .cell.home .tint{ display:none; }
+
+/* corner "Đỉnh" cells — special teleport anchors */
+.cell.corner .tile{
+  background:linear-gradient(135deg,#fff7d6,#ffd86b);
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.8), 0 0 16px var(--center-glow);
+}
+.cell .corner-mark{
+  position:absolute; inset:0; display:grid; place-items:center;
+  font-size:20px; color:rgba(120,80,0,.55); pointer-events:none;
+  text-shadow:0 1px 2px rgba(255,255,255,.6);
+  animation:cornerSpin 6s linear infinite;
+}
+@keyframes cornerSpin{to{transform:rotate(360deg)}}
+/* door cells — the home gate, ringed in the seat colour */
+.cell.door .tile{ box-shadow:inset 0 0 0 2px var(--cell-tint), 0 0 10px color-mix(in srgb,var(--cell-tint) 60%,transparent); }
+.cell.door .tile::before{
+  content:'⌂'; position:absolute; inset:0; display:grid; place-items:center;
+  font-size:15px; color:color-mix(in srgb,var(--cell-tint) 80%,#000); opacity:.8;
+}
+
+/* ❄️ ice trap marker sitting on a ring cell */
+.cell .ice-trap{
+  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  font-size:20px; color:#bfe9ff; z-index:8; pointer-events:none;
+  text-shadow:0 0 8px #7fd0ff, 0 0 3px #fff;
+  animation:trapFloat 2s ease-in-out infinite;
+}
+@keyframes trapFloat{0%,100%{transform:translate(-50%,-55%) scale(1)}50%{transform:translate(-50%,-45%) scale(1.12)}}
 /* directional chevron on each home-lane cell, pointing toward centre */
 .cell.home .tile::after{
   content:''; position:absolute; left:50%; top:50%;
@@ -120,14 +148,14 @@ body{
 }
 @keyframes pulse{0%,100%{opacity:.45}50%{opacity:1}}
 
-/* corner stable platform */
-.stable{
+/* corner base camp */
+.base{
   position:absolute; border-radius:18px;
   background:var(--cell-tint);
   box-shadow:inset 0 0 0 3px rgba(255,255,255,.4), inset 0 0 30px rgba(0,0,0,.25), 0 6px 14px rgba(0,0,0,.25);
-  transform-style:preserve-3d;
+  transform-style:preserve-3d; opacity:.92;
 }
-.stable .slot{
+.base .slot{
   position:absolute; width:30px;height:30px;border-radius:50%;
   background:radial-gradient(circle at 35% 30%, rgba(255,255,255,.7), rgba(0,0,0,.15));
   box-shadow:inset 0 0 0 2px rgba(255,255,255,.5);
@@ -218,3 +246,138 @@ body{
   background:radial-gradient(circle, rgba(0,0,0,.32), transparent 64%);
   filter:blur(3px);
 }
+
+/* ====================== transient skill VFX (board layer) ================= */
+/* each .vfx sits at a board cell centre; billboard-flat so it reads on the tilt */
+.vfx{ position:absolute; width:0; height:0; pointer-events:none; z-index:30; transform-style:preserve-3d; }
+.vfx::before{
+  content:''; position:absolute; left:50%; top:50%;
+  transform:translate(-50%,-50%) rotateZ(calc(var(--rotZ)*-1)) rotateX(calc(var(--tiltX)*-1));
+}
+/* generic capture poof */
+.vfx-poof::before{ width:42px;height:42px;border-radius:50%;
+  background:radial-gradient(circle,var(--center-glow),transparent 70%); animation:poofA .6s ease-out forwards; }
+@keyframes poofA{from{opacity:.9;transform:translate(-50%,-50%) scale(.4)}to{opacity:0;transform:translate(-50%,-50%) scale(2.4)}}
+/* 🔴 red slash */
+.vfx-slash::before{ width:60px;height:60px;
+  background:
+    linear-gradient(58deg,transparent 44%,#fff 47%,#ff5763 50%,#ff2230 53%,transparent 56%);
+  filter:drop-shadow(0 0 8px #ff4d57); animation:slashA .5s ease-out forwards; }
+@keyframes slashA{0%{opacity:0;transform:translate(-50%,-50%) scale(.5) rotate(-30deg)}30%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(1.6) rotate(20deg)}}
+/* 🛡️ green shatter */
+.vfx-shatter::before{ width:48px;height:48px;border-radius:50%;
+  background:radial-gradient(circle,rgba(170,255,210,.8),transparent 60%);
+  box-shadow:0 0 0 2px rgba(150,255,200,.6); animation:shatterA .55s ease-out forwards; }
+@keyframes shatterA{0%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.8)}}
+.vfx-shatter::after{ content:'✶'; position:absolute;left:50%;top:50%;color:#d6ffe9;font-size:30px;
+  transform:translate(-50%,-50%) rotateZ(calc(var(--rotZ)*-1)) rotateX(calc(var(--tiltX)*-1));
+  animation:shatterB .5s ease-out forwards; text-shadow:0 0 10px #7fffc0; }
+@keyframes shatterB{0%{opacity:0;transform:translate(-50%,-50%) scale(.3)}40%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(1.5)}}
+/* ❄️ blue frost (trap laid) */
+.vfx-frost::before{ content:'❄'; width:auto;height:auto;color:#cfeeff;font-size:26px;
+  text-shadow:0 0 10px #7fd0ff; animation:frostA .7s ease-out forwards; }
+@keyframes frostA{0%{opacity:0;transform:translate(-50%,-50%) scale(.3) rotate(-40deg)}40%{opacity:1}100%{opacity:.0;transform:translate(-50%,-50%) scale(1.2) rotate(20deg)}}
+/* 🧊 ice block (stepped on a trap) */
+.vfx-iceblock::before{ width:40px;height:46px;border-radius:8px;
+  background:linear-gradient(160deg,rgba(200,240,255,.7),rgba(120,200,255,.4));
+  box-shadow:inset 0 0 12px rgba(255,255,255,.8),0 0 16px rgba(130,210,255,.7);
+  border:1.5px solid rgba(220,245,255,.8); animation:iceA .9s ease-out forwards; }
+@keyframes iceA{0%{opacity:0;transform:translate(-50%,-60%) scale(.4)}25%{opacity:1;transform:translate(-50%,-60%) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-60%) scale(1.05)}}
+/* 💨 orange dust (pushback) */
+.vfx-dust::before{ width:50px;height:26px;border-radius:50%;
+  background:radial-gradient(circle,rgba(220,200,170,.7),transparent 70%); animation:dustA .6s ease-out forwards; }
+@keyframes dustA{0%{opacity:.9;transform:translate(-50%,-50%) scale(.5)}100%{opacity:0;transform:translate(-120%,-50%) scale(1.6)}}
+/* 🎳 strike (domino) */
+.vfx-strike::before{ content:'💥'; width:auto;height:auto;font-size:30px; animation:strikeA .55s ease-out forwards; }
+@keyframes strikeA{0%{opacity:0;transform:translate(-50%,-50%) scale(.3)}35%{opacity:1;transform:translate(-50%,-50%) scale(1.3)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.6)}}
+/* 🌀 warp (nhót / void) */
+.vfx-warp::before{ width:46px;height:46px;border-radius:50%;
+  background:conic-gradient(from 0deg,#a85cff,#6a2fb0,#d9b6ff,#a85cff);
+  filter:blur(1px); animation:warpA .8s ease-in forwards; }
+@keyframes warpA{0%{opacity:0;transform:translate(-50%,-50%) scale(1.4) rotate(0)}30%{opacity:.95}100%{opacity:0;transform:translate(-50%,-50%) scale(.1) rotate(360deg)}}
+/* ⛓️ white chain (drawn from victim to attacker) */
+.vfx-chain{ position:absolute; height:4px; transform-origin:left center; pointer-events:none; z-index:29;
+  background:repeating-linear-gradient(90deg,#3a2a4a 0 6px,#8a6aa8 6px 10px);
+  box-shadow:0 0 8px rgba(120,80,160,.8); border-radius:2px; animation:chainA .7s ease-out forwards; }
+@keyframes chainA{0%{opacity:0;transform:scaleX(.2) rotate(var(--a,0))}30%{opacity:1}100%{opacity:0}}
+
+/* ============================ game log panel ============================= */
+.log-panel{
+  position:fixed; left:14px; top:50%; transform:translateY(-50%);
+  width:230px; max-height:46vh; z-index:24;
+  background:var(--panel); border:2px solid var(--panel-border); border-radius:16px;
+  backdrop-filter:blur(8px); box-shadow:0 10px 26px rgba(0,0,0,.28);
+  display:flex; flex-direction:column; overflow:hidden;
+  font-family:'Quicksand','Baloo 2',sans-serif;
+}
+.log-panel.collapsed{ max-height:none; }
+.log-head{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:9px 13px; font-weight:700; font-size:13px; cursor:pointer;
+  color:var(--ink); border-bottom:1px solid var(--panel-border);
+}
+.log-head:hover{ background:rgba(255,255,255,.08); }
+.log-panel.collapsed .log-head{ border-bottom:none; }
+.log-toggle{ opacity:.7; font-size:12px; }
+.log-body{ overflow-y:auto; padding:8px 11px; display:flex; flex-direction:column; gap:6px; }
+.log-body::-webkit-scrollbar{ width:6px; }
+.log-body::-webkit-scrollbar-thumb{ background:var(--panel-border); border-radius:4px; }
+.log-line{
+  font-size:12px; line-height:1.35; color:var(--ink);
+  padding:6px 9px; border-radius:9px; background:rgba(255,255,255,.06);
+  border-left:3px solid var(--center-glow); animation:logIn .3s ease;
+}
+.log-empty{ font-size:12px; opacity:.55; padding:6px 4px; }
+@keyframes logIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+@media (max-width:900px){ .log-panel{ width:190px; left:8px; } }
+@media (max-width:560px){ .log-panel{ display:none; } }
+
+/* ============================ hero wiki modal ============================ */
+.wiki-overlay{ position:fixed; inset:0; z-index:2147483646;
+  display:grid; place-items:center; padding:20px;
+  background:radial-gradient(circle at 50% 40%,rgba(0,0,0,.45),rgba(0,0,0,.72));
+  backdrop-filter:blur(5px); animation:fade .25s ease; }
+.wiki{
+  width:min(880px,96vw); max-height:90vh; overflow:hidden;
+  background:var(--panel); border:3px solid var(--panel-border); border-radius:24px;
+  box-shadow:0 30px 80px rgba(0,0,0,.55); display:flex; flex-direction:column;
+  font-family:'Baloo 2','Quicksand',sans-serif; color:var(--ink);
+}
+.wiki-head{ display:flex; align-items:center; justify-content:space-between;
+  padding:16px 22px; border-bottom:2px solid var(--panel-border); }
+.wiki-head h2{ font-size:22px; }
+.wiki-x{ width:34px;height:34px;border:none;border-radius:50%;cursor:pointer;
+  background:rgba(255,255,255,.12); color:var(--ink); font-size:16px; font-weight:700;
+  transition:background .15s,transform .12s; }
+.wiki-x:hover{ background:rgba(255,255,255,.24); }
+.wiki-x:active{ transform:scale(.92); }
+.wiki-grid{ overflow-y:auto; padding:18px 20px;
+  display:grid; grid-template-columns:repeat(2,1fr); gap:13px; }
+@media (max-width:620px){ .wiki-grid{ grid-template-columns:1fr; } }
+.wiki-card{ position:relative; border-radius:16px; padding:14px 15px;
+  background:linear-gradient(150deg,color-mix(in srgb,var(--pc) 14%,transparent),rgba(255,255,255,.04));
+  border:2px solid color-mix(in srgb,var(--pc) 45%,transparent);
+  box-shadow:0 4px 12px rgba(0,0,0,.18); transition:transform .15s; opacity:.72; }
+.wiki-card.active{ opacity:1; box-shadow:0 0 0 2px var(--pc),0 6px 16px rgba(0,0,0,.3); }
+.wiki-card:hover{ transform:translateY(-2px); }
+.wiki-card-top{ display:flex; align-items:center; gap:11px; margin-bottom:8px; }
+.wiki-chip{ width:42px;height:42px;border-radius:12px; display:grid; place-items:center; font-size:22px;
+  background:linear-gradient(150deg,color-mix(in srgb,var(--pc) 85%,#fff),color-mix(in srgb,var(--pc) 65%,#000));
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.4); }
+.wiki-name{ font-weight:800; font-size:16px; }
+.wiki-skill{ font-size:12.5px; font-weight:700; color:color-mix(in srgb,var(--pc) 70%,var(--ink)); }
+.wiki-desc{ font-size:12.5px; line-height:1.5; color:var(--ink-soft); }
+.wiki-badge{ position:absolute; top:11px; right:12px; font-size:10px; font-weight:800;
+  padding:3px 9px; border-radius:20px; background:var(--pc); color:#fff; box-shadow:0 2px 6px rgba(0,0,0,.3); }
+.wiki-foot{ padding:12px 22px; border-top:1px solid var(--panel-border);
+  font-size:11.5px; line-height:1.5; color:var(--ink-soft); }
+
+/* ============================ hover tooltip ============================== */
+.hero-tip{ position:fixed; z-index:2147483647; pointer-events:none;
+  max-width:240px; padding:9px 12px; border-radius:12px;
+  background:var(--panel); border:2px solid var(--pc); color:var(--ink);
+  box-shadow:0 8px 22px rgba(0,0,0,.4); backdrop-filter:blur(8px);
+  font-family:'Quicksand','Baloo 2',sans-serif; animation:tipIn .12s ease; }
+@keyframes tipIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.hero-tip-name{ font-weight:800; font-size:13.5px; margin-bottom:2px; }
+.hero-tip-skill{ font-size:11.5px; line-height:1.4; color:var(--ink-soft); }

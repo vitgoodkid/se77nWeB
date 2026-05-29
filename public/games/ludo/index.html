@@ -68,6 +68,8 @@
 <div id="ludo-bar">
   <a href="/#/game" title="Về se77n · Game">⌂ se77n</a>
   <span class="sep"></span>
+  <button id="wiki-open" type="button" aria-label="Từ điển hệ phái" title="Từ Điển Hệ Phái (8 màu, kỹ năng)"><span>📖</span><span>Hệ Phái</span></button>
+  <span class="sep"></span>
   <button id="twk-open" type="button" aria-label="Mở cài đặt" title="Cài đặt (chủ đề, góc nhìn)"><span class="gear">⚙</span><span>Cài đặt</span></button>
 </div>
 <div id="root"></div>
@@ -98,6 +100,11 @@
     window.addEventListener('message', function (e) {
       var t = e && e.data && e.data.type;
       if (t === '__edit_mode_dismissed' || t === '__deactivate_edit_mode') open = false;
+    });
+    // Hero Wiki button → React exposes window.__openWiki once mounted.
+    var wikiBtn = document.getElementById('wiki-open');
+    if (wikiBtn) wikiBtn.addEventListener('click', function () {
+      if (typeof window.__openWiki === 'function') window.__openWiki();
     });
   })();
 </script>
