@@ -101,12 +101,14 @@ function App() {
         const nextTilt = Math.round(startTilt + (ev.clientY - startY) * 0.12);
         const clampedTilt = Math.max(TILT_MIN, Math.min(TILT_MAX, nextTilt));
         if (clampedTilt !== tiltRef.current) setTweak('tilt', clampedTilt);
-        // kéo ngang → xoay quanh trục đứng (rotateZ), tự do mọi hướng
+        // kéo ngang → xoay quanh trục đứng của bàn cờ (rotateZ), tự do mọi hướng.
+        // Không gọi fit() ở đây: khung bao lớn nhất ở 45° (đã fit sẵn), mọi góc
+        // khác chỉ nhỏ hơn nên không tràn — gọi fit() chỉ gây phóng to nhấp nháy
+        // khiến tưởng là không xoay.
         const nextRot = Math.round(startRot + (ev.clientX - startX) * 0.12);
         if (nextRot !== rotRef.current) {
           rotRef.current = nextRot;
           document.documentElement.style.setProperty('--rotZ', nextRot + 'deg');
-          fit();
         }
       };
       const onUp = () => {
