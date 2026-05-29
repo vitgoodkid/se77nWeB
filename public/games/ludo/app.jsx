@@ -259,24 +259,16 @@ function App() {
         React.createElement('p', {}, 'Đưa cả 4 quân về Thánh Tích trung tâm.'),
         React.createElement('button', { className: 'roll-btn', onClick: newGame }, 'Chơi ván mới'))),
 
-    React.createElement(TweaksPanel, {},
-      React.createElement(TweakSection, { label: 'Phong cách (variant)' }),
+    React.createElement(TweaksPanel, { title: 'Cài đặt' },
+      React.createElement(TweakSection, { label: 'Chủ đề' }),
       React.createElement(TweakSelect, { label: 'Chủ đề', value: t.variant,
         options: Object.keys(THEMES).map(k => ({ value: k, label: THEMES[k].label })),
         onChange: v => setTweak('variant', v) }),
       React.createElement('div', { style: { fontSize: 11, opacity: .7, padding: '0 2px 6px', lineHeight: 1.4 } },
         (THEMES[t.variant] || THEMES.dawn).blurb),
-      React.createElement(TweakToggle, { label: 'Ánh sáng phép mạnh', value: t.extraGlow,
-        onChange: v => setTweak('extraGlow', v) }),
-      React.createElement(TweakSection, { label: 'Góc nhìn & lối chơi' }),
+      React.createElement(TweakSection, { label: 'Góc nhìn' }),
       React.createElement(TweakSlider, { label: 'Độ nghiêng', value: t.tilt, min: 30, max: 68, step: 1, unit: '°',
-        onChange: v => setTweak('tilt', v) }),
-      React.createElement(TweakSelect, { label: 'Đối thủ', value: t.opponents,
-        options: [{ value: 'ai', label: '3 AI (bạn cầm Hỏa)' }, { value: 'hotseat', label: 'Hotseat (tự điều khiển)' }],
-        onChange: v => { setTweak('opponents', v); } }),
-      React.createElement(TweakSelect, { label: 'Tốc độ AI', value: t.aiSpeed,
-        options: ['nhanh','vừa','chậm'], onChange: v => setTweak('aiSpeed', v) }),
-      React.createElement(TweakButton, { label: 'Ván mới', onClick: newGame })
+        onChange: v => setTweak('tilt', v) })
     )
   );
 }

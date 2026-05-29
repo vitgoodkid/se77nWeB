@@ -17,16 +17,20 @@
      unreachable on the live site. */
   #twk-open{
     position:fixed; right:16px; bottom:16px; z-index:2147483645;
-    width:46px; height:46px; border-radius:50%; border:none; cursor:pointer;
+    display:inline-flex; align-items:center; gap:8px;
+    height:46px; padding:0 18px; border-radius:999px; cursor:pointer;
     background:var(--panel,rgba(20,24,55,.82));
     color:var(--ink,#fff);
     border:2px solid var(--panel-border,rgba(130,150,255,.4));
-    box-shadow:0 8px 22px rgba(0,0,0,.35);
-    font-size:20px; display:grid; place-items:center;
+    box-shadow:0 8px 22px rgba(0,0,0,.35); backdrop-filter:blur(8px);
+    font-family:'Baloo 2',system-ui,sans-serif; font-weight:700; font-size:14px;
     transition:transform .15s, filter .2s;
   }
-  #twk-open:hover{ transform:translateY(-2px) rotate(40deg); filter:brightness(1.1); }
-  #twk-open:active{ transform:translateY(0) scale(.95); }
+  #twk-open .gear{ font-size:18px; line-height:1; display:inline-block; transition:transform .3s; }
+  #twk-open:hover{ transform:translateY(-2px); filter:brightness(1.1); }
+  #twk-open:hover .gear{ transform:rotate(60deg); }
+  #twk-open:active{ transform:translateY(0) scale(.96); }
+  @media (max-width:560px){ #twk-open{ height:42px; padding:0 14px; font-size:13px; } }
   /* Back-to-se77n pill */
   #back-home{
     position:fixed; left:16px; top:16px; z-index:2147483645;
@@ -45,7 +49,7 @@
 <body>
 <a id="back-home" href="/#/game" title="Về se77n · Game">← se77n</a>
 <div id="root"></div>
-<button id="twk-open" aria-label="Mở tuỳ chỉnh" title="Tuỳ chỉnh (chủ đề, đối thủ, ván mới)">⚙</button>
+<button id="twk-open" aria-label="Mở cài đặt" title="Cài đặt (chủ đề, góc nhìn)"><span class="gear">⚙</span><span>Cài đặt</span></button>
 
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
