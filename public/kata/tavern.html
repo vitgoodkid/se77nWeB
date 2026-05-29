@@ -174,8 +174,10 @@
 <script src="_strings.js"></script>
 <script src="_shell.js"></script>
 
-<div aria-hidden class="fixed inset-0 z-0 pointer-events-none ambient"></div>
-<div aria-hidden class="fixed inset-0 z-0 pointer-events-none grain opacity-40"></div>
+<canvas id="bg" aria-hidden class="fixed inset-0 z-0 pointer-events-none" style="width:100vw;height:100vh;display:block"></canvas>
+<div aria-hidden class="fixed inset-0 z-0 pointer-events-none grain opacity-30"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="_tavern-bg.js" defer></script>
 
 <header class="fixed top-0 inset-x-0 h-16 z-50 flex items-center justify-between px-6 backdrop-blur-md border-b border-line" style="background:rgba(13,10,8,0.7)">
   <div class="flex items-center gap-5">
