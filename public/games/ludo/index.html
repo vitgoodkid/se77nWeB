@@ -11,45 +11,66 @@
 <link rel="stylesheet" href="styles.css" />
 <link rel="stylesheet" href="pieces.css" />
 <style>
-  /* Standalone "open settings" gear — the design's TweaksPanel only opens on a
-     host postMessage (__activate_edit_mode) that doesn't exist outside Claude
-     Design, so without this the theme / opponents / new-game controls would be
-     unreachable on the live site. */
-  #twk-open{
-    position:fixed; right:16px; bottom:16px; z-index:2147483645;
-    display:inline-flex; align-items:center; gap:8px;
-    height:46px; padding:0 18px; border-radius:999px; cursor:pointer;
-    background:var(--panel,rgba(20,24,55,.82));
-    color:var(--ink,#fff);
-    border:2px solid var(--panel-border,rgba(130,150,255,.4));
-    box-shadow:0 8px 22px rgba(0,0,0,.35); backdrop-filter:blur(8px);
-    font-family:'Baloo 2',system-ui,sans-serif; font-weight:700; font-size:14px;
-    transition:transform .15s, filter .2s;
-  }
-  #twk-open .gear{ font-size:18px; line-height:1; display:inline-block; transition:transform .3s; }
-  #twk-open:hover{ transform:translateY(-2px); filter:brightness(1.1); }
-  #twk-open:hover .gear{ transform:rotate(60deg); }
-  #twk-open:active{ transform:translateY(0) scale(.96); }
-  @media (max-width:560px){ #twk-open{ height:42px; padding:0 14px; font-size:13px; } }
-  /* Back-to-se77n pill */
-  #back-home{
-    position:fixed; left:16px; top:16px; z-index:2147483645;
-    display:inline-flex; align-items:center; gap:7px;
-    padding:8px 14px; border-radius:999px; text-decoration:none;
-    font-family:'Baloo 2',system-ui,sans-serif; font-weight:700; font-size:13px;
+  /* Unified top toolbar (home + settings), centered in the free gap between the
+     two top HUD cards so neither control overlaps the player panels or the
+     board's play area. The design's TweaksPanel only opens on a host
+     postMessage (__activate_edit_mode) that doesn't exist outside Claude
+     Design, so the gear button below synthesizes it locally. */
+  #ludo-bar{
+    position:fixed; top:12px; left:50%; transform:translateX(-50%); z-index:2147483645;
+    display:flex; align-items:center; gap:4px; padding:5px;
+    border-radius:999px;
     background:var(--panel,rgba(20,24,55,.82)); color:var(--ink,#fff);
     border:2px solid var(--panel-border,rgba(130,150,255,.4));
-    box-shadow:0 6px 16px rgba(0,0,0,.28); backdrop-filter:blur(8px);
-    transition:transform .15s, filter .2s;
+    box-shadow:0 6px 18px rgba(0,0,0,.3); backdrop-filter:blur(8px);
+    font-family:'Baloo 2',system-ui,sans-serif;
   }
-  #back-home:hover{ transform:translateY(-1px); filter:brightness(1.08); }
-  @media (max-width:560px){ #back-home{ font-size:12px; padding:6px 11px; } }
+  #ludo-bar a, #ludo-bar button{
+    display:inline-flex; align-items:center; gap:7px; height:34px; padding:0 15px;
+    border:none; background:transparent; color:inherit; cursor:pointer;
+    font-family:inherit; font-weight:700; font-size:13px; border-radius:999px;
+    text-decoration:none; transition:background .15s, transform .12s;
+  }
+  #ludo-bar a:hover, #ludo-bar button:hover{ background:rgba(255,255,255,.14); }
+  #ludo-bar a:active, #ludo-bar button:active{ transform:scale(.96); }
+  #ludo-bar .sep{ width:1px; height:20px; background:var(--panel-border,rgba(130,150,255,.4)); }
+  #ludo-bar .gear{ display:inline-block; font-size:15px; transition:transform .3s; }
+  #ludo-bar #twk-open:hover .gear{ transform:rotate(60deg); }
+  @media (max-width:560px){
+    #ludo-bar a, #ludo-bar button{ font-size:12px; padding:0 12px; height:32px; }
+  }
+
+  /* Compact dice dock so it stays clear of the board's lower edge. */
+  .die-dock{ bottom:14px !important; gap:7px !important; }
+  .die-dock .status{ font-size:12.5px !important; padding:6px 14px !important; }
+  .die{ width:54px !important; height:54px !important; padding:9px !important; border-radius:13px !important; }
+  .die .pip{ width:8px !important; height:8px !important; }
+  .roll-btn{ font-size:15px !important; padding:10px 22px !important; }
+  @media (max-width:560px){
+    .die{ width:48px !important; height:48px !important; padding:8px !important; }
+    .roll-btn{ font-size:14px !important; padding:9px 18px !important; }
+  }
+
+  /* Anchor the Tweaks panel to the right edge, vertically centered, in the gap
+     between the two right-side HUD cards instead of the default bottom-right
+     corner (which overlapped the bottom-right player panel). */
+  .twk-panel{
+    top:50% !important; bottom:auto !important; right:14px !important;
+    transform:translateY(-50%) scale(var(--dc-inv-zoom,1)) !important;
+    transform-origin:right center !important;
+  }
+  @media (max-width:560px){
+    .twk-panel{ width:min(280px,calc(100vw - 24px)) !important; }
+  }
 </style>
 </head>
 <body>
-<a id="back-home" href="/#/game" title="Về se77n · Game">← se77n</a>
+<div id="ludo-bar">
+  <a href="/#/game" title="Về se77n · Game">⌂ se77n</a>
+  <span class="sep"></span>
+  <button id="twk-open" type="button" aria-label="Mở cài đặt" title="Cài đặt (chủ đề, góc nhìn)"><span class="gear">⚙</span><span>Cài đặt</span></button>
+</div>
 <div id="root"></div>
-<button id="twk-open" aria-label="Mở cài đặt" title="Cài đặt (chủ đề, góc nhìn)"><span class="gear">⚙</span><span>Cài đặt</span></button>
 
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
