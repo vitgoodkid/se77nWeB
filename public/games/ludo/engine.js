@@ -2,55 +2,67 @@
    LUDO HEROES — Cờ Cá Ngựa 8 Hệ Phái.  Pure game logic, no UI.
    Exposes window.Engine.
 
-   BOARD GEOMETRY (15x15 grid, [row,col] 0-indexed)
-   ───────────────────────────────────────────────
-   • RING  : perimeter of the inner 13x13 region = 48 cells, clockwise from the
-             top-left corner.  Steps 0..47 live here.
-   • CORNERS ("Đỉnh") : ring indices 0 / 12 / 24 / 36 (the 4 grid corners).
-   • DOORS  : the 4 side-midpoints (ring idx 6/18/30/42) — each seat's home gate.
-   • STARTS : one cell clockwise after each door (idx 7/19/31/43).
-   • HOME   : 6-stage column per seat (steps 48..53) converging on CENTER [7,7].
-             Step 53 == reached centre == that horse is DONE.
-   • BASE   : 4 stable slots per seat inside its corner quadrant (step -1).
+   BOARD GEOMETRY — CLASSIC CROSS (15x15 grid, [row,col] 0-indexed)
+   ───────────────────────────────────────────────────────────────
+   • RING : the 52-cell clockwise cross track (steps 0..50 are walked by each
+            seat; the array has 52 cells for modulo positioning).
+   • CORNERS ("Đỉnh") : the 4 crossover tip cells (RING idx 11/24/37/50) — the
+            outermost point of each arm, which sit at the 4 board corners once
+            the board is rotated 45°.  Each tip is ALSO a seat's home door.
+   • STARTS : the 4 coloured deploy squares (RING idx 0/13/26/39).
+   • DOORS  : each seat's home gate == its tip (step 50 for every seat).
+   • HOME   : 6-cell coloured column (bậc 1..6) per seat, leading to CENTER.
+   • BASE   : 4 stable slots per seat in its corner 6x6 block.
 
-   LOGICAL STEP per horse:  -1 = base, 0..47 = ring, 48..52 = home bậc1..5,
-   53 = bậc6/centre = done.  A horse sits on its home DOOR at step 47.
+   LOGICAL STEP per horse: -1 = base, 0..50 = ring (50 = home door),
+   51..56 = home bậc1..6, 57 = centre = DONE.
    =========================================================================== */
 (function () {
   const N = 15;
 
-  // ---- the 48-cell clockwise ring ------------------------------------------
-  const RING = [];
-  for (let c = 1; c <= 13; c++) RING.push([1, c]);   // top    L→R  idx 0..12
-  for (let r = 2; r <= 13; r++) RING.push([r, 13]);  // right  T→B  idx 13..24
-  for (let c = 12; c >= 1; c--) RING.push([13, c]);  // bottom R→L  idx 25..36
-  for (let r = 12; r >= 2; r--) RING.push([r, 1]);   // left   B→T  idx 37..47
-  const RING_LEN = RING.length;                       // 48
-
-  const CORNERS_IDX = [0, 12, 24, 36];
-  const START_IDX   = [7, 19, 31, 43];
-  const DOOR_IDX    = START_IDX.map(i => (i - 1 + RING_LEN) % RING_LEN); // 6,18,30,42
-
-  // 6-stage home columns (stage 6 == centre, shared goal)
-  const HOME = [
-    [[2,7],[3,7],[4,7],[5,7],[6,7],[7,7]],     // seat 0 — top,   going down
-    [[7,12],[7,11],[7,10],[7,9],[7,8],[7,7]],  // seat 1 — right, going left
-    [[12,7],[11,7],[10,7],[9,7],[8,7],[7,7]],  // seat 2 — bottom,going up
-    [[7,2],[7,3],[7,4],[7,5],[7,6],[7,7]],     // seat 3 — left,  going right
+  // 52-cell clockwise cross track (identical to the classic board)
+  const RING = [
+    [6,1],[6,2],[6,3],[6,4],[6,5],          // 0-4   left arm → right
+    [5,6],[4,6],[3,6],[2,6],[1,6],[0,6],     // 5-10  up col 6
+    [0,7],                                    // 11    TOP TIP (Đỉnh)
+    [0,8],[1,8],[2,8],[3,8],[4,8],[5,8],     // 12-17 down col 8
+    [6,9],[6,10],[6,11],[6,12],[6,13],[6,14],// 18-23 right along row 6
+    [7,14],                                   // 24    RIGHT TIP (Đỉnh)
+    [8,14],[8,13],[8,12],[8,11],[8,10],[8,9],// 25-30 left along row 8
+    [9,8],[10,8],[11,8],[12,8],[13,8],[14,8],// 31-36 down col 8
+    [14,7],                                   // 37    BOTTOM TIP (Đỉnh)
+    [14,6],[13,6],[12,6],[11,6],[10,6],[9,6],// 38-43 up col 6
+    [8,5],[8,4],[8,3],[8,2],[8,1],[8,0],     // 44-49 left along row 8
+    [7,0],                                    // 50    LEFT TIP (Đỉnh)
+    [6,0],                                    // 51    back near start
   ];
-  // 4 stable slots per seat, inside its corner quadrant
+  const RING_LEN = RING.length;               // 52
+
+  const START_IDX   = [0, 13, 26, 39];
+  const HOME_DOOR_STEP = 50;                  // every seat's door sits at step 50
+  const STEP_DONE      = 57;                  // step >= 57 → reached centre
+  const TRACK_MAX      = 50;                  // last ring step (== the door tip)
+  const DOOR_IDX     = START_IDX.map(s => (s + HOME_DOOR_STEP) % RING_LEN); // 50,11,24,37
+  const CORNERS_IDX  = [11, 24, 37, 50];      // the 4 Đỉnh / tips
+
+  // 6-cell home columns (classic), pointing inward to CENTER [7,7]
+  const HOME = [
+    [[7,1],[7,2],[7,3],[7,4],[7,5],[7,6]],     // seat 0 — row 7, east
+    [[1,7],[2,7],[3,7],[4,7],[5,7],[6,7]],     // seat 1 — col 7, south
+    [[7,13],[7,12],[7,11],[7,10],[7,9],[7,8]], // seat 2 — row 7, west
+    [[13,7],[12,7],[11,7],[10,7],[9,7],[8,7]], // seat 3 — col 7, north
+  ];
+  // 4 stable slots per seat, inside its corner 6x6 block
   const BASE = [
-    [[3,3],[3,5],[5,3],[5,5]],         // seat 0 TL
-    [[3,9],[3,11],[5,9],[5,11]],       // seat 1 TR
-    [[9,9],[9,11],[11,9],[11,11]],     // seat 2 BR
-    [[9,3],[9,5],[11,3],[11,5]],       // seat 3 BL
+    [[1,1],[1,4],[4,1],[4,4]],         // seat 0 TL
+    [[1,10],[1,13],[4,10],[4,13]],     // seat 1 TR
+    [[10,10],[10,13],[13,10],[13,13]], // seat 2 BR
+    [[10,1],[10,4],[13,1],[13,4]],     // seat 3 BL
   ];
 
   const CENTER = [7, 7];
-  const STEP_DONE      = 53;   // step >= 53 → reached centre (done)
-  const HOME_DOOR_STEP = 47;   // ring step that sits exactly on the home door
-  const SAFE = new Set(START_IDX.map(i => RING[i].join(',')));        // start cells
-  const CORNER_KEYS = new Set(CORNERS_IDX.map(i => RING[i].join(','))); // Đỉnh cells
+  const SAFE = new Set(START_IDX.map(i => RING[i].join(',')));          // start cells
+  const CORNER_KEYS = new Set(CORNERS_IDX.map(i => RING[i].join(',')));  // Đỉnh cells
 
   // ---- the 8 factions -------------------------------------------------------
   const FACTIONS = {
@@ -83,13 +95,13 @@
 
   // ---- geometry helpers -----------------------------------------------------
   function cellOf(seat, step) {
-    if (step < 0) return null;                              // base
-    if (step <= 47) return RING[(START_IDX[seat] + step) % RING_LEN];
-    if (step <= 53) return HOME[seat][step - 48];
+    if (step < 0) return null;
+    if (step <= TRACK_MAX) return RING[(START_IDX[seat] + step) % RING_LEN];
+    if (step <= 56) return HOME[seat][step - 51];
     return CENTER;
   }
   function ringIdxAt(seat, step) {
-    return (step >= 0 && step <= 47) ? (START_IDX[seat] + step) % RING_LEN : -1;
+    return (step >= 0 && step <= TRACK_MAX) ? (START_IDX[seat] + step) % RING_LEN : -1;
   }
   function nextCornerIdx(idx) {
     let best = null, bestD = 99;
@@ -112,11 +124,11 @@
     }
     return out;
   }
-  function homeOccupants(state, seat, stage, except) { // stage 0..5 → step 48..53
+  function homeOccupants(state, seat, stage, except) { // stage 0..5 → step 51..56
     const out = [];
     for (const h of state.horses[seat]) {
       if (h === except) continue;
-      if (h.step >= 48 && h.step < STEP_DONE && (h.step - 48) === stage) out.push(h);
+      if (h.step >= 51 && h.step < STEP_DONE && (h.step - 51) === stage) out.push(h);
     }
     return out;
   }
@@ -133,14 +145,14 @@
   }
   function ringLanding(state, mover, toStep) {
     const idx = (START_IDX[mover.seat] + toStep) % RING_LEN;
-    if (SAFE.has(RING[idx].join(','))) return { ok: true, capture: [] }; // safe → coexist
+    if (SAFE.has(RING[idx].join(','))) return { ok: true, capture: [] };
     const occ = ringOccupants(state, idx, mover);
     if (occ.some(o => o.seat === mover.seat)) return { ok: false, capture: [] }; // ally block
     return { ok: true, capture: occ.filter(o => o.seat !== mover.seat) };
   }
   function homePathClear(state, mover, fromStep, toStep) {
-    for (let s = Math.max(fromStep + 1, 48); s < toStep; s++) {
-      if (homeOccupants(state, mover.seat, s - 48, mover).length) return false;
+    for (let s = Math.max(fromStep + 1, 51); s < toStep; s++) {
+      if (homeOccupants(state, mover.seat, s - 51, mover).length) return false;
     }
     return true;
   }
@@ -166,7 +178,6 @@
 
   function playerDone(state, seat) { return state.horses[seat].every(h => h.step >= STEP_DONE); }
 
-  // furthest-advanced still-active horse (for Thiên Lôi penalty)
   function furthestHorse(state, seat) {
     let best = null;
     for (const h of state.horses[seat]) {
@@ -187,29 +198,29 @@
         if (die === 6) moves.push({ horse: h, kind: 'deploy', from: -1, to: 0 });
         continue;
       }
-      if (s <= 46) {                              // on the ring (not at door)
+      if (s < TRACK_MAX) {                         // on the ring, not yet at door
         const to = s + die;
-        if (to <= 47 && ringPathClear(state, h, s, to)) {
+        if (to <= TRACK_MAX && ringPathClear(state, h, s, to)) {
           const land = ringLanding(state, h, to);
           if (land.ok) moves.push({ horse: h, kind: 'ring', from: s, to, capture: land.capture });
         }
-        if (die === 1) {                          // ── Nhót: teleport to next Đỉnh ──
+        if (die === 1) {                           // ── Nhót: teleport to next Đỉnh ──
           const curIdx = (START_IDX[seat] + s) % RING_LEN;
           const C = nextCornerIdx(curIdx);
           const d = (C - curIdx + RING_LEN) % RING_LEN;
           const newStep = s + d;
-          if (d > 0 && newStep <= 47 && ringPathClear(state, h, s, newStep)) {
+          if (d > 0 && newStep <= TRACK_MAX && ringPathClear(state, h, s, newStep)) {
             const land = ringLanding(state, h, newStep);
             if (land.ok) moves.push({ horse: h, kind: 'nhot', from: s, to: newStep, cornerIdx: C, capture: land.capture });
           }
         }
-      } else if (s === HOME_DOOR_STEP) {          // at the home door
+      } else if (s === HOME_DOOR_STEP) {           // at the home door
         const can = die === 6 || (vip && (die === 4 || die === 5 || die === 6));
         if (can && homeOccupants(state, seat, 0, h).length === 0)
-          moves.push({ horse: h, kind: 'enter', from: s, to: 48 });
-      } else if (s >= 48 && s < STEP_DONE) {      // climbing the home column
+          moves.push({ horse: h, kind: 'enter', from: s, to: 51 });
+      } else if (s >= 51 && s < STEP_DONE) {       // climbing the home column
         const to = s + die;
-        if (to <= STEP_DONE && homePathClear(state, h, s, to) && homeOccupants(state, seat, to - 48, h).length === 0)
+        if (to <= STEP_DONE && homePathClear(state, h, s, to) && homeOccupants(state, seat, to - 51, h).length === 0)
           moves.push({ horse: h, kind: 'home', from: s, to });
       }
     }
@@ -272,7 +283,6 @@
   }
 
   // ---- apply a chosen move --------------------------------------------------
-  // Returns { events, capturedSomeone, finished, attackerFaction }.
   function applyMove(state, move) {
     const h = move.horse, seat = h.seat;
     const fac = factionKey(state, seat);
@@ -311,7 +321,7 @@
       ev.push({ t: 'freeze', seat, cell: landCell });
     }
     // 🔵 Bẫy Băng — blue rolling a 5 drops a trap on the cell it just left
-    if (fac === 'blue' && state.die === 5 && fromStep >= 0 && fromStep <= 47) {
+    if (fac === 'blue' && state.die === 5 && fromStep >= 0 && fromStep <= TRACK_MAX) {
       const leftIdx = (START_IDX[seat] + fromStep) % RING_LEN;
       if (!SAFE.has(RING[leftIdx].join(',')) && state.traps[leftIdx] == null) {
         state.traps[leftIdx] = seat;
@@ -348,8 +358,8 @@
       if ((m.kind === 'ring' || m.kind === 'nhot') && m.capture && m.capture.length) {
         s += 420 + m.capture.reduce((a, o) => a + o.step, 0) * 2;
       }
-      if (m.kind === 'nhot') s += 60;                      // a free jump is handy
-      if (state.traps[(START_IDX[seat] + m.to) % RING_LEN] != null) s -= 200; // avoid known traps
+      if (m.kind === 'nhot') s += 60;
+      if (m.to >= 0 && m.to <= TRACK_MAX && state.traps[(START_IDX[seat] + m.to) % RING_LEN] != null) s -= 200;
       s += (m.to >= 0 ? m.to : 0);
       s += Math.random() * 6;
       return s;
@@ -382,7 +392,7 @@
   window.Engine = {
     N, RING, RING_LEN, CORNERS_IDX, START_IDX, DOOR_IDX, HOME, BASE, CENTER,
     SAFE, CORNER_KEYS, FACTIONS, FACTION_ORDER,
-    STEP_DONE, HOME_DOOR_STEP,
+    STEP_DONE, HOME_DOOR_STEP, TRACK_MAX,
     cellOf, ringIdxAt, nextCornerIdx, prevCornerIdx, factionKey,
     ringOccupants, homeOccupants,
     newGame, playerDone, furthestHorse, legalMoves, applyMove,

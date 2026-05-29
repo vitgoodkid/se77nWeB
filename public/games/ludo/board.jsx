@@ -10,20 +10,21 @@ function buildCells() {
     const d = { r, c, kind: 'ring', key: 'r' + idx, ringIdx: idx };
     const seat = START_IDX.indexOf(idx);
     if (seat >= 0) { d.kind = 'start'; d.seat = seat; }
-    else if (DOOR_IDX.indexOf(idx) >= 0) { d.kind = 'door'; d.seat = DOOR_IDX.indexOf(idx); }
-    else if (CORNERS_IDX.indexOf(idx) >= 0) { d.kind = 'corner'; }
+    else if (CORNERS_IDX.indexOf(idx) >= 0) { d.kind = 'corner'; d.seat = DOOR_IDX.indexOf(idx); }
     cells.push(d);
   });
   HOME.forEach((arr, seat) => arr.forEach(([r, c], stage) => {
-    if (stage === 5) return; // stage 6 == centre gem, drawn separately
-    cells.push({ r, c, kind: 'home', seat, key: 'h' + seat + '-' + stage });
+    cells.push({ r, c, kind: 'home', seat, stage, key: 'h' + seat + '-' + stage });
   }));
   return cells;
 }
 const CELLS = buildCells();
 
 // home-lane chevrons point toward centre [7,7]
-const CHEV = { 0: '135deg', 1: '-135deg', 2: '-45deg', 3: '45deg' };
+//  seat0 row7→east(right), seat1 col7→south(down), seat2 row7→west(left), seat3 col7→north(up)
+const CHEV = { 0: '-45deg', 1: '45deg', 2: '135deg', 3: '-135deg' };
+// each seat's 6x6 base block top-left corner on the grid
+const BASE_CORNER = { 0: [0, 0], 1: [0, 9], 2: [9, 9], 3: [9, 0] };
 
 function Board({ state, movable, onPick, onHover, fx, badges }) {
   const center = (r, c) => ({ left: (c + 0.5) * CELL, top: (r + 0.5) * CELL });
@@ -35,21 +36,19 @@ function Board({ state, movable, onPick, onHover, fx, badges }) {
       React.createElement('div', { className: 'board' },
         React.createElement('div', { className: 'slab' }),
 
-        // ---- base camps (corner quadrants) ----
+        // ---- base camps (corner 6x6 blocks) ----
         state.seats.map((st, seat) => {
-          const slots = BASE[seat];
-          const minR = Math.min(...slots.map(s => s[0])), maxR = Math.max(...slots.map(s => s[0]));
-          const minC = Math.min(...slots.map(s => s[1])), maxC = Math.max(...slots.map(s => s[1]));
-          const left = (minC - 0.7) * CELL, top = (minR - 0.7) * CELL;
-          const w = (maxC - minC + 1.4) * CELL, h = (maxR - minR + 1.4) * CELL;
+          const [br, bc] = BASE_CORNER[seat];
+          const bx = bc * CELL + 8, by = br * CELL + 8;
           return React.createElement('div', {
             key: 'base' + seat, className: 'base',
-            style: { left, top, width: w, height: h, ['--cell-tint']: hueOf(seat) },
+            style: { left: bx, top: by,
+              width: 6 * CELL - 16, height: 6 * CELL - 16, ['--cell-tint']: hueOf(seat) },
           },
-            slots.map(([r, c], i) => {
+            BASE[seat].map(([r, c], i) => {
               const p = center(r, c);
               return React.createElement('div', { key: i, className: 'slot',
-                style: { left: p.left - left, top: p.top - top } });
+                style: { left: p.left - bx, top: p.top - by } });
             }));
         }),
 
