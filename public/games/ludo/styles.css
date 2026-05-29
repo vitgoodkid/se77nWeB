@@ -146,18 +146,33 @@ body{
   animation:crownBob 3.6s ease-in-out infinite;
 }
 @keyframes crownBob{0%,100%{transform:translateZ(2px)}50%{transform:translateZ(9px)}}
-.crown-stand{
-  transform-style:preserve-3d;
-  /* counter the board's isometric rotation so the gem faces the camera like a
-     floating jewel; crown-float still bobs it along the board normal. */
+.gem3d{
+  /* the gem's pivot, lifted along the board normal so it floats above centre.
+     No counter-rotation: it inherits the board's tilt+spin, so it reads as a
+     solid 3D jewel turning with the board. Lift ≥ half the gem height so the
+     culet (point) clears the board surface. */
   position:absolute; left:0; top:0;
-  transform:rotateZ(calc(var(--rotZ) * -1)) rotateX(calc(var(--tiltX) * -1));
+  transform-style:preserve-3d;
+  transform:translateZ(30px);
 }
-.dia-gem{
-  position:absolute; width:58px; height:58px; margin:-42px 0 0 -29px;
-  filter:drop-shadow(0 4px 5px rgba(18,55,85,.4)) drop-shadow(0 0 5px rgba(150,225,255,.6));
+.gem-spin{
+  position:absolute; left:0; top:0;
+  transform-style:preserve-3d;
+  animation:gemSpin 9s linear infinite;
 }
-.dia-gem svg{ display:block; }
+@keyframes gemSpin{ from{transform:rotateZ(0deg)} to{transform:rotateZ(360deg)} }
+.gem-plane{
+  /* each faceted SVG stood upright along the board normal (rotateX -90°) and
+     fanned around the vertical axis (--pa). Three planes at 0/60/120° intersect
+     into a volumetric gem; backfaces give the other three sides. */
+  position:absolute; left:0; top:0;
+  width:58px; height:58px; margin:-29px 0 0 -29px;
+  transform-style:preserve-3d;
+  backface-visibility:visible;
+  transform:rotateZ(var(--pa)) rotateX(-90deg);
+  filter:drop-shadow(0 4px 5px rgba(18,55,85,.35)) drop-shadow(0 0 5px rgba(150,225,255,.6));
+}
+.gem-plane svg{ display:block; }
 
 /* ---- diamond ---- */
 /* soft cool glow behind the gem (sits on the board plane) */

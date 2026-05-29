@@ -117,10 +117,19 @@ function Board({ state, movable, onPick, poofs }) {
             React.createElement('div', { className: 'crown-float' },
               React.createElement('div', { className: 'crown-shadow' }),
               React.createElement('div', { className: 'dia-glow' }),
-              React.createElement('div', { className: 'crown-stand' },
-                React.createElement('div', { className: 'dia-gem', dangerouslySetInnerHTML: { __html: svg } }),
-                sparks
-              )
+              // true 3D gem: a few faceted SVG planes standing along the board
+              // normal and fanned around the vertical axis, so intersecting they
+              // read as a solid jewel. Parented to the board (no counter-rotation)
+              // → it tilts and turns with the board; gem-spin adds a slow idle spin.
+              React.createElement('div', { className: 'gem3d' },
+                React.createElement('div', { className: 'gem-spin' },
+                  [0, 1, 2].map((i) => React.createElement('div', {
+                    key: i, className: 'gem-plane', style: { ['--pa']: (i * 60) + 'deg' },
+                    dangerouslySetInnerHTML: { __html: svg },
+                  }))
+                )
+              ),
+              sparks
             )
           );
         })(),
