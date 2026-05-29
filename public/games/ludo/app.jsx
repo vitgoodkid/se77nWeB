@@ -94,8 +94,8 @@ function App() {
       const startTilt = tiltRef.current;
       document.body.style.cursor = 'ns-resize';
       const onMove = (ev) => {
-        // 0.35°/px feels natural across the 30–68 range
-        const next = Math.round(startTilt + (ev.clientY - startY) * 0.35);
+        // 0.18°/px — nhẹ tay, kéo mượt qua dải 30–68°
+        const next = Math.round(startTilt + (ev.clientY - startY) * 0.18);
         const clamped = Math.max(TILT_MIN, Math.min(TILT_MAX, next));
         if (clamped !== tiltRef.current) setTweak('tilt', clamped);
       };
