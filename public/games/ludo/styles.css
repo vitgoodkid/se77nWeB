@@ -161,18 +161,18 @@ body{
   animation:gemSpin 9s linear infinite;
 }
 @keyframes gemSpin{ from{transform:rotateZ(0deg)} to{transform:rotateZ(360deg)} }
-.gem-plane{
-  /* each faceted SVG stood upright along the board normal (rotateX -90°) and
-     fanned around the vertical axis (--pa). Three planes at 0/60/120° intersect
-     into a volumetric gem; backfaces give the other three sides. */
+.gem-facet{
+  /* one triangular facet of the gem. The 100x100 box is clipped to the right
+     triangle (0,0)/(100,0)/(0,100) — the same local corners board.jsx maps via
+     matrix3d onto the facet's 3 vertices (origin at top-left). Backface culling
+     hides the far facets so only the near, convex faces show → solid volume. */
   position:absolute; left:0; top:0;
-  width:58px; height:58px; margin:-29px 0 0 -29px;
-  transform-style:preserve-3d;
-  backface-visibility:visible;
-  transform:rotateZ(var(--pa)) rotateX(-90deg);
-  filter:drop-shadow(0 4px 5px rgba(18,55,85,.35)) drop-shadow(0 0 5px rgba(150,225,255,.6));
+  width:100px; height:100px;
+  transform-origin:0 0;
+  backface-visibility:hidden;
+  clip-path:polygon(0 0, 100% 0, 0 100%);
+  box-shadow:inset 0 0 18px rgba(255,255,255,.25);
 }
-.gem-plane svg{ display:block; }
 
 /* ---- diamond ---- */
 /* soft cool glow behind the gem (sits on the board plane) */

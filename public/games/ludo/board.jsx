@@ -78,38 +78,63 @@ function Board({ state, movable, onPick, poofs }) {
           );
         }),
 
-        // centre goal — a crisp faceted diamond that floats, bobs and sparkles
+        // centre goal — a TRUE 3D faceted gem (octagonal bipyramid). Each
+        // triangular facet is a flat div placed in 3D space via matrix3d, so the
+        // jewel reads as a solid volume from every angle, including top-down
+        // (you see the crown pyramid, not a flat sheet). Parented to the board →
+        // it tilts & turns with the board; gem-spin adds a slow idle spin.
         (function () {
-          const svg =
-            '<svg viewBox="0 0 100 100" width="58" height="58" xmlns="http://www.w3.org/2000/svg">' +
-            '<defs>' +
-            '<linearGradient id="gT" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4fdff"/><stop offset="1" stop-color="#c7ecfb"/></linearGradient>' +
-            '<linearGradient id="gL" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#cdeefb"/><stop offset="1" stop-color="#92cfef"/></linearGradient>' +
-            '<linearGradient id="gR" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#aaddf4"/><stop offset="1" stop-color="#73bce8"/></linearGradient>' +
-            '<linearGradient id="pA" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5fb0e2"/><stop offset="1" stop-color="#2b7cba"/></linearGradient>' +
-            '<linearGradient id="pB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4ea3da"/><stop offset="1" stop-color="#226ea8"/></linearGradient>' +
-            '<linearGradient id="pC" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3f95d2"/><stop offset="1" stop-color="#1c5f95"/></linearGradient>' +
-            '</defs>' +
-            '<g stroke="#eef9ff" stroke-width="0.8" stroke-linejoin="round">' +
-            // crown
-            '<polygon points="36,10 64,10 76,36 24,36" fill="url(#gT)"/>' +
-            '<polygon points="6,36 24,36 36,10" fill="url(#gL)"/>' +
-            '<polygon points="94,36 76,36 64,10" fill="url(#gR)"/>' +
-            // pavilion (converges to a culet point)
-            '<polygon points="6,36 28,36 50,95" fill="url(#pB)"/>' +
-            '<polygon points="28,36 50,36 50,95" fill="url(#pA)"/>' +
-            '<polygon points="50,36 72,36 50,95" fill="url(#pC)"/>' +
-            '<polygon points="72,36 94,36 50,95" fill="url(#pB)"/>' +
-            '</g>' +
-            // specular glints
-            '<polygon points="40,13 51,13 49,22 39,22" fill="#ffffff" opacity="0.7"/>' +
-            '<polygon points="30,36 40,36 36,60" fill="#dff4ff" opacity="0.5"/>' +
-            '</svg>';
+          const N = 8;     // girdle segments
+          const R = 24;    // girdle radius (px)
+          const HC = 16;   // crown height (top apex above girdle)
+          const HP = 30;   // pavilion depth (culet below girdle)
+          const S = 100;   // facet div size in local px (resolution only)
+
+          const top = [0, 0, HC];
+          const cul = [0, 0, -HP];
+          const girdle = [];
+          for (let i = 0; i < N; i++) {
+            const a = (i / N) * Math.PI * 2;
+            girdle.push([R * Math.cos(a), R * Math.sin(a), 0]);
+          }
+
+          const sub = (p, q) => [p[0] - q[0], p[1] - q[1], p[2] - q[2]];
+          const cross = (u, v) => [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+          const dot = (u, v) => u[0] * v[0] + u[1] * v[1] + u[2] * v[2];
+
+          // Map a 100x100 right-triangle div (corners 0,0 / S,0 / 0,S) onto the
+          // 3D triangle p0,p1,p2. matrix3d columns = images of local x, y, z axes
+          // and the translation. Flip winding so the normal faces outward, which
+          // lets backface-culling render exactly the near (convex) facets.
+          function facet(p0, p1, p2, grad) {
+            let U = sub(p1, p0), V = sub(p2, p0);
+            const c = [(p0[0] + p1[0] + p2[0]) / 3, (p0[1] + p1[1] + p2[1]) / 3, (p0[2] + p1[2] + p2[2]) / 3];
+            if (dot(cross(U, V), c) < 0) { const t = p1; p1 = p2; p2 = t; U = sub(p1, p0); V = sub(p2, p0); }
+            const nrm = cross(U, V);
+            const nl = Math.hypot(nrm[0], nrm[1], nrm[2]) || 1;
+            const col = [U[0] / S, U[1] / S, U[2] / S, 0,
+                         V[0] / S, V[1] / S, V[2] / S, 0,
+                         nrm[0] / nl, nrm[1] / nl, nrm[2] / nl, 0,
+                         p0[0], p0[1], p0[2], 1];
+            const m = col.map(n => (Math.abs(n) < 1e-6 ? 0 : +n.toFixed(4))).join(',');
+            return { transform: 'matrix3d(' + m + ')', grad };
+          }
+
+          const crown = ['linear-gradient(135deg,#f6fdff,#8fcaec)', 'linear-gradient(135deg,#e6f6ff,#62b2e3)'];
+          const pav = ['linear-gradient(135deg,#1c5f95,#5fb0e2)', 'linear-gradient(135deg,#23709f,#74bde9)'];
+          const facets = [];
+          for (let i = 0; i < N; i++) {
+            const g0 = girdle[i], g1 = girdle[(i + 1) % N];
+            facets.push(facet(top, g0, g1, crown[i % 2]));
+            facets.push(facet(cul, g0, g1, pav[i % 2]));
+          }
+
           const sparks = [
             { cls: 'sp1', d: '0s' }, { cls: 'sp2', d: '1.2s' }, { cls: 'sp3', d: '2.4s' },
           ].map((s) => React.createElement('div', {
             key: s.cls, className: 'dia-spark ' + s.cls, style: { animationDelay: s.d },
           }));
+
           return React.createElement('div', {
             className: 'goal',
             style: { left: 6 * CELL, top: 6 * CELL, width: 3 * CELL, height: 3 * CELL },
@@ -117,15 +142,11 @@ function Board({ state, movable, onPick, poofs }) {
             React.createElement('div', { className: 'crown-float' },
               React.createElement('div', { className: 'crown-shadow' }),
               React.createElement('div', { className: 'dia-glow' }),
-              // true 3D gem: a few faceted SVG planes standing along the board
-              // normal and fanned around the vertical axis, so intersecting they
-              // read as a solid jewel. Parented to the board (no counter-rotation)
-              // → it tilts and turns with the board; gem-spin adds a slow idle spin.
               React.createElement('div', { className: 'gem3d' },
                 React.createElement('div', { className: 'gem-spin' },
-                  [0, 1, 2].map((i) => React.createElement('div', {
-                    key: i, className: 'gem-plane', style: { ['--pa']: (i * 60) + 'deg' },
-                    dangerouslySetInnerHTML: { __html: svg },
+                  facets.map((f, i) => React.createElement('div', {
+                    key: i, className: 'gem-facet',
+                    style: { transform: f.transform, backgroundImage: f.grad },
                   }))
                 )
               ),
