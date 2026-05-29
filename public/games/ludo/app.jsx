@@ -78,26 +78,36 @@ function App() {
     document.documentElement.style.setProperty('--tiltX', t.tilt + 'deg');
   }, [t.tilt]);
 
-  // ---- right-click drag to adjust board tilt ----
-  // Hold the right mouse button and drag vertically to tilt the board (drag up
-  // = flatter/lower angle, down = steeper). Keeps the Tweaks slider in sync.
-  // tiltRef mirrors t.tilt so the drag handler never reads a stale closure.
+  // ---- right-click drag to orbit the board ----
+  // Hold the right mouse button and drag to orbit the board: kéo dọc đổi độ
+  // nghiêng (lên = phẳng hơn, xuống = dựng hơn), kéo ngang xoay quanh trục đứng.
+  // tiltRef/rotRef mirror the live values so the drag handler never reads a
+  // stale closure. Tốc độ đã giảm nhẹ cho dễ canh hướng.
   const tiltRef = useRef(t.tilt);
   useEffect(() => { tiltRef.current = t.tilt; }, [t.tilt]);
+  const rotRef = useRef(45); // matches --rotZ default in styles.css
   const TILT_MIN = 30, TILT_MAX = 68;
   useEffect(() => {
     const onContext = (e) => e.preventDefault(); // suppress the browser menu
     const onDown = (e) => {
       if (e.button !== 2) return; // right button only
       e.preventDefault();
-      const startY = e.clientY;
+      const startX = e.clientX, startY = e.clientY;
       const startTilt = tiltRef.current;
-      document.body.style.cursor = 'ns-resize';
+      const startRot = rotRef.current;
+      document.body.style.cursor = 'grabbing';
       const onMove = (ev) => {
-        // 0.18°/px — nhẹ tay, kéo mượt qua dải 30–68°
-        const next = Math.round(startTilt + (ev.clientY - startY) * 0.18);
-        const clamped = Math.max(TILT_MIN, Math.min(TILT_MAX, next));
-        if (clamped !== tiltRef.current) setTweak('tilt', clamped);
+        // 0.12°/px — chậm hơn trước, kéo mượt qua dải 30–68°
+        const nextTilt = Math.round(startTilt + (ev.clientY - startY) * 0.12);
+        const clampedTilt = Math.max(TILT_MIN, Math.min(TILT_MAX, nextTilt));
+        if (clampedTilt !== tiltRef.current) setTweak('tilt', clampedTilt);
+        // kéo ngang → xoay quanh trục đứng (rotateZ), tự do mọi hướng
+        const nextRot = Math.round(startRot + (ev.clientX - startX) * 0.12);
+        if (nextRot !== rotRef.current) {
+          rotRef.current = nextRot;
+          document.documentElement.style.setProperty('--rotZ', nextRot + 'deg');
+          fit();
+        }
       };
       const onUp = () => {
         document.body.style.cursor = '';
