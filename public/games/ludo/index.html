@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cờ Cá Ngựa — Anime Fantasy · se77n</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+<link rel="stylesheet" href="pieces.css" />
+<style>
+  /* Standalone "open settings" gear — the design's TweaksPanel only opens on a
+     host postMessage (__activate_edit_mode) that doesn't exist outside Claude
+     Design, so without this the theme / opponents / new-game controls would be
+     unreachable on the live site. */
+  #twk-open{
+    position:fixed; right:16px; bottom:16px; z-index:2147483645;
+    width:46px; height:46px; border-radius:50%; border:none; cursor:pointer;
+    background:var(--panel,rgba(20,24,55,.82));
+    color:var(--ink,#fff);
+    border:2px solid var(--panel-border,rgba(130,150,255,.4));
+    box-shadow:0 8px 22px rgba(0,0,0,.35);
+    font-size:20px; display:grid; place-items:center;
+    transition:transform .15s, filter .2s;
+  }
+  #twk-open:hover{ transform:translateY(-2px) rotate(40deg); filter:brightness(1.1); }
+  #twk-open:active{ transform:translateY(0) scale(.95); }
+  /* Back-to-se77n pill */
+  #back-home{
+    position:fixed; left:16px; top:16px; z-index:2147483645;
+    display:inline-flex; align-items:center; gap:7px;
+    padding:8px 14px; border-radius:999px; text-decoration:none;
+    font-family:'Baloo 2',system-ui,sans-serif; font-weight:700; font-size:13px;
+    background:var(--panel,rgba(20,24,55,.82)); color:var(--ink,#fff);
+    border:2px solid var(--panel-border,rgba(130,150,255,.4));
+    box-shadow:0 6px 16px rgba(0,0,0,.28); backdrop-filter:blur(8px);
+    transition:transform .15s, filter .2s;
+  }
+  #back-home:hover{ transform:translateY(-1px); filter:brightness(1.08); }
+  @media (max-width:560px){ #back-home{ font-size:12px; padding:6px 11px; } }
+</style>
+</head>
+<body>
+<a id="back-home" href="/#/game" title="Về se77n · Game">← se77n</a>
+<div id="root"></div>
+<button id="twk-open" aria-label="Mở tuỳ chỉnh" title="Tuỳ chỉnh (chủ đề, đối thủ, ván mới)">⚙</button>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script src="engine.js"></script>
+<script src="themes.js"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="board.jsx"></script>
+<script type="text/babel" src="app.jsx"></script>
+
+<script>
+  // Drive the design's TweaksPanel the way its host would: it listens for
+  // window 'message' events of type __activate_edit_mode / __deactivate_edit_mode
+  // and posts __edit_mode_available when ready. We toggle it locally.
+  (function () {
+    var open = false;
+    var btn = document.getElementById('twk-open');
+    function send(t) { window.postMessage({ type: t }, '*'); }
+    btn.addEventListener('click', function () {
+      open = !open;
+      send(open ? '__activate_edit_mode' : '__deactivate_edit_mode');
+    });
+    // If the panel dismisses itself (its ✕ posts __edit_mode_dismissed), sync.
+    window.addEventListener('message', function (e) {
+      var t = e && e.data && e.data.type;
+      if (t === '__edit_mode_dismissed' || t === '__deactivate_edit_mode') open = false;
+    });
+  })();
+</script>
+</body>
+</html>

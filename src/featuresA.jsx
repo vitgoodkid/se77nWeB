@@ -3495,6 +3495,16 @@ const GAME_TILES = [
     href: '/kata/tavern.html',
     external: true,
   },
+  {
+    id: 'ludo',
+    label: 'Cờ Cá Ngựa',
+    accent: '#ff5763',
+    glyph: '🎲',
+    tagline: 'Anime Fantasy Ludo',
+    desc: 'Bàn cờ 3D phong cách anime, 4 tộc, AI đối thủ, 6 chủ đề. Chơi ngay trên web.',
+    href: '/games/ludo/',
+    external: true,
+  },
 ];
 
 function readGameSubRoute() {

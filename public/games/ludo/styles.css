@@ -1,0 +1,204 @@
+/* ============================ Cờ Cá Ngựa — styles ========================= */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --cell:46px;            /* one grid cell */
+  --tiltX:56deg;          /* isometric tilt */
+  --rotZ:45deg;
+}
+html,body{height:100%}
+body{
+  font-family:'Baloo 2','Quicksand',system-ui,sans-serif;
+  color:var(--ink);
+  overflow:hidden;
+  background:
+    var(--sky-haze),
+    linear-gradient(160deg,var(--bg-1),var(--bg-2) 55%,var(--bg-3));
+  background-attachment:fixed;
+  transition:background .6s ease;
+}
+#root{height:100%}
+
+/* ---------------------------------------------------------------- layout -- */
+.wrap{
+  position:fixed; inset:0;
+  display:grid;
+  grid-template-columns:1fr;
+  place-items:center;
+}
+.ambient{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:0}
+.ambient i{
+  position:absolute; border-radius:50%;
+  background:var(--particle);
+  filter:blur(.4px);
+  opacity:.0; will-change:transform,opacity;
+  animation:float linear infinite;
+}
+@keyframes float{
+  0%{transform:translateY(20px) scale(.6);opacity:0}
+  15%{opacity:.85}
+  85%{opacity:.7}
+  100%{transform:translateY(-110vh) scale(1);opacity:0}
+}
+
+/* the scaled stage that holds the 3D board */
+.stage-fit{position:relative;z-index:1;display:grid;place-items:center}
+.scene{
+  position:relative;
+  width:calc(var(--cell)*15);
+  height:calc(var(--cell)*15);
+  transform-style:preserve-3d;
+  perspective:1600px;
+}
+.board{
+  position:absolute; inset:0;
+  transform-style:preserve-3d;
+  transform:rotateX(var(--tiltX)) rotateZ(var(--rotZ));
+}
+
+/* board base slab (gives thickness) */
+.slab{
+  position:absolute; inset:-14px;
+  background:var(--board-face);
+  border-radius:26px;
+  box-shadow:
+    0 0 0 6px var(--board-edge),
+    0 0 0 10px var(--board-rim),
+    0 60px 80px rgba(0,0,0,.45);
+  transform:translateZ(-18px);
+}
+.slab::after{ /* engraved bevel */
+  content:''; position:absolute; inset:14px;
+  border-radius:16px;
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.25), inset 0 0 40px rgba(0,0,0,.12);
+}
+
+/* ------------------------------------------------------------------ cells -- */
+.cell{
+  position:absolute;
+  width:var(--cell); height:var(--cell);
+  transform-style:preserve-3d;
+}
+.cell .tile{
+  position:absolute; inset:3px;
+  border-radius:7px;
+  background:var(--track);
+  box-shadow:inset 0 0 0 1.5px var(--track-line), 0 2px 3px rgba(0,0,0,.18);
+}
+.cell.path .tile{ background:var(--track); }
+.cell.home .tile{
+  background:linear-gradient(160deg,
+    color-mix(in srgb,var(--cell-tint) 55%,#fff),
+    color-mix(in srgb,var(--cell-tint) 92%,#000));
+  box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.65),
+    0 0 12px color-mix(in srgb,var(--cell-tint) 70%,transparent);
+}
+.cell.start .tile{ box-shadow:inset 0 0 0 2px rgba(255,255,255,.7), 0 0 14px var(--cell-tint); }
+.cell .tint{ position:absolute; inset:3px; border-radius:7px; background:var(--cell-tint); opacity:.5; mix-blend-mode:multiply; }
+.cell.home .tint{ display:none; }
+/* directional chevron on each home-lane cell, pointing toward centre */
+.cell.home .tile::after{
+  content:''; position:absolute; left:50%; top:50%;
+  width:14px; height:14px;
+  border-right:3px solid rgba(255,255,255,.85);
+  border-bottom:3px solid rgba(255,255,255,.85);
+  transform:translate(-50%,-60%) rotate(var(--chev,45deg));
+  filter:drop-shadow(0 1px 2px rgba(0,0,0,.3));
+  animation:chevPulse 1.6s ease-in-out infinite;
+}
+@keyframes chevPulse{0%,100%{opacity:.5}50%{opacity:1}}
+.cell.safe .tile::after{
+  content:'✦'; position:absolute; inset:0; display:grid; place-items:center;
+  font-size:18px; color:rgba(0,0,0,.22);
+}
+
+/* highlight a legal landing tile */
+.cell .ring{
+  position:absolute; inset:-1px; border-radius:9px;
+  border:3px solid #fff; box-shadow:0 0 16px 2px var(--center-glow);
+  animation:pulse 1s ease-in-out infinite; pointer-events:none;
+}
+@keyframes pulse{0%,100%{opacity:.45}50%{opacity:1}}
+
+/* corner stable platform */
+.stable{
+  position:absolute; border-radius:18px;
+  background:var(--cell-tint);
+  box-shadow:inset 0 0 0 3px rgba(255,255,255,.4), inset 0 0 30px rgba(0,0,0,.25), 0 6px 14px rgba(0,0,0,.25);
+  transform-style:preserve-3d;
+}
+.stable .slot{
+  position:absolute; width:30px;height:30px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, rgba(255,255,255,.7), rgba(0,0,0,.15));
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.5);
+  transform:translate(-50%,-50%);
+}
+
+/* ---- centre goal: spinning 3D crown (no background) ---- */
+.goal{
+  position:absolute; transform-style:preserve-3d;
+  display:grid; place-items:center;
+}
+/* the crown floats just above the board centre and bobs gently */
+.crown-float{
+  position:absolute; left:50%; top:50%; width:0; height:0;
+  transform-style:preserve-3d;
+  animation:crownBob 3.6s ease-in-out infinite;
+}
+@keyframes crownBob{0%,100%{transform:translateZ(2px)}50%{transform:translateZ(9px)}}
+.crown-stand{
+  transform-style:preserve-3d;
+  /* counter the board's isometric rotation so the gem faces the camera like a
+     floating jewel; crown-float still bobs it along the board normal. */
+  position:absolute; left:0; top:0;
+  transform:rotateZ(calc(var(--rotZ) * -1)) rotateX(calc(var(--tiltX) * -1));
+}
+.dia-gem{
+  position:absolute; width:58px; height:58px; margin:-42px 0 0 -29px;
+  filter:drop-shadow(0 4px 5px rgba(18,55,85,.4)) drop-shadow(0 0 5px rgba(150,225,255,.6));
+}
+.dia-gem svg{ display:block; }
+
+/* ---- diamond ---- */
+/* soft cool glow behind the gem (sits on the board plane) */
+.dia-glow{
+  position:absolute; left:50%; top:50%;
+  width:78px; height:78px; margin:-39px 0 0 -39px;
+  border-radius:50%;
+  transform:translateZ(1px);
+  background:radial-gradient(circle, color-mix(in srgb,var(--center-glow) 35%,#bfeaff) 0%, transparent 64%);
+  opacity:.5;
+  animation:diaGlow 3.4s ease-in-out infinite;
+}
+@keyframes diaGlow{0%,100%{opacity:.32;transform:translateZ(1px) scale(1)}50%{opacity:.62;transform:translateZ(1px) scale(1.08)}}
+/* tiny 4-point sparkles that twinkle gently (screen-facing) */
+.dia-spark{
+  position:absolute; left:50%; top:50%;
+  width:13px; height:13px;
+  background:#fff;
+  -webkit-mask:
+    radial-gradient(closest-side, #000 96%, transparent) 50% 0/2.5px 50% no-repeat,
+    radial-gradient(closest-side, #000 96%, transparent) 50% 100%/2.5px 50% no-repeat,
+    radial-gradient(closest-side, #000 96%, transparent) 0 50%/50% 2.5px no-repeat,
+    radial-gradient(closest-side, #000 96%, transparent) 100% 50%/50% 2.5px no-repeat;
+  mask:
+    radial-gradient(closest-side, #000 96%, transparent) 50% 0/2.5px 50% no-repeat,
+    radial-gradient(closest-side, #000 96%, transparent) 50% 100%/2.5px 50% no-repeat,
+    radial-gradient(closest-side, #000 96%, transparent) 0 50%/50% 2.5px no-repeat,
+    radial-gradient(closest-side, #000 96%, transparent) 100% 50%/50% 2.5px no-repeat;
+  opacity:0;
+  filter:drop-shadow(0 0 3px #d7f4ff);
+  animation:diaSpark 3.8s ease-in-out infinite;
+}
+.dia-spark.sp1{ margin:-34px 0 0 8px; }
+.dia-spark.sp2{ margin:-6px 0 0 -28px; width:10px; height:10px; }
+.dia-spark.sp3{ margin:6px 0 0 18px; width:8px; height:8px; }
+@keyframes diaSpark{0%,70%,100%{opacity:0;transform:scale(.4) rotate(0deg)}85%{opacity:.95;transform:scale(1) rotate(30deg)}}
+/* soft contact shadow on the board */
+.crown-shadow{
+  position:absolute; left:50%; top:50%;
+  width:50px; height:50px; margin:-25px 0 0 -25px;
+  border-radius:50%;
+  transform:translateZ(-8px);
+  background:radial-gradient(circle, rgba(0,0,0,.32), transparent 64%);
+  filter:blur(3px);
+}

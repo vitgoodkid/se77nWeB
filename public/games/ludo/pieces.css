@@ -1,0 +1,222 @@
+/* ===================== Chibi standees · dice · HUD ======================= */
+
+/* a piece = a point in board space holding a ground shadow + an upright standee */
+.piece{ position:absolute; width:0; height:0; transform-style:preserve-3d; z-index:5; }
+.piece .shadow{
+  position:absolute; left:50%; top:50%;
+  width:34px; height:34px; border-radius:50%;
+  background:radial-gradient(circle, rgba(0,0,0,.4), rgba(0,0,0,0) 70%);
+  transform:translate(-50%,-50%);
+}
+
+/* .billboard does the 3D counter-rotation; .standee lifts in screen space */
+.billboard{
+  position:absolute; left:0; top:0;
+  transform-origin:center center;
+  transform:rotateZ(calc(var(--rotZ) * -1)) rotateX(calc(var(--tiltX) * -1));
+}
+.standee{
+  position:absolute; left:0; top:0;
+  width:44px; height:64px;
+  transform-origin:center bottom;
+  transform:translate(-50%,-100%);
+  transition:filter .2s;
+  will-change:transform;
+}
+.piece.movable .standee{ animation:bob 1s ease-in-out infinite; cursor:pointer; }
+.piece.movable .ground-ring{
+  position:absolute; left:50%; top:50%; width:40px;height:40px;border-radius:50%;
+  transform:translate(-50%,-50%);
+  box-shadow:0 0 0 3px #fff, 0 0 18px 4px var(--center-glow);
+  animation:pulse 1s ease-in-out infinite;
+}
+@keyframes bob{0%,100%{margin-top:0}50%{margin-top:-7px}}
+
+/* body / head base shape */
+.standee .body{
+  position:absolute; left:50%; bottom:0; width:32px; height:34px;
+  transform:translateX(-50%);
+  background:
+    radial-gradient(110% 80% at 30% 20%, rgba(255,255,255,.55), transparent 55%),
+    linear-gradient(160deg, color-mix(in srgb, var(--pc) 88%, #fff), color-mix(in srgb, var(--pc) 75%, #000));
+  border-radius:18px 18px 14px 14px;
+  box-shadow:0 3px 6px rgba(0,0,0,.35), inset 0 -6px 10px rgba(0,0,0,.25);
+}
+.standee .head{
+  position:absolute; left:50%; bottom:27px; width:30px; height:30px;
+  transform:translateX(-50%);
+  border-radius:50%;
+  background:radial-gradient(circle at 38% 32%, #ffe9d6, #f0c39c);
+  box-shadow:0 2px 5px rgba(0,0,0,.3), inset -3px -4px 6px rgba(0,0,0,.12);
+  z-index:2;
+}
+.standee .face{position:absolute;inset:0;z-index:3}
+.standee .face .eye{position:absolute;top:13px;width:4px;height:6px;border-radius:50%;background:#3a2a22}
+.standee .face .eye.l{left:8px}
+.standee .face .eye.r{right:8px}
+.standee .face .blush{position:absolute;top:18px;width:5px;height:3px;border-radius:50%;background:rgba(255,120,120,.6)}
+.standee .face .blush.l{left:4px}.standee .face .blush.r{right:4px}
+
+/* class-specific topper */
+.standee .hat{position:absolute;left:50%;bottom:49px;transform:translateX(-50%);z-index:4}
+
+/* knight: helmet dome + plume */
+.cls-knight .head{background:radial-gradient(circle at 38% 30%,#eef3ff,#b9c4d6)}
+.cls-knight .hat{width:30px;height:14px;border-radius:14px 14px 0 0;background:linear-gradient(#dfe6f2,#9fb0c8);box-shadow:inset 0 -3px 4px rgba(0,0,0,.2)}
+.cls-knight .hat::after{content:'';position:absolute;left:50%;bottom:8px;transform:translateX(-50%);width:6px;height:20px;border-radius:6px;background:linear-gradient(var(--pc),color-mix(in srgb,var(--pc) 60%,#000))}
+.cls-knight .face .eye{top:10px}
+
+/* mage: pointed hat + star */
+.cls-mage .hat{width:0;height:0;border-left:17px solid transparent;border-right:17px solid transparent;border-bottom:30px solid color-mix(in srgb,var(--pc) 80%,#222);bottom:44px}
+.cls-mage .hat::after{content:'✦';position:absolute;left:-7px;top:14px;font-size:11px;color:#fff;text-shadow:0 0 6px var(--center-glow)}
+
+/* ranger: hood + feather */
+.cls-ranger .hat{width:30px;height:18px;border-radius:16px 16px 0 0;background:linear-gradient(color-mix(in srgb,var(--pc) 85%,#2a3),color-mix(in srgb,var(--pc) 60%,#000))}
+.cls-ranger .hat::after{content:'';position:absolute;right:-4px;top:-6px;width:5px;height:18px;border-radius:6px;background:#f4e08a;transform:rotate(24deg)}
+
+/* rogue: hood + eye mask */
+.cls-rogue .hat{width:30px;height:16px;border-radius:16px 16px 0 0;background:linear-gradient(#2b3146,#171a28)}
+.cls-rogue .head::after{content:'';position:absolute;left:50%;top:11px;transform:translateX(-50%);width:26px;height:8px;border-radius:4px;background:#1c2030;z-index:4}
+.cls-rogue .face .eye{background:#cfe9ff;box-shadow:0 0 4px #9fe9ff;top:12px}
+
+/* ---- material treatments (per theme) ---- */
+[data-mat="gem"] .standee .body{box-shadow:0 3px 6px rgba(0,0,0,.35),inset 0 -6px 10px rgba(0,0,0,.25),inset 0 4px 8px rgba(255,255,255,.5)}
+[data-mat="gem"] .standee::after{content:'';position:absolute;left:50%;bottom:4px;transform:translateX(-50%);width:8px;height:8px;background:#fff;opacity:.7;border-radius:50%;filter:blur(1px);animation:twinkle 2.4s ease-in-out infinite}
+@keyframes twinkle{0%,100%{opacity:.2;transform:translateX(-50%) scale(.7)}50%{opacity:.9;transform:translateX(-50%) scale(1.1)}}
+[data-mat="rune"] .standee .body{box-shadow:0 0 14px 2px color-mix(in srgb,var(--pc) 70%,transparent),inset 0 -6px 10px rgba(0,0,0,.4)}
+[data-mat="rune"] .standee .head{box-shadow:0 0 10px color-mix(in srgb,var(--pc) 50%,transparent),inset -3px -4px 6px rgba(0,0,0,.2)}
+[data-mat="leaf"] .standee .body{border-radius:20px 6px 18px 6px;box-shadow:0 3px 6px rgba(0,0,0,.35),inset 0 -6px 10px rgba(0,0,0,.3)}
+
+/* ember: molten body, glowing seams, rising sparks */
+[data-mat="ember"] .standee .body{
+  box-shadow:0 0 16px 3px color-mix(in srgb,var(--pc) 60%,#ff7a2b),
+    inset 0 -6px 10px rgba(0,0,0,.45), inset 0 4px 8px rgba(255,180,90,.5);
+  animation:emberPulse 1.8s ease-in-out infinite;
+}
+[data-mat="ember"] .standee .head{box-shadow:0 0 12px rgba(255,140,60,.5),inset -3px -4px 6px rgba(0,0,0,.2)}
+@keyframes emberPulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.18)}}
+[data-mat="ember"] .standee::before{
+  content:'';position:absolute;left:50%;bottom:30px;transform:translateX(-50%);
+  width:5px;height:5px;border-radius:50%;background:#ffd27a;
+  box-shadow:0 0 8px 2px #ff8a2b;animation:spark 1.6s ease-in infinite;
+}
+[data-mat="ember"] .standee::after{
+  content:'';position:absolute;left:40%;bottom:24px;transform:translateX(-50%);
+  width:4px;height:4px;border-radius:50%;background:#ffe6a8;
+  box-shadow:0 0 7px 2px #ff6a2b;animation:spark 1.9s .6s ease-in infinite;
+}
+@keyframes spark{0%{opacity:0;transform:translate(-50%,0) scale(.6)}25%{opacity:1}100%{opacity:0;transform:translate(-50%,-34px) scale(.3)}}
+
+/* pearl: iridescent shimmer, bioluminescent rim, drifting bubbles */
+[data-mat="pearl"] .standee .body{
+  background:
+    radial-gradient(120% 90% at 28% 18%, rgba(255,255,255,.75), transparent 50%),
+    linear-gradient(160deg, color-mix(in srgb,var(--pc) 80%,#bafff4), color-mix(in srgb,var(--pc) 70%,#0a2c34));
+  box-shadow:0 0 16px 2px color-mix(in srgb,var(--pc) 55%,#41f0e0),
+    inset 0 -6px 10px rgba(0,0,0,.3), inset 0 4px 9px rgba(255,255,255,.6);
+}
+[data-mat="pearl"] .standee .head{
+  background:radial-gradient(circle at 38% 30%,#eafffb,#bfe9e4);
+  box-shadow:0 0 10px rgba(70,230,210,.45),inset -3px -4px 6px rgba(0,0,0,.12);
+}
+[data-mat="pearl"] .standee::after{
+  content:'';position:absolute;left:62%;bottom:18px;
+  width:6px;height:6px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#fff,rgba(160,250,240,.3));
+  box-shadow:0 0 6px rgba(120,240,230,.7);
+  animation:bubble 2.6s ease-in infinite;
+}
+@keyframes bubble{0%{opacity:0;transform:translateY(0) scale(.5)}20%{opacity:.9}100%{opacity:0;transform:translateY(-40px) scale(1)}}
+
+/* halo: radiant gold ring behind head + soft light */
+[data-mat="halo"] .standee .body{
+  box-shadow:0 3px 6px rgba(0,0,0,.3),inset 0 -6px 10px rgba(0,0,0,.18),
+    inset 0 4px 9px rgba(255,255,255,.55),0 0 14px rgba(255,224,122,.4);
+}
+[data-mat="halo"] .standee .head{box-shadow:0 0 12px rgba(255,224,122,.5),inset -3px -4px 6px rgba(0,0,0,.1)}
+[data-mat="halo"] .standee::before{
+  content:'';position:absolute;left:50%;bottom:40px;transform:translate(-50%,0);
+  width:34px;height:34px;border-radius:50%;
+  border:3px solid #ffe07a;box-shadow:0 0 14px 3px rgba(255,224,122,.7);
+  z-index:0;animation:haloSpin 5s linear infinite;
+}
+@keyframes haloSpin{to{transform:translate(-50%,0) rotate(360deg)}}
+
+/* capture poof */
+.poof{position:absolute;width:40px;height:40px;left:0;top:0;transform:translate(-50%,-50%);border-radius:50%;
+  background:radial-gradient(circle,var(--center-glow),transparent 70%);
+  animation:poof .5s ease-out forwards;pointer-events:none;z-index:9}
+@keyframes poof{from{opacity:.9;transform:translate(-50%,-50%) scale(.4)}to{opacity:0;transform:translate(-50%,-50%) scale(2.2)}}
+
+/* =============================== HUD ===================================== */
+.hud-corner{position:fixed;z-index:20;width:188px}
+.hud-corner.tl{top:18px;left:18px}
+.hud-corner.tr{top:18px;right:18px}
+.hud-corner.bl{bottom:18px;left:18px}
+.hud-corner.br{bottom:18px;right:18px}
+.pcard{
+  background:var(--panel);
+  border:2px solid var(--panel-border);
+  border-radius:16px; padding:11px 13px;
+  backdrop-filter:blur(8px);
+  box-shadow:0 10px 26px rgba(0,0,0,.28);
+  transition:transform .3s, box-shadow .3s, opacity .3s;
+}
+.pcard.active{transform:scale(1.05);box-shadow:0 0 0 3px var(--pc), 0 14px 30px rgba(0,0,0,.35)}
+.pcard.dimmed{opacity:.62}
+.pcard .top{display:flex;align-items:center;gap:9px}
+.pcard .crest{width:30px;height:30px;border-radius:9px;background:linear-gradient(150deg,color-mix(in srgb,var(--pc) 90%,#fff),color-mix(in srgb,var(--pc) 70%,#000));box-shadow:inset 0 0 0 2px rgba(255,255,255,.4)}
+.pcard .nm{font-weight:700;font-size:15px;line-height:1.05;white-space:nowrap}
+.pcard .sub{font-size:11px;color:var(--ink-soft);margin-top:3px;white-space:nowrap}
+.pcard .pips{display:flex;gap:5px;margin-top:9px}
+.pcard .pips .p{width:15px;height:15px;border-radius:50%;background:rgba(0,0,0,.12);display:grid;place-items:center;font-size:9px}
+.pcard .pips .p.home{background:var(--pc);box-shadow:0 0 8px var(--pc);color:#fff}
+.pcard .bot{display:flex;align-items:center;justify-content:space-between;margin-top:9px}
+.pcard .tag{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:color-mix(in srgb,var(--pc) 22%,transparent);color:var(--ink)}
+.pcard .tag.you{background:var(--pc);color:#fff}
+
+/* =============================== DICE ==================================== */
+.die-dock{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:25;display:flex;flex-direction:column;align-items:center;gap:10px}
+.die{
+  width:64px;height:64px;border-radius:15px;
+  background:var(--die-face);
+  box-shadow:0 8px 18px rgba(0,0,0,.4), inset 0 2px 6px rgba(255,255,255,.6), inset 0 -8px 12px rgba(0,0,0,.18);
+  display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:11px;gap:2px;
+}
+.die.rolling{animation:tumble .6s ease-in-out}
+@keyframes tumble{0%{transform:rotate(0) scale(1)}25%{transform:rotate(-90deg) scale(1.08)}55%{transform:rotate(120deg) scale(.95)}100%{transform:rotate(360deg) scale(1)}}
+.die .pip{width:9px;height:9px;border-radius:50%;background:var(--die-pip);align-self:center;justify-self:center;opacity:0}
+.die .pip.on{opacity:1}
+.roll-btn{
+  font:inherit;font-weight:800;font-size:16px;letter-spacing:.3px;
+  padding:11px 26px;border:none;border-radius:30px;cursor:pointer;color:#fff;
+  background:linear-gradient(160deg,#ff8a3d,#ff5763);
+  box-shadow:0 8px 20px rgba(255,87,99,.45), inset 0 2px 0 rgba(255,255,255,.4);
+  transition:transform .12s, filter .2s;
+}
+.roll-btn:hover{transform:translateY(-2px) scale(1.03)}
+.roll-btn:active{transform:translateY(0) scale(.97)}
+.roll-btn:disabled{filter:grayscale(.6) opacity(.55);cursor:default;transform:none}
+.status{
+  font-weight:700;font-size:14px;padding:7px 16px;border-radius:30px;
+  background:var(--panel);border:2px solid var(--panel-border);backdrop-filter:blur(8px);
+  box-shadow:0 6px 16px rgba(0,0,0,.2);max-width:min(80vw,420px);text-align:center;
+}
+
+/* ============================ banners ==================================== */
+.toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(.8);z-index:40;
+  font-weight:900;font-size:38px;color:#fff;text-shadow:0 4px 18px rgba(0,0,0,.5);
+  padding:18px 40px;border-radius:22px;opacity:0;pointer-events:none;
+  background:linear-gradient(150deg,rgba(255,255,255,.18),rgba(255,255,255,.05));
+  border:2px solid rgba(255,255,255,.4);backdrop-filter:blur(6px);}
+.toast.show{animation:toast 1.6s ease forwards}
+@keyframes toast{12%{opacity:1;transform:translate(-50%,-50%) scale(1.05)}80%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.1)}}
+
+.win-overlay{position:fixed;inset:0;z-index:50;display:grid;place-items:center;
+  background:radial-gradient(circle at 50% 40%,rgba(0,0,0,.35),rgba(0,0,0,.7));
+  backdrop-filter:blur(4px);opacity:0;animation:fade .5s ease forwards}
+@keyframes fade{to{opacity:1}}
+.win-card{background:var(--panel);border:3px solid var(--panel-border);border-radius:24px;
+  padding:34px 44px;text-align:center;box-shadow:0 30px 70px rgba(0,0,0,.5)}
+.win-card h1{font-size:34px;margin-bottom:6px}
+.win-card p{color:var(--ink-soft);margin-bottom:18px;font-size:15px}
