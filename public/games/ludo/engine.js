@@ -17,7 +17,7 @@
    LOGICAL STEP per horse: -1 = base, 0..50 = ring (50 = home door),
    51..56 = home bậc1..6, 57 = centre = DONE.
    =========================================================================== */
-(function () {
+const ENGINE = (function () {
   const N = 15;
 
   // 52-cell clockwise cross track (identical to the classic board)
@@ -389,7 +389,7 @@
     }
   }
 
-  window.Engine = {
+  const Engine = {
     N, RING, RING_LEN, CORNERS_IDX, START_IDX, DOOR_IDX, HOME, BASE, CENTER,
     SAFE, CORNER_KEYS, FACTIONS, FACTION_ORDER,
     STEP_DONE, HOME_DOOR_STEP, TRACK_MAX,
@@ -399,4 +399,25 @@
     nextTurn, sendFurthestToBase, aiChoose,
     label, describeEvent, pickFactions,
   };
+
+  // Dual-mode: browser global for the CDN-loaded client, ESM export for the
+  // Vercel serverless side (api/_lib/ludo-rooms.js imports this same file so
+  // server + client never drift on the rules).
+  if (typeof window !== 'undefined') window.Engine = Engine;
+  return Engine;
 })();
+
+// ESM exports — only the server uses these. The IIFE above still runs in the
+// browser (where `export` is a no-op statement that module scripts allow) and
+// sets window.Engine. Node imports the named/default bindings below.
+export default ENGINE;
+export const {
+  N, RING, RING_LEN, CORNERS_IDX, START_IDX, DOOR_IDX, HOME, BASE, CENTER,
+  SAFE, CORNER_KEYS, FACTIONS, FACTION_ORDER,
+  STEP_DONE, HOME_DOOR_STEP, TRACK_MAX,
+  cellOf, ringIdxAt, nextCornerIdx, prevCornerIdx, factionKey,
+  ringOccupants, homeOccupants,
+  newGame, playerDone, furthestHorse, legalMoves, applyMove,
+  nextTurn, sendFurthestToBase, aiChoose,
+  label, describeEvent, pickFactions,
+} = ENGINE;

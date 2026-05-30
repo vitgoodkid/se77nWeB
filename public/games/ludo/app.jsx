@@ -14,17 +14,28 @@ function Die({ value, rolling }) {
 }
 
 // ---------- HUD player cards (4 corners) ----------
-function HUD({ state, mode, onHover }) {
+function HUD({ state, mode, onHover, mySeat, seatMeta }) {
   const order = ['tl', 'tr', 'br', 'bl'];
   return state.seats.map((st, p) => {
     const homeCount = state.horses[p].filter(h => h.step >= STEP_DONE).length;
     const active = state.turn === p && state.winner == null;
-    const you = mode === 'hotseat' ? false : p === 0;
+    const you = mySeat != null ? p === mySeat : (mode === 'hotseat' ? false : p === 0);
     const stt = state.status[p];
     const cls = ['pcard']; cls.push(active ? 'active' : 'dimmed');
     const debuffs = [];
     if (stt.skip > 0) debuffs.push('⏭️');
     if (stt.curse > 0) debuffs.push('⛓️');
+    // online: derive role + name from the room's seat metadata
+    const sm = seatMeta && seatMeta[p];
+    let tagText, nameText = st.name;
+    if (seatMeta) {
+      if (you) tagText = 'Bạn';
+      else if (sm && sm.isAI) tagText = 'AI';
+      else if (sm && sm.occupied) { tagText = 'Người'; if (sm.displayName) nameText = sm.displayName; }
+      else tagText = 'Trống';
+    } else {
+      tagText = you ? 'Bạn' : (mode === 'hotseat' ? 'Người' : 'AI');
+    }
     return React.createElement('div', { key: p, className: 'hud-corner ' + order[p] },
       React.createElement('div', { className: cls.join(' '), style: { ['--pc']: st.hue },
         onMouseEnter: onHover ? (e) => onHover({ seat: p, faction: st.faction }, e) : undefined,
@@ -33,14 +44,14 @@ function HUD({ state, mode, onHover }) {
         React.createElement('div', { className: 'top' },
           React.createElement('div', { className: 'crest' }, st.icon),
           React.createElement('div', {},
-            React.createElement('div', { className: 'nm' }, st.name),
+            React.createElement('div', { className: 'nm' }, nameText),
             React.createElement('div', { className: 'sub' }, st.skill))),
         React.createElement('div', { className: 'pips' },
           state.horses[p].map((h, i) =>
             React.createElement('div', { key: i, className: 'p' + (h.step >= STEP_DONE ? ' home' : '') },
               h.step >= STEP_DONE ? '★' : ''))),
         React.createElement('div', { className: 'bot' },
-          React.createElement('div', { className: 'tag' + (you ? ' you' : '') }, you ? 'Bạn' : (mode === 'hotseat' ? 'Người' : 'AI')),
+          React.createElement('div', { className: 'tag' + (you ? ' you' : '') }, tagText),
           React.createElement('div', { className: 'sub' },
             debuffs.length ? debuffs.join(' ') + ' ' : '', 'Đích ' + homeCount + '/4'))));
   });
@@ -80,6 +91,62 @@ const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
   "aiSpeed": "vừa"
 }/*EDITMODE-END*/;
 
+// ---------- Online lobby overlay ----------
+// me: undefined=loading · null=not logged in · {id,displayName,...}=authed
+// net: null when not in a room; { code, mySeat } once seated.
+function LudoLobby({ open, onClose, me, net, room, joinCode, setJoinCode, err,
+                     onCreate, onJoin, onStart, onLeave }) {
+  if (!open) return null;
+  const h = React.createElement;
+  const inRoom = !!net && !!room;
+  const isHost = inRoom && me && room.hostUid === me.id;
+  const humans = inRoom ? room.seats.filter(s => s.occupied && !s.isAI).length : 0;
+
+  let body;
+  if (me === undefined) {
+    body = h('div', { className: 'lobby-msg' }, 'Đang tải…');
+  } else if (me === null) {
+    body = h('div', { className: 'lobby-auth' },
+      h('p', {}, 'Đăng nhập bằng Discord để chơi cùng bạn bè.'),
+      h('a', { className: 'roll-btn', href: '/api/auth/discord/start' }, '🎮 Đăng nhập Discord'));
+  } else if (!inRoom) {
+    body = h('div', { className: 'lobby-home' },
+      h('div', { className: 'lobby-greet' }, 'Chào ' + (me.displayName || 'bạn') + '!'),
+      h('button', { className: 'roll-btn', onClick: onCreate }, '➕ Tạo phòng mới'),
+      h('div', { className: 'lobby-or' }, 'hoặc nhập mã phòng'),
+      h('div', { className: 'lobby-join' },
+        h('input', { className: 'lobby-input', value: joinCode, maxLength: 4,
+          placeholder: 'ABCD', onChange: (e) => setJoinCode(e.target.value.toUpperCase()),
+          onKeyDown: (e) => { if (e.key === 'Enter') onJoin(); } }),
+        h('button', { className: 'roll-btn', onClick: onJoin }, 'Vào')));
+  } else {
+    // seated — show room code + the 4 seats
+    body = h('div', { className: 'lobby-room' },
+      h('div', { className: 'lobby-code' },
+        h('span', { className: 'lobby-code-label' }, 'Mã phòng'),
+        h('span', { className: 'lobby-code-val' }, room.code)),
+      h('div', { className: 'lobby-seats' },
+        room.seats.map((s) => h('div', { key: s.seat, className: 'lobby-seat' + (s.occupied ? ' filled' : '') },
+          h('span', { className: 'lobby-seat-icon' }, s.isAI ? '🤖' : (s.occupied ? '🧑' : '∅')),
+          h('span', {}, s.seat === (net && net.mySeat) ? (s.displayName || 'Bạn') + ' (bạn)'
+            : s.isAI ? 'AI' : (s.occupied ? (s.displayName || 'Người chơi') : 'Trống'))))),
+      h('div', { className: 'lobby-hint' }, 'Ghế trống sẽ do AI điều khiển khi bắt đầu.'),
+      h('div', { className: 'lobby-actions' },
+        isHost
+          ? h('button', { className: 'roll-btn', onClick: onStart, disabled: humans < 1 }, '▶ Bắt đầu')
+          : h('div', { className: 'lobby-msg' }, 'Chờ chủ phòng bắt đầu…'),
+        h('button', { className: 'lobby-leave', onClick: onLeave }, 'Rời phòng')));
+  }
+
+  return h('div', { className: 'wiki-overlay', onClick: onClose },
+    h('div', { className: 'wiki lobby', onClick: (e) => e.stopPropagation() },
+      h('div', { className: 'wiki-head' },
+        h('h2', {}, '🌐 Chơi Online'),
+        h('button', { className: 'wiki-x', onClick: onClose }, '✕')),
+      err && h('div', { className: 'lobby-err' }, err),
+      body));
+}
+
 function App() {
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
   const gameRef = useRef(Engine.newGame());
@@ -97,16 +164,79 @@ function App() {
   const [logOpen, setLogOpen] = useState(true);
   const [wikiOpen, setWikiOpen] = useState(false);
   const [tip, setTip] = useState(null);           // {x,y,faction}
+
+  // ── online multiplayer state ──
+  const [me, setMe] = useState(undefined);         // undefined=loading · null=guest · {id,...}=authed
+  const [net, setNet] = useState(null);            // { code, mySeat, version } when in a room
+  const [room, setRoom] = useState(null);          // latest server roomView (seats/status/state)
+  const [onlineOpen, setOnlineOpen] = useState(false); // lobby overlay visible
+  const [lobbyErr, setLobbyErr] = useState(null);
+  const [joinCode, setJoinCode] = useState('');
+  const netRef = useRef(null);
+  const roomRef = useRef(null);
+  const busyRef = useRef(false);
+  const animatingRef = useRef(false);
+  useEffect(() => { busyRef.current = busy; }, [busy]);
+  const isOnline = !!net;
+
   const fitRef = useRef(null);
   const sceneRef = useRef(null);
   const fxId = useRef(0);
 
   const mode = t.opponents;
-  const isAI = (p) => mode === 'ai' && p !== 0;
+  const isAI = (p) => !isOnline && mode === 'ai' && p !== 0;
   const aiDelay = { 'nhanh': 240, 'vừa': 460, 'chậm': 800 }[t.aiSpeed] || 460;
+
+  // keep refs in sync so async pollers / handlers read fresh values
+  useEffect(() => { netRef.current = net; }, [net]);
+  useEffect(() => { roomRef.current = room; }, [room]);
+
+  // ---- detect Discord login (same-origin → session cookie auto-sent) ----
+  useEffect(() => {
+    let cancel = false;
+    fetch('/api/auth/me')
+      .then((r) => (r.ok ? r.json() : { user: null }))
+      .then(async (d) => {
+        if (cancel) return;
+        const user = d?.user || null;
+        setMe(user);
+        // auto-rejoin a room we were in before a refresh (server matches by uid)
+        if (user) {
+          let saved = null;
+          try { saved = localStorage.getItem('ludo.room'); } catch {}
+          if (saved) {
+            try {
+              const data = await api('join', { body: { code: saved } });
+              if (cancel) return;
+              setNet({ code: data.room.code, mySeat: data.mySeat, version: data.room.version });
+              await ingestRoom(data, { animate: false });
+              setOnlineOpen(data.room.status === 'lobby');
+            } catch { try { localStorage.removeItem('ludo.room'); } catch {} }
+          }
+        }
+      })
+      .catch(() => { if (!cancel) setMe(null); });
+    return () => { cancel = true; };
+  }, []);
+
+  // ---- online API helper ----
+  const api = useCallback(async (action, opts = {}) => {
+    const { method = 'POST', body, query } = opts;
+    const qs = new URLSearchParams({ kind: 'ludo', action, ...(query || {}) }).toString();
+    const res = await fetch('/api/toolbox?' + qs, {
+      method,
+      headers: body ? { 'Content-Type': 'application/json' } : undefined,
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw Object.assign(new Error(data.error || 'request_failed'), { status: res.status, data });
+    return data;
+  }, []);
 
   // expose the Hero Wiki toggle to the HTML toolbar button
   useEffect(() => { window.__openWiki = () => setWikiOpen(o => !o); return () => { delete window.__openWiki; }; }, []);
+  // expose the Online lobby toggle to the HTML toolbar button
+  useEffect(() => { window.__openOnline = () => setOnlineOpen(o => !o); return () => { delete window.__openOnline; }; }, []);
 
   // ---- theme ----
   useEffect(() => {
@@ -371,6 +501,7 @@ function App() {
 
   // ---- core turn flow ----
   async function doRoll() {
+    if (isOnline) return onlineRoll();
     const g = gameRef.current;
     if (busy || rolling || g.winner != null || g.phase !== 'roll') return;
     setBusy(true); setRolling(true); setMovable({ horses: new Set(), landing: null });
@@ -433,6 +564,7 @@ function App() {
   }
 
   async function onPick(h) {
+    if (isOnline) return onlinePick(h);
     const g = gameRef.current;
     if (g.phase !== 'select' || busy) return;
     const moves = Engine.legalMoves(g);
@@ -495,6 +627,7 @@ function App() {
     return isAI(g.turn) ? 'Lượt của ' + g.seats[g.turn].name + ' (AI)…' : 'Lượt của bạn — đổ xúc xắc';
   }
   function scheduleTurn() {
+    if (isOnline) return;            // server drives AI online; no client timers
     const g = gameRef.current;
     if (g.winner != null) return;
     if (isAI(g.turn)) setTimeout(() => doRoll(), 620);
@@ -512,8 +645,157 @@ function App() {
   useEffect(() => { scheduleTurn(); /* eslint-disable-next-line */ }, []);
   useEffect(() => { setTimeout(fit, 60); /* eslint-disable-next-line */ }, [t.variant]);
 
+  // ════════════════════════════════════════════════════════════════
+  // ONLINE MULTIPLAYER — server-authoritative; this client only sends
+  // intents (roll/move) and renders the state the server returns.
+  // ════════════════════════════════════════════════════════════════
+
+  // Replace local game state with the server's, then animate any new events.
+  async function ingestRoom(data, { animate = true } = {}) {
+    const r = data.room;
+    if (!r) return;
+    setRoom(r);
+    if (typeof data.mySeat === 'number' && data.mySeat >= 0 && netRef.current) {
+      if (netRef.current.mySeat !== data.mySeat) setNet(n => n && ({ ...n, mySeat: data.mySeat }));
+    }
+    if (r.state) {
+      gameRef.current = r.state;
+      // bump version so the next poll only pulls newer event batches
+      if (netRef.current && r.version != null) setNet(n => n && ({ ...n, version: r.version }));
+      // animate the server's event batch (captures, traps, finishes…)
+      if (animate && Array.isArray(r.events) && r.events.length) {
+        animatingRef.current = true;
+        await playEvents(r.events);
+        animatingRef.current = false;
+      }
+      refreshOnlineTurnUI();
+      render();
+    }
+  }
+
+  // After state settles, light up the player's movable horses if it's their
+  // turn and the server is waiting on a selection (phase 'select').
+  function refreshOnlineTurnUI() {
+    const g = gameRef.current;
+    const n = netRef.current;
+    if (!g || !n) return;
+    setDie(g.die || null);
+    if (g.winner != null) { setMovable({ horses: new Set(), landing: null }); setStatus(g.seats[g.winner].name + ' chiến thắng!'); return; }
+    const mine = g.turn === n.mySeat;
+    if (mine && g.phase === 'select') {
+      const moves = Engine.legalMoves(g);
+      setMovable({ horses: new Set(moves.map(m => m.horse.seat + '-' + m.horse.idx)), landing: landingSet(moves) });
+      const hasNhot = moves.some(m => m.kind === 'nhot');
+      setStatus('Đổ ' + g.die + (hasNhot ? ' — có thể Nhót! ' : ' — ') + 'chọn quân phát sáng');
+    } else {
+      setMovable({ horses: new Set(), landing: null });
+      setStatus(mine ? 'Lượt của bạn — đổ xúc xắc' : 'Lượt của ' + g.seats[g.turn].name + '…');
+    }
+  }
+
+  async function onlineRoll() {
+    const n = netRef.current; const g = gameRef.current;
+    if (!n || busyRef.current || g.winner != null) return;
+    if (g.turn !== n.mySeat || g.phase !== 'roll') return;
+    setBusy(true); setRolling(true);
+    try {
+      await sleep(420);
+      const data = await api('roll', { body: { code: n.code, version: n.version } });
+      setRolling(false);
+      await ingestRoom(data);
+    } catch (e) {
+      setRolling(false);
+      if (e.status === 409 && e.data?.room) await ingestRoom({ room: e.data.room }, { animate: false });
+      else flash('Lỗi: ' + (e.message || 'roll'));
+    } finally { setBusy(false); }
+  }
+
+  async function onlinePick(h) {
+    const n = netRef.current; const g = gameRef.current;
+    if (!n || busyRef.current) return;
+    if (g.turn !== n.mySeat || g.phase !== 'select') return;
+    const moves = Engine.legalMoves(g);
+    const mine = moves.filter(mv => mv.horse.seat === h.seat && mv.horse.idx === h.idx);
+    if (!mine.length) return;
+    const m = mine.find(mv => mv.kind === 'nhot') || mine[0];
+    setBusy(true);
+    setMovable({ horses: new Set(), landing: null });
+    try {
+      const data = await api('move', { body: { code: n.code, version: n.version, idx: m.horse.idx, kind: m.kind, to: m.to } });
+      await ingestRoom(data);
+    } catch (e) {
+      if (e.status === 409 && e.data?.room) await ingestRoom({ room: e.data.room }, { animate: false });
+      else flash('Lỗi: ' + (e.message || 'move'));
+    } finally { setBusy(false); }
+  }
+
+  // ---- poll loop: ~1s, paused while a local action/animation is in flight ----
+  useEffect(() => {
+    if (!net) return;
+    let stop = false; let ctrl = null;
+    const tick = async () => {
+      if (stop) return;
+      if (busyRef.current || animatingRef.current) return; // don't clobber an in-flight turn
+      const n = netRef.current; if (!n) return;
+      ctrl = new AbortController();
+      try {
+        const qs = new URLSearchParams({ kind: 'ludo', action: 'state', code: n.code, since: String(n.version) });
+        const res = await fetch('/api/toolbox?' + qs, { signal: ctrl.signal });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (stop || busyRef.current || animatingRef.current) return;
+        if (data.room && data.room.version > n.version) await ingestRoom(data);
+        else if (data.room) setRoom(data.room); // seats/presence refresh only
+      } catch { /* aborted or network blip — next tick retries */ }
+    };
+    const id = setInterval(tick, 1000);
+    tick();
+    return () => { stop = true; clearInterval(id); if (ctrl) ctrl.abort(); };
+  }, [net && net.code]); // eslint-disable-line
+
+  // ---- lobby actions ----
+  async function lobbyCreate() {
+    setLobbyErr(null);
+    try {
+      const data = await api('create');
+      setNet({ code: data.room.code, mySeat: data.mySeat, version: data.room.version });
+      setRoom(data.room);
+      try { localStorage.setItem('ludo.room', data.room.code); } catch {}
+    } catch (e) { setLobbyErr(loginHintErr(e)); }
+  }
+  async function lobbyJoin() {
+    setLobbyErr(null);
+    const code = joinCode.toUpperCase().trim();
+    if (code.length < 3) { setLobbyErr('Nhập mã phòng'); return; }
+    try {
+      const data = await api('join', { body: { code } });
+      setNet({ code: data.room.code, mySeat: data.mySeat, version: data.room.version });
+      setRoom(data.room);
+      try { localStorage.setItem('ludo.room', data.room.code); } catch {}
+    } catch (e) { setLobbyErr(joinErrMsg(e)); }
+  }
+  async function lobbyStart() {
+    const n = netRef.current; if (!n) return;
+    try { const data = await api('start', { body: { code: n.code } }); await ingestRoom(data, { animate: false }); }
+    catch (e) { setLobbyErr(e.data?.error === 'need_player' ? 'Cần ít nhất 1 người' : 'Lỗi bắt đầu'); }
+  }
+  async function lobbyLeave() {
+    const n = netRef.current; if (!n) return;
+    try { await api('leave', { body: { code: n.code } }); } catch {}
+    try { localStorage.removeItem('ludo.room'); } catch {}
+    setNet(null); setRoom(null); setOnlineOpen(false);
+    gameRef.current = Engine.newGame(); render();
+  }
+  function loginHintErr(e) { return e.status === 401 ? 'Cần đăng nhập Discord trước' : ('Lỗi: ' + (e.message || '')); }
+  function joinErrMsg(e) {
+    const m = { room_not_found: 'Không tìm thấy phòng', room_full: 'Phòng đã đầy', game_in_progress: 'Ván đang diễn ra' };
+    return e.status === 401 ? 'Cần đăng nhập Discord trước' : (m[e.data?.error] || 'Lỗi vào phòng');
+  }
+
   const g = gameRef.current;
-  const canRoll = !isAI(g.turn) && g.phase === 'roll' && !busy && !rolling && g.winner == null;
+  const canRoll = isOnline
+    ? (net && g.turn === net.mySeat && g.phase === 'roll' && !busy && !rolling && g.winner == null)
+    : (!isAI(g.turn) && g.phase === 'roll' && !busy && !rolling && g.winner == null);
 
   const onHover = (info, e) => {
     if (!info) { setTip(null); return; }
@@ -534,7 +816,7 @@ function App() {
       React.createElement('div', { ref: sceneRef, style: { display: 'inline-block' } },
         React.createElement(Board, { state: g, movable, onPick, onHover, fx, badges }))),
 
-    React.createElement(HUD, { state: g, mode, onHover }),
+    React.createElement(HUD, { state: g, mode, onHover, mySeat: isOnline && net ? net.mySeat : null, seatMeta: isOnline && room ? room.seats : null }),
 
     // ---- game log panel ----
     React.createElement('div', { className: 'log-panel' + (logOpen ? '' : ' collapsed') },
@@ -566,11 +848,19 @@ function App() {
 
     React.createElement(HeroWiki, { open: wikiOpen, onClose: () => setWikiOpen(false), seats: g.seats }),
 
+    React.createElement(LudoLobby, {
+      open: onlineOpen, onClose: () => setOnlineOpen(false),
+      me, net, room, joinCode, setJoinCode, err: lobbyErr,
+      onCreate: lobbyCreate, onJoin: lobbyJoin, onStart: lobbyStart, onLeave: lobbyLeave,
+    }),
+
     g.winner != null && React.createElement('div', { className: 'win-overlay' },
       React.createElement('div', { className: 'win-card', style: { ['--pc']: g.seats[g.winner].hue } },
         React.createElement('h1', { style: { color: g.seats[g.winner].hue } }, g.seats[g.winner].icon + ' ' + g.seats[g.winner].name + ' chiến thắng!'),
         React.createElement('p', {}, 'Đưa cả 4 quân về Thánh Tích trung tâm.'),
-        React.createElement('button', { className: 'roll-btn', onClick: newGame }, 'Chơi ván mới'))),
+        isOnline
+          ? React.createElement('button', { className: 'roll-btn', onClick: lobbyLeave }, 'Về sảnh')
+          : React.createElement('button', { className: 'roll-btn', onClick: newGame }, 'Chơi ván mới'))),
 
     React.createElement(TweaksPanel, { title: 'Cài đặt' },
       React.createElement(TweakSection, { label: 'Chủ đề' }),

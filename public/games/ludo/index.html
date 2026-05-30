@@ -70,6 +70,8 @@
   <span class="sep"></span>
   <button id="wiki-open" type="button" aria-label="Từ điển hệ phái" title="Từ Điển Hệ Phái (8 màu, kỹ năng)"><span>📖</span><span>Hệ Phái</span></button>
   <span class="sep"></span>
+  <button id="online-open" type="button" aria-label="Chơi online" title="Chơi online với bạn bè (đăng nhập Discord)"><span>🌐</span><span>Online</span></button>
+  <span class="sep"></span>
   <button id="twk-open" type="button" aria-label="Mở cài đặt" title="Cài đặt (chủ đề, góc nhìn)"><span class="gear">⚙</span><span>Cài đặt</span></button>
 </div>
 <div id="root"></div>
@@ -78,7 +80,7 @@
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 
-<script src="engine.js"></script>
+<script type="module" src="engine.js"></script>
 <script src="themes.js"></script>
 <script type="text/babel" src="tweaks-panel.jsx"></script>
 <script type="text/babel" src="board.jsx"></script>
@@ -105,6 +107,11 @@
     var wikiBtn = document.getElementById('wiki-open');
     if (wikiBtn) wikiBtn.addEventListener('click', function () {
       if (typeof window.__openWiki === 'function') window.__openWiki();
+    });
+    // Online lobby button → React exposes window.__openOnline once mounted.
+    var onlineBtn = document.getElementById('online-open');
+    if (onlineBtn) onlineBtn.addEventListener('click', function () {
+      if (typeof window.__openOnline === 'function') window.__openOnline();
     });
   })();
 </script>

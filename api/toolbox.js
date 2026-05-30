@@ -8,7 +8,8 @@
 //   /p/:id         → ?kind=paste&id=:id&view=1     (HTML view)
 //   /api/toolbox   → direct calls from ShortenerTool / PastebinTool / GameResourcesTool
 //
-// Public — no auth.
+// Public — no auth. (Exception: ?kind=ludo is the online Cờ Cá Ngựa room API,
+// which requires a session and does its own auth in _lib/ludo-rooms.js.)
 
 import { ObjectId } from 'mongodb';
 import { getDb } from './_lib/mongo.js';
@@ -25,7 +26,8 @@ export default async function handler(req, res) {
       case 'games': return await handleGames(req, res);
       case 'tech':  return await handleTech(req, res);
       case 'history': return await handleHistory(req, res);
-      default: return res.status(400).json({ error: 'unknown kind', hint: 'expected ?kind=short|paste|games|tech|history' });
+      case 'ludo':  return await (await import('./_lib/ludo-rooms.js')).handleLudo(req, res);
+      default: return res.status(400).json({ error: 'unknown kind', hint: 'expected ?kind=short|paste|games|tech|history|ludo' });
     }
   } catch (err) {
     console.error('[/api/toolbox]', kind, err);
