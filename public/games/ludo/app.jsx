@@ -123,6 +123,18 @@ function App() {
   useEffect(() => { tiltRef.current = t.tilt; }, [t.tilt]);
   const rotRef = useRef(45);
   const TILT_MIN = 30, TILT_MAX = 68;
+  // Touch-device default: orient the board so seat 0 (the human) sits at the
+  // bottom-front of the diamond instead of seat 3, so the player's pieces are
+  // closest to them. Each seat is 90° apart; the formula puts seat 0 at front
+  // by rotating an extra +90° from the desktop default of 45°.
+  const HOME_ROT = 135;
+  const HOME_TILT = 56;
+  useEffect(() => {
+    if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) {
+      rotRef.current = HOME_ROT;
+      document.documentElement.style.setProperty('--rotZ', HOME_ROT + 'deg');
+    }
+  }, []);
   useEffect(() => {
     const onContext = (e) => e.preventDefault();
     const onDown = (e) => {
@@ -182,25 +194,34 @@ function App() {
     };
   }, [fit]);
 
-  // ---- 2-finger touch: pinch to zoom + drag to orbit (matches desktop
-  // right-drag). The single-finger path is left alone so taps on tiles,
-  // buttons, and HUD cards still work normally.
+  // ---- 2-finger touch: pinch to zoom + small peek-orbit with spring-back.
+  // Single-finger taps still work normally (tiles, dice, HUD buttons).
   //
-  // Perf: every touchmove on a phone was hitting setTweak (→ full React
-  // re-render of the game tree), fit() (→ getBoundingClientRect forced sync
-  // layout), and restarting the .board's 140ms transform transition. The
-  // gesture coalesces all writes into a single rAF callback, writes CSS vars
-  // and the box transform directly (no React state churn), and the .gesturing
-  // body class kills the transition + pauses ambient particles. Tilt is
-  // committed to React state ONCE on touchend.
+  // Behavior tuned for board-game UX:
+  //  • the resting orientation is HOME_ROT / HOME_TILT (so the player's
+  //    pieces are always at the bottom-front of the diamond),
+  //  • drag is clamped to a small peek (no 360° spins) so the player keeps
+  //    their bearings while glancing at the far side of the board,
+  //  • releasing the fingers springs rotZ + tilt back to HOME with a rAF
+  //    tween. Pinch-zoom persists (user keeps the zoom they wanted).
+  //
+  // Perf: per-touchmove we only mutate refs + schedule one rAF flush — no
+  // setTweak / no getBoundingClientRect / no React re-render. The .gesturing
+  // body class kills the .board's 140ms transform transition and pauses
+  // ambient particles for the duration of the gesture + spring.
   useEffect(() => {
     const root = document.documentElement;
     let active = false, d0 = 0, cx0 = 0, cy0 = 0;
-    let baseZ = 1, baseTilt = 56, baseRot = 45;
+    let baseZ = 1;
     let autoFitBase = 1;
-    let pendingRot = 45, pendingTilt = 56, pendingZoom = 1, rafId = 0;
+    let pendingRot = HOME_ROT, pendingTilt = HOME_TILT, pendingZoom = 1, rafId = 0;
+    let springRaf = 0;
+    const ROT_PEEK = 22;   // max ° from HOME_ROT during a drag
+    const TILT_PEEK = 8;   // max ° from HOME_TILT during a drag
+    const SPRING_MS = 280;
 
     const dist = (a, b) => Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+    const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
     // Compute the auto-fit scale once at gesture start without reading any
     // element's bbox (avoids forcing layout). The board is always --cell × 15
@@ -234,6 +255,40 @@ function App() {
       }
     };
 
+    // Tween rotZ + tilt back to HOME. Picks the shortest angular path for rot
+    // so e.g. 350° → 135° goes the short way (-145°), not the long way (+145°).
+    const springHome = () => {
+      const startRot = rotRef.current;
+      const startTilt = tiltRef.current;
+      const dRot = ((HOME_ROT - startRot + 540) % 360) - 180;
+      const dTilt = HOME_TILT - startTilt;
+      if (Math.abs(dRot) < 0.5 && Math.abs(dTilt) < 0.5) {
+        document.body.classList.remove('gesturing');
+        return;
+      }
+      const t0 = performance.now();
+      const step = (now) => {
+        const k = Math.min(1, (now - t0) / SPRING_MS);
+        const ease = 1 - Math.pow(1 - k, 3);
+        const r = startRot + dRot * ease;
+        const ti = startTilt + dTilt * ease;
+        rotRef.current = r;
+        tiltRef.current = Math.round(ti);
+        root.style.setProperty('--rotZ', r + 'deg');
+        root.style.setProperty('--tiltX', Math.round(ti) + 'deg');
+        if (k < 1) {
+          springRaf = requestAnimationFrame(step);
+        } else {
+          springRaf = 0;
+          document.body.classList.remove('gesturing');
+          // Commit final tilt to React state so fit-on-tilt-change picks it up.
+          if (tiltRef.current !== HOME_TILT) tiltRef.current = HOME_TILT;
+          setTweak('tilt', HOME_TILT);
+        }
+      };
+      springRaf = requestAnimationFrame(step);
+    };
+
     const onStart = (e) => {
       if (e.touches.length !== 2) { active = false; return; }
       const [a, b] = e.touches;
@@ -241,14 +296,20 @@ function App() {
       cx0 = (a.clientX + b.clientX) / 2;
       cy0 = (a.clientY + b.clientY) / 2;
       baseZ = userZoomRef.current;
-      baseTilt = tiltRef.current;
-      baseRot = rotRef.current;
-      pendingRot = baseRot;
-      pendingTilt = baseTilt;
+      // Cancel any in-flight spring so the new gesture takes over cleanly.
+      if (springRaf) { cancelAnimationFrame(springRaf); springRaf = 0; }
+      pendingRot = HOME_ROT;
+      pendingTilt = HOME_TILT;
       pendingZoom = baseZ;
+      rotRef.current = HOME_ROT;
+      tiltRef.current = HOME_TILT;
       autoFitBase = computeAutoFit();
       document.body.classList.add('gesturing');
       active = true;
+      // Snap to HOME on the next frame even before any drag, so the board
+      // recenters under the touch (handles the case where the user grabs
+      // mid-spring or before the spring-back has settled).
+      if (!rafId) rafId = requestAnimationFrame(flush);
       e.preventDefault();
     };
 
@@ -259,10 +320,11 @@ function App() {
       const d = dist(a, b);
       const cx = (a.clientX + b.clientX) / 2;
       const cy = (a.clientY + b.clientY) / 2;
-      pendingZoom = Math.max(0.4, Math.min(3, baseZ * (d / Math.max(1, d0))));
+      pendingZoom = clamp(baseZ * (d / Math.max(1, d0)), 0.4, 3);
       const dx = cx - cx0, dy = cy - cy0;
-      pendingRot = Math.round(baseRot + dx * 0.18);
-      pendingTilt = Math.max(TILT_MIN, Math.min(TILT_MAX, Math.round(baseTilt + dy * 0.18)));
+      // Always anchor to HOME so the peek never accumulates beyond ±PEEK°.
+      pendingRot = HOME_ROT + clamp(dx * 0.18, -ROT_PEEK, ROT_PEEK);
+      pendingTilt = clamp(Math.round(HOME_TILT + clamp(dy * 0.18, -TILT_PEEK, TILT_PEEK)), TILT_MIN, TILT_MAX);
       rotRef.current = pendingRot;
       tiltRef.current = pendingTilt;
       userZoomRef.current = pendingZoom;
@@ -273,10 +335,7 @@ function App() {
       if (!active) return;
       active = false;
       if (rafId) { cancelAnimationFrame(rafId); rafId = 0; }
-      document.body.classList.remove('gesturing');
-      // Commit tilt to React state so subsequent renders / fit() see it.
-      // rotZ stays in the CSS var only (mirrors the desktop right-drag path).
-      setTweak('tilt', tiltRef.current);
+      springHome();
     };
 
     window.addEventListener('touchstart', onStart, { passive: false });
@@ -285,6 +344,7 @@ function App() {
     window.addEventListener('touchcancel', onEnd);
     return () => {
       if (rafId) cancelAnimationFrame(rafId);
+      if (springRaf) cancelAnimationFrame(springRaf);
       document.body.classList.remove('gesturing');
       window.removeEventListener('touchstart', onStart);
       window.removeEventListener('touchmove', onMove);
