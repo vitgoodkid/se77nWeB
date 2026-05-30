@@ -144,16 +144,96 @@ function App() {
   }, [setTweak]);
 
   // ---- fit-to-viewport ----
+  // User-controlled multiplier on top of the auto-fit; driven by the
+  // two-finger pinch handler below. fit() reads it on every recompute.
+  const userZoomRef = useRef(1);
   const fit = useCallback(() => {
     const el = sceneRef.current, box = fitRef.current;
     if (!el || !box) return;
     box.style.transform = 'scale(1)';
     const r = el.getBoundingClientRect();
-    const s = Math.min((window.innerWidth * 0.96) / r.width, (window.innerHeight * 0.96) / (r.height + 90));
-    box.style.transform = 'scale(' + Math.max(0.3, Math.min(s, 2.1)) + ')';
+    // The board sits inside rotateX(tilt) ∘ rotateZ(45°). After the 45°
+    // rotateZ the layout square reads as a diamond whose footprint is √2
+    // wider in both axes; rotateX(tilt) then compresses Y by cos(tilt). We
+    // size the available area against that effective footprint so the
+    // visible corners don't slip behind the toolbar / dice dock.
+    const tiltDeg = tiltRef.current;
+    const diag = 1.42;
+    const effW = r.width * diag;
+    const effH = r.height * diag * Math.cos(tiltDeg * Math.PI / 180);
+    const isShort = window.innerHeight < 540;  // phone landscape / tight
+    const reserveTop = isShort ? 56 : 72;       // unified toolbar
+    const reserveBot = isShort ? 76 : 96;       // dice dock + status pill
+    const reserveSide = 14;
+    const availW = Math.max(180, window.innerWidth - reserveSide * 2);
+    const availH = Math.max(180, window.innerHeight - reserveTop - reserveBot);
+    const base = Math.min(availW / effW, availH / effH);
+    const s = Math.max(0.18, Math.min(base * userZoomRef.current, 2.5));
+    box.style.transform = 'scale(' + s + ')';
   }, []);
   useLayoutEffect(() => { fit(); }, [t.tilt]);
-  useEffect(() => { fit(); window.addEventListener('resize', fit); return () => window.removeEventListener('resize', fit); }, [fit]);
+  useEffect(() => {
+    fit();
+    window.addEventListener('resize', fit);
+    window.addEventListener('orientationchange', fit);
+    return () => {
+      window.removeEventListener('resize', fit);
+      window.removeEventListener('orientationchange', fit);
+    };
+  }, [fit]);
+
+  // ---- 2-finger touch: pinch to zoom + drag to orbit (matches desktop
+  // right-drag). The single-finger path is left alone so taps on tiles,
+  // buttons, and HUD cards still work normally.
+  useEffect(() => {
+    let active = false, d0 = 0, cx0 = 0, cy0 = 0;
+    let baseZ = 1, baseTilt = tiltRef.current, baseRot = rotRef.current;
+    const dist = (a, b) => Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+    const onStart = (e) => {
+      if (e.touches.length !== 2) { active = false; return; }
+      const [a, b] = e.touches;
+      d0 = dist(a, b);
+      cx0 = (a.clientX + b.clientX) / 2;
+      cy0 = (a.clientY + b.clientY) / 2;
+      baseZ = userZoomRef.current;
+      baseTilt = tiltRef.current;
+      baseRot = rotRef.current;
+      active = true;
+      e.preventDefault();
+    };
+    const onMove = (e) => {
+      if (!active || e.touches.length !== 2) return;
+      e.preventDefault();
+      const [a, b] = e.touches;
+      const d = dist(a, b);
+      const cx = (a.clientX + b.clientX) / 2;
+      const cy = (a.clientY + b.clientY) / 2;
+      // pinch → zoom multiplier
+      const zoom = Math.max(0.4, Math.min(3, baseZ * (d / Math.max(1, d0))));
+      userZoomRef.current = zoom;
+      // drag center → orbit (X → rotZ, Y → tilt), same feel as desktop right-drag
+      const dx = cx - cx0, dy = cy - cy0;
+      const nextRot = Math.round(baseRot + dx * 0.18);
+      if (nextRot !== rotRef.current) {
+        rotRef.current = nextRot;
+        document.documentElement.style.setProperty('--rotZ', nextRot + 'deg');
+      }
+      const nextTilt = Math.max(TILT_MIN, Math.min(TILT_MAX, Math.round(baseTilt + dy * 0.18)));
+      if (nextTilt !== tiltRef.current) setTweak('tilt', nextTilt);
+      fit();
+    };
+    const onEnd = () => { active = false; };
+    window.addEventListener('touchstart', onStart, { passive: false });
+    window.addEventListener('touchmove', onMove, { passive: false });
+    window.addEventListener('touchend', onEnd);
+    window.addEventListener('touchcancel', onEnd);
+    return () => {
+      window.removeEventListener('touchstart', onStart);
+      window.removeEventListener('touchmove', onMove);
+      window.removeEventListener('touchend', onEnd);
+      window.removeEventListener('touchcancel', onEnd);
+    };
+  }, [setTweak, fit]);
 
   const flash = (msg) => { setToast(msg); setTimeout(() => setToast(null), 1500); };
 

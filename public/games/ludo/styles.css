@@ -378,3 +378,27 @@ body{
 @keyframes tipIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 .hero-tip-name{ font-weight:800; font-size:13.5px; margin-bottom:2px; }
 .hero-tip-skill{ font-size:11.5px; line-height:1.4; color:var(--ink-soft); }
+
+/* ============================ mobile fit ================================= */
+/* Shrink the board's underlying grid on small viewports so the natural size is
+   already phone-friendly before fit() scales further. fit() in app.jsx applies
+   an additional scale that accounts for the rotateZ(45deg) diamond extent and
+   the top/bottom chrome (toolbar + dice dock). */
+@media (max-width: 600px), (max-height: 540px) {
+  :root { --cell: 32px; }
+}
+@media (max-width: 400px), (max-height: 380px) {
+  :root { --cell: 26px; }
+}
+/* Tighten the dice dock on short viewports so it doesn't crowd the board. */
+@media (max-height: 540px) {
+  .die-dock{ bottom:8px !important; gap:6px !important; }
+  .die{ width:44px !important; height:44px !important; padding:7px !important; border-radius:11px !important; }
+  .die .pip{ width:7px !important; height:7px !important; }
+  .roll-btn{ font-size:13px !important; padding:7px 14px !important; }
+}
+/* Allow the top toolbar to wrap when really tight. */
+@media (max-width: 360px) {
+  #ludo-bar{ top:6px; padding:3px; gap:2px; }
+  #ludo-bar a, #ludo-bar button{ font-size:11px; padding:0 10px; height:30px; }
+}
