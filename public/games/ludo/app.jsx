@@ -185,10 +185,55 @@ function App() {
   // ---- 2-finger touch: pinch to zoom + drag to orbit (matches desktop
   // right-drag). The single-finger path is left alone so taps on tiles,
   // buttons, and HUD cards still work normally.
+  //
+  // Perf: every touchmove on a phone was hitting setTweak (→ full React
+  // re-render of the game tree), fit() (→ getBoundingClientRect forced sync
+  // layout), and restarting the .board's 140ms transform transition. The
+  // gesture coalesces all writes into a single rAF callback, writes CSS vars
+  // and the box transform directly (no React state churn), and the .gesturing
+  // body class kills the transition + pauses ambient particles. Tilt is
+  // committed to React state ONCE on touchend.
   useEffect(() => {
+    const root = document.documentElement;
     let active = false, d0 = 0, cx0 = 0, cy0 = 0;
-    let baseZ = 1, baseTilt = tiltRef.current, baseRot = rotRef.current;
+    let baseZ = 1, baseTilt = 56, baseRot = 45;
+    let autoFitBase = 1;
+    let pendingRot = 45, pendingTilt = 56, pendingZoom = 1, rafId = 0;
+
     const dist = (a, b) => Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+
+    // Compute the auto-fit scale once at gesture start without reading any
+    // element's bbox (avoids forcing layout). The board is always --cell × 15
+    // CSS pixels; tilt is read from the ref.
+    const computeAutoFit = () => {
+      const cellStr = getComputedStyle(root).getPropertyValue('--cell').trim();
+      const cellPx = parseFloat(cellStr) || 46;
+      const boardPx = cellPx * 15;
+      const tiltDeg = tiltRef.current;
+      const diag = 1.42;
+      const effW = boardPx * diag;
+      const effH = boardPx * diag * Math.cos(tiltDeg * Math.PI / 180);
+      const isShort = window.innerHeight < 540;
+      const reserveTop = isShort ? 56 : 72;
+      const reserveBot = isShort ? 76 : 96;
+      const reserveSide = 14;
+      const availW = Math.max(180, window.innerWidth - reserveSide * 2);
+      const availH = Math.max(180, window.innerHeight - reserveTop - reserveBot);
+      return Math.min(availW / effW, availH / effH);
+    };
+
+    const flush = () => {
+      rafId = 0;
+      if (!active) return;
+      root.style.setProperty('--rotZ', pendingRot + 'deg');
+      root.style.setProperty('--tiltX', pendingTilt + 'deg');
+      const box = fitRef.current;
+      if (box) {
+        const s = Math.max(0.18, Math.min(autoFitBase * pendingZoom, 2.5));
+        box.style.transform = 'scale(' + s + ')';
+      }
+    };
+
     const onStart = (e) => {
       if (e.touches.length !== 2) { active = false; return; }
       const [a, b] = e.touches;
@@ -198,9 +243,15 @@ function App() {
       baseZ = userZoomRef.current;
       baseTilt = tiltRef.current;
       baseRot = rotRef.current;
+      pendingRot = baseRot;
+      pendingTilt = baseTilt;
+      pendingZoom = baseZ;
+      autoFitBase = computeAutoFit();
+      document.body.classList.add('gesturing');
       active = true;
       e.preventDefault();
     };
+
     const onMove = (e) => {
       if (!active || e.touches.length !== 2) return;
       e.preventDefault();
@@ -208,32 +259,39 @@ function App() {
       const d = dist(a, b);
       const cx = (a.clientX + b.clientX) / 2;
       const cy = (a.clientY + b.clientY) / 2;
-      // pinch → zoom multiplier
-      const zoom = Math.max(0.4, Math.min(3, baseZ * (d / Math.max(1, d0))));
-      userZoomRef.current = zoom;
-      // drag center → orbit (X → rotZ, Y → tilt), same feel as desktop right-drag
+      pendingZoom = Math.max(0.4, Math.min(3, baseZ * (d / Math.max(1, d0))));
       const dx = cx - cx0, dy = cy - cy0;
-      const nextRot = Math.round(baseRot + dx * 0.18);
-      if (nextRot !== rotRef.current) {
-        rotRef.current = nextRot;
-        document.documentElement.style.setProperty('--rotZ', nextRot + 'deg');
-      }
-      const nextTilt = Math.max(TILT_MIN, Math.min(TILT_MAX, Math.round(baseTilt + dy * 0.18)));
-      if (nextTilt !== tiltRef.current) setTweak('tilt', nextTilt);
-      fit();
+      pendingRot = Math.round(baseRot + dx * 0.18);
+      pendingTilt = Math.max(TILT_MIN, Math.min(TILT_MAX, Math.round(baseTilt + dy * 0.18)));
+      rotRef.current = pendingRot;
+      tiltRef.current = pendingTilt;
+      userZoomRef.current = pendingZoom;
+      if (!rafId) rafId = requestAnimationFrame(flush);
     };
-    const onEnd = () => { active = false; };
+
+    const onEnd = () => {
+      if (!active) return;
+      active = false;
+      if (rafId) { cancelAnimationFrame(rafId); rafId = 0; }
+      document.body.classList.remove('gesturing');
+      // Commit tilt to React state so subsequent renders / fit() see it.
+      // rotZ stays in the CSS var only (mirrors the desktop right-drag path).
+      setTweak('tilt', tiltRef.current);
+    };
+
     window.addEventListener('touchstart', onStart, { passive: false });
     window.addEventListener('touchmove', onMove, { passive: false });
     window.addEventListener('touchend', onEnd);
     window.addEventListener('touchcancel', onEnd);
     return () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      document.body.classList.remove('gesturing');
       window.removeEventListener('touchstart', onStart);
       window.removeEventListener('touchmove', onMove);
       window.removeEventListener('touchend', onEnd);
       window.removeEventListener('touchcancel', onEnd);
     };
-  }, [setTweak, fit]);
+  }, [setTweak]);
 
   const flash = (msg) => { setToast(msg); setTimeout(() => setToast(null), 1500); };
 

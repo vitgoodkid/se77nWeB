@@ -380,16 +380,9 @@ body{
 .hero-tip-skill{ font-size:11.5px; line-height:1.4; color:var(--ink-soft); }
 
 /* ============================ mobile fit ================================= */
-/* Shrink the board's underlying grid on small viewports so the natural size is
-   already phone-friendly before fit() scales further. fit() in app.jsx applies
-   an additional scale that accounts for the rotateZ(45deg) diamond extent and
-   the top/bottom chrome (toolbar + dice dock). */
-@media (max-width: 600px), (max-height: 540px) {
-  :root { --cell: 32px; }
-}
-@media (max-width: 400px), (max-height: 380px) {
-  :root { --cell: 26px; }
-}
+/* The board geometry stays at --cell:46px on every viewport so the pieces
+   (which are sized in fixed px in pieces.css) keep their proportions; fit()
+   in app.jsx scales the entire stage uniformly to fit small viewports. */
 /* Tighten the dice dock on short viewports so it doesn't crowd the board. */
 @media (max-height: 540px) {
   .die-dock{ bottom:8px !important; gap:6px !important; }
@@ -402,3 +395,10 @@ body{
   #ludo-bar{ top:6px; padding:3px; gap:2px; }
   #ludo-bar a, #ludo-bar button{ font-size:11px; padding:0 10px; height:30px; }
 }
+
+/* ============================ gesture perf =============================== */
+/* While a touch gesture is active, kill the 140ms transform transition on the
+   board (otherwise every CSS-var update restarts the easing, which reads as
+   jank on phones) and pause ambient particles (saves GPU during the drag). */
+body.gesturing .board{ transition:none !important; }
+body.gesturing .ambient i{ animation-play-state:paused !important; }
