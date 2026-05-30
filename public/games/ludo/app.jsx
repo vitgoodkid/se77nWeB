@@ -125,9 +125,9 @@ function App() {
   const TILT_MIN = 30, TILT_MAX = 68;
   // Touch-device default: orient the board so seat 0 (the human) sits at the
   // bottom-front of the diamond instead of seat 3, so the player's pieces are
-  // closest to them. Each seat is 90° apart; the formula puts seat 0 at front
-  // by rotating an extra +90° from the desktop default of 45°.
-  const HOME_ROT = 135;
+  // closest to them. Empirically at rotZ=45° seat 0 is at the TOP-back of the
+  // diamond; +180° brings it to the bottom-front.
+  const HOME_ROT = 225;
   const HOME_TILT = 56;
   useEffect(() => {
     if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) {
