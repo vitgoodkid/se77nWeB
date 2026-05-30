@@ -156,23 +156,20 @@ function App() {
   }, [setTweak]);
 
   // ---- fit-to-viewport ----
-  // User-controlled multiplier on top of the auto-fit; driven by the
-  // two-finger pinch handler below. fit() reads it on every recompute.
-  const userZoomRef = useRef(1);
   const fit = useCallback(() => {
-    const el = sceneRef.current, box = fitRef.current;
-    if (!el || !box) return;
-    box.style.transform = 'scale(1)';
-    const r = el.getBoundingClientRect();
-    // The board sits inside rotateX(tilt) ∘ rotateZ(45°). After the 45°
-    // rotateZ the layout square reads as a diamond whose footprint is √2
-    // wider in both axes; rotateX(tilt) then compresses Y by cos(tilt). We
-    // size the available area against that effective footprint so the
-    // visible corners don't slip behind the toolbar / dice dock.
+    const box = fitRef.current;
+    if (!box) return;
+    // Compute against --cell (read from CSS) — no getBoundingClientRect, no
+    // forced sync layout. The board is always --cell × 15 CSS pixels.
+    const cellStr = getComputedStyle(document.documentElement).getPropertyValue('--cell').trim();
+    const cellPx = parseFloat(cellStr) || 46;
+    const boardPx = cellPx * 15;
+    // rotateZ(45°)-ish makes the layout square read as a diamond ~√2 wider
+    // in both axes; rotateX(tilt) compresses Y by cos(tilt).
     const tiltDeg = tiltRef.current;
     const diag = 1.42;
-    const effW = r.width * diag;
-    const effH = r.height * diag * Math.cos(tiltDeg * Math.PI / 180);
+    const effW = boardPx * diag;
+    const effH = boardPx * diag * Math.cos(tiltDeg * Math.PI / 180);
     const isShort = window.innerHeight < 540;  // phone landscape / tight
     const reserveTop = isShort ? 56 : 72;       // unified toolbar
     const reserveBot = isShort ? 76 : 96;       // dice dock + status pill
@@ -180,8 +177,13 @@ function App() {
     const availW = Math.max(180, window.innerWidth - reserveSide * 2);
     const availH = Math.max(180, window.innerHeight - reserveTop - reserveBot);
     const base = Math.min(availW / effW, availH / effH);
-    const s = Math.max(0.18, Math.min(base * userZoomRef.current, 2.5));
-    box.style.transform = 'scale(' + s + ')';
+    const s = Math.max(0.18, Math.min(base, 2.5));
+    // Perspective renders the near corner of the diamond bigger than the
+    // far one, so the visible centre-of-mass sits below the geometric
+    // centre. Shift the whole stage up a touch so the board reads as
+    // centered on screen instead of crowding the dice dock at the bottom.
+    const yOffset = -Math.round(boardPx * 0.06 * s);
+    box.style.transform = 'translate3d(0,' + yOffset + 'px,0) scale(' + s + ')';
   }, []);
   useLayoutEffect(() => { fit(); }, [t.tilt]);
   useEffect(() => {
@@ -194,7 +196,7 @@ function App() {
     };
   }, [fit]);
 
-  // ---- 2-finger touch: pinch to zoom + small peek-orbit with spring-back.
+  // ---- 2-finger touch: small peek-orbit with spring-back.
   // Single-finger taps still work normally (tiles, dice, HUD buttons).
   //
   // Behavior tuned for board-game UX:
@@ -203,56 +205,27 @@ function App() {
   //  • drag is clamped to a small peek (no 360° spins) so the player keeps
   //    their bearings while glancing at the far side of the board,
   //  • releasing the fingers springs rotZ + tilt back to HOME with a rAF
-  //    tween. Pinch-zoom persists (user keeps the zoom they wanted).
+  //    tween.
   //
-  // Perf: per-touchmove we only mutate refs + schedule one rAF flush — no
-  // setTweak / no getBoundingClientRect / no React re-render. The .gesturing
-  // body class kills the .board's 140ms transform transition and pauses
-  // ambient particles for the duration of the gesture + spring.
+  // Pinch-zoom is intentionally NOT wired here — every per-frame transform
+  // write on .stage-fit during a pinch was forcing a heavy composite of the
+  // whole 3D board on phones. The fixed auto-fit is enough; the only per-
+  // frame work in this handler is two CSS-var writes.
   useEffect(() => {
     const root = document.documentElement;
-    let active = false, d0 = 0, cx0 = 0, cy0 = 0;
-    let baseZ = 1;
-    let autoFitBase = 1;
-    let pendingRot = HOME_ROT, pendingTilt = HOME_TILT, pendingZoom = 1, rafId = 0;
+    let active = false, cx0 = 0, cy0 = 0;
+    let pendingRot = HOME_ROT, pendingTilt = HOME_TILT, rafId = 0;
     let springRaf = 0;
     const ROT_PEEK = 22;   // max ° from HOME_ROT during a drag
     const TILT_PEEK = 8;   // max ° from HOME_TILT during a drag
     const SPRING_MS = 280;
-
-    const dist = (a, b) => Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
     const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
-
-    // Compute the auto-fit scale once at gesture start without reading any
-    // element's bbox (avoids forcing layout). The board is always --cell × 15
-    // CSS pixels; tilt is read from the ref.
-    const computeAutoFit = () => {
-      const cellStr = getComputedStyle(root).getPropertyValue('--cell').trim();
-      const cellPx = parseFloat(cellStr) || 46;
-      const boardPx = cellPx * 15;
-      const tiltDeg = tiltRef.current;
-      const diag = 1.42;
-      const effW = boardPx * diag;
-      const effH = boardPx * diag * Math.cos(tiltDeg * Math.PI / 180);
-      const isShort = window.innerHeight < 540;
-      const reserveTop = isShort ? 56 : 72;
-      const reserveBot = isShort ? 76 : 96;
-      const reserveSide = 14;
-      const availW = Math.max(180, window.innerWidth - reserveSide * 2);
-      const availH = Math.max(180, window.innerHeight - reserveTop - reserveBot);
-      return Math.min(availW / effW, availH / effH);
-    };
 
     const flush = () => {
       rafId = 0;
       if (!active) return;
       root.style.setProperty('--rotZ', pendingRot + 'deg');
       root.style.setProperty('--tiltX', pendingTilt + 'deg');
-      const box = fitRef.current;
-      if (box) {
-        const s = Math.max(0.18, Math.min(autoFitBase * pendingZoom, 2.5));
-        box.style.transform = 'scale(' + s + ')';
-      }
     };
 
     // Tween rotZ + tilt back to HOME. Picks the shortest angular path for rot
@@ -281,7 +254,6 @@ function App() {
         } else {
           springRaf = 0;
           document.body.classList.remove('gesturing');
-          // Commit final tilt to React state so fit-on-tilt-change picks it up.
           if (tiltRef.current !== HOME_TILT) tiltRef.current = HOME_TILT;
           setTweak('tilt', HOME_TILT);
         }
@@ -292,23 +264,16 @@ function App() {
     const onStart = (e) => {
       if (e.touches.length !== 2) { active = false; return; }
       const [a, b] = e.touches;
-      d0 = dist(a, b);
       cx0 = (a.clientX + b.clientX) / 2;
       cy0 = (a.clientY + b.clientY) / 2;
-      baseZ = userZoomRef.current;
       // Cancel any in-flight spring so the new gesture takes over cleanly.
       if (springRaf) { cancelAnimationFrame(springRaf); springRaf = 0; }
       pendingRot = HOME_ROT;
       pendingTilt = HOME_TILT;
-      pendingZoom = baseZ;
       rotRef.current = HOME_ROT;
       tiltRef.current = HOME_TILT;
-      autoFitBase = computeAutoFit();
       document.body.classList.add('gesturing');
       active = true;
-      // Snap to HOME on the next frame even before any drag, so the board
-      // recenters under the touch (handles the case where the user grabs
-      // mid-spring or before the spring-back has settled).
       if (!rafId) rafId = requestAnimationFrame(flush);
       e.preventDefault();
     };
@@ -317,17 +282,13 @@ function App() {
       if (!active || e.touches.length !== 2) return;
       e.preventDefault();
       const [a, b] = e.touches;
-      const d = dist(a, b);
       const cx = (a.clientX + b.clientX) / 2;
       const cy = (a.clientY + b.clientY) / 2;
-      pendingZoom = clamp(baseZ * (d / Math.max(1, d0)), 0.4, 3);
       const dx = cx - cx0, dy = cy - cy0;
-      // Always anchor to HOME so the peek never accumulates beyond ±PEEK°.
       pendingRot = HOME_ROT + clamp(dx * 0.18, -ROT_PEEK, ROT_PEEK);
       pendingTilt = clamp(Math.round(HOME_TILT + clamp(dy * 0.18, -TILT_PEEK, TILT_PEEK)), TILT_MIN, TILT_MAX);
       rotRef.current = pendingRot;
       tiltRef.current = pendingTilt;
-      userZoomRef.current = pendingZoom;
       if (!rafId) rafId = requestAnimationFrame(flush);
     };
 

@@ -402,3 +402,9 @@ body{
    jank on phones) and pause ambient particles (saves GPU during the drag). */
 body.gesturing .board{ transition:none !important; }
 body.gesturing .ambient i{ animation-play-state:paused !important; }
+/* Ambient particles are a heavy compositor cost on phones (50+ blurred,
+   animated layers running every frame). They look nice on desktop but pull
+   the whole 3D board down on iOS Safari → drop them entirely on touch. */
+@media (pointer: coarse) {
+  .ambient { display: none !important; }
+}
