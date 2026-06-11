@@ -746,6 +746,7 @@ const PUBLIC_TOOLS = [
   { id: 'pst',     nameKey: 'tools.pst.name',     descKey: 'tools.pst.desc',     icon: '¶' },
   { id: 'game',    nameKey: 'tools.game.name',    descKey: 'tools.game.desc',    icon: '◉' },
   { id: 'convert', nameKey: 'tools.convert.name', descKey: 'tools.convert.desc', icon: '⇄' },
+  { id: 'hex',     nameKey: 'tools.hex.name',     descKey: 'tools.hex.desc',     icon: '0x' },
   { id: 'thao',    nameKey: 'tools.thao.name',    descKey: 'tools.thao.desc',    icon: '♥' },
 ];
 const PRIVATE_TOOLS = [
@@ -948,6 +949,7 @@ function ToolDetail({ tool, accent, onBack }) {
         {tool.id === 'short'   ? <ShortenerTool accent={accent} /> :
          tool.id === 'pst'     ? <PastebinTool accent={accent} /> :
          tool.id === 'convert' ? <ConverterTool accent={accent} /> :
+         tool.id === 'hex'     ? <HexToTextTool accent={accent} /> :
          tool.id === 'fin'     ? <FinanceTool accent={accent} /> :
          tool.id === 'game'    ? <GameResourcesTool accent={accent} /> :
          tool.id === 'thao'    ? <ThaoTool onClose={onBack} /> :
@@ -1177,6 +1179,122 @@ function PastebinTool({ accent }) {
             style={{ fontSize: 13, color: accent, fontWeight: 700, textDecoration: 'none', wordBreak: 'break-all' }}
           >{saved.url}</a>
           <Btn variant="tinted" color={accent} onClick={() => copyText(saved.url)}>Copy</Btn>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function decodeHexUtf8(input) {
+  const normalized = input
+    .trim()
+    .replace(/(?:0x|\\x)/gi, '')
+    .replace(/[\s,;:_-]+/g, '');
+
+  if (!normalized) throw new Error('Nhập mã HEX cần giải mã.');
+  if (!/^[0-9a-f]+$/i.test(normalized)) {
+    throw new Error('Mã HEX chỉ được chứa ký tự 0-9 và A-F.');
+  }
+  if (normalized.length % 2 !== 0) {
+    throw new Error('Mã HEX phải có số ký tự chẵn.');
+  }
+
+  const bytes = new Uint8Array(normalized.length / 2);
+  for (let i = 0; i < normalized.length; i += 2) {
+    bytes[i / 2] = Number.parseInt(normalized.slice(i, i + 2), 16);
+  }
+
+  try {
+    return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+  } catch {
+    throw new Error('Chuỗi HEX không phải văn bản UTF-8 hợp lệ.');
+  }
+}
+
+function HexToTextTool({ accent }) {
+  const [hex, setHex] = useState('');
+  const [output, setOutput] = useState('');
+  const [err, setErr] = useState('');
+  const [copied, setCopied] = useState(false);
+
+  function convert() {
+    try {
+      setOutput(decodeHexUtf8(hex));
+      setErr('');
+    } catch (e) {
+      setOutput('');
+      setErr(e.message || 'Không thể giải mã chuỗi HEX.');
+    }
+  }
+
+  function clear() {
+    setHex('');
+    setOutput('');
+    setErr('');
+    setCopied(false);
+  }
+
+  function copyOutput() {
+    copyText(output);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }
+
+  const textAreaStyle = {
+    width: '100%', background: COLORS.bg, border: '1px solid ' + COLORS.line,
+    borderRadius: 10, padding: 14, color: COLORS.text, fontSize: 13,
+    resize: 'vertical', outline: 'none', lineHeight: 1.6,
+  };
+
+  return (
+    <div style={{ display: 'grid', gap: 14 }}>
+      <div>
+        <Kicker style={{ marginBottom: 8 }}>HEX INPUT</Kicker>
+        <textarea
+          value={hex}
+          onChange={(e) => { setHex(e.target.value); setErr(''); }}
+          onKeyDown={(e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') convert();
+          }}
+          rows={7}
+          className="mono"
+          placeholder="48656c6c6f20576f726c64 or 0x48 0x65 0x6c 0x6c 0x6f"
+          style={textAreaStyle}
+        />
+        <div className="mono" style={{ marginTop: 7, fontSize: 10, color: COLORS.muted }}>
+          Hỗ trợ HEX liền nhau, khoảng trắng, dấu phẩy, 0x và \\x · Ctrl/⌘ + Enter để chuyển đổi
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+        <Btn variant="solid" color={accent} onClick={convert} disabled={!hex.trim()}>
+          Chuyển sang text
+        </Btn>
+        <Btn variant="ghost" onClick={clear} disabled={!hex && !output}>Xóa</Btn>
+      </div>
+
+      {err && (
+        <div className="mono" style={{
+          padding: '10px 14px', borderRadius: 10,
+          border: `1px solid ${COLORS.red}55`, background: COLORS.red + '0e',
+          color: COLORS.red, fontSize: 12,
+        }}>✕ {err}</div>
+      )}
+
+      {output !== '' && (
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+            <Kicker style={{ color: accent }}>TEXT OUTPUT</Kicker>
+            <Btn variant="tinted" color={accent} onClick={copyOutput}>
+              {copied ? 'Đã sao chép' : 'Sao chép'}
+            </Btn>
+          </div>
+          <textarea
+            value={output}
+            readOnly
+            rows={7}
+            style={{ ...textAreaStyle, borderColor: accent + '55' }}
+          />
         </div>
       )}
     </div>
