@@ -73,7 +73,7 @@ function AppDesktop() {
     // Match against first hash segment only — sub-routes like #/tv4/list/<slug>
     // belong to the feature module and are parsed there.
     const h = window.location.hash.replace(/^#\//, '').split('/')[0];
-    if (h === 'kata') { window.open('/kata', '_blank', 'noopener'); window.history.replaceState(null, '', '#/home'); }
+    if (h === 'kata') { window.location.assign('/kata'); }
     else if (FEATURES.find((f) => f.id === h)) return h;
     // On mobile, default landing → AI chat instead of the desktop landing page.
     const mobileNow = typeof window !== 'undefined' && window.matchMedia
@@ -97,7 +97,7 @@ function AppDesktop() {
   const phase = geo.phase;
 
   function nav(to) {
-    if (to === 'kata') { window.open('/kata', '_blank', 'noopener'); return; }
+    if (to === 'kata') { window.location.assign('/kata'); return; }
     if (to === route) return;
     setTransitioning(true);
     setTimeout(() => {
@@ -128,7 +128,7 @@ function AppDesktop() {
   useEffect(() => {
     const onHash = () => {
       const id = window.location.hash.replace(/^#\//, '').split('/')[0] || 'home';
-      if (id === 'kata') { window.open('/kata', '_blank', 'noopener'); window.history.replaceState(null, '', '#/' + route); return; }
+      if (id === 'kata') { window.location.assign('/kata'); return; }
       if (FEATURES.find((f) => f.id === id) && id !== route) setRoute(id);
     };
     window.addEventListener('hashchange', onHash);
@@ -792,10 +792,7 @@ function NavRail({ route, nav }) {
       {visibleFeatures.map((f) => {
         const active = f.id === route;
         return (
-          <button key={f.id} onClick={() => {
-            if (f.id === 'kata') window.open('/kata', '_blank', 'noopener');
-            else nav(f.id);
-          }} title={f.label}
+          <button key={f.id} onClick={() => nav(f.id)} title={f.label}
             style={{
               width: 56, height: 56, borderRadius: 12,
               background: active ? f.accent + '1a' : 'transparent',
@@ -1252,10 +1249,7 @@ function HomeView({ nav, ambient, ambientOn }) {
             <FeatureCard
               key={f.id}
               feature={f}
-              onClick={() => {
-                if (f.id === 'kata') window.open('/kata', '_blank', 'noopener');
-                else nav(f.id);
-              }}
+              onClick={() => nav(f.id)}
               idx={i}
             />
           ))}

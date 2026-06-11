@@ -218,7 +218,7 @@ function Drawer({ open, onClose, route, onNav }) {
           {visibleModules.map((m) => {
             const active = m.id === route;
             const handleClick = () => {
-              if (m.id === 'kata') { window.open('/kata', '_blank', 'noopener'); onClose(); return; }
+              if (m.id === 'kata') { window.location.assign('/kata'); return; }
               onNav(m.id);
               onClose();
             };
@@ -937,7 +937,7 @@ export default function MobileShell() {
     }
     if (slashEntry && slashEntry.kind === 'url') {
       setInput('');
-      window.open(slashEntry.url, '_blank', 'noopener');
+      window.location.assign(slashEntry.url);
       return;
     }
     // Slash menu picked a /prompt command → fill the input, focus, wait for user
