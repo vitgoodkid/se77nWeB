@@ -382,22 +382,26 @@ const CHAT_MODELS_BY_PROVIDER = {
     '9router:kr/claude-opus-4.7',
   ],
 };
+// Gen-primary models only (mirrors the bot's GEN_MODELS chain in
+// apps/bot/src/services/imagePipeline.ts — edit variants are derived).
 const IMAGE_MODELS_BY_PROVIDER = {
   'fal.ai': [
     'fal-ai/nano-banana-pro',
-    'fal-ai/nano-banana-pro/edit',
     'fal-ai/gpt-image-2',
-    'fal-ai/gpt-image-2/edit',
-    'fal-ai/flux/dev/image-to-image',
-    'fal-ai/wan-2.6/image-to-image',
+    'xai/grok-imagine-image/quality/text-to-image',
+  ],
+  nanogpt: [
+    'wavespeed-ai/flux-2-klein-base-9b/text-to-image',
   ],
 };
+// NOTE: happy-horse routes under `alibaba/` on fal — NOT `fal-ai/`.
+// Mirrors T2V_MODELS/I2V_MODELS + grok in apps/bot/src/services/videoPipeline.ts.
 const VIDEO_MODELS_BY_PROVIDER = {
   'fal.ai': [
     'bytedance/seedance-2.0/text-to-video',
     'bytedance/seedance-2.0/image-to-video',
-    'fal-ai/happy-horse/text-to-video',
-    'fal-ai/happy-horse/image-to-video',
+    'alibaba/happy-horse/text-to-video',
+    'alibaba/happy-horse/image-to-video',
     'xai/grok-imagine-video/text-to-video',
     'xai/grok-imagine-video/image-to-video',
   ],
@@ -421,14 +425,17 @@ function findProviderForModel(byProvider, model) {
   return defaultProvider(byProvider);
 }
 
+// NSFW thresholds are gone — the bot dropped its client-side NSFW gates
+// entirely (provider-side policy is the only filter now).
+// imageModel/videoModel are stored in GlobalConfig but the bot's media
+// pipelines currently run their own hardcoded fallback chains — the picks
+// here are reserved for when per-config primary models get wired in.
 const SETTINGS_FIELDS = [
   { key: 'systemPrompt', type: 'textarea', label: 'system prompt', placeholder: '(empty — bot uses no extra prompt)', max: 4000 },
   { key: 'chatModel', type: 'model-picker', label: 'chat model', byProvider: CHAT_MODELS_BY_PROVIDER, placeholder: 'grok-4-fast' },
-  { key: 'imageModel', type: 'model-picker', label: 'image model', byProvider: IMAGE_MODELS_BY_PROVIDER, placeholder: 'fal-ai/nano-banana-pro' },
-  { key: 'videoModel', type: 'model-picker', label: 'video model', byProvider: VIDEO_MODELS_BY_PROVIDER, placeholder: 'bytedance/seedance-2.0/image-to-video' },
+  { key: 'imageModel', type: 'model-picker', label: 'image model (reserved — pipeline dùng fallback chain riêng)', byProvider: IMAGE_MODELS_BY_PROVIDER, placeholder: 'fal-ai/nano-banana-pro' },
+  { key: 'videoModel', type: 'model-picker', label: 'video model (reserved — pipeline dùng fallback chain riêng)', byProvider: VIDEO_MODELS_BY_PROVIDER, placeholder: 'bytedance/seedance-2.0/image-to-video' },
   { key: 'rateLimitPerUser', type: 'number', label: 'rate limit / user (mentions/h)', min: 1, max: 1000 },
-  { key: 'nsfwThresholdNormal', type: 'number', label: 'NSFW threshold (normal channels)', min: 0, max: 1, step: 0.05 },
-  { key: 'nsfwThresholdNsfw', type: 'number', label: 'NSFW threshold (NSFW channels)', min: 0, max: 1, step: 0.05 },
   { key: 'allowedChannels', type: 'textarea', label: 'allowed channels (snowflake, one per line)', placeholder: '(empty = allow all)' },
 ];
 

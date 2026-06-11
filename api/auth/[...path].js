@@ -708,15 +708,14 @@ async function handleKataServerGet(req, res, guildId) {
       //   effective: code-default ← global ← guildOverride
       // FE picks the right badge per field by checking which layer the
       // value came from (matches the bot's resolution order verbatim).
+      // Mirror of the bot's DEFAULT_CONFIG (apps/bot/src/services/guildConfig.ts).
+      // chatMode + NSFW thresholds are gone — the bot dropped that machinery.
       const codeDefaults = {
         systemPrompt: '',
-        chatModel: 'gemini-3.1-flash-lite',
-        chatMode: 'balanced',
+        chatModel: 'grok-4-fast',
         imageModel: 'fal-ai/nano-banana-pro',
         videoModel: 'bytedance/seedance-2.0/image-to-video',
         rateLimitPerUser: 30,
-        nsfwThresholdNormal: 0.3,
-        nsfwThresholdNsfw: 0.85,
         allowedChannels: [],
       };
       const guildOverride = {};
@@ -787,12 +786,17 @@ async function handleKataServerGet(req, res, guildId) {
 
 // ── PATCH /api/kata/server/:guildId/config ──────────────────────
 //
-// Validates payload, writes to serverconfigs (upsert), publishes
-// config:updated:{guildId} on Redis so the bot invalidates its cache.
+// Validates payload, writes to serverconfigs (upsert); the bot's change
+// stream on `serverconfigs` picks the write up and invalidates its cache.
+//
+// Per-guild surface = systemPrompt / rateLimitPerUser / allowedChannels
+// only. Models are owner-managed in GlobalConfig (guild admins may still
+// send null to CLEAR a legacy per-guild model override, never set one).
+// chatMode + NSFW thresholds were dropped from the bot entirely.
 
-const ALLOWED_CHAT_MODES = new Set(['fast', 'balanced', 'deep']);
 const MAX_SYSPROMPT_LEN = 4000;
 const MAX_ALLOWED_CHANNELS = 50;
+const LEGACY_UNSET_ONLY_FIELDS = ['chatModel', 'imageModel', 'videoModel', 'chatMode', 'nsfwThresholdNormal', 'nsfwThresholdNsfw'];
 
 async function handleKataServerConfigPatch(req, res, guildId) {
   const auth = await authorizeGuildAccess(req, guildId);
@@ -827,28 +831,11 @@ async function handleKataServerConfigPatch(req, res, guildId) {
       else update.systemPrompt = body.systemPrompt;
     }
   }
-  if (body.chatModel !== undefined) {
-    if (!clearOrSet('chatModel', body.chatModel)) {
-      if (typeof body.chatModel !== 'string' || !body.chatModel.trim()) errors.push('chatModel must be non-empty string');
-      else update.chatModel = body.chatModel.trim();
-    }
-  }
-  if (body.chatMode !== undefined) {
-    if (!clearOrSet('chatMode', body.chatMode)) {
-      if (!ALLOWED_CHAT_MODES.has(body.chatMode)) errors.push('chatMode must be fast|balanced|deep');
-      else update.chatMode = body.chatMode;
-    }
-  }
-  if (body.imageModel !== undefined) {
-    if (!clearOrSet('imageModel', body.imageModel)) {
-      if (typeof body.imageModel !== 'string' || !body.imageModel.trim()) errors.push('imageModel must be non-empty string');
-      else update.imageModel = body.imageModel.trim();
-    }
-  }
-  if (body.videoModel !== undefined) {
-    if (!clearOrSet('videoModel', body.videoModel)) {
-      if (typeof body.videoModel !== 'string' || !body.videoModel.trim()) errors.push('videoModel must be non-empty string');
-      else update.videoModel = body.videoModel.trim();
+  // Legacy fields: bot ignores per-guild values for these now. Accept null
+  // so old overrides can be cleaned off the doc, reject any attempt to set.
+  for (const field of LEGACY_UNSET_ONLY_FIELDS) {
+    if (body[field] !== undefined && !clearOrSet(field, body[field])) {
+      errors.push(`${field} is owner-managed globally — set it in /kata/admin?tab=settings (null is allowed here to clear a legacy override)`);
     }
   }
   if (body.rateLimitPerUser !== undefined) {
@@ -856,20 +843,6 @@ async function handleKataServerConfigPatch(req, res, guildId) {
       const n = Number(body.rateLimitPerUser);
       if (!Number.isFinite(n) || n < 1 || n > 1000) errors.push('rateLimitPerUser must be 1-1000');
       else update.rateLimitPerUser = Math.round(n);
-    }
-  }
-  if (body.nsfwThresholdNormal !== undefined) {
-    if (!clearOrSet('nsfwThresholdNormal', body.nsfwThresholdNormal)) {
-      const n = Number(body.nsfwThresholdNormal);
-      if (!Number.isFinite(n) || n < 0 || n > 1) errors.push('nsfwThresholdNormal must be 0-1');
-      else update.nsfwThresholdNormal = n;
-    }
-  }
-  if (body.nsfwThresholdNsfw !== undefined) {
-    if (!clearOrSet('nsfwThresholdNsfw', body.nsfwThresholdNsfw)) {
-      const n = Number(body.nsfwThresholdNsfw);
-      if (!Number.isFinite(n) || n < 0 || n > 1) errors.push('nsfwThresholdNsfw must be 0-1');
-      else update.nsfwThresholdNsfw = n;
     }
   }
   if (body.allowedChannels !== undefined) {
@@ -1542,15 +1515,13 @@ async function adminGlobalConfigGet(req, res, kataDb) {
   const doc = await kataDb.collection('globalconfigs').findOne({ scope: GLOBAL_SCOPE });
   return res.status(200).json({
     config: doc ?? { scope: GLOBAL_SCOPE },
+    // Mirror of the bot's DEFAULT_CONFIG (apps/bot/src/services/guildConfig.ts).
     codeDefaults: {
       systemPrompt: '',
-      chatModel: 'gemini-3.1-flash-lite',
-      chatMode: 'balanced',
+      chatModel: 'grok-4-fast',
       imageModel: 'fal-ai/nano-banana-pro',
       videoModel: 'bytedance/seedance-2.0/image-to-video',
       rateLimitPerUser: 30,
-      nsfwThresholdNormal: 0.3,
-      nsfwThresholdNsfw: 0.85,
       allowedChannels: [],
     },
   });
@@ -1596,11 +1567,6 @@ async function handleKataAdminGlobalConfigPatch(req, res) {
       ? { error: 'chatModel must be non-empty string' }
       : { value: v.trim() },
   );
-  take('chatMode', (v) =>
-    !ALLOWED_CHAT_MODES.has(v)
-      ? { error: 'chatMode must be fast|balanced|deep' }
-      : { value: v },
-  );
   take('imageModel', (v) =>
     typeof v !== 'string' || !v.trim()
       ? { error: 'imageModel must be non-empty string' }
@@ -1617,18 +1583,11 @@ async function handleKataAdminGlobalConfigPatch(req, res) {
       ? { error: 'rateLimitPerUser must be 1-1000' }
       : { value: Math.round(n) };
   });
-  take('nsfwThresholdNormal', (v) => {
-    const n = Number(v);
-    return !Number.isFinite(n) || n < 0 || n > 1
-      ? { error: 'nsfwThresholdNormal must be 0-1' }
-      : { value: n };
-  });
-  take('nsfwThresholdNsfw', (v) => {
-    const n = Number(v);
-    return !Number.isFinite(n) || n < 0 || n > 1
-      ? { error: 'nsfwThresholdNsfw must be 0-1' }
-      : { value: n };
-  });
+  // chatMode + NSFW thresholds intentionally not taken — dropped from the
+  // bot; legacy values can still be cleared by sending null (handled above).
+  take('chatMode', () => ({ error: 'chatMode no longer exists in the bot (send null to clear a legacy value)' }));
+  take('nsfwThresholdNormal', () => ({ error: 'nsfwThresholdNormal no longer exists in the bot (send null to clear)' }));
+  take('nsfwThresholdNsfw', () => ({ error: 'nsfwThresholdNsfw no longer exists in the bot (send null to clear)' }));
   take('allowedChannels', (v) => {
     if (!Array.isArray(v)) return { error: 'allowedChannels must be array' };
     if (v.length > MAX_ALLOWED_CHANNELS) return { error: `allowedChannels > ${MAX_ALLOWED_CHANNELS}` };

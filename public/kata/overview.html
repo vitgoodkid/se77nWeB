@@ -210,7 +210,7 @@
     <div class="rounded-[14px] border border-line bg-panel p-5">
       <div class="flex items-baseline justify-between mb-3">
         <div class="mono text-[10px] uppercase tracking-kicker text-mute">models</div>
-        <button data-open-settings="models" class="mono text-[10px] tracking-label uppercase text-red hover:underline">edit →</button>
+        <span class="mono text-[9px] tracking-label uppercase px-1.5 py-0.5 rounded" style="background:#D4A85822;color:#D4A858;border:1px solid #D4A85844" title="Models do owner quản lý global — sửa trong /kata/admin?tab=settings">GLOBAL</span>
       </div>
       <div class="space-y-2 mono text-[11px]">
         <div class="flex items-baseline justify-between"><span class="text-mute2">chat</span><span id="cfg-chat-model" class="text-ink">—</span></div>
@@ -220,12 +220,10 @@
     </div>
     <div class="rounded-[14px] border border-line bg-panel p-5">
       <div class="flex items-baseline justify-between mb-3">
-        <div class="mono text-[10px] uppercase tracking-kicker text-mute">moderation</div>
+        <div class="mono text-[10px] uppercase tracking-kicker text-mute">limits</div>
         <button data-open-settings="moderation" class="mono text-[10px] tracking-label uppercase text-red hover:underline">edit →</button>
       </div>
       <div class="space-y-2 mono text-[11px]">
-        <div class="flex items-baseline justify-between"><span class="text-mute2">safe ch · nsfw</span><span id="cfg-nsfw-normal" class="text-ink">—</span></div>
-        <div class="flex items-baseline justify-between"><span class="text-mute2">nsfw ch · nsfw</span><span id="cfg-nsfw-nsfw" class="text-ink">—</span></div>
         <div class="flex items-baseline justify-between"><span class="text-mute2">rate · msg/hr</span><span id="cfg-rate" class="text-ink">—</span></div>
         <div class="flex items-baseline justify-between"><span class="text-mute2">channels</span><span id="cfg-channels" class="text-ink">—</span></div>
       </div>
@@ -259,23 +257,7 @@
         <div class="mono text-[10px] text-mute2 mt-1.5"><span id="f-systemPrompt-count">0</span> / 4000 ký tự</div>
       </section>
 
-      <section data-section="models" class="grid grid-cols-2 gap-3" style="display:none">
-        <input type="hidden" id="f-chatModel" value="" />
-        <input type="hidden" id="f-imageModel" value="" />
-        <input type="hidden" id="f-videoModel" value="" />
-      </section>
-
       <section data-section="moderation" class="grid grid-cols-2 gap-3">
-        <div>
-          <div class="mono text-[10px] uppercase tracking-kicker text-mute mb-2">nsfw threshold · safe channel</div>
-          <input id="f-nsfwThresholdNormal" type="number" min="0" max="1" step="0.05" class="w-full bg-bg border border-line rounded-[10px] h-10 px-3 text-[12px] text-ink mono focus:outline-none focus:border-red/60" />
-          <div class="mono text-[10px] text-mute2 mt-1.5">0–1, mặc định 0.30</div>
-        </div>
-        <div>
-          <div class="mono text-[10px] uppercase tracking-kicker text-mute mb-2">nsfw threshold · nsfw channel</div>
-          <input id="f-nsfwThresholdNsfw" type="number" min="0" max="1" step="0.05" class="w-full bg-bg border border-line rounded-[10px] h-10 px-3 text-[12px] text-ink mono focus:outline-none focus:border-red/60" />
-          <div class="mono text-[10px] text-mute2 mt-1.5">0–1, mặc định 0.85</div>
-        </div>
         <div>
           <div class="mono text-[10px] uppercase tracking-kicker text-mute mb-2">rate limit · msg/hr per user</div>
           <input id="f-rateLimitPerUser" type="number" min="1" max="1000" step="1" class="w-full bg-bg border border-line rounded-[10px] h-10 px-3 text-[12px] text-ink mono focus:outline-none focus:border-red/60" />
@@ -512,8 +494,6 @@ async function loadOverview(){
   document.getElementById('cfg-chat-model').textContent = c.chatModel || 'grok-4-fast';
   document.getElementById('cfg-image-model').textContent = (c.imageModel || '').replace(/^fal-ai\//,'') || '—';
   document.getElementById('cfg-video-model').textContent = (c.videoModel || '').split('/').slice(-2).join('/') || '—';
-  document.getElementById('cfg-nsfw-normal').textContent = `≥ ${(c.nsfwThresholdNormal ?? 0.3).toFixed(2)}`;
-  document.getElementById('cfg-nsfw-nsfw').textContent = `≥ ${(c.nsfwThresholdNsfw ?? 0.85).toFixed(2)}`;
   document.getElementById('cfg-rate').textContent = c.rateLimitPerUser ?? 30;
   const chCount = (c.allowedChannels || []).length;
   document.getElementById('cfg-channels').textContent = chCount ? `${chCount} channels` : 'tất cả';
@@ -528,95 +508,14 @@ async function loadOverview(){
 // /kata/admin?tab=settings, or the bot's hardcoded code default. Override
 // fields also get a "reset" button that PATCHes the field as null.
 const SETTINGS_FIELD_MAP = [
-  { key: 'systemPrompt',         input: 'f-systemPrompt' },
-  { key: 'chatModel',            input: 'f-chatModel' },
-  { key: 'imageModel',           input: 'f-imageModel' },
-  { key: 'videoModel',           input: 'f-videoModel' },
-  { key: 'rateLimitPerUser',     input: 'f-rateLimitPerUser' },
-  { key: 'nsfwThresholdNormal',  input: 'f-nsfwThresholdNormal' },
-  { key: 'nsfwThresholdNsfw',    input: 'f-nsfwThresholdNsfw' },
-  { key: 'allowedChannels',      input: 'f-allowedChannels' },
+  { key: 'systemPrompt',     input: 'f-systemPrompt' },
+  { key: 'rateLimitPerUser', input: 'f-rateLimitPerUser' },
+  { key: 'allowedChannels',  input: 'f-allowedChannels' },
 ];
 
-// Models grouped by provider for the popup picker. Provider tabs are
-// arbitrary labels — the bot just needs the model id string. Sync with
-// the bot's pricing list at packages/pricing/src/models.ts when adding
-// new models. The picker also has a "custom…" text input so any model
-// id the bot accepts can be set without editing this file.
-const CHAT_MODELS_BY_PROVIDER = {
-  yunwu: [
-    'gemini-3.1-flash-lite',
-    'gemini-3.1-flash-preview',
-    'gemini-3-flash-preview',
-    'gemini-3-pro-preview',
-    'gemini-3.1-pro-preview',
-    'gemini-2.5-flash',
-    'gemini-2.5-flash-lite',
-    'gemini-2.5-pro',
-    'claude-haiku-4-5',
-    'claude-sonnet-4-6',
-    'claude-opus-4-7',
-    'grok-4',
-    'grok-4.1',
-    'grok-4-fast',
-  ],
-};
-const IMAGE_MODELS_BY_PROVIDER = {
-  'fal.ai': [
-    'fal-ai/nano-banana-pro',
-    'fal-ai/nano-banana-pro/edit',
-    'fal-ai/gpt-image-2',
-    'fal-ai/gpt-image-2/edit',
-    'fal-ai/flux/dev/image-to-image',
-    'fal-ai/wan-2.6/image-to-image',
-  ],
-};
-const VIDEO_MODELS_BY_PROVIDER = {
-  'fal.ai': [
-    'bytedance/seedance-2.0/text-to-video',
-    'bytedance/seedance-2.0/image-to-video',
-    'fal-ai/happy-horse/text-to-video',
-    'fal-ai/happy-horse/image-to-video',
-    'xai/grok-imagine-video/text-to-video',
-    'xai/grok-imagine-video/image-to-video',
-  ],
-};
-
-// Wire up a model picker popup attached to a hidden input + a button +
-// a label span + a clear button. Idempotent — safe to call repeatedly
-// each time the drawer opens. The trigger button stores its provider
-// list / placeholder in data-* so the popup helper is identical to the
-// admin page.
-function wireModelPicker(idBase, byProvider, placeholder) {
-  const btn = document.getElementById(idBase + '-btn');
-  const inp = document.getElementById(idBase);
-  const lbl = document.getElementById(idBase + '-label');
-  const clr = document.getElementById(idBase + '-clear');
-  if (!btn || !inp || !lbl || !clr) return;
-  btn.setAttribute('data-providers', JSON.stringify(byProvider).replace(/"/g, '&quot;'));
-  btn.setAttribute('data-placeholder', placeholder || '');
-  btn.setAttribute('data-picker', idBase);
-  inp.setAttribute('data-field', idBase);
-  if (!btn.dataset.bound) {
-    btn.dataset.bound = '1';
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      openModelPicker(btn);
-    });
-    clr.addEventListener('click', () => {
-      inp.value = '';
-      lbl.textContent = `(default · ${placeholder || '—'})`;
-    });
-  }
-}
-
-function setModelValue(idBase, value, placeholder) {
-  const inp = document.getElementById(idBase);
-  const lbl = document.getElementById(idBase + '-label');
-  if (!inp || !lbl) return;
-  inp.value = value || '';
-  lbl.textContent = value || `(default · ${placeholder || '—'})`;
-}
+// Models are owner-managed in GlobalConfig (/kata/admin?tab=settings) —
+// the per-guild drawer no longer edits them, so the provider lists and
+// the model-picker popup live only in admin.html now.
 
 function fieldSource(cfg, key) {
   if (!cfg) return 'code';
@@ -702,166 +601,11 @@ async function resetFieldToInherit(key) {
   }
 }
 
-// Provider-tabbed model picker — same impl as /kata/admin's settings page.
-// Anchored to triggerBtn; reads provider list + placeholder from data-*
-// attrs that wireModelPicker() set. On selection, writes the chosen model
-// id into the hidden input and updates the visible label.
-function openModelPicker(triggerBtn) {
-  const placeholder = triggerBtn.getAttribute('data-placeholder') || '';
-  let byProvider;
-  try {
-    byProvider = JSON.parse(triggerBtn.getAttribute('data-providers').replace(/&quot;/g, '"'));
-  } catch { byProvider = {}; }
-  const providers = Object.keys(byProvider);
-  if (providers.length === 0) return;
-
-  const idBase = triggerBtn.getAttribute('data-picker');
-  const hiddenInput = document.getElementById(idBase);
-  const labelEl = document.getElementById(idBase + '-label');
-  const currentValue = (hiddenInput && hiddenInput.value) || '';
-
-  let activeProvider = providers[0];
-  for (const p of providers) {
-    if ((byProvider[p] || []).includes(currentValue)) { activeProvider = p; break; }
-  }
-
-  const pop = document.createElement('div');
-  pop.style.position = 'absolute';
-  pop.style.zIndex = '500';
-  pop.style.minWidth = '320px';
-  pop.style.background = 'rgba(13,10,8,0.95)';
-  pop.style.border = '1px solid rgba(255,255,255,0.1)';
-  pop.style.borderRadius = '10px';
-  pop.style.padding = '8px';
-  pop.style.backdropFilter = 'blur(8px)';
-  pop.style.boxShadow = '0 8px 24px rgba(0,0,0,0.4)';
-
-  const r = triggerBtn.getBoundingClientRect();
-  pop.style.left = (r.left + window.scrollX) + 'px';
-  pop.style.top = (r.bottom + window.scrollY + 6) + 'px';
-  pop.style.width = r.width + 'px';
-
-  function render() {
-    pop.innerHTML = '';
-    const tabs = document.createElement('div');
-    tabs.style.display = 'flex';
-    tabs.style.gap = '4px';
-    tabs.style.marginBottom = '8px';
-    tabs.style.borderBottom = '1px solid rgba(255,255,255,0.06)';
-    tabs.style.paddingBottom = '6px';
-    for (const p of providers) {
-      const t = document.createElement('button');
-      t.type = 'button';
-      t.textContent = p;
-      t.className = 'mono px-3 py-1.5 rounded-[6px]';
-      t.style.fontSize = '10px';
-      t.style.letterSpacing = '0.18em';
-      t.style.textTransform = 'uppercase';
-      if (p === activeProvider) {
-        t.style.background = 'rgba(245,237,224,0.10)';
-        t.style.color = '#f5ede0';
-      } else {
-        t.style.color = 'rgba(245,237,224,0.5)';
-      }
-      t.addEventListener('click', () => { activeProvider = p; render(); });
-      tabs.appendChild(t);
-    }
-    pop.appendChild(tabs);
-
-    const list = byProvider[activeProvider] || [];
-    const listWrap = document.createElement('div');
-    listWrap.style.maxHeight = '280px';
-    listWrap.style.overflowY = 'auto';
-    listWrap.style.marginBottom = '8px';
-    listWrap.style.display = 'flex';
-    listWrap.style.flexDirection = 'column';
-    listWrap.style.gap = '2px';
-
-    const defRow = document.createElement('button');
-    defRow.type = 'button';
-    defRow.textContent = `(use default · ${placeholder || '—'})`;
-    defRow.className = 'mono text-left bg-bg border border-line rounded-[6px] px-3 py-2 hover:border-line2';
-    defRow.style.fontSize = '11px';
-    defRow.style.color = 'rgba(245,237,224,0.5)';
-    if (!currentValue) {
-      defRow.style.borderColor = 'var(--accent)';
-      defRow.style.color = '#f5ede0';
-    }
-    defRow.addEventListener('click', () => apply(''));
-    listWrap.appendChild(defRow);
-
-    for (const m of list) {
-      const row = document.createElement('button');
-      row.type = 'button';
-      row.textContent = m;
-      row.className = 'mono text-left bg-bg border border-line rounded-[6px] px-3 py-2 hover:border-line2';
-      row.style.fontSize = '12px';
-      if (m === currentValue) {
-        row.style.borderColor = 'var(--accent)';
-        row.style.background = 'rgba(212,168,88,0.06)';
-        row.style.color = '#f5ede0';
-      } else {
-        row.style.color = '#f5ede0';
-      }
-      row.addEventListener('click', () => apply(m));
-      listWrap.appendChild(row);
-    }
-    pop.appendChild(listWrap);
-
-    const customWrap = document.createElement('div');
-    customWrap.style.display = 'flex';
-    customWrap.style.gap = '6px';
-    const inp = document.createElement('input');
-    inp.type = 'text';
-    inp.placeholder = 'custom model id';
-    inp.className = 'mono flex-1 bg-bg border border-line rounded-[8px] px-3 py-2 text-ink focus:outline-none focus:border-line2';
-    inp.style.fontSize = '11px';
-    const setBtn = document.createElement('button');
-    setBtn.type = 'button';
-    setBtn.textContent = 'use';
-    setBtn.className = 'mono px-3 py-2 rounded-[8px] text-bg font-bold';
-    setBtn.style.fontSize = '10px';
-    setBtn.style.letterSpacing = '0.18em';
-    setBtn.style.textTransform = 'uppercase';
-    setBtn.style.background = 'var(--accent)';
-    setBtn.addEventListener('click', () => {
-      const v = inp.value.trim();
-      if (v) apply(v);
-    });
-    inp.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') { e.preventDefault(); setBtn.click(); }
-    });
-    customWrap.appendChild(inp);
-    customWrap.appendChild(setBtn);
-    pop.appendChild(customWrap);
-  }
-
-  function apply(v) {
-    if (hiddenInput) hiddenInput.value = v;
-    if (labelEl) labelEl.textContent = v || `(default · ${placeholder || '—'})`;
-    close();
-  }
-  function close() {
-    if (pop.parentElement) pop.parentElement.removeChild(pop);
-    document.removeEventListener('click', onOutside, true);
-  }
-  function onOutside(e) {
-    if (pop.contains(e.target) || triggerBtn.contains(e.target)) return;
-    close();
-  }
-
-  render();
-  document.body.appendChild(pop);
-  setTimeout(() => document.addEventListener('click', onOutside, true), 0);
-}
-
 function openSettings(focusSection){
   if (!CURRENT_CONFIG){ showToast('Đang tải config…', 'info'); return; }
   const c = CURRENT_CONFIG;
   document.getElementById('f-systemPrompt').value = c.systemPrompt || '';
   document.getElementById('f-systemPrompt-count').textContent = (c.systemPrompt || '').length;
-  document.getElementById('f-nsfwThresholdNormal').value = c.nsfwThresholdNormal ?? 0.3;
-  document.getElementById('f-nsfwThresholdNsfw').value = c.nsfwThresholdNsfw ?? 0.85;
   document.getElementById('f-rateLimitPerUser').value = c.rateLimitPerUser ?? 30;
   document.getElementById('f-allowedChannels').value = (c.allowedChannels || []).join(', ');
   document.getElementById('settings-status').textContent = '';
@@ -901,8 +645,6 @@ document.getElementById('settings-form').addEventListener('submit', async (e)=>{
   const allowedChannels = channelsRaw.split(/[\s,]+/).map(s=>s.trim()).filter(Boolean);
   const payload = {
     systemPrompt: document.getElementById('f-systemPrompt').value,
-    nsfwThresholdNormal: parseFloat(document.getElementById('f-nsfwThresholdNormal').value),
-    nsfwThresholdNsfw: parseFloat(document.getElementById('f-nsfwThresholdNsfw').value),
     rateLimitPerUser: parseInt(document.getElementById('f-rateLimitPerUser').value, 10),
     allowedChannels,
   };
