@@ -747,6 +747,7 @@ const PUBLIC_TOOLS = [
   { id: 'game',    nameKey: 'tools.game.name',    descKey: 'tools.game.desc',    icon: '◉' },
   { id: 'convert', nameKey: 'tools.convert.name', descKey: 'tools.convert.desc', icon: '⇄' },
   { id: 'hex',     nameKey: 'tools.hex.name',     descKey: 'tools.hex.desc',     icon: '0x' },
+  { id: '2fa',     nameKey: 'tools.2fa.name',     descKey: 'tools.2fa.desc',     icon: '2F' },
   { id: 'thao',    nameKey: 'tools.thao.name',    descKey: 'tools.thao.desc',    icon: '♥' },
 ];
 const PRIVATE_TOOLS = [
@@ -950,6 +951,7 @@ function ToolDetail({ tool, accent, onBack }) {
          tool.id === 'pst'     ? <PastebinTool accent={accent} /> :
          tool.id === 'convert' ? <ConverterTool accent={accent} /> :
          tool.id === 'hex'     ? <HexToTextTool accent={accent} /> :
+         tool.id === '2fa'     ? <TotpAuthenticatorTool accent={accent} /> :
          tool.id === 'fin'     ? <FinanceTool accent={accent} /> :
          tool.id === 'game'    ? <GameResourcesTool accent={accent} /> :
          tool.id === 'thao'    ? <ThaoTool onClose={onBack} /> :
@@ -1297,6 +1299,243 @@ function HexToTextTool({ accent }) {
           />
         </div>
       )}
+    </div>
+  );
+}
+
+function extractTotpSecret(input) {
+  const value = input.trim();
+  if (!value) throw new Error('empty');
+
+  if (/^otpauth:\/\//i.test(value)) {
+    try {
+      const secret = new URL(value).searchParams.get('secret');
+      if (!secret) throw new Error('missing');
+      return secret;
+    } catch {
+      throw new Error('url');
+    }
+  }
+
+  return value;
+}
+
+function decodeBase32(input) {
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+  const normalized = extractTotpSecret(input)
+    .toUpperCase()
+    .replace(/[\s-]+/g, '')
+    .replace(/=+$/, '');
+
+  if (!normalized) throw new Error('empty');
+  if (!/^[A-Z2-7]+$/.test(normalized)) throw new Error('base32');
+
+  let bits = 0;
+  let bitCount = 0;
+  const bytes = [];
+  for (const char of normalized) {
+    bits = (bits << 5) | alphabet.indexOf(char);
+    bitCount += 5;
+    if (bitCount >= 8) {
+      bitCount -= 8;
+      bytes.push((bits >>> bitCount) & 0xff);
+      bits &= (1 << bitCount) - 1;
+    }
+  }
+
+  if (!bytes.length) throw new Error('base32');
+  return new Uint8Array(bytes);
+}
+
+async function generateTotp(input, timestamp = Date.now()) {
+  if (!globalThis.crypto?.subtle) throw new Error('crypto');
+
+  const keyBytes = decodeBase32(input);
+  const counter = Math.floor(timestamp / 30000);
+  const counterBytes = new ArrayBuffer(8);
+  const view = new DataView(counterBytes);
+  view.setUint32(0, Math.floor(counter / 0x100000000), false);
+  view.setUint32(4, counter >>> 0, false);
+
+  const key = await globalThis.crypto.subtle.importKey(
+    'raw', keyBytes, { name: 'HMAC', hash: 'SHA-1' }, false, ['sign'],
+  );
+  const signature = new Uint8Array(await globalThis.crypto.subtle.sign('HMAC', key, counterBytes));
+  const offset = signature[signature.length - 1] & 0x0f;
+  const binary = (
+    ((signature[offset] & 0x7f) << 24) |
+    ((signature[offset + 1] & 0xff) << 16) |
+    ((signature[offset + 2] & 0xff) << 8) |
+    (signature[offset + 3] & 0xff)
+  );
+  return String(binary % 1000000).padStart(6, '0');
+}
+
+function TotpAuthenticatorTool({ accent }) {
+  const { lang } = useLang();
+  const [secret, setSecret] = useState('');
+  const [activeSecret, setActiveSecret] = useState('');
+  const [code, setCode] = useState('');
+  const [err, setErr] = useState('');
+  const [visible, setVisible] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [now, setNow] = useState(Date.now());
+  const period = Math.floor(now / 30000);
+  const remaining = 30 - (Math.floor(now / 1000) % 30);
+  const progress = ((30 - remaining) / 30) * 360;
+
+  const labels = useMemo(() => (lang === 'vi' ? {
+    input: 'SECRET KEY 2FA', placeholder: 'Nhập secret Base32 hoặc link otpauth://',
+    generate: 'Lấy mã 2FA', generating: 'Đang tạo…', show: 'Hiện', hide: 'Ẩn',
+    clear: 'Xóa', copy: 'Sao chép', copied: 'Đã sao chép', next: 'Mã mới sau',
+    local: 'Mã được tạo ngay trên trình duyệt. Secret không được gửi hoặc lưu trên máy chủ.',
+    empty: 'Nhập secret key 2FA.', base32: 'Secret Base32 không hợp lệ.',
+    url: 'Link otpauth không hợp lệ hoặc thiếu secret.', crypto: 'Trình duyệt không hỗ trợ tạo mã TOTP.',
+    failed: 'Không thể tạo mã 2FA.',
+  } : {
+    input: '2FA SECRET KEY', placeholder: 'Enter a Base32 secret or otpauth:// URL',
+    generate: 'Generate code', generating: 'Generating…', show: 'Show', hide: 'Hide',
+    clear: 'Clear', copy: 'Copy', copied: 'Copied', next: 'New code in',
+    local: 'The code is generated in your browser. Your secret is never sent to or stored on the server.',
+    empty: 'Enter a 2FA secret key.', base32: 'The Base32 secret is invalid.',
+    url: 'The otpauth URL is invalid or missing its secret.', crypto: 'This browser cannot generate TOTP codes.',
+    failed: 'Could not generate the 2FA code.',
+  }), [lang]);
+
+  const errorMessage = useCallback((error) => labels[error?.message] || labels.failed, [labels]);
+
+  const updateCode = useCallback(async (value, timestamp) => {
+    try {
+      const nextCode = await generateTotp(value, timestamp);
+      setCode(nextCode);
+      setErr('');
+      return true;
+    } catch (error) {
+      setCode('');
+      setErr(errorMessage(error));
+      return false;
+    }
+  }, [errorMessage]);
+
+  useEffect(() => {
+    if (!activeSecret) return undefined;
+    const timer = setInterval(() => setNow(Date.now()), 250);
+    return () => clearInterval(timer);
+  }, [activeSecret]);
+
+  useEffect(() => {
+    if (activeSecret) updateCode(activeSecret, period * 30000);
+  }, [activeSecret, period, updateCode]);
+
+  async function activate() {
+    if (busy) return;
+    setBusy(true);
+    const timestamp = Date.now();
+    setNow(timestamp);
+    const ok = await updateCode(secret, timestamp);
+    setActiveSecret(ok ? secret : '');
+    setBusy(false);
+  }
+
+  function reset() {
+    setSecret('');
+    setActiveSecret('');
+    setCode('');
+    setErr('');
+    setCopied(false);
+    setVisible(false);
+  }
+
+  function copyCode() {
+    copyText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }
+
+  return (
+    <div style={{ display: 'grid', gap: 18 }}>
+      <div>
+        <Kicker style={{ marginBottom: 8 }}>{labels.input}</Kicker>
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', gap: 8 }}>
+          <Field
+            value={secret}
+            onChange={(value) => {
+              setSecret(value);
+              setActiveSecret('');
+              setCode('');
+              setErr('');
+            }}
+            type={visible ? 'text' : 'password'}
+            placeholder={labels.placeholder}
+            onKeyDown={(e) => { if (e.key === 'Enter') activate(); }}
+            autoFocus
+          />
+          <Btn variant="tinted" color={accent} onClick={() => setVisible((value) => !value)}>
+            {visible ? labels.hide : labels.show}
+          </Btn>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+        <Btn variant="solid" color={accent} onClick={activate} disabled={!secret.trim() || busy}>
+          {busy ? labels.generating : labels.generate}
+        </Btn>
+        <Btn variant="ghost" onClick={reset} disabled={!secret && !code}>{labels.clear}</Btn>
+      </div>
+
+      {err && (
+        <div className="mono" style={{
+          padding: '10px 14px', borderRadius: 10,
+          border: `1px solid ${COLORS.red}55`, background: COLORS.red + '0e',
+          color: COLORS.red, fontSize: 12,
+        }}>✕ {err}</div>
+      )}
+
+      {code && (
+        <div style={{
+          padding: 22, borderRadius: 14, border: `1px solid ${accent}55`,
+          background: accent + '0b', display: 'grid', gap: 16,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+            <button
+              type="button"
+              onClick={copyCode}
+              className="mono"
+              title={labels.copy}
+              style={{
+                border: 0, background: 'transparent', padding: 0, cursor: 'pointer',
+                color: accent, fontSize: 'clamp(32px, 7vw, 52px)', fontWeight: 800,
+                letterSpacing: '0.16em', lineHeight: 1, whiteSpace: 'nowrap',
+              }}
+            >{code.slice(0, 3)} {code.slice(3)}</button>
+            <div style={{
+              width: 58, height: 58, borderRadius: 999, flex: '0 0 auto',
+              display: 'grid', placeItems: 'center',
+              background: `conic-gradient(${accent} ${progress}deg, ${COLORS.line} ${progress}deg)`,
+            }}>
+              <div className="mono" style={{
+                width: 48, height: 48, borderRadius: 999, display: 'grid', placeItems: 'center',
+                background: COLORS.bg, color: remaining <= 5 ? COLORS.red : COLORS.text,
+                fontSize: 15, fontWeight: 700,
+              }}>{remaining}</div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+            <span className="mono" style={{ color: COLORS.muted, fontSize: 10, letterSpacing: '0.08em' }}>
+              {labels.next} {remaining}s
+            </span>
+            <Btn variant="tinted" color={accent} onClick={copyCode}>
+              {copied ? labels.copied : labels.copy}
+            </Btn>
+          </div>
+        </div>
+      )}
+
+      <div className="mono" style={{
+        padding: '10px 14px', borderRadius: 10, background: COLORS.bg,
+        border: '1px solid ' + COLORS.line, fontSize: 10, color: COLORS.muted, lineHeight: 1.6,
+      }}>◇ {labels.local}</div>
     </div>
   );
 }
