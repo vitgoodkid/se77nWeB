@@ -18,106 +18,190 @@
   }}};
 </script>
 <style>
-  html, body { background: #0d0a08; color: #f5ede0; font-family: Geist, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  html, body { background: #0d0a08; color: #ece6df; font-family: 'JetBrains Mono', ui-monospace, monospace; -webkit-font-smoothing: antialiased; }
   .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
-  .glow77 { text-shadow: 0 0 6px #E04545cc, 0 0 18px #E0454566, 0 0 36px #E0454533; }
-  @keyframes pulse77 { 0%,100% { opacity:1; transform: scale(1); } 50% { opacity:.55; transform: scale(.82); } }
-  .dot-pulse { animation: pulse77 2s ease-in-out infinite; }
-  .ambient { background-image:
-      radial-gradient(60% 50% at 18% 12%, #E0454520 0%, transparent 65%),
-      radial-gradient(50% 45% at 90% 88%, #5BA86820 0%, transparent 70%); }
-  .grain { background-image: radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px); background-size: 3px 3px; }
-  ::-webkit-scrollbar { width: 8px; height: 8px; }
-  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
-  .tab-active { color: #f5ede0 !important; background: rgba(245,237,224,0.05); }
-  .row { transition: background 120ms ease; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 16px; background: rgba(21,17,13,0.4); }
-  .row:hover { background: rgba(245,237,224,0.03); }
-  .stat-pos { color: #E04545; }
-  .stat-neg { color: #5BA868; }
-  .truncate-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .glow77 { text-shadow: 0 0 6px color-mix(in srgb, var(--accent, #E04545) 80%, transparent), 0 0 18px color-mix(in srgb, var(--accent, #E04545) 40%, transparent); }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: #2a2422; border-radius: 99px; border: 2px solid #0d0a08; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  textarea::placeholder, input::placeholder { color: #57504b; }
+  textarea:focus, input:focus { outline: none; }
+
+  @keyframes ddIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes toastIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes pageIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .page-in { animation: pageIn .25s ease; }
+
+  /* ── cards ─────────────────────────────────────────────── */
+  .card { background: #131010; border: 1px solid #272120; border-radius: 13px; transition: border-color .2s, transform .2s, box-shadow .2s; }
+  .card:hover { border-color: #3a302c; }
+  .card-lift:hover { transform: translateY(-2px); }
+  .card-row:hover { transform: translateY(-2px); box-shadow: 0 14px 36px rgba(0,0,0,.35); }
+  .card-log:hover { transform: translateX(4px); }
+
+  /* ── nav ───────────────────────────────────────────────── */
+  .navitem { display: flex; align-items: center; justify-content: space-between; padding: 11px 12px; border-radius: 8px; font-size: 10.5px; letter-spacing: .18em; font-weight: 800; text-transform: uppercase; color: #8a7f78; cursor: pointer; background: transparent; border-left: 2px solid transparent; transition: all .18s; }
+  .navitem:hover { background: #15100f; color: #ece6df; transform: translateX(3px); }
+  .navitem.on { color: #f3ede6; background: #1a1312; border-left-color: var(--accent); }
+  .navitem .navdot { width: 6px; height: 6px; border-radius: 99px; background: transparent; }
+  .navitem.on .navdot { background: var(--accent); }
+
+  /* ── chips (filter pills) ──────────────────────────────── */
+  .chip { padding: 9px 18px; border-radius: 99px; font-family: inherit; font-size: 10px; letter-spacing: .18em; font-weight: 800; cursor: pointer; border: 1px solid #2c2522; background: transparent; color: #8a7f78; transition: all .18s; }
+  .chip:hover { transform: translateY(-2px); color: #ece6df; }
+  .chip.on { background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
+
+  /* ── buttons ───────────────────────────────────────────── */
+  .btn-accent { background: var(--accent); color: var(--accent-fg, #fff); padding: 15px 32px; border-radius: 11px; font-family: inherit; font-weight: 800; letter-spacing: .18em; font-size: 11.5px; border: none; cursor: pointer; transition: transform .18s, box-shadow .18s, background .6s; }
+  .btn-accent:hover { transform: translateY(-2px); box-shadow: 0 12px 32px color-mix(in srgb, var(--accent) 35%, transparent); }
+  .btn-accent:active { transform: translateY(0); }
+  .btn-ghost { background: transparent; color: #8a7f78; padding: 15px 28px; border-radius: 11px; font-family: inherit; font-weight: 800; letter-spacing: .18em; font-size: 11.5px; border: 1px solid #2c2522; cursor: pointer; transition: all .18s; }
+  .btn-ghost:hover { border-color: #57504b; color: #ece6df; transform: translateY(-2px); }
+  .btn-manage { padding: 11px 18px; border-radius: 9px; background: transparent; border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); color: var(--accent); font-family: inherit; font-size: 10px; font-weight: 800; letter-spacing: .16em; cursor: pointer; transition: all .18s; white-space: nowrap; text-decoration: none; display: inline-block; }
+  .btn-manage:hover { background: var(--accent); color: var(--accent-fg, #fff); transform: translateX(3px); box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 35%, transparent); }
+  .btn-step { width: 40px; height: 40px; border-radius: 10px; background: #0e0b0a; border: 1px solid #2c2522; color: #8a7f78; font-family: inherit; font-size: 17px; cursor: pointer; transition: all .15s; }
+  .btn-step:hover { border-color: color-mix(in srgb, var(--accent) 50%, transparent); color: #ece6df; transform: translateY(-1px); }
+  .btn-use { padding: 0 18px; border-radius: 8px; border: none; color: #0b0908; font-family: inherit; font-size: 10.5px; font-weight: 800; letter-spacing: .16em; cursor: pointer; transition: transform .15s, box-shadow .15s; }
+  .btn-use:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(0,0,0,.4); }
+
+  /* ── settings fields ───────────────────────────────────── */
+  .fld-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 22px; border-bottom: 1px solid #1d1817; }
+  .fld-title { font-size: 14.5px; font-weight: 800; letter-spacing: .14em; color: #f3ede6; }
+  .fld-desc { font-size: 11.5px; color: #6b6058; margin-top: 6px; }
+  .fld-status { font-size: 9px; letter-spacing: .16em; font-weight: 800; border-radius: 99px; padding: 3px 9px; border: 1px solid #332a26; color: #6b5f58; transition: all .25s; }
+  .fld-status.on { color: var(--accent); border-color: var(--accent); }
+  .fld-body { padding: 18px 22px 20px; opacity: .4; pointer-events: none; transition: opacity .25s; }
+  .fld-body.on { opacity: 1; pointer-events: auto; }
+  .tgl { width: 46px; height: 25px; flex: none; border-radius: 99px; border: 1px solid #332a26; background: #1f1a18; position: relative; cursor: pointer; transition: all .25s; }
+  .tgl-knob { position: absolute; top: 3px; left: 3px; width: 17px; height: 17px; border-radius: 99px; background: #6b5f58; transform: translateX(0); transition: transform .25s cubic-bezier(.4,0,.2,1), background .25s; }
+  .tgl.on { background: var(--accent); border-color: var(--accent); }
+  .tgl.on .tgl-knob { transform: translateX(21px); background: var(--accent-fg, #fff); }
+
+  .inp { width: 100%; background: #0e0b0a; border: 1px solid #2c2522; border-radius: 10px; padding: 14px 16px; font-family: inherit; font-size: 12.5px; line-height: 1.7; color: #ddd6cf; transition: border-color .2s, box-shadow .2s; }
+  .inp:focus { border-color: color-mix(in srgb, var(--accent) 50%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 8%, transparent); }
+  textarea.inp { resize: vertical; }
+
+  /* ── model dropdown ────────────────────────────────────── */
+  .dd-trigger { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; background: #0e0b0a; border: 1px solid #2c2522; border-radius: 10px; padding: 14px 16px; font-family: inherit; font-size: 13.5px; color: #ece6df; cursor: pointer; transition: border-color .2s, box-shadow .2s; text-align: left; }
+  .dd-trigger:hover { border-color: color-mix(in srgb, var(--accent) 45%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 7%, transparent); }
+  .dd-panel { position: absolute; top: calc(100% + 8px); left: 0; right: 0; z-index: 40; background: #100d0c; border: 1px solid #332a26; border-radius: 12px; box-shadow: 0 28px 70px rgba(0,0,0,.65); animation: ddIn .16s ease; overflow: hidden; }
+  .dd-panel.up { top: auto; bottom: calc(100% + 8px); }
+  .dd-tab { padding: 7px 16px; border-radius: 8px; font-family: inherit; font-size: 10px; letter-spacing: .18em; font-weight: 800; cursor: pointer; border: 1px solid #2c2522; background: transparent; color: #6b5f58; transition: all .15s; }
+  .dd-tab:hover { color: #ece6df; }
+  .dd-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 11px 13px; border-radius: 8px; border: 1px solid transparent; color: #ddd6cf; font-size: 12.5px; cursor: pointer; transition: background .12s, transform .12s; }
+  .dd-item:hover { background: #1c1614; transform: translateX(3px); }
+  .dd-backdrop { position: fixed; inset: 0; z-index: 30; }
+
+  .provider-pill { font-size: 9px; color: #57504b; letter-spacing: .16em; flex: none; border: 1px solid #2c2522; border-radius: 99px; padding: 3px 8px; }
+  .ovr-pill { font-size: 10px; letter-spacing: .14em; font-weight: 800; color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); border-radius: 99px; padding: 7px 14px; }
+
+  .tag-pill { font-size: 8.5px; letter-spacing: .18em; font-weight: 800; border-radius: 99px; padding: 3px 9px; border: 1px solid #2c2522; }
+
+  .bar-track { height: 4px; border-radius: 99px; background: #1d1817; margin-top: 7px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 99px; transition: width .5s ease; }
+
+  .stat-label { font-size: 9.5px; letter-spacing: .22em; color: #8a7f78; font-weight: 800; }
+  .micro-label { font-size: 8.5px; letter-spacing: .2em; color: #57504b; font-weight: 800; }
+
+  #toast-wrap { position: fixed; bottom: 24px; right: 24px; z-index: 90; }
+  .toast { background: #102019; border: 1px solid #2c5a44; color: #5BA868; padding: 13px 20px; border-radius: 11px; font-size: 12px; font-weight: 700; animation: toastIn .22s ease; box-shadow: 0 18px 44px rgba(0,0,0,.55); }
+  .toast.warn { background: #201210; border-color: #5a342c; color: #E04545; }
+
+  .guild-chip { display: inline-flex; align-items: center; gap: 7px; border: 1px solid #2c2522; border-radius: 99px; padding: 4px 11px; min-width: 0; }
 </style>
 </head>
 <body class="bg-bg text-ink min-h-screen overflow-x-hidden">
 <script src="_strings.js"></script>
 <script src="_shell.js"></script>
 
-<div aria-hidden class="fixed inset-0 z-0 pointer-events-none ambient"></div>
-<div aria-hidden class="fixed inset-0 z-0 pointer-events-none grain opacity-40"></div>
-
-<header class="fixed top-0 inset-x-0 h-16 z-50 flex items-center justify-between px-6 backdrop-blur-md border-b border-line" style="background:rgba(13,10,8,0.7)">
-  <div class="flex items-center gap-5">
-    <a href="/" class="flex flex-col items-start gap-1 leading-none" title="Về se77n.com">
-      <div class="mono text-[24px] font-extrabold tracking-[-0.025em]">se<span class="text-red glow77">77</span>n<span class="text-mute font-normal"> / kata</span></div>
-      <div class="mono text-[9px] uppercase tracking-kicker text-mute">Experiment <span class="text-red font-bold">007</span> · admin</div>
+<header class="fixed top-0 inset-x-0 z-50 flex items-center justify-between px-6 backdrop-blur-md" style="height:58px;background:rgba(13,10,8,0.82);border-bottom:1px solid #1d1817">
+  <div class="flex items-center" style="gap:22px">
+    <a href="/" class="flex flex-col items-start leading-none" title="Về se77n.com" style="gap:2px">
+      <div class="mono font-extrabold" style="font-size:17px;letter-spacing:-0.02em;color:#f3ede6">se<span class="glow77" style="color:var(--accent);transition:color .6s">77</span>n <span style="color:#57504b;font-weight:400">/</span> <span style="color:#b9b0a8">kata</span></div>
+      <div class="mono" style="font-size:8.5px;letter-spacing:.26em;color:#57504b">EXPERIMENT <span style="color:var(--accent);transition:color .6s">007</span> · ADMIN</div>
     </a>
-    <div class="flex items-center gap-2 ml-3 mono text-[10px] tracking-label uppercase">
-      <a href="index.html" class="text-mute hover:text-ink">se77n</a><span class="text-mute2">/</span>
-      <a href="index.html" class="text-mute hover:text-ink">kata</a><span class="text-mute2">/</span>
-      <span class="text-ink">admin · <span id="bc-tab">servers</span></span>
-    </div>
+    <div class="mono" style="font-size:10px;letter-spacing:.2em;color:#57504b">ADMIN <span style="color:var(--accent);transition:color .6s">·</span> <span id="bc-tab" style="color:#b9b0a8">SERVERS</span></div>
   </div>
   <div id="kata-header-actions" class="flex items-center gap-2.5"></div>
 </header>
 
-<aside class="fixed top-16 left-0 bottom-0 w-[220px] z-40 border-r border-line backdrop-blur-md overflow-y-auto" style="background:rgba(13,10,8,0.6)">
-  <div class="p-5 border-b border-line">
-    <div class="mono text-[10px] tracking-label uppercase text-gold">owner</div>
-    <div class="text-[14px] font-medium tracking-tight text-ink mt-1" data-i18n="admin.subtitle">admin console</div>
-    <div class="mono text-[10px] text-mute mt-1" data-i18n="admin.subtitle.desc">global view</div>
-  </div>
-  <nav class="px-3 py-4 mono text-[11px] tracking-label uppercase">
-    <a data-tab="servers" class="block px-3 py-2 rounded-[8px] text-mute hover:text-ink cursor-pointer mb-1"><span data-i18n="admin.tab.servers">▸ all servers</span></a>
-    <a data-tab="logs" class="block px-3 py-2 rounded-[8px] text-mute hover:text-ink cursor-pointer mb-1"><span data-i18n="admin.tab.logs">▸ global logs</span></a>
-    <a data-tab="cost" class="block px-3 py-2 rounded-[8px] text-mute hover:text-ink cursor-pointer mb-1"><span data-i18n="admin.tab.cost">▸ global cost</span></a>
-    <a data-tab="settings" class="block px-3 py-2 rounded-[8px] text-mute hover:text-ink cursor-pointer mb-1"><span data-i18n="admin.tab.settings">▸ global settings</span></a>
+<aside class="fixed left-0 bottom-0 z-40 border-r overflow-y-auto" style="top:58px;width:232px;border-color:#1d1817;background:rgba(13,10,8,0.6);backdrop-filter:blur(12px)">
+  <nav class="flex flex-col mono" style="padding:26px 14px 20px;gap:3px;min-height:calc(100% - 60px)">
+    <a data-tab="servers" class="navitem"><span data-i18n="admin.tab.servers">ALL SERVERS</span><span class="navdot"></span></a>
+    <a data-tab="logs" class="navitem"><span data-i18n="admin.tab.logs">GLOBAL LOGS</span><span class="navdot"></span></a>
+    <a data-tab="cost" class="navitem"><span data-i18n="admin.tab.cost">GLOBAL COST</span><span class="navdot"></span></a>
+    <a data-tab="settings" class="navitem"><span data-i18n="admin.tab.settings">GLOBAL SETTINGS</span><span class="navdot"></span></a>
   </nav>
-  <div class="px-5 py-4 border-t border-line">
-    <a href="servers.html" class="mono text-[10px] tracking-label uppercase text-mute hover:text-ink" data-i18n="btn.back-my-servers">← my servers</a>
+  <div style="padding:0 14px 20px">
+    <a href="servers.html" class="mono block" style="padding:11px 12px;border-radius:8px;font-size:10.5px;letter-spacing:.18em;font-weight:700;text-transform:uppercase;color:#57504b;transition:all .18s" onmouseover="this.style.color='#ece6df';this.style.transform='translateX(-3px)'" onmouseout="this.style.color='#57504b';this.style.transform=''" data-i18n="btn.back-my-servers">← MY SERVERS</a>
   </div>
 </aside>
 
-<main class="relative z-10 pt-20 pb-16 pl-[244px] pr-8">
+<main class="relative z-10 pl-[244px]" style="padding-top:58px">
+  <div style="max-width:1180px;margin:0 auto;padding:44px 40px 120px">
 
-  <div class="flex items-end justify-between gap-6 mb-6">
-    <div>
-      <div class="mono text-[10px] uppercase tracking-kicker text-gold mb-2">OWNER · ADMIN / <span id="page-tag">SERVERS</span></div>
-      <h1 class="mono text-[36px] leading-none font-extrabold tracking-[-0.035em] lowercase">admin<span id="page-tab-label" class="text-red font-extrabold"> · servers</span><span class="text-red glow77">.</span></h1>
-      <div id="page-counts" class="mono text-[11px] text-mute mt-3">—</div>
+    <div style="margin-bottom:30px">
+      <div class="mono" style="font-size:10px;letter-spacing:.26em;color:var(--accent);font-weight:800;transition:color .6s">OWNER · ADMIN / <span id="page-tag">SERVERS</span></div>
+      <h1 class="mono" style="font-size:38px;margin:10px 0 8px;color:#f3ede6;font-weight:800;letter-spacing:-.02em;line-height:1"><span id="page-title">All Servers</span><span style="color:var(--accent);transition:color .6s">.</span></h1>
+      <p id="page-counts" class="mono" style="margin:0;font-size:12.5px;color:#8a7f78">—</p>
     </div>
-    <div id="page-actions" class="flex items-center gap-2"></div>
-  </div>
 
-  <div id="auth-warning" class="hidden mb-6 p-5 border border-line rounded-[12px] bg-panel">
-    <div class="mono text-[10px] uppercase tracking-kicker text-red mb-2" data-i18n="err.generic">không thể tải</div>
-    <div id="auth-warning-msg" class="text-[14px] text-mute">—</div>
-    <a id="auth-login-btn" href="/api/auth/discord/start" class="hidden mt-4 inline-block mono h-9 px-4 rounded-full border border-line text-[11px] tracking-label uppercase hover:bg-ink/5" data-i18n="kata.login">đăng nhập discord</a>
-  </div>
+    <div id="auth-warning" class="hidden card" style="margin-bottom:24px;padding:20px 22px">
+      <div class="mono" style="font-size:10px;letter-spacing:.22em;color:var(--accent);font-weight:800;margin-bottom:8px;text-transform:uppercase" data-i18n="err.generic">KHÔNG THỂ TẢI</div>
+      <div id="auth-warning-msg" class="mono" style="font-size:13px;color:#8a7f78">—</div>
+      <a id="auth-login-btn" href="/api/auth/discord/start" class="hidden mono mt-4 inline-block btn-manage" data-i18n="kata.login">ĐĂNG NHẬP DISCORD</a>
+    </div>
 
-  <div id="content"></div>
+    <div id="content"></div>
+  </div>
 </main>
+
+<div id="toast-wrap"></div>
 
 <script>
 const TABS = ['servers','logs','cost','settings'];
 const params = new URLSearchParams(location.search);
 let currentTab = TABS.includes(params.get('tab')) ? params.get('tab') : 'servers';
 
+const PAGE_META = {
+  servers:  { title: 'All Servers',     tag: 'SERVERS' },
+  logs:     { title: 'Global Logs',     tag: 'LOGS' },
+  cost:     { title: 'Global Cost',     tag: 'COST' },
+  settings: { title: 'Global Settings', tag: 'SETTINGS' },
+};
+
 const elTag = document.getElementById('page-tag');
-const elLabel = document.getElementById('page-tab-label');
+const elTitle = document.getElementById('page-title');
 const elBcTab = document.getElementById('bc-tab');
 const elCounts = document.getElementById('page-counts');
 const elContent = document.getElementById('content');
-const elActions = document.getElementById('page-actions');
 const elAuthWarn = document.getElementById('auth-warning');
 const elAuthMsg = document.getElementById('auth-warning-msg');
 const elAuthLogin = document.getElementById('auth-login-btn');
 
+// --accent-fg: text color sitting ON the accent (dark for gold/white themes,
+// white for red/green). Shell only sets --accent, so derive here.
+function applyAccentFg() {
+  const hex = (getComputedStyle(document.documentElement).getPropertyValue('--accent') || '#E04545').trim();
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex);
+  let fg = '#ffffff';
+  if (m) {
+    const n = parseInt(m[1], 16);
+    const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+    const lum = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+    fg = lum > 0.62 ? '#1a1408' : '#ffffff';
+  }
+  document.documentElement.style.setProperty('--accent-fg', fg);
+}
+applyAccentFg();
+document.addEventListener('kata:theme-change', applyAccentFg);
+
 function setTabUI() {
-  document.querySelectorAll('[data-tab]').forEach(a => {
-    a.classList.toggle('tab-active', a.dataset.tab === currentTab);
-  });
-  elTag.textContent = currentTab.toUpperCase();
-  elLabel.textContent = ` · ${currentTab}`;
-  elBcTab.textContent = currentTab;
+  document.querySelectorAll('[data-tab]').forEach(a => a.classList.toggle('on', a.dataset.tab === currentTab));
+  const meta = PAGE_META[currentTab];
+  elTag.textContent = meta.tag;
+  elTitle.textContent = meta.title;
+  elBcTab.textContent = meta.tag;
 }
 
 function escapeHtml(s) {
@@ -139,13 +223,24 @@ function fmtUSD(n) { return `$${Number(n ?? 0).toFixed(4)}`; }
 function fmtUSD2(n) { return `$${Number(n ?? 0).toFixed(2)}`; }
 function fmtNum(n) { return Number(n ?? 0).toLocaleString(); }
 
-function guildBadge(g) {
-  const name = escapeHtml(g.name ?? '?');
-  const initial = escapeHtml((g.name ?? '?').slice(0,2));
-  const icon = g.iconUrl
-    ? `<img src="${escapeHtml(g.iconUrl)}" alt="" class="w-5 h-5 rounded-md object-cover" />`
-    : `<span class="w-5 h-5 rounded-md grid place-items-center mono text-[9px] font-bold" style="background:#D4A85822;color:#D4A858">${initial}</span>`;
-  return `<span class="inline-flex items-center gap-1.5 mono text-[10px] tracking-label uppercase text-mute">${icon}<span class="max-w-[180px] truncate">${name}</span></span>`;
+// Deterministic muted tile color per id — same trick the design used with
+// hardcoded swatches, derived from the snowflake so it's stable.
+const TILE_COLORS = ['#4a3358','#2e4438','#50392b','#56303a','#2b3d52','#583636','#403328','#43314f','#23404f','#3a3a30'];
+function tileColor(id) {
+  let h = 0;
+  const s = String(id ?? '?');
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  return TILE_COLORS[h % TILE_COLORS.length];
+}
+
+function avatarTile(url, name, id, size, radius) {
+  const ini = escapeHtml(String(name ?? '?').slice(0, 2).toUpperCase());
+  const fallback = `<span style="width:${size}px;height:${size}px;border-radius:${radius}px;background:${tileColor(id)};display:none;place-items:center;font-size:${Math.round(size*0.3)}px;font-weight:800;color:rgba(255,255,255,.85);flex:none">${ini}</span>`;
+  if (url) {
+    return `<img src="${escapeHtml(url)}" alt="" style="width:${size}px;height:${size}px;border-radius:${radius}px;object-fit:cover;flex:none" onerror="this.style.display='none';this.nextElementSibling.style.display='grid'" />` +
+      fallback;
+  }
+  return `<span style="width:${size}px;height:${size}px;border-radius:${radius}px;background:${tileColor(id)};display:grid;place-items:center;font-size:${Math.round(size*0.3)}px;font-weight:800;color:rgba(255,255,255,.85);flex:none">${ini}</span>`;
 }
 
 async function fetchJson(url) {
@@ -172,17 +267,17 @@ function clearAuthWarn() {
   elAuthLogin.classList.add('hidden');
 }
 
-function renderActionsRange(tab) {
-  if (tab !== 'cost') return '';
-  const range = params.get('range') || '30d';
-  const opts = ['7d','30d','90d'].map(r =>
-    `<button data-range="${r}" class="mono h-8 px-3 rounded-full border border-line text-[10px] tracking-label uppercase ${r===range?'tab-active':'text-mute hover:text-ink'}">${r}</button>`
-  ).join('');
-  return opts;
+let toastTimer = null;
+function showToast(msg, warn) {
+  clearTimeout(toastTimer);
+  const wrap = document.getElementById('toast-wrap');
+  wrap.innerHTML = `<div class="toast mono${warn ? ' warn' : ''}">${escapeHtml(msg)}</div>`;
+  toastTimer = setTimeout(() => { wrap.innerHTML = ''; }, 2600);
 }
 
+/* ==================== ALL SERVERS ==================== */
 async function renderServers() {
-  elContent.innerHTML = '<div class="mono text-[11px] text-mute">loading…</div>';
+  elContent.innerHTML = '<div class="mono" style="font-size:11px;color:#57504b">loading…</div>';
   const data = await fetchJson('/api/kata/admin/servers');
   if (!data) return;
   clearAuthWarn();
@@ -190,592 +285,532 @@ async function renderServers() {
 
   const totalCost = data.servers.reduce((s, r) => s + r.cost30d, 0);
   const totalEvents = data.servers.reduce((s, r) => s + r.events30d, 0);
-  const heroHtml = `
-    <div class="grid grid-cols-3 gap-3 mb-6">
-      <div class="row"><div class="mono text-[10px] tracking-label uppercase text-mute mb-1">guilds</div><div class="text-[28px] font-extrabold tracking-[-0.02em]">${data.servers.length}</div></div>
-      <div class="row"><div class="mono text-[10px] tracking-label uppercase text-mute mb-1">cost · 30d</div><div class="text-[28px] font-extrabold tracking-[-0.02em] text-gold">${fmtUSD2(totalCost)}</div></div>
-      <div class="row"><div class="mono text-[10px] tracking-label uppercase text-mute mb-1">events · 30d</div><div class="text-[28px] font-extrabold tracking-[-0.02em]">${fmtNum(totalEvents)}</div></div>
+  const statCard = (label, value, color) => `
+    <div class="card card-lift" style="padding:20px 22px">
+      <div class="stat-label">${label}</div>
+      <div style="font-size:30px;font-weight:800;color:${color};margin-top:10px">${value}</div>
     </div>`;
 
   const rowsHtml = data.servers.map((s) => `
-    <div class="row flex items-center gap-4">
-      ${s.iconUrl ? `<img src="${escapeHtml(s.iconUrl)}" alt="" class="w-10 h-10 rounded-[8px] object-cover" />` : `<div class="w-10 h-10 rounded-[8px] grid place-items-center mono text-[11px] font-extrabold" style="background:#D4A85822;color:#D4A858">${escapeHtml((s.name||'?').slice(0,2))}</div>`}
-      <div class="flex-1 min-w-0">
-        <div class="flex items-center gap-3 flex-wrap">
-          <div class="text-[14px] font-medium truncate">${escapeHtml(s.name)}</div>
-          <div class="mono text-[9px] tracking-label uppercase text-mute2">${escapeHtml(s.guildId)}</div>
-          ${s.isActive ? '' : '<span class="mono text-[9px] tracking-label uppercase px-2 py-0.5 rounded-full border border-red/40 text-red">left</span>'}
+    <div class="card card-row flex items-center" style="gap:16px;padding:16px 20px">
+      ${avatarTile(s.iconUrl, s.name, s.guildId, 44, 11)}
+      <div style="min-width:0">
+        <div class="flex items-baseline" style="gap:10px">
+          <span style="font-size:14px;font-weight:700;color:#f3ede6;white-space:nowrap">${escapeHtml(s.name)}</span>
+          <span style="font-size:10px;color:#57504b;overflow:hidden;text-overflow:ellipsis">${escapeHtml(s.guildId)}</span>
+          ${s.isActive ? '' : '<span class="tag-pill" style="color:#E04545;border-color:rgba(224,69,69,.4)">LEFT</span>'}
         </div>
-        <div class="mono text-[10px] text-mute mt-1">members ${fmtNum(s.memberCount ?? '?')} · joined ${escapeHtml(fmtTime(s.joinedAt))}</div>
+        <div style="font-size:11px;color:#6b6058;margin-top:4px">members ${fmtNum(s.memberCount ?? '?')} · joined ${escapeHtml(fmtTime(s.joinedAt))}</div>
       </div>
-      <div class="text-right">
-        <div class="mono text-[10px] tracking-label uppercase text-mute">cost · msgs · events</div>
-        <div class="mono text-[12px] font-bold text-gold">${fmtUSD2(s.cost30d)} · ${fmtNum(s.msgs30d)} · ${fmtNum(s.events30d)}</div>
-        <a href="overview.html?guild=${encodeURIComponent(s.guildId)}" class="mono text-[10px] text-red hover:underline">manage →</a>
+      <span class="flex-1"></span>
+      <div class="flex text-right" style="gap:26px">
+        <div><div class="micro-label">COST</div><div style="font-size:15px;font-weight:800;color:#D4A858;margin-top:4px">${fmtUSD2(s.cost30d)}</div></div>
+        <div><div class="micro-label">MSGS</div><div style="font-size:15px;font-weight:700;color:#b9b0a8;margin-top:4px">${fmtNum(s.msgs30d)}</div></div>
+        <div><div class="micro-label">EVENTS</div><div style="font-size:15px;font-weight:700;color:#b9b0a8;margin-top:4px">${fmtNum(s.events30d)}</div></div>
       </div>
+      <a href="overview.html?guild=${encodeURIComponent(s.guildId)}" class="btn-manage mono" style="margin-left:10px">MANAGE →</a>
     </div>
   `).join('');
 
-  elContent.innerHTML = heroHtml + `<div class="space-y-2">${rowsHtml}</div>`;
+  elContent.innerHTML = `<div class="page-in">
+    <div class="grid grid-cols-3" style="gap:16px;margin-bottom:26px">
+      ${statCard('GUILDS', data.servers.length, '#f3ede6')}
+      ${statCard('COST · 30D', fmtUSD2(totalCost), '#D4A858')}
+      ${statCard('EVENTS · 30D', fmtNum(totalEvents), '#f3ede6')}
+    </div>
+    <div class="flex flex-col" style="gap:12px">${rowsHtml}</div>
+  </div>`;
 }
 
+/* ==================== GLOBAL LOGS ==================== */
+const TAG_STYLE = {
+  chat:    { color: '#8a7f78', border: '#2c2522' },
+  image:   { color: '#D4A858', border: 'rgba(212,168,88,.4)' },
+  video:   { color: '#E04545', border: 'rgba(224,69,69,.4)' },
+  command: { color: '#5BA868', border: 'rgba(91,168,104,.4)' },
+};
+
 async function renderLogs() {
-  elContent.innerHTML = '<div class="mono text-[11px] text-mute">loading…</div>';
   const type = params.get('logtype') || 'chat';
-  elActions.innerHTML = ['chat','image','video','command'].map(t =>
-    `<button data-logtype="${t}" class="mono h-8 px-3 rounded-full border border-line text-[10px] tracking-label uppercase ${t===type?'tab-active':'text-mute hover:text-ink'}">${t}</button>`
+  const chips = ['chat','image','video','command'].map(t =>
+    `<button data-logtype="${t}" class="chip mono${t===type?' on':''}">${t.toUpperCase()}</button>`
   ).join('');
-  elActions.querySelectorAll('[data-logtype]').forEach(b => b.addEventListener('click', () => {
-    const u = new URL(location.href); u.searchParams.set('logtype', b.dataset.logtype); history.replaceState(null, '', u); renderLogs();
+  elContent.innerHTML = `<div class="page-in">
+    <div class="flex" style="gap:8px;margin-bottom:22px">${chips}</div>
+    <div id="log-list" class="mono" style="font-size:11px;color:#57504b">loading…</div>
+  </div>`;
+  elContent.querySelectorAll('[data-logtype]').forEach(b => b.addEventListener('click', () => {
+    const u = new URL(location.href); u.searchParams.set('logtype', b.dataset.logtype); history.replaceState(null, '', u);
+    params.set('logtype', b.dataset.logtype);
+    renderLogs();
   }));
 
   const data = await fetchJson(`/api/kata/admin/logs?type=${encodeURIComponent(type)}`);
   if (!data) return;
   clearAuthWarn();
-  elCounts.textContent = `${data.items.length} loaded`;
+  elCounts.textContent = `${data.items.length} loaded · realtime feed`;
+  const listEl = document.getElementById('log-list');
+  if (!listEl) return;
 
   if (data.items.length === 0) {
-    elContent.innerHTML = '<div class="mono text-[12px] tracking-label uppercase text-mute py-8 text-center">— no events —</div>';
+    listEl.outerHTML = '<div class="mono" style="font-size:12px;letter-spacing:.18em;color:#57504b;padding:32px 0;text-align:center">— NO EVENTS —</div>';
     return;
   }
+
   const rowsHtml = data.items.map((r) => {
+    const tag = TAG_STYLE[type] || TAG_STYLE.chat;
+    const authorName = r.user?.displayName ?? r.user?.username ?? (r.userId ? r.userId.slice(-6) : 'unknown');
+    const body = r.content ?? r.prompt ?? r.input ?? '';
+    const ts = r.createdAt ? new Date(r.createdAt) : null;
+    const tsTitle = ts ? ts.toLocaleString('vi-VN', { hour12: false }) : '';
+
     const meta = [];
-    if (r.modelUsed) meta.push(`<span class="text-mute">${escapeHtml(r.modelUsed)}</span>`);
+    if (r.modelUsed) meta.push(`<span>${escapeHtml(r.modelUsed)}</span>`);
     if (r.tokensIn != null || r.tokensOut != null) meta.push(`<span>${r.tokensIn ?? 0}→${r.tokensOut ?? 0}</span>`);
     if (r.durationSec) meta.push(`<span>${r.durationSec}s</span>`);
     if (r.latencyMs) meta.push(`<span>${r.latencyMs}ms</span>`);
-    if (r.costUSD != null) meta.push(`<span class="text-gold">${fmtUSD(r.costUSD)}</span>`);
-    const body = r.content ?? r.prompt ?? r.input ?? '';
+    if (r.costUSD != null) meta.push(`<span style="color:#D4A858">${fmtUSD(r.costUSD)}</span>`);
 
-    // Author header — bigger avatar + display name. Falls back to a
-    // truncated snowflake when katasusers hasn't been populated yet.
-    const authorName = r.user?.displayName ?? r.user?.username ?? (r.userId ? r.userId.slice(-6) : 'unknown');
-    const authorInitial = authorName.slice(0, 1).toUpperCase();
-    const authorAvatar = r.user?.avatarUrl
-      ? `<img src="${escapeHtml(r.user.avatarUrl)}" class="w-7 h-7 rounded-full flex-shrink-0" />`
-      : `<span class="w-7 h-7 rounded-full grid place-items-center text-[11px] font-bold flex-shrink-0" style="background:rgba(224,69,69,0.15);color:#E04545">${escapeHtml(authorInitial)}</span>`;
-    const authorLine = `<span class="flex items-center gap-2 min-w-0">${authorAvatar}<span class="text-[14px] text-ink font-medium truncate">${escapeHtml(authorName)}</span></span>`;
+    const guildIcon = r.guild?.iconUrl
+      ? `<img src="${escapeHtml(r.guild.iconUrl)}" alt="" style="width:12px;height:12px;border-radius:3px;object-fit:cover;flex:none" onerror="this.style.display='none'" />`
+      : `<span style="width:12px;height:12px;border-radius:3px;background:${tileColor(r.guild?.name)};flex:none"></span>`;
 
-    // Channel — render as a discord-style #id pill. Last 6 of the snowflake
-    // since we don't have a channel-name index yet.
-    const channelPill = r.channelId
-      ? `<span class="mono text-[12px] text-mute">#${escapeHtml(r.channelId.slice(-6))}</span>`
-      : '';
-
-    // Full timestamp on hover, relative time as the visible label.
-    const ts = r.createdAt ? new Date(r.createdAt) : null;
-    const tsTitle = ts ? ts.toLocaleString('vi-VN', { hour12: false }) : '';
-    const tsLabel = ts ? fmtTime(r.createdAt) : '';
-
-    return `<article class="rounded-[14px] border border-line bg-panel p-5">
-      <header class="flex items-center justify-between gap-3 mb-3 flex-wrap">
-        <div class="flex items-center gap-3 min-w-0 flex-1">
-          ${authorLine}
-          ${guildBadge(r.guild)}
-          ${channelPill}
-        </div>
-        <span class="mono text-[12px] text-mute" title="${escapeHtml(tsTitle)}">${escapeHtml(tsLabel)}</span>
-      </header>
-      <div class="text-[15px] text-ink leading-[1.6] break-words">${escapeHtml(body)}</div>
-      ${meta.length > 0 ? `<footer class="flex items-center gap-3 mono text-[11px] mt-3 pt-3 border-t border-line/60 flex-wrap text-mute2">${meta.join('')}</footer>` : ''}
-    </article>`;
+    return `<div class="card card-log" style="padding:16px 20px">
+      <div class="flex items-center" style="gap:10px">
+        ${avatarTile(r.user?.avatarUrl, authorName, r.userId, 30, 99)}
+        <span style="font-size:13px;font-weight:700;color:#f3ede6;white-space:nowrap">${escapeHtml(authorName)}</span>
+        <span class="guild-chip">
+          ${guildIcon}
+          <span style="font-size:9px;letter-spacing:.14em;color:#8a7f78;font-weight:700;white-space:nowrap;max-width:180px;overflow:hidden;text-overflow:ellipsis">${escapeHtml((r.guild?.name ?? '?').toUpperCase())}</span>
+          ${r.channelId ? `<span style="font-size:9px;color:#57504b">#${escapeHtml(r.channelId.slice(-6))}</span>` : ''}
+        </span>
+        <span class="flex-1"></span>
+        <span class="tag-pill" style="color:${tag.color};border-color:${tag.border}">${type.toUpperCase()}</span>
+        <span style="font-size:11px;color:#57504b;flex:none" title="${escapeHtml(tsTitle)}">${escapeHtml(fmtTime(r.createdAt))}</span>
+      </div>
+      <div style="margin:10px 0 0 40px;font-size:13.5px;line-height:1.65;color:#cfc7bf;word-break:break-word">${escapeHtml(body)}</div>
+      ${meta.length > 0 ? `<div class="flex flex-wrap" style="gap:14px;margin:10px 0 0 40px;padding-top:10px;border-top:1px solid rgba(255,255,255,.04);font-size:10.5px;color:#57504b">${meta.join('')}</div>` : ''}
+    </div>`;
   }).join('');
-  elContent.innerHTML = `<div class="space-y-2.5">${rowsHtml}</div>`;
+  listEl.outerHTML = `<div class="flex flex-col" style="gap:12px">${rowsHtml}</div>`;
 }
 
+/* ==================== GLOBAL COST ==================== */
+const SERVICE_COLORS = { fal: '#D4A858', yunwu: '#5BA868', nanogpt: '#8a7f78', '9router': '#E04545' };
+
 async function renderCost() {
-  elContent.innerHTML = '<div class="mono text-[11px] text-mute">loading…</div>';
   const range = params.get('range') || '30d';
-  elActions.innerHTML = renderActionsRange('cost');
-  elActions.querySelectorAll('[data-range]').forEach(b => b.addEventListener('click', () => {
-    const u = new URL(location.href); u.searchParams.set('range', b.dataset.range); history.replaceState(null, '', u); renderCost();
+  const chips = ['7d','30d','90d'].map(r =>
+    `<button data-range="${r}" class="chip mono${r===range?' on':''}">${r.toUpperCase()}</button>`
+  ).join('');
+  elContent.innerHTML = `<div class="page-in">
+    <div class="flex justify-end" style="gap:6px;margin-bottom:18px">${chips}</div>
+    <div id="cost-body" class="mono" style="font-size:11px;color:#57504b">loading…</div>
+  </div>`;
+  elContent.querySelectorAll('[data-range]').forEach(b => b.addEventListener('click', () => {
+    const u = new URL(location.href); u.searchParams.set('range', b.dataset.range); history.replaceState(null, '', u);
+    params.set('range', b.dataset.range);
+    renderCost();
   }));
 
   const data = await fetchJson(`/api/kata/admin/cost?range=${encodeURIComponent(range)}`);
   if (!data) return;
   clearAuthWarn();
-  const deltaCls = data.totalDelta > 0 ? 'stat-pos' : 'stat-neg';
-  const deltaSign = data.totalDelta > 0 ? '↑' : (data.totalDelta < 0 ? '↓' : '·');
   elCounts.textContent = `${fmtNum(data.events)} events · ${range}`;
+  const bodyEl = document.getElementById('cost-body');
+  if (!bodyEl) return;
 
-  const hero = `
-    <div class="grid grid-cols-3 gap-3 mb-6">
-      <div class="row col-span-1">
-        <div class="mono text-[10px] tracking-label uppercase text-mute mb-1">total · ${range}</div>
-        <div class="text-[36px] font-extrabold tracking-[-0.02em] text-gold">${fmtUSD2(data.total)}</div>
-        <div class="mono text-[10px] mt-1 ${deltaCls}">${deltaSign} ${Math.abs(data.totalDelta)}% vs prior ${range}</div>
+  const deltaColor = data.totalDelta > 0 ? '#E04545' : '#5BA868';
+  const deltaSign = data.totalDelta > 0 ? '↑' : (data.totalDelta < 0 ? '↓' : '·');
+
+  const svcTotal = Math.max(data.total, 0.0001);
+  const svcRows = data.byService.map((s) => {
+    const pct = Math.max(2, Math.round((s.cost / svcTotal) * 100));
+    const color = SERVICE_COLORS[s.service] || '#8a7f78';
+    return `<div style="margin-bottom:12px">
+      <div class="flex items-baseline" style="gap:10px">
+        <span style="font-size:12.5px;font-weight:700;color:#ece6df">${escapeHtml(s.service)}</span>
+        <span class="flex-1"></span>
+        <span style="font-size:12.5px;font-weight:800;color:#D4A858">${fmtUSD2(s.cost)}</span>
+        <span style="font-size:10.5px;color:#57504b">· ${fmtNum(s.count)}</span>
       </div>
-      <div class="row col-span-1">
-        <div class="mono text-[10px] tracking-label uppercase text-mute mb-2">by service</div>
-        <div class="space-y-1">${data.byService.map((s) =>
-          `<div class="flex justify-between mono text-[11px]"><span class="text-ink">${escapeHtml(s.service)}</span><span class="text-mute">${fmtUSD2(s.cost)} · ${fmtNum(s.count)}</span></div>`
-        ).join('')}</div>
-      </div>
-      <div class="row col-span-1">
-        <div class="mono text-[10px] tracking-label uppercase text-mute mb-2">top guilds</div>
-        <div class="space-y-1">${data.byGuild.slice(0, 5).map((g) =>
-          `<div class="flex justify-between mono text-[11px]"><span class="text-ink truncate">${escapeHtml(g.name)}</span><span class="text-gold">${fmtUSD2(g.cost)}</span></div>`
-        ).join('')}</div>
-      </div>
-    </div>`;
-
-  const guildRows = data.byGuild.map((g) => `
-    <div class="row flex items-center gap-3">
-      ${g.iconUrl ? `<img src="${escapeHtml(g.iconUrl)}" alt="" class="w-8 h-8 rounded-[6px] object-cover" />` : `<div class="w-8 h-8 rounded-[6px] grid place-items-center mono text-[10px] font-bold" style="background:#D4A85822;color:#D4A858">${escapeHtml((g.name||'?').slice(0,2))}</div>`}
-      <div class="flex-1 min-w-0">
-        <div class="text-[13px] truncate">${escapeHtml(g.name)}</div>
-        <div class="mono text-[10px] text-mute">${escapeHtml(g.guildId)}</div>
-      </div>
-      <div class="mono text-[12px] font-bold text-gold">${fmtUSD2(g.cost)}</div>
-      <div class="mono text-[10px] text-mute2 w-16 text-right">${fmtNum(g.count)} ev</div>
-    </div>
-  `).join('');
-
-  const cmdRows = data.byCommand.map((c) => `
-    <div class="flex justify-between mono text-[11px] py-1 border-b border-line/50 last:border-0">
-      <span class="text-ink">${escapeHtml(c.command || '?')}</span>
-      <span class="text-mute">${fmtUSD(c.cost)} · ${fmtNum(c.count)}</span>
-    </div>
-  `).join('');
-
-  elContent.innerHTML = hero + `
-    <div class="grid grid-cols-2 gap-3 mb-6">
-      <div class="row">
-        <div class="mono text-[10px] tracking-label uppercase text-mute mb-3">guilds (${data.byGuild.length})</div>
-        <div class="space-y-2">${guildRows}</div>
-      </div>
-      <div class="row">
-        <div class="mono text-[10px] tracking-label uppercase text-mute mb-3">commands (${data.byCommand.length})</div>
-        <div>${cmdRows}</div>
-      </div>
-    </div>`;
-}
-
-// ── settings (global config) ────────────────────────────────────
-//
-// Models grouped by provider. Provider tab keys are arbitrary labels —
-// the bot just needs the model id string. Sync with the bot's pricing
-// list at packages/pricing/src/models.ts when adding new models;
-// providers are the convenient UI grouping, not a runtime concept.
-//
-// IMPORTANT: ids that should route to a non-default provider must be
-// prefixed with `<provider>:` so the bot dispatches correctly. For yunwu
-// (the default) the prefix is omitted to keep existing Mongo docs valid.
-const CHAT_MODELS_BY_PROVIDER = {
-  yunwu: [
-    'gemini-3.1-flash-lite',
-    'gemini-3.1-flash-preview',
-    'gemini-3-flash-preview',
-    'gemini-3-pro-preview',
-    'gemini-3.1-pro-preview',
-    'gemini-2.5-flash',
-    'gemini-2.5-flash-lite',
-    'gemini-2.5-pro',
-    'claude-haiku-4-5',
-    'claude-sonnet-4-6',
-    'claude-opus-4-7',
-    'grok-4',
-    'grok-4.1',
-    'grok-4-fast',
-  ],
-  '9router': [
-    '9router:kr/claude-opus-4.7',
-  ],
-};
-// Gen-primary models only (mirrors the bot's GEN_MODELS chain in
-// apps/bot/src/services/imagePipeline.ts — edit variants are derived).
-const IMAGE_MODELS_BY_PROVIDER = {
-  'fal.ai': [
-    'fal-ai/nano-banana-pro',
-    'fal-ai/gpt-image-2',
-    'xai/grok-imagine-image/quality/text-to-image',
-  ],
-  nanogpt: [
-    'wavespeed-ai/flux-2-klein-base-9b/text-to-image',
-  ],
-};
-// NOTE: happy-horse routes under `alibaba/` on fal — NOT `fal-ai/`.
-// Mirrors T2V_MODELS/I2V_MODELS + grok in apps/bot/src/services/videoPipeline.ts.
-const VIDEO_MODELS_BY_PROVIDER = {
-  'fal.ai': [
-    'bytedance/seedance-2.0/text-to-video',
-    'bytedance/seedance-2.0/image-to-video',
-    'alibaba/happy-horse/text-to-video',
-    'alibaba/happy-horse/image-to-video',
-    'xai/grok-imagine-video/text-to-video',
-    'xai/grok-imagine-video/image-to-video',
-  ],
-};
-
-// Flat list (used by the popup for "look up which provider owns this model").
-function flattenProviders(byProvider) {
-  const out = [];
-  for (const [provider, models] of Object.entries(byProvider)) {
-    for (const m of models) out.push({ provider, model: m });
-  }
-  return out;
-}
-function defaultProvider(byProvider) {
-  return Object.keys(byProvider)[0];
-}
-function findProviderForModel(byProvider, model) {
-  for (const [provider, models] of Object.entries(byProvider)) {
-    if (models.includes(model)) return provider;
-  }
-  return defaultProvider(byProvider);
-}
-
-// NSFW thresholds are gone — the bot dropped its client-side NSFW gates
-// entirely (provider-side policy is the only filter now).
-// imageModel/videoModel are stored in GlobalConfig but the bot's media
-// pipelines currently run their own hardcoded fallback chains — the picks
-// here are reserved for when per-config primary models get wired in.
-const SETTINGS_FIELDS = [
-  { key: 'systemPrompt', type: 'textarea', label: 'system prompt', placeholder: '(empty — bot uses no extra prompt)', max: 4000 },
-  { key: 'chatModel', type: 'model-picker', label: 'chat model', byProvider: CHAT_MODELS_BY_PROVIDER, placeholder: 'grok-4-fast' },
-  { key: 'imageModel', type: 'model-picker', label: 'image model (reserved — pipeline dùng fallback chain riêng)', byProvider: IMAGE_MODELS_BY_PROVIDER, placeholder: 'fal-ai/nano-banana-pro' },
-  { key: 'videoModel', type: 'model-picker', label: 'video model (reserved — pipeline dùng fallback chain riêng)', byProvider: VIDEO_MODELS_BY_PROVIDER, placeholder: 'bytedance/seedance-2.0/image-to-video' },
-  { key: 'rateLimitPerUser', type: 'number', label: 'rate limit / user (mentions/h)', min: 1, max: 1000 },
-  { key: 'allowedChannels', type: 'textarea', label: 'allowed channels (snowflake, one per line)', placeholder: '(empty = allow all)' },
-];
-
-function fieldValue(stored, codeDefault) {
-  if (stored !== undefined && stored !== null) return { value: stored, source: 'global' };
-  return { value: codeDefault, source: 'code' };
-}
-
-async function renderSettings() {
-  elContent.innerHTML = '<div class="mono text-[11px] text-mute">loading…</div>';
-  elActions.innerHTML = '';
-  const data = await fetchJson('/api/kata/admin/global-config');
-  if (!data) return;
-  clearAuthWarn();
-  elCounts.textContent = 'global defaults · cascades to every guild without explicit override';
-
-  const cfg = data.config || {};
-  const codeDef = data.codeDefaults || {};
-
-  const rows = SETTINGS_FIELDS.map((f) => {
-    const stored = cfg[f.key];
-    const { value, source } = fieldValue(stored, codeDef[f.key]);
-    const tag = source === 'global'
-      ? '<span class="mono text-[9px] tracking-label uppercase px-2 py-0.5 rounded-full" style="background:#D4A85822;border:1px solid #D4A85844;color:#D4A858">SET</span>'
-      : '<span class="mono text-[9px] tracking-label uppercase px-2 py-0.5 rounded-full" style="background:rgba(245,237,224,0.05);border:1px solid rgba(245,237,224,0.10);color:rgba(245,237,224,0.5)">CODE</span>';
-    let inputHtml = '';
-    if (f.type === 'textarea') {
-      const v = f.key === 'allowedChannels'
-        ? (Array.isArray(value) ? value.join('\n') : '')
-        : (value ?? '');
-      inputHtml = `<textarea data-field="${f.key}" rows="${f.key === 'systemPrompt' ? 6 : 3}" class="mono text-[12px] w-full bg-bg border border-line rounded-[8px] px-3 py-2 text-ink focus:outline-none focus:border-line2" placeholder="${escapeHtml(f.placeholder || '')}">${escapeHtml(v)}</textarea>`;
-    } else if (f.type === 'select') {
-      inputHtml = `<select data-field="${f.key}" class="mono text-[12px] bg-bg border border-line rounded-[8px] px-3 py-2 text-ink focus:outline-none focus:border-line2">${f.options.map((o) => `<option value="${o}" ${value === o ? 'selected' : ''}>${o}</option>`).join('')}</select>`;
-    } else if (f.type === 'model-picker') {
-      // Provider-tabbed picker: rendered as a button that opens a popup
-      // with provider tabs, each tab showing the models for that provider.
-      // The hidden input data-field carries the actual model id string
-      // that gets PATCHed back. (use default) keeps the value empty so
-      // the bot falls back to the global / code default.
-      const cur = (value ?? '').toString();
-      // Strip provider prefix when showing the label — the prefix is a
-      // routing hint, not a name humans want to read.
-      const curDisplay = cur.includes(':') ? cur.split(':').slice(1).join(':') : cur;
-      const display = curDisplay || '(default · ' + (f.placeholder || '—') + ')';
-      const providers = JSON.stringify(f.byProvider).replace(/"/g, '&quot;');
-      inputHtml = `
-        <div class="flex gap-2 items-center">
-          <input type="hidden" data-field="${f.key}" value="${escapeHtml(cur)}" />
-          <button type="button" data-picker="${f.key}" data-providers="${providers}" data-placeholder="${escapeHtml(f.placeholder || '')}"
-            class="mono text-[12px] flex-1 bg-bg border border-line rounded-[8px] px-3 py-2 text-ink hover:border-line2 text-left flex items-center justify-between gap-2">
-            <span data-picker-label>${escapeHtml(display)}</span>
-            <span class="text-mute text-[10px]">▾</span>
-          </button>
-          <button type="button" data-picker-clear="${f.key}" class="mono text-[10px] tracking-label uppercase text-mute hover:text-ink border border-line rounded-[8px] px-3 py-2" title="Use default">clear</button>
-        </div>`;
-    } else if (f.type === 'number') {
-      inputHtml = `<input type="number" data-field="${f.key}" value="${value ?? ''}" min="${f.min ?? ''}" max="${f.max ?? ''}" step="${f.step ?? 1}" class="mono text-[12px] w-32 bg-bg border border-line rounded-[8px] px-3 py-2 text-ink focus:outline-none focus:border-line2" />`;
-    } else {
-      inputHtml = `<input type="text" data-field="${f.key}" value="${escapeHtml(value ?? '')}" placeholder="${escapeHtml(f.placeholder || '')}" class="mono text-[12px] w-full bg-bg border border-line rounded-[8px] px-3 py-2 text-ink focus:outline-none focus:border-line2" />`;
-    }
-    const resetBtn = source === 'global'
-      ? `<button data-reset="${f.key}" class="mono text-[10px] tracking-label uppercase text-mute hover:text-ink ml-2" title="Reset to code default">reset</button>`
-      : '';
-    return `<div class="row">
-      <div class="flex items-center justify-between gap-3 mb-2">
-        <div class="mono text-[11px] tracking-label uppercase text-ink">${escapeHtml(f.label)}${resetBtn}</div>
-        ${tag}
-      </div>
-      ${inputHtml}
+      <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${color}"></div></div>
     </div>`;
   }).join('');
 
-  elContent.innerHTML = `
-    <div class="mb-4 mono text-[11px] text-mute">
-      Bất cứ field nào để chế độ <span class="text-ink">CODE</span> sẽ dùng default cứng trong bot. Đặt giá trị ở đây để áp cho mọi guild — guild nào muốn khác thì admin guild đó override trong overview drawer.
-    </div>
-    <div class="space-y-3">${rows}</div>
-    <div class="flex gap-3 mt-6">
-      <button id="settings-save" class="mono h-10 px-6 rounded-[10px] text-[11px] tracking-label uppercase font-bold text-bg" style="background:var(--accent)">save</button>
-      <button id="settings-reload" class="mono h-10 px-6 rounded-[10px] border border-line text-[11px] tracking-label uppercase text-mute hover:text-ink">reload</button>
-      <span id="settings-status" class="mono text-[11px] text-mute self-center"></span>
-    </div>
-  `;
+  const topRows = data.byGuild.slice(0, 5).map((g, i) => `
+    <div class="flex items-center" style="gap:10px;padding:6px 0">
+      <span style="font-size:9px;color:var(--accent);font-weight:800;width:14px">0${i + 1}</span>
+      <span style="font-size:12px;color:#ddd6cf;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(g.name)}</span>
+      <span class="flex-1"></span>
+      <span style="font-size:12px;font-weight:800;color:#D4A858">${fmtUSD2(g.cost)}</span>
+    </div>`).join('');
 
-  document.getElementById('settings-reload').addEventListener('click', renderSettings);
-  document.querySelectorAll('[data-reset]').forEach((b) => {
-    b.addEventListener('click', async () => {
-      const key = b.getAttribute('data-reset');
-      await saveSettings({ [key]: null });
-      renderSettings();
-    });
-  });
-  // Provider-tabbed model pickers — open a popup with tabs per provider,
-  // dropdown of models inside each tab, and a custom… text input.
-  document.querySelectorAll('[data-picker]').forEach((btn) => {
-    btn.addEventListener('click', (e) => {
+  const guildRows = data.byGuild.map((g) => `
+    <div class="flex items-center" style="gap:12px;padding:10px 12px;border-radius:10px;border:1px solid transparent;transition:all .15s"
+      onmouseover="this.style.background='#1a1513';this.style.borderColor='#2c2522';this.style.transform='translateX(3px)'"
+      onmouseout="this.style.background='';this.style.borderColor='transparent';this.style.transform=''">
+      ${avatarTile(g.iconUrl, g.name, g.guildId, 32, 8)}
+      <div style="min-width:0">
+        <div style="font-size:12.5px;font-weight:700;color:#ece6df;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(g.name)}</div>
+        <div style="font-size:9.5px;color:#57504b;margin-top:2px">${escapeHtml(g.guildId)}</div>
+      </div>
+      <span class="flex-1"></span>
+      <span style="font-size:13.5px;font-weight:800;color:#D4A858">${fmtUSD2(g.cost)}</span>
+      <span style="font-size:10px;color:#57504b;width:52px;text-align:right">${fmtNum(g.count)} ev</span>
+    </div>`).join('');
+
+  const maxCmd = Math.max(...data.byCommand.map((c) => c.cost), 0.0001);
+  const cmdRows = data.byCommand.map((c) => {
+    const pct = Math.max(1, Math.round((c.cost / maxCmd) * 100));
+    return `<div style="padding:7px 10px;border-radius:8px;transition:background .15s" onmouseover="this.style.background='#1a1513'" onmouseout="this.style.background=''">
+      <div class="flex items-baseline" style="gap:10px">
+        <span style="font-size:12px;font-weight:700;color:#ece6df">${escapeHtml(c.command || '?')}</span>
+        <span class="flex-1"></span>
+        <span style="font-size:11.5px;font-weight:800;color:#D4A858">${fmtUSD(c.cost)}</span>
+        <span style="font-size:10px;color:#57504b;width:38px;text-align:right">· ${fmtNum(c.count)}</span>
+      </div>
+      <div class="bar-track" style="height:3px;margin-top:6px"><div class="bar-fill" style="width:${pct}%;background:color-mix(in srgb, #D4A858 75%, transparent)"></div></div>
+    </div>`;
+  }).join('');
+
+  bodyEl.outerHTML = `<div>
+    <div class="grid" style="grid-template-columns:1fr 1.3fr 1fr;gap:16px;margin-bottom:22px">
+      <div class="card card-lift" style="padding:20px 22px">
+        <div class="stat-label">TOTAL · ${range.toUpperCase()}</div>
+        <div style="font-size:36px;font-weight:800;color:#D4A858;margin-top:12px">${fmtUSD2(data.total)}</div>
+        <div style="font-size:11px;color:${deltaColor};margin-top:8px">${deltaSign} ${Math.abs(data.totalDelta)}% vs prior ${range}</div>
+      </div>
+      <div class="card card-lift" style="padding:20px 22px">
+        <div class="stat-label" style="margin-bottom:14px">BY SERVICE</div>
+        ${svcRows}
+      </div>
+      <div class="card card-lift" style="padding:20px 22px">
+        <div class="stat-label" style="margin-bottom:12px">TOP GUILDS</div>
+        ${topRows}
+      </div>
+    </div>
+    <div class="grid" style="grid-template-columns:1.15fr 1fr;gap:16px">
+      <div class="card" style="padding:20px 22px">
+        <div class="stat-label" style="margin-bottom:14px">GUILDS (${data.byGuild.length})</div>
+        <div class="flex flex-col" style="gap:8px">${guildRows}</div>
+      </div>
+      <div class="card" style="padding:20px 22px">
+        <div class="stat-label" style="margin-bottom:14px">COMMANDS (${data.byCommand.length})</div>
+        <div class="flex flex-col" style="gap:4px">${cmdRows}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ==================== GLOBAL SETTINGS ==================== */
+// Models grouped by provider — synced with the bot's real chains
+// (apps/bot pricing + image/video pipelines). Provider keys are UI labels;
+// ids that route to a non-default provider carry a `<provider>:` prefix.
+const CHAT_MODELS_BY_PROVIDER = {
+  YUNWU: [
+    'gemini-3.1-flash-lite','gemini-3.1-flash-preview','gemini-3-flash-preview','gemini-3-pro-preview','gemini-3.1-pro-preview',
+    'gemini-2.5-flash','gemini-2.5-flash-lite','gemini-2.5-pro',
+    'claude-haiku-4-5','claude-sonnet-4-6','claude-opus-4-7',
+    'grok-4','grok-4.1','grok-4-fast',
+  ],
+  '9ROUTER': ['9router:kr/claude-opus-4.7'],
+};
+const IMAGE_MODELS_BY_PROVIDER = {
+  'FAL.AI': ['fal-ai/nano-banana-pro','fal-ai/gpt-image-2','xai/grok-imagine-image/quality/text-to-image'],
+  NANOGPT: ['wavespeed-ai/flux-2-klein-base-9b/text-to-image'],
+};
+const VIDEO_MODELS_BY_PROVIDER = {
+  'FAL.AI': [
+    'bytedance/seedance-2.0/text-to-video','bytedance/seedance-2.0/image-to-video',
+    'alibaba/happy-horse/text-to-video','alibaba/happy-horse/image-to-video',
+    'xai/grok-imagine-video/text-to-video','xai/grok-imagine-video/image-to-video',
+  ],
+};
+const PROVIDER_ACCENT = { YUNWU: '#5BA868', '9ROUTER': '#D4A858', 'FAL.AI': '#D4A858', NANOGPT: '#8a7f78' };
+
+const SETTINGS_FIELDS = [
+  { key: 'systemPrompt', type: 'textarea', title: 'SYSTEM PROMPT', desc: 'Persona mặc định của bot trên mọi guild', rows: 7, placeholder: '(trống — bot không dùng prompt phụ)' },
+  { key: 'chatModel', type: 'model', title: 'CHAT MODEL', desc: 'Model trả lời tin nhắn', byProvider: CHAT_MODELS_BY_PROVIDER },
+  { key: 'imageModel', type: 'model', title: 'IMAGE MODEL', desc: 'Primary của pipeline ảnh — fallback chain giữ nguyên phía sau', byProvider: IMAGE_MODELS_BY_PROVIDER },
+  { key: 'videoModel', type: 'model', title: 'VIDEO MODEL', desc: 'Primary của pipeline video — fallback chain giữ nguyên phía sau', byProvider: VIDEO_MODELS_BY_PROVIDER, ddUp: true },
+  { key: 'rateLimitPerUser', type: 'number', title: 'RATE LIMIT', desc: 'Mentions / user / giờ' },
+  { key: 'allowedChannels', type: 'channels', title: 'ALLOWED CHANNELS', desc: 'Snowflake ID, mỗi dòng 1 kênh · trống = allow all', rows: 3, placeholder: '(trống = cho phép tất cả)' },
+];
+
+// Settings page state — mirrors the design's CODE ↔ OVERRIDE semantics:
+// over[key]=false → PATCH null (bot dùng default trong code), true → PATCH value.
+const ST = { cfg: {}, codeDef: {}, over: {}, values: {}, custom: {}, dirty: false, openDd: null, ddTab: {} };
+
+function stripPrefix(v) { return v && v.includes(':') ? v.split(':').slice(1).join(':') : (v || ''); }
+
+function markDirty() {
+  ST.dirty = true;
+  const el = document.getElementById('dirty-flag');
+  if (el) el.style.display = '';
+}
+
+function setFieldUI(key) {
+  const on = !!ST.over[key];
+  const card = document.querySelector(`[data-fld="${key}"]`);
+  if (!card) return;
+  card.querySelector('.fld-status').textContent = on ? 'OVERRIDE' : 'CODE';
+  card.querySelector('.fld-status').classList.toggle('on', on);
+  card.querySelector('.tgl').classList.toggle('on', on);
+  card.querySelector('.fld-body').classList.toggle('on', on);
+  const cnt = Object.keys(ST.over).filter((k) => ST.over[k]).length;
+  const pill = document.getElementById('ovr-count');
+  if (pill) pill.textContent = `${cnt}/${SETTINGS_FIELDS.length} OVERRIDE`;
+}
+
+function closeDd() {
+  ST.openDd = null;
+  document.querySelectorAll('.dd-panel, .dd-backdrop').forEach((e) => e.remove());
+  document.querySelectorAll('[data-chev]').forEach((e) => { e.style.transform = 'rotate(0deg)'; });
+}
+
+function providerOf(byProvider, value) {
+  for (const [p, list] of Object.entries(byProvider)) if (list.includes(value)) return p;
+  return Object.keys(byProvider)[0];
+}
+
+function openDd(field) {
+  closeDd();
+  ST.openDd = field.key;
+  const anchor = document.querySelector(`[data-ddwrap="${field.key}"]`);
+  const chev = anchor.querySelector('[data-chev]');
+  if (chev) chev.style.transform = 'rotate(180deg)';
+
+  const backdrop = document.createElement('div');
+  backdrop.className = 'dd-backdrop';
+  backdrop.addEventListener('click', closeDd);
+  document.body.appendChild(backdrop);
+
+  const panel = document.createElement('div');
+  panel.className = 'dd-panel' + (field.ddUp ? ' up' : '');
+  anchor.appendChild(panel);
+
+  const providers = Object.keys(field.byProvider);
+  if (!ST.ddTab[field.key]) ST.ddTab[field.key] = providerOf(field.byProvider, ST.values[field.key]);
+
+  function renderPanel() {
+    const active = ST.ddTab[field.key];
+    const accent = PROVIDER_ACCENT[active] || '#D4A858';
+    const cur = ST.values[field.key] || '';
+
+    const tabs = providers.map((p) => {
+      const on = p === active;
+      const pa = PROVIDER_ACCENT[p] || '#D4A858';
+      const st = on ? `border-color:color-mix(in srgb, ${pa} 40%, transparent);background:color-mix(in srgb, ${pa} 10%, transparent);color:${pa}` : '';
+      return `<button data-ddtab="${escapeHtml(p)}" class="dd-tab mono" style="${st}">${escapeHtml(p)}</button>`;
+    }).join('');
+
+    const defLabel = `(use default · ${stripPrefix(String(ST.codeDef[field.key] ?? '—'))})`;
+    const items = [{ label: defLabel, value: '', def: true }]
+      .concat((field.byProvider[active] || []).map((m) => ({ label: stripPrefix(m), value: m })));
+    const itemsHtml = items.map((it) => {
+      const sel = it.value === cur || (it.def && !cur);
+      const st = sel ? `border-color:${accent}55;background:${accent}18;color:${accent}` : (it.def ? 'color:#7a7068' : '');
+      return `<div data-ddpick="${escapeHtml(it.value)}" class="dd-item mono" style="${st}"><span>${escapeHtml(it.label)}</span><span style="color:${accent};font-size:11px">${sel ? '●' : ''}</span></div>`;
+    }).join('');
+
+    panel.innerHTML = `
+      <div class="flex" style="gap:6px;padding:10px 12px;border-bottom:1px solid #1f1a18">${tabs}</div>
+      <div style="max-height:272px;overflow:auto;padding:8px">${itemsHtml}</div>
+      <div class="flex" style="gap:8px;padding:11px 12px;border-top:1px solid #1f1a18;background:#0d0a09">
+        <input data-ddcustom class="mono" placeholder="custom model id" value="${escapeHtml(ST.custom[field.key] || '')}"
+          style="flex:1;background:#0b0908;border:1px solid #2c2522;border-radius:8px;padding:10px 13px;font-family:inherit;font-size:12px;color:#ece6df" />
+        <button data-dduse class="btn-use mono" style="background:${accent}">USE</button>
+      </div>`;
+
+    panel.querySelectorAll('[data-ddtab]').forEach((b) => b.addEventListener('click', (e) => {
       e.stopPropagation();
-      openModelPicker(btn);
-    });
-  });
-  document.querySelectorAll('[data-picker-clear]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const key = btn.getAttribute('data-picker-clear');
-      const inp = document.querySelector(`input[data-field="${key}"]`);
-      const lbl = document.querySelector(`button[data-picker="${key}"] [data-picker-label]`);
-      if (inp) inp.value = '';
-      if (lbl) {
-        const placeholder = document.querySelector(`button[data-picker="${key}"]`).getAttribute('data-placeholder') || '—';
-        lbl.textContent = `(default · ${placeholder})`;
-      }
-    });
-  });
-  // "custom…" button on model dropdowns: prompt for a free-text model id
-  // so we can set a model the dropdown doesn't list yet.
-  document.querySelectorAll('[data-custom]').forEach((b) => {
-    b.addEventListener('click', async () => {
-      const key = b.getAttribute('data-custom');
-      const sel = document.querySelector(`[data-field="${key}"]`);
-      const current = sel ? sel.value : '';
-      const next = await window.KataShell.prompt(`Custom model id cho ${key}:`, current, {
-        title: 'Custom model',
-        placeholder: 'vd: openrouter:google/gemini-2.5-flash-lite',
-      });
-      if (next == null) return;
-      const trimmed = next.trim();
-      if (!sel) return;
-      if (trimmed === '') {
-        sel.value = '';
-        return;
-      }
-      // Inject the custom value as an option so the select can show it.
-      let opt = Array.from(sel.options).find((o) => o.value === trimmed);
-      if (!opt) {
-        opt = document.createElement('option');
-        opt.value = trimmed;
-        opt.textContent = trimmed;
-        sel.insertBefore(opt, sel.options[1] || null);
-      }
-      sel.value = trimmed;
-    });
-  });
-  document.getElementById('settings-save').addEventListener('click', async () => {
-    const payload = collectSettingsPayload(cfg);
-    if (Object.keys(payload).length === 0) {
-      document.getElementById('settings-status').textContent = '(không có thay đổi)';
-      return;
-    }
-    await saveSettings(payload);
-    renderSettings();
-  });
+      ST.ddTab[field.key] = b.getAttribute('data-ddtab');
+      renderPanel();
+    }));
+    panel.querySelectorAll('[data-ddpick]').forEach((b) => b.addEventListener('click', (e) => {
+      e.stopPropagation();
+      pickModel(field, b.getAttribute('data-ddpick'));
+    }));
+    const customInp = panel.querySelector('[data-ddcustom]');
+    customInp.addEventListener('input', () => { ST.custom[field.key] = customInp.value; });
+    customInp.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); useCustom(field); } });
+    panel.querySelector('[data-dduse]').addEventListener('click', (e) => { e.stopPropagation(); useCustom(field); });
+  }
+
+  function useCustom(field) {
+    const v = (ST.custom[field.key] || '').trim();
+    if (!v) return;
+    ST.custom[field.key] = '';
+    pickModel(field, v);
+  }
+
+  renderPanel();
 }
 
-function collectSettingsPayload(currentCfg) {
-  const out = {};
+function pickModel(field, value) {
+  ST.values[field.key] = value;
+  markDirty();
+  closeDd();
+  const lbl = document.querySelector(`[data-ddwrap="${field.key}"] [data-ddvalue]`);
+  const prov = document.querySelector(`[data-ddwrap="${field.key}"] [data-ddprov]`);
+  if (lbl) lbl.textContent = value ? stripPrefix(value) : `(default · ${stripPrefix(String(ST.codeDef[field.key] ?? '—'))})`;
+  if (prov) prov.textContent = providerOf(field.byProvider, value);
+}
+
+async function renderSettings() {
+  elContent.innerHTML = '<div class="mono" style="font-size:11px;color:#57504b">loading…</div>';
+  const data = await fetchJson('/api/kata/admin/global-config');
+  if (!data) return;
+  clearAuthWarn();
+  elCounts.textContent = 'Default cho mọi guild — guild muốn khác thì override trong guild drawer.';
+
+  ST.cfg = data.config || {};
+  ST.codeDef = data.codeDefaults || {};
+  ST.dirty = false;
+  ST.custom = {};
+  ST.ddTab = {};
+
+  // A field is OVERRIDE when the GlobalConfig doc actually stores a value;
+  // otherwise the bot falls through to its code default.
   for (const f of SETTINGS_FIELDS) {
-    const el = document.querySelector(`[data-field="${f.key}"]`);
-    if (!el) continue;
-    let v;
+    const stored = ST.cfg[f.key];
+    const has = stored !== undefined && stored !== null && !(Array.isArray(stored) && stored.length === 0) && stored !== '';
+    ST.over[f.key] = !!has;
+    ST.values[f.key] = has ? stored : ST.codeDef[f.key];
+  }
+
+  const cards = SETTINGS_FIELDS.map((f) => {
+    let body = '';
+    if (f.type === 'textarea' || f.type === 'channels') {
+      const raw = ST.values[f.key];
+      const v = f.type === 'channels' ? (Array.isArray(raw) ? raw.join('\n') : '') : (raw ?? '');
+      body = `<textarea data-input="${f.key}" rows="${f.rows}" class="inp mono" placeholder="${escapeHtml(f.placeholder || '')}">${escapeHtml(v)}</textarea>`;
+    } else if (f.type === 'number') {
+      body = `<div class="flex items-center" style="gap:10px">
+        <button data-step="-5" data-stepkey="${f.key}" class="btn-step mono">−</button>
+        <input data-input="${f.key}" value="${escapeHtml(String(ST.values[f.key] ?? ''))}" class="inp mono" style="width:80px;text-align:center;font-size:16px;font-weight:800;padding:11px 0" />
+        <button data-step="5" data-stepkey="${f.key}" class="btn-step mono">+</button>
+      </div>`;
+    } else if (f.type === 'model') {
+      const cur = ST.values[f.key] || '';
+      const prov = providerOf(f.byProvider, cur);
+      const provAccent = PROVIDER_ACCENT[prov] || '#D4A858';
+      const display = cur ? stripPrefix(cur) : `(default · ${stripPrefix(String(ST.codeDef[f.key] ?? '—'))})`;
+      body = `<div data-ddwrap="${f.key}" style="position:relative">
+        <button data-ddtrigger="${f.key}" class="dd-trigger mono">
+          <span class="flex items-center" style="gap:11px;min-width:0">
+            <span style="width:7px;height:7px;border-radius:99px;background:${provAccent};flex:none"></span>
+            <span data-ddvalue style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700">${escapeHtml(display)}</span>
+            <span data-ddprov class="provider-pill">${escapeHtml(prov)}</span>
+          </span>
+          <span data-chev style="color:#8a7f78;font-size:10px;transition:transform .2s">▼</span>
+        </button>
+      </div>`;
+    }
+
+    return `<div data-fld="${f.key}" class="card">
+      <div class="fld-head">
+        <div>
+          <div class="flex items-center" style="gap:10px">
+            <span class="fld-title mono">${escapeHtml(f.title)}</span>
+            <span class="fld-status mono">CODE</span>
+          </div>
+          <div class="fld-desc">${escapeHtml(f.desc)}</div>
+        </div>
+        <div data-toggle="${f.key}" class="tgl"><div class="tgl-knob"></div></div>
+      </div>
+      <div class="fld-body">${body}</div>
+    </div>`;
+  });
+
+  // RATE LIMIT + ALLOWED CHANNELS share one grid row per the design.
+  const rateCard = cards[4], chanCard = cards[5];
+  elContent.innerHTML = `<div class="page-in">
+    <div class="flex justify-end" style="margin-bottom:18px"><span id="ovr-count" class="ovr-pill mono">0/${SETTINGS_FIELDS.length} OVERRIDE</span></div>
+    <div class="flex flex-col" style="gap:18px">
+      ${cards[0]}${cards[1]}${cards[2]}${cards[3]}
+      <div class="grid" style="grid-template-columns:1fr 1.4fr;gap:18px">${rateCard}${chanCard}</div>
+    </div>
+    <div class="flex items-center" style="gap:14px;margin-top:34px">
+      <button id="settings-save" class="btn-accent mono">SAVE CHANGES</button>
+      <button id="settings-reload" class="btn-ghost mono">RELOAD</button>
+      <span id="dirty-flag" class="mono" style="font-size:11px;color:#D4A858;letter-spacing:.1em;display:none">● chưa lưu</span>
+    </div>
+  </div>`;
+
+  for (const f of SETTINGS_FIELDS) setFieldUI(f.key);
+
+  document.querySelectorAll('[data-toggle]').forEach((t) => t.addEventListener('click', () => {
+    const key = t.getAttribute('data-toggle');
+    ST.over[key] = !ST.over[key];
+    markDirty();
+    setFieldUI(key);
+  }));
+  document.querySelectorAll('[data-input]').forEach((el) => el.addEventListener('input', () => {
+    const key = el.getAttribute('data-input');
+    const f = SETTINGS_FIELDS.find((x) => x.key === key);
     if (f.type === 'number') {
-      const n = Number(el.value);
-      v = el.value === '' ? null : (Number.isFinite(n) ? n : null);
-    } else if (f.type === 'select') {
-      v = el.value;
-    } else if (f.type === 'model-picker') {
-      v = el.value === '' ? null : el.value;
-    } else if (f.type === 'model-select') {
-      v = el.value === '' ? null : el.value;
-    } else if (f.type === 'textarea' && f.key === 'allowedChannels') {
-      const lines = el.value.split('\n').map((s) => s.trim()).filter(Boolean);
-      v = lines.length === 0 ? null : lines;
+      el.value = el.value.replace(/[^0-9]/g, '');
+      ST.values[key] = el.value === '' ? null : Number(el.value);
+    } else if (f.type === 'channels') {
+      ST.values[key] = el.value.split('\n').map((s) => s.trim()).filter(Boolean);
     } else {
-      v = el.value === '' ? null : el.value;
+      ST.values[key] = el.value;
     }
-    const cur = currentCfg[f.key];
-    const same = JSON.stringify(v) === JSON.stringify(cur ?? null);
-    if (!same) out[f.key] = v;
-  }
-  return out;
+    markDirty();
+  }));
+  document.querySelectorAll('[data-step]').forEach((b) => b.addEventListener('click', () => {
+    const key = b.getAttribute('data-stepkey');
+    const inp = document.querySelector(`[data-input="${key}"]`);
+    const next = Math.max(0, (parseInt(inp.value, 10) || 0) + Number(b.getAttribute('data-step')));
+    inp.value = String(next);
+    ST.values[key] = next;
+    markDirty();
+  }));
+  SETTINGS_FIELDS.filter((f) => f.type === 'model').forEach((f) => {
+    document.querySelector(`[data-ddtrigger="${f.key}"]`).addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (ST.openDd === f.key) closeDd(); else openDd(f);
+    });
+  });
+
+  document.getElementById('settings-reload').addEventListener('click', async () => {
+    closeDd();
+    await renderSettings();
+    showToast('↺ Đã tải lại từ server');
+  });
+  document.getElementById('settings-save').addEventListener('click', saveSettings);
 }
 
-// Provider-tabbed model picker — opens a popup anchored to `triggerBtn`.
-// triggerBtn carries the key, providers map (JSON), and placeholder via
-// data-* attributes. Choosing a model writes back into the hidden
-// input[data-field] + updates the trigger button label. The popup also
-// has a "custom…" text input so we can set an arbitrary id without
-// editing this file.
-function openModelPicker(triggerBtn) {
-  const key = triggerBtn.getAttribute('data-picker');
-  const placeholder = triggerBtn.getAttribute('data-placeholder') || '';
-  let byProvider;
-  try {
-    byProvider = JSON.parse(triggerBtn.getAttribute('data-providers').replace(/&quot;/g, '"'));
-  } catch { byProvider = {}; }
-  const providers = Object.keys(byProvider);
-  if (providers.length === 0) return;
-
-  const hiddenInput = document.querySelector(`input[data-field="${key}"]`);
-  const labelEl = triggerBtn.querySelector('[data-picker-label]');
-  const currentValue = (hiddenInput && hiddenInput.value) || '';
-
-  let activeProvider = providers[0];
-  for (const p of providers) {
-    if ((byProvider[p] || []).includes(currentValue)) { activeProvider = p; break; }
-  }
-
-  const pop = document.createElement('div');
-  pop.style.position = 'absolute';
-  pop.style.zIndex = '200';
-  pop.style.minWidth = '320px';
-  pop.style.background = 'rgba(13,10,8,0.95)';
-  pop.style.border = '1px solid rgba(255,255,255,0.1)';
-  pop.style.borderRadius = '10px';
-  pop.style.padding = '8px';
-  pop.style.backdropFilter = 'blur(8px)';
-  pop.style.boxShadow = '0 8px 24px rgba(0,0,0,0.4)';
-
-  const r = triggerBtn.getBoundingClientRect();
-  pop.style.left = (r.left + window.scrollX) + 'px';
-  pop.style.top = (r.bottom + window.scrollY + 6) + 'px';
-  pop.style.width = r.width + 'px';
-
-  function render() {
-    pop.innerHTML = '';
-    const tabs = document.createElement('div');
-    tabs.style.display = 'flex';
-    tabs.style.gap = '4px';
-    tabs.style.marginBottom = '8px';
-    tabs.style.borderBottom = '1px solid rgba(255,255,255,0.06)';
-    tabs.style.paddingBottom = '6px';
-    for (const p of providers) {
-      const t = document.createElement('button');
-      t.type = 'button';
-      t.textContent = p;
-      t.className = 'mono text-[10px] tracking-label uppercase px-3 py-1.5 rounded-[6px]';
-      if (p === activeProvider) {
-        t.style.background = 'rgba(245,237,224,0.10)';
-        t.style.color = '#f5ede0';
-      } else {
-        t.style.color = 'rgba(245,237,224,0.5)';
-      }
-      t.addEventListener('click', () => { activeProvider = p; render(); });
-      tabs.appendChild(t);
+async function saveSettings() {
+  closeDd();
+  // OVERRIDE on → store the edited value; off → null (bot falls back to code).
+  // Only ship keys that differ from what GlobalConfig currently stores.
+  const payload = {};
+  for (const f of SETTINGS_FIELDS) {
+    let v;
+    if (!ST.over[f.key]) {
+      v = null;
+    } else if (f.type === 'channels') {
+      const arr = Array.isArray(ST.values[f.key]) ? ST.values[f.key] : [];
+      v = arr.length === 0 ? null : arr;
+    } else if (f.type === 'number') {
+      v = (ST.values[f.key] === null || ST.values[f.key] === undefined || ST.values[f.key] === '') ? null : Number(ST.values[f.key]);
+    } else {
+      const s = (ST.values[f.key] ?? '').toString();
+      v = s.trim() === '' ? null : s;
     }
-    pop.appendChild(tabs);
-
-    const list = byProvider[activeProvider] || [];
-    // Render every model in the active provider as a clickable row so the
-    // user sees the full list without an extra click on a <select>.
-    const listWrap = document.createElement('div');
-    listWrap.style.maxHeight = '280px';
-    listWrap.style.overflowY = 'auto';
-    listWrap.style.marginBottom = '8px';
-    listWrap.style.display = 'flex';
-    listWrap.style.flexDirection = 'column';
-    listWrap.style.gap = '2px';
-
-    // Default row at the top — picks "(use default)" which clears the field.
-    const defRow = document.createElement('button');
-    defRow.type = 'button';
-    defRow.textContent = `(use default · ${placeholder || '—'})`;
-    defRow.className = 'mono text-left bg-bg border border-line rounded-[6px] px-3 py-2 hover:border-line2';
-    defRow.style.fontSize = '11px';
-    defRow.style.color = 'rgba(245,237,224,0.5)';
-    if (!currentValue) {
-      defRow.style.borderColor = 'var(--accent)';
-      defRow.style.color = '#f5ede0';
-    }
-    defRow.addEventListener('click', () => apply(''));
-    listWrap.appendChild(defRow);
-
-    for (const m of list) {
-      const row = document.createElement('button');
-      row.type = 'button';
-      // Strip the provider prefix when displaying — the prefix is just a
-      // routing hint for the bot, the human-readable model id is whatever
-      // comes after the colon.
-      row.textContent = m.includes(':') ? m.split(':').slice(1).join(':') : m;
-      row.className = 'mono text-left bg-bg border border-line rounded-[6px] px-3 py-2 hover:border-line2';
-      row.style.fontSize = '12px';
-      if (m === currentValue) {
-        row.style.borderColor = 'var(--accent)';
-        row.style.background = 'rgba(212,168,88,0.06)';
-        row.style.color = '#f5ede0';
-      } else {
-        row.style.color = '#f5ede0';
-      }
-      row.addEventListener('click', () => apply(m));
-      listWrap.appendChild(row);
-    }
-    pop.appendChild(listWrap);
-
-    const customWrap = document.createElement('div');
-    customWrap.style.display = 'flex';
-    customWrap.style.gap = '6px';
-    const inp = document.createElement('input');
-    inp.type = 'text';
-    inp.placeholder = 'custom model id';
-    inp.className = 'mono text-[11px] flex-1 bg-bg border border-line rounded-[8px] px-3 py-2 text-ink focus:outline-none focus:border-line2';
-    const setBtn = document.createElement('button');
-    setBtn.type = 'button';
-    setBtn.textContent = 'use';
-    setBtn.className = 'mono text-[10px] tracking-label uppercase px-3 py-2 rounded-[8px] text-bg font-bold';
-    setBtn.style.background = 'var(--accent)';
-    setBtn.addEventListener('click', () => {
-      const v = inp.value.trim();
-      if (v) apply(v);
-    });
-    inp.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') { e.preventDefault(); setBtn.click(); }
-    });
-    customWrap.appendChild(inp);
-    customWrap.appendChild(setBtn);
-    pop.appendChild(customWrap);
+    const cur = ST.cfg[f.key];
+    const curNorm = (cur === undefined || cur === null || (Array.isArray(cur) && cur.length === 0) || cur === '') ? null : cur;
+    if (JSON.stringify(v) !== JSON.stringify(curNorm)) payload[f.key] = v;
   }
-
-  function apply(v) {
-    if (hiddenInput) hiddenInput.value = v;
-    if (labelEl) {
-      const disp = v && v.includes(':') ? v.split(':').slice(1).join(':') : v;
-      labelEl.textContent = disp || `(default · ${placeholder || '—'})`;
-    }
-    close();
+  if (Object.keys(payload).length === 0) {
+    showToast('Không có thay đổi để lưu');
+    return;
   }
-  function close() {
-    if (pop.parentElement) pop.parentElement.removeChild(pop);
-    document.removeEventListener('click', onOutside, true);
-  }
-  function onOutside(e) {
-    if (pop.contains(e.target) || triggerBtn.contains(e.target)) return;
-    close();
-  }
-
-  render();
-  document.body.appendChild(pop);
-  setTimeout(() => document.addEventListener('click', onOutside, true), 0);
-}
-
-async function saveSettings(payload) {
-  const status = document.getElementById('settings-status');
-  if (status) status.textContent = 'saving…';
+  const btn = document.getElementById('settings-save');
+  btn.disabled = true; btn.style.opacity = '.6';
   try {
     const r = await fetch('/api/kata/admin/global-config', {
       method: 'PATCH',
@@ -785,25 +820,29 @@ async function saveSettings(payload) {
     });
     const data = await r.json().catch(() => ({}));
     if (!r.ok) {
-      if (status) status.textContent = '⚠ ' + (data.error || `error ${r.status}`);
+      showToast('⚠ ' + (data.error || `lỗi ${r.status}`), true);
       return;
     }
-    if (status) status.textContent = '✓ saved · bot đang reload config';
-  } catch (e) {
-    if (status) status.textContent = '⚠ network error';
+    showToast('✓ Đã lưu — áp dụng cho mọi guild');
+    await renderSettings();
+  } catch {
+    showToast('⚠ Lỗi mạng — chưa lưu được', true);
+  } finally {
+    btn.disabled = false; btn.style.opacity = '';
   }
 }
 
+/* ==================== tab routing ==================== */
 const renderers = { servers: renderServers, logs: renderLogs, cost: renderCost, settings: renderSettings };
 
 function switchTab(tab) {
   if (!TABS.includes(tab)) return;
   currentTab = tab;
+  closeDd();
   setTabUI();
   const url = new URL(location.href);
   url.searchParams.set('tab', tab);
   history.replaceState(null, '', url);
-  elActions.innerHTML = '';
   renderers[tab]();
 }
 
@@ -813,8 +852,6 @@ document.querySelectorAll('[data-tab]').forEach(a => {
     switchTab(a.dataset.tab);
   });
 });
-
-// User chip is rendered + hydrated by _shell.js — no per-page boot needed.
 
 setTabUI();
 renderers[currentTab]();
