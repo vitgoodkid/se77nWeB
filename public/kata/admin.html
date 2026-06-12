@@ -90,7 +90,6 @@
   .dd-tab:hover { color: #ece6df; }
   .dd-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 11px 13px; border-radius: 8px; border: 1px solid transparent; color: #ddd6cf; font-size: 12.5px; cursor: pointer; transition: background .12s, transform .12s; }
   .dd-item:hover { background: #1c1614; transform: translateX(3px); }
-  .dd-backdrop { position: fixed; inset: 0; z-index: 30; }
 
   .provider-pill { font-size: 9px; color: #57504b; letter-spacing: .16em; flex: none; border: 1px solid #2c2522; border-radius: 99px; padding: 3px 8px; }
   .ovr-pill { font-size: 10px; letter-spacing: .14em; font-weight: 800; color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); border-radius: 99px; padding: 7px 14px; }
@@ -565,9 +564,16 @@ function setFieldUI(key) {
 
 function closeDd() {
   ST.openDd = null;
-  document.querySelectorAll('.dd-panel, .dd-backdrop').forEach((e) => e.remove());
+  document.querySelectorAll('.dd-panel').forEach((e) => e.remove());
   document.querySelectorAll('[data-chev]').forEach((e) => { e.style.transform = 'rotate(0deg)'; });
 }
+
+// Close on outside click. A body-level backdrop can't work here: <main> is its
+// own stacking context (relative z-10), so any fixed overlay outside it sits
+// ABOVE the panel and eats the item clicks.
+document.addEventListener('click', (e) => {
+  if (ST.openDd && !e.target.closest('.dd-panel') && !e.target.closest('[data-ddtrigger]')) closeDd();
+});
 
 function providerOf(byProvider, value) {
   for (const [p, list] of Object.entries(byProvider)) if (list.includes(value)) return p;
@@ -580,11 +586,6 @@ function openDd(field) {
   const anchor = document.querySelector(`[data-ddwrap="${field.key}"]`);
   const chev = anchor.querySelector('[data-chev]');
   if (chev) chev.style.transform = 'rotate(180deg)';
-
-  const backdrop = document.createElement('div');
-  backdrop.className = 'dd-backdrop';
-  backdrop.addEventListener('click', closeDd);
-  document.body.appendChild(backdrop);
 
   const panel = document.createElement('div');
   panel.className = 'dd-panel' + (field.ddUp ? ' up' : '');
