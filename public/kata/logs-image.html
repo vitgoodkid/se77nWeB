@@ -210,17 +210,22 @@ function renderTabsActive(){
   document.title = `logs · ${TAB_LABELS[CURRENT_TAB].vi} · katas`;
 }
 
+function authorName(e){
+  return (e.user && (e.user.displayName || e.user.username)) || e.userId.slice(-4);
+}
 function rowChat(e){
   const accent = avatarSeed(e.userId);
-  const short = e.userId.slice(-4);
   const isAssistant = e.role === 'assistant';
+  // Assistant rows carry the requester's userId — label them as the bot,
+  // the badge + name of the user row above tells whose conversation it is.
+  const name = isAssistant ? 'KataS' : authorName(e);
   const roleColor = isAssistant ? '#D4A858' : '#E04545';
   const roleLabel = isAssistant ? 'bot' : 'user';
   return `<article class="rounded-[14px] border border-line bg-panel p-5">
     <header class="flex items-center justify-between gap-3 mb-3 flex-wrap">
       <div class="flex items-center gap-2.5 min-w-0">
-        <span class="w-7 h-7 rounded-full grid place-items-center text-[12px] font-bold flex-shrink-0" style="background:${accent}22;color:${accent}">${short.slice(0,1).toUpperCase()}</span>
-        <span class="text-[14px] text-ink font-medium">${short}</span>
+        <span class="w-7 h-7 rounded-full grid place-items-center text-[12px] font-bold flex-shrink-0" style="background:${accent}22;color:${accent}">${escapeHtml(name.slice(0,1).toUpperCase())}</span>
+        <span class="text-[14px] text-ink font-medium">${escapeHtml(name)}</span>
         <span class="mono text-[11px] px-2 py-0.5 rounded-full" style="background:${roleColor}18;border:1px solid ${roleColor}40;color:${roleColor}">${roleLabel}</span>
         <span class="mono text-[12px] text-mute">#${e.channelId.slice(-6)}</span>
       </div>
@@ -238,7 +243,7 @@ function rowChat(e){
 
 function rowImage(e){
   const accent = avatarSeed(e.userId);
-  const short = e.userId.slice(-4);
+  const name = authorName(e);
   const inputUrl = e.inputImageUrl;
   const outputUrl = e.outputUrl;
   const fallback = Array.isArray(e.fallbackChain) ? e.fallbackChain.find(f => f.status === 'fallback') : null;
@@ -258,8 +263,8 @@ function rowImage(e){
       <div class="flex-1 min-w-0">
         <header class="flex items-center justify-between gap-3 mb-3 flex-wrap">
           <div class="flex items-center gap-2.5 min-w-0">
-            <span class="w-7 h-7 rounded-full grid place-items-center text-[12px] font-bold flex-shrink-0" style="background:${accent}22;color:${accent}">${short.slice(0,1).toUpperCase()}</span>
-            <span class="text-[14px] text-ink font-medium">${short}</span>
+            <span class="w-7 h-7 rounded-full grid place-items-center text-[12px] font-bold flex-shrink-0" style="background:${accent}22;color:${accent}">${escapeHtml(name.slice(0,1).toUpperCase())}</span>
+            <span class="text-[14px] text-ink font-medium">${escapeHtml(name)}</span>
             <span class="mono text-[11px] px-2 py-0.5 rounded-full" style="background:#E0454518;border:1px solid #E0454540;color:#E04545">${escapeHtml(e.command)}</span>
             <span class="mono text-[12px] text-mute">#${e.channelId.slice(-6)}</span>
             ${fallback ? `<span class="mono text-[10px] tracking-label uppercase px-2 py-0.5 rounded-full" style="background:#c9a65318;border:1px solid #c9a65340;color:#c9a653">fallback · ${escapeHtml(fallback.model.split('/').pop())}</span>` : ''}
@@ -281,7 +286,7 @@ function rowImage(e){
 
 function rowVideo(e){
   const accent = avatarSeed(e.userId);
-  const short = e.userId.slice(-4);
+  const name = authorName(e);
   const outputUrl = e.outputUrl;
   return `<article class="rounded-[14px] border border-line bg-panel">
     <div class="p-5 flex gap-5">
@@ -294,8 +299,8 @@ function rowVideo(e){
       <div class="flex-1 min-w-0">
         <header class="flex items-center justify-between gap-3 mb-3 flex-wrap">
           <div class="flex items-center gap-2.5 min-w-0">
-            <span class="w-7 h-7 rounded-full grid place-items-center text-[12px] font-bold flex-shrink-0" style="background:${accent}22;color:${accent}">${short.slice(0,1).toUpperCase()}</span>
-            <span class="text-[14px] text-ink font-medium">${short}</span>
+            <span class="w-7 h-7 rounded-full grid place-items-center text-[12px] font-bold flex-shrink-0" style="background:${accent}22;color:${accent}">${escapeHtml(name.slice(0,1).toUpperCase())}</span>
+            <span class="text-[14px] text-ink font-medium">${escapeHtml(name)}</span>
             <span class="mono text-[11px] px-2 py-0.5 rounded-full" style="background:#E0454518;border:1px solid #E0454540;color:#E04545">${escapeHtml(e.command)}</span>
             <span class="mono text-[12px] text-mute">#${e.channelId.slice(-6)}</span>
           </div>
@@ -316,14 +321,14 @@ function rowVideo(e){
 
 function rowCommand(e){
   const accent = avatarSeed(e.userId);
-  const short = e.userId.slice(-4);
+  const name = authorName(e);
   const failed = e.success === false;
   const wrapStyle = failed ? 'background:#c4686808;border-color:#c4686844' : '';
   return `<article class="rounded-[14px] border bg-panel p-5" style="border-color:rgba(255,255,255,0.08);${wrapStyle}">
     <header class="flex items-center justify-between gap-3 mb-3 flex-wrap">
       <div class="flex items-center gap-2.5 min-w-0">
-        <span class="w-7 h-7 rounded-full grid place-items-center text-[12px] font-bold flex-shrink-0" style="background:${accent}22;color:${accent}">${short.slice(0,1).toUpperCase()}</span>
-        <span class="text-[14px] text-ink font-medium">${short}</span>
+        <span class="w-7 h-7 rounded-full grid place-items-center text-[12px] font-bold flex-shrink-0" style="background:${accent}22;color:${accent}">${escapeHtml(name.slice(0,1).toUpperCase())}</span>
+        <span class="text-[14px] text-ink font-medium">${escapeHtml(name)}</span>
         <span class="mono text-[11px] px-2 py-0.5 rounded-full" style="background:${failed?'#c4686818':'#E0454518'};border:1px solid ${failed?'#c4686844':'#E0454540'};color:${failed?'#c46868':'#E04545'}">${escapeHtml(e.command)}${failed?' · fail':''}</span>
         <span class="mono text-[12px] text-mute">#${e.channelId.slice(-6)}</span>
       </div>
@@ -409,6 +414,8 @@ async function loadLogs({ append = false } = {}){
     document.getElementById('empty-state').classList.add('hidden');
   }
   const params = new URLSearchParams({ type: CURRENT_TAB, limit: '20' });
+  // Chat: include bot replies too — the API hides them unless role=all.
+  if (CURRENT_TAB === 'chat') params.set('role', 'all');
   if (CURRENT_CURSOR) params.set('cursor', CURRENT_CURSOR);
   const userId = document.getElementById('f-userId').value.trim();
   const channelId = document.getElementById('f-channelId').value.trim();

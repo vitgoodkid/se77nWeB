@@ -1074,9 +1074,14 @@ async function handleKataServerLogs(req, res, guildId) {
     return row;
   });
 
+  // Resolve author names from katasusers — same as the admin logs handler.
+  // Missing entries stay null and the UI falls back to the snowflake suffix.
+  const userIds = [...new Set(sanitized.map((r) => r.userId).filter(Boolean))];
+  const userMeta = userIds.length > 0 ? await hydrateUsernames(kataDb, userIds) : {};
+
   return res.status(200).json({
     type,
-    items: sanitized,
+    items: sanitized.map((r) => ({ ...r, user: userMeta[r.userId] ?? null })),
     nextCursor,
     total,
     limit,
