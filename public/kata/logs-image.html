@@ -213,18 +213,29 @@ function renderTabsActive(){
 function authorName(e){
   return (e.user && (e.user.displayName || e.user.username)) || e.userId.slice(-4);
 }
-function rowChat(e){
+// Avatar tile: real Discord avatar when katasusers has one, letter fallback
+// otherwise. onerror covers stale CDN hashes (user changed avatar since the
+// bot last saw them) — swap to the hidden letter tile instead of a broken img.
+function avatarTile(e, name, useImg = true){
   const accent = avatarSeed(e.userId);
+  const letter = escapeHtml(String(name).slice(0,1).toUpperCase());
+  const letterTile = (display) => `<span class="w-7 h-7 rounded-full place-items-center text-[12px] font-bold flex-shrink-0" style="display:${display};background:${accent}22;color:${accent}">${letter}</span>`;
+  const url = useImg && e.user && e.user.avatarUrl;
+  if (!url) return letterTile('grid');
+  return `<img src="${escapeHtml(url)}" alt="" class="w-7 h-7 rounded-full object-cover flex-shrink-0" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='grid'" />${letterTile('none')}`;
+}
+function rowChat(e){
   const isAssistant = e.role === 'assistant';
   // Assistant rows carry the requester's userId — label them as the bot,
   // the badge + name of the user row above tells whose conversation it is.
+  // No avatar img either: e.user is the requester's meta, not the bot's.
   const name = isAssistant ? 'KataS' : authorName(e);
   const roleColor = isAssistant ? '#D4A858' : '#E04545';
   const roleLabel = isAssistant ? 'bot' : 'user';
   return `<article class="rounded-[14px] border border-line bg-panel p-5">
     <header class="flex items-center justify-between gap-3 mb-3 flex-wrap">
       <div class="flex items-center gap-2.5 min-w-0">
-        <span class="w-7 h-7 rounded-full grid place-items-center text-[12px] font-bold flex-shrink-0" style="background:${accent}22;color:${accent}">${escapeHtml(name.slice(0,1).toUpperCase())}</span>
+        ${avatarTile(e, name, !isAssistant)}
         <span class="text-[14px] text-ink font-medium">${escapeHtml(name)}</span>
         <span class="mono text-[11px] px-2 py-0.5 rounded-full" style="background:${roleColor}18;border:1px solid ${roleColor}40;color:${roleColor}">${roleLabel}</span>
         <span class="mono text-[12px] text-mute">#${e.channelId.slice(-6)}</span>
@@ -242,7 +253,6 @@ function rowChat(e){
 }
 
 function rowImage(e){
-  const accent = avatarSeed(e.userId);
   const name = authorName(e);
   const inputUrl = e.inputImageUrl;
   const outputUrl = e.outputUrl;
@@ -263,7 +273,7 @@ function rowImage(e){
       <div class="flex-1 min-w-0">
         <header class="flex items-center justify-between gap-3 mb-3 flex-wrap">
           <div class="flex items-center gap-2.5 min-w-0">
-            <span class="w-7 h-7 rounded-full grid place-items-center text-[12px] font-bold flex-shrink-0" style="background:${accent}22;color:${accent}">${escapeHtml(name.slice(0,1).toUpperCase())}</span>
+            ${avatarTile(e, name)}
             <span class="text-[14px] text-ink font-medium">${escapeHtml(name)}</span>
             <span class="mono text-[11px] px-2 py-0.5 rounded-full" style="background:#E0454518;border:1px solid #E0454540;color:#E04545">${escapeHtml(e.command)}</span>
             <span class="mono text-[12px] text-mute">#${e.channelId.slice(-6)}</span>
@@ -285,7 +295,6 @@ function rowImage(e){
 }
 
 function rowVideo(e){
-  const accent = avatarSeed(e.userId);
   const name = authorName(e);
   const outputUrl = e.outputUrl;
   return `<article class="rounded-[14px] border border-line bg-panel">
@@ -299,7 +308,7 @@ function rowVideo(e){
       <div class="flex-1 min-w-0">
         <header class="flex items-center justify-between gap-3 mb-3 flex-wrap">
           <div class="flex items-center gap-2.5 min-w-0">
-            <span class="w-7 h-7 rounded-full grid place-items-center text-[12px] font-bold flex-shrink-0" style="background:${accent}22;color:${accent}">${escapeHtml(name.slice(0,1).toUpperCase())}</span>
+            ${avatarTile(e, name)}
             <span class="text-[14px] text-ink font-medium">${escapeHtml(name)}</span>
             <span class="mono text-[11px] px-2 py-0.5 rounded-full" style="background:#E0454518;border:1px solid #E0454540;color:#E04545">${escapeHtml(e.command)}</span>
             <span class="mono text-[12px] text-mute">#${e.channelId.slice(-6)}</span>
@@ -320,14 +329,13 @@ function rowVideo(e){
 }
 
 function rowCommand(e){
-  const accent = avatarSeed(e.userId);
   const name = authorName(e);
   const failed = e.success === false;
   const wrapStyle = failed ? 'background:#c4686808;border-color:#c4686844' : '';
   return `<article class="rounded-[14px] border bg-panel p-5" style="border-color:rgba(255,255,255,0.08);${wrapStyle}">
     <header class="flex items-center justify-between gap-3 mb-3 flex-wrap">
       <div class="flex items-center gap-2.5 min-w-0">
-        <span class="w-7 h-7 rounded-full grid place-items-center text-[12px] font-bold flex-shrink-0" style="background:${accent}22;color:${accent}">${escapeHtml(name.slice(0,1).toUpperCase())}</span>
+        ${avatarTile(e, name)}
         <span class="text-[14px] text-ink font-medium">${escapeHtml(name)}</span>
         <span class="mono text-[11px] px-2 py-0.5 rounded-full" style="background:${failed?'#c4686818':'#E0454518'};border:1px solid ${failed?'#c4686844':'#E0454540'};color:${failed?'#c46868':'#E04545'}">${escapeHtml(e.command)}${failed?' · fail':''}</span>
         <span class="mono text-[12px] text-mute">#${e.channelId.slice(-6)}</span>

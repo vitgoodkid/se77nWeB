@@ -116,15 +116,18 @@ function avatarBlock(g, size) {
   const px = size === 'lg' ? 12 : 10;
   const fontPx = size === 'lg' ? 16 : 13;
   const radius = size === 'lg' ? 10 : 8;
-  if (g.iconUrl) {
-    return `<img src="${g.iconUrl}" alt="" style="width:${px*4}px;height:${px*4}px;border-radius:${radius}px;object-fit:cover;flex-shrink:0;border:1px solid rgba(255,255,255,0.08)" />`;
-  }
   // Two-char initial fallback. Pick a stable accent from guildId hash so the
   // colour doesn't reshuffle on refresh.
   const seed = [...g.id].reduce((a, c) => a + c.charCodeAt(0), 0);
   const accent = ACCENTS[seed % ACCENTS.length];
   const initials = g.name.replace(/[^A-Za-z0-9À-ỹ]/g, '').slice(0, 2).toUpperCase() || '??';
-  return `<div class="grid place-items-center flex-shrink-0 mono font-extrabold" style="width:${px*4}px;height:${px*4}px;border-radius:${radius}px;background:linear-gradient(135deg,${accent},${accent}55);color:#0d0a08;font-size:${fontPx}px">${initials}</div>`;
+  const initialsTile = (display) => `<div class="place-items-center flex-shrink-0 mono font-extrabold" style="display:${display};width:${px*4}px;height:${px*4}px;border-radius:${radius}px;background:linear-gradient(135deg,${accent},${accent}55);color:#0d0a08;font-size:${fontPx}px">${initials}</div>`;
+  if (g.iconUrl) {
+    // onerror: the stored icon hash can go stale (server changed its icon
+    // since the bot last synced) — swap to initials instead of a broken img.
+    return `<img src="${g.iconUrl}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='grid'" style="width:${px*4}px;height:${px*4}px;border-radius:${radius}px;object-fit:cover;flex-shrink:0;border:1px solid rgba(255,255,255,0.08)" />${initialsTile('none')}`;
+  }
+  return initialsTile('grid');
 }
 
 function managedCard(g) {
