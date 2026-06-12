@@ -224,32 +224,85 @@ function avatarTile(e, name, useImg = true){
   if (!url) return letterTile('grid');
   return `<img src="${escapeHtml(url)}" alt="" class="w-7 h-7 rounded-full object-cover flex-shrink-0" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='grid'" />${letterTile('none')}`;
 }
-function rowChat(e){
-  const isAssistant = e.role === 'assistant';
-  // Assistant rows carry the requester's userId — label them as the bot,
-  // the badge + name of the user row above tells whose conversation it is.
-  // No avatar img either: e.user is the requester's meta, not the bot's.
-  const name = isAssistant ? 'KataS' : authorName(e);
-  const roleColor = isAssistant ? '#D4A858' : '#E04545';
-  const roleLabel = isAssistant ? 'bot' : 'user';
-  return `<article class="rounded-[14px] border border-line bg-panel p-5">
+function chatContentHtml(e){
+  return `${escapeHtml(e.content)}${e.contentTruncated?'<span class="text-mute2"> …</span>':''}`;
+}
+function chatMetaHtml(e){
+  const bits = [];
+  if (e.modelUsed) bits.push(`<span class="text-mute">${escapeHtml(e.modelUsed)}</span>`);
+  if (e.tokensIn != null) bits.push(`<span>in · ${e.tokensIn}</span>`);
+  if (e.tokensOut != null) bits.push(`<span>out · ${e.tokensOut}</span>`);
+  if (e.costUSD != null) bits.push(`<span class="text-gold">$${e.costUSD.toFixed(4)}</span>`);
+  return bits.join('');
+}
+// Pair each bot reply with the user message that triggered it. Chatlogs has
+// no reply-id link, but assistant rows carry the requester's userId and are
+// written right after the user row — so with items sorted newest-first, the
+// trigger is the nearest OLDER user row with the same userId + channelId
+// (within 30min to avoid latching onto an unrelated earlier message).
+function pairChatItems(items){
+  const blocks = [];
+  const used = new Array(items.length).fill(false);
+  for (let i = 0; i < items.length; i++){
+    if (used[i]) continue;
+    const e = items[i];
+    used[i] = true;
+    if (e.role !== 'assistant'){ blocks.push({ user: e, bot: null }); continue; }
+    let match = -1;
+    for (let j = i + 1; j < items.length; j++){
+      if (used[j]) continue;
+      const u = items[j];
+      if (u.role !== 'user' || u.userId !== e.userId || u.channelId !== e.channelId) continue;
+      const dt = new Date(e.createdAt) - new Date(u.createdAt);
+      if (dt >= 0 && dt < 30 * 60 * 1000) match = j;
+      break;
+    }
+    if (match >= 0){ used[match] = true; blocks.push({ user: items[match], bot: e }); }
+    else blocks.push({ user: null, bot: e });
+  }
+  return blocks;
+}
+// One box per exchange: user message on top, bot reply below behind a gold
+// left rail + dashed divider. Orphans (reply older than the page window, or
+// message the bot never answered) render their half alone.
+function chatBlockHtml(b){
+  const u = b.user, bot = b.bot;
+  let userPart = '';
+  if (u){
+    const name = authorName(u);
+    userPart = `
     <header class="flex items-center justify-between gap-3 mb-3 flex-wrap">
       <div class="flex items-center gap-2.5 min-w-0">
-        ${avatarTile(e, name, !isAssistant)}
+        ${avatarTile(u, name)}
         <span class="text-[14px] text-ink font-medium">${escapeHtml(name)}</span>
-        <span class="mono text-[11px] px-2 py-0.5 rounded-full" style="background:${roleColor}18;border:1px solid ${roleColor}40;color:${roleColor}">${roleLabel}</span>
-        <span class="mono text-[12px] text-mute">#${e.channelId.slice(-6)}</span>
+        <span class="mono text-[11px] px-2 py-0.5 rounded-full" style="background:#E0454518;border:1px solid #E0454540;color:#E04545">user</span>
+        <span class="mono text-[12px] text-mute">#${u.channelId.slice(-6)}</span>
       </div>
-      <span class="mono text-[12px] text-mute" title="${escapeHtml(new Date(e.createdAt).toLocaleString('vi-VN', { hour12: false }))}">${relTime(e.createdAt)}</span>
+      <span class="mono text-[12px] text-mute" title="${escapeHtml(new Date(u.createdAt).toLocaleString('vi-VN', { hour12: false }))}">${relTime(u.createdAt)}</span>
     </header>
-    <div class="text-[15px] text-ink leading-[1.6] whitespace-pre-wrap break-words">${escapeHtml(e.content)}${e.contentTruncated?'<span class="text-mute2"> …</span>':''}</div>
-    <footer class="flex items-center gap-3 mono text-[11px] mt-3 pt-3 border-t border-line/60 flex-wrap text-mute2">
-      ${e.modelUsed ? `<span class="text-mute">${escapeHtml(e.modelUsed)}</span>` : ''}
-      ${e.tokensIn != null ? `<span>in · ${e.tokensIn}</span>` : ''}
-      ${e.tokensOut != null ? `<span>out · ${e.tokensOut}</span>` : ''}
-      ${e.costUSD != null ? `<span class="text-gold">$${e.costUSD.toFixed(4)}</span>` : ''}
-    </footer>
-  </article>`;
+    <div class="text-[15px] text-ink leading-[1.6] whitespace-pre-wrap break-words">${chatContentHtml(u)}</div>`;
+  }
+  let botPart = '';
+  if (bot){
+    const botMeta = chatMetaHtml(bot);
+    botPart = `
+    <div class="${u ? 'mt-4 pt-4 border-t border-dashed' : ''}" style="${u ? 'border-color:rgba(212,168,88,0.22)' : ''}">
+      <div class="pl-4" style="border-left:2px solid rgba(212,168,88,0.4)">
+        <div class="flex items-center justify-between gap-3 mb-2 flex-wrap">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <span class="w-7 h-7 rounded-full grid place-items-center mono text-[12px] font-bold flex-shrink-0" style="background:#D4A85822;color:#D4A858">K</span>
+            <span class="text-[14px] font-medium" style="color:#D4A858">KataS</span>
+            <span class="mono text-[11px] px-2 py-0.5 rounded-full" style="background:#D4A85818;border:1px solid #D4A85840;color:#D4A858">↳ bot</span>
+            ${u ? '' : `<span class="mono text-[12px] text-mute">#${bot.channelId.slice(-6)}</span>`}
+          </div>
+          <span class="mono text-[12px] text-mute" title="${escapeHtml(new Date(bot.createdAt).toLocaleString('vi-VN', { hour12: false }))}">${relTime(bot.createdAt)}</span>
+        </div>
+        <div class="text-[15px] text-ink leading-[1.6] whitespace-pre-wrap break-words">${chatContentHtml(bot)}</div>
+        ${botMeta ? `<div class="flex items-center gap-3 mono text-[11px] mt-3 pt-3 border-t border-line/60 flex-wrap text-mute2">${botMeta}</div>` : ''}
+      </div>
+    </div>`;
+  }
+  return `<article class="rounded-[14px] border border-line bg-panel p-5">${userPart}${botPart}</article>`;
 }
 
 function rowImage(e){
@@ -352,7 +405,11 @@ function rowCommand(e){
   </article>`;
 }
 
-const ROW_RENDERERS = { chat: rowChat, image: rowImage, video: rowVideo, command: rowCommand };
+const ROW_RENDERERS = { image: rowImage, video: rowVideo, command: rowCommand };
+// Chat keeps the full item list across "load more" and re-renders the whole
+// pane — pairing needs to see both halves of an exchange even when the page
+// boundary fell between them.
+let CHAT_ITEMS = [];
 
 async function loadGuildBootstrap(){
   const guildId = getGuildId();
@@ -419,6 +476,7 @@ async function loadLogs({ append = false } = {}){
   if (!append){
     document.getElementById('log-list').innerHTML = '';
     CURRENT_CURSOR = null;
+    CHAT_ITEMS = [];
     document.getElementById('empty-state').classList.add('hidden');
   }
   const params = new URLSearchParams({ type: CURRENT_TAB, limit: '20' });
@@ -456,6 +514,9 @@ async function loadLogs({ append = false } = {}){
   }
   if (data.items.length === 0 && !append){
     document.getElementById('log-list').innerHTML = `<div class="rounded-[14px] border border-line bg-panel/40 p-10 text-center"><div class="mono text-[11px] text-mute">Chưa có entry nào.</div></div>`;
+  } else if (CURRENT_TAB === 'chat'){
+    CHAT_ITEMS = CHAT_ITEMS.concat(data.items);
+    document.getElementById('log-list').innerHTML = pairChatItems(CHAT_ITEMS).map(chatBlockHtml).join('');
   } else {
     const renderer = ROW_RENDERERS[CURRENT_TAB];
     document.getElementById('log-list').insertAdjacentHTML('beforeend', data.items.map(renderer).join(''));
