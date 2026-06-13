@@ -741,18 +741,22 @@ function TypingDots({ kind }) {
 // ═════════════════════════════════════════════════════════════
 // 2. TOOLBOX — Public / Private (PIN 7777)
 // ═════════════════════════════════════════════════════════════
+// Pink isn't a global brand color — it's the dedicated accent for the Thảo
+// love-letter tool, so it lives next to the tool data rather than in COLORS.
+const PINK = '#f59cb4';
+
 const PUBLIC_TOOLS = [
-  { id: 'short',   nameKey: 'tools.short.name',   descKey: 'tools.short.desc',   icon: '/' },
-  { id: 'pst',     nameKey: 'tools.pst.name',     descKey: 'tools.pst.desc',     icon: '¶' },
-  { id: 'game',    nameKey: 'tools.game.name',    descKey: 'tools.game.desc',    icon: '◉' },
-  { id: 'convert', nameKey: 'tools.convert.name', descKey: 'tools.convert.desc', icon: '⇄' },
-  { id: 'hex',     nameKey: 'tools.hex.name',     descKey: 'tools.hex.desc',     icon: '0x' },
-  { id: '2fa',     nameKey: 'tools.2fa.name',     descKey: 'tools.2fa.desc',     icon: '2F' },
-  { id: 'thao',    nameKey: 'tools.thao.name',    descKey: 'tools.thao.desc',    icon: '♥' },
+  { id: 'short',   nameKey: 'tools.short.name',   descKey: 'tools.short.desc',   icon: '/',  accent: COLORS.green, tag: 'WEB' },
+  { id: 'pst',     nameKey: 'tools.pst.name',     descKey: 'tools.pst.desc',     icon: '¶',  accent: COLORS.green, tag: 'WEB' },
+  { id: 'game',    nameKey: 'tools.game.name',    descKey: 'tools.game.desc',    icon: '◉',  accent: COLORS.gold,  tag: 'ARCHIVE' },
+  { id: 'convert', nameKey: 'tools.convert.name', descKey: 'tools.convert.desc', icon: '⇄',  accent: COLORS.gold,  tag: 'MEDIA' },
+  { id: 'hex',     nameKey: 'tools.hex.name',     descKey: 'tools.hex.desc',     icon: '0x', accent: COLORS.green, tag: 'DEV' },
+  { id: '2fa',     nameKey: 'tools.2fa.name',     descKey: 'tools.2fa.desc',     icon: '2F', accent: COLORS.red,   tag: 'SECURITY' },
+  { id: 'thao',    nameKey: 'tools.thao.name',    descKey: 'tools.thao.desc',    icon: '♥',  accent: PINK,         tag: 'PIN · 4 DIGIT' },
 ];
 const PRIVATE_TOOLS = [
-  { id: 'srv', nameKey: 'tools.srv.name', descKey: 'tools.srv.desc', icon: '⌬' },
-  { id: 'fin', nameKey: 'tools.fin.name', descKey: 'tools.fin.desc', icon: '$' },
+  { id: 'srv', nameKey: 'tools.srv.name', descKey: 'tools.srv.desc', icon: '⌬', accent: COLORS.red, tag: 'OWNER' },
+  { id: 'fin', nameKey: 'tools.fin.name', descKey: 'tools.fin.desc', icon: '$', accent: COLORS.red, tag: 'OWNER' },
 ];
 
 const THAO_PIN = '2609';
@@ -764,6 +768,12 @@ export function Toolbox() {
   const [pin, setPin] = useState('');
   const [err, setErr] = useState(false);
   const [activeTool, setActiveTool] = useState(null);
+
+  // Card grid is 3-up on desktop (per design), collapsing to 2 / 1 so the
+  // shared component stays usable inside the mobile shell.
+  const tbNarrow = useMediaQuery('(max-width: 560px)');
+  const tbMid = useMediaQuery('(max-width: 900px)');
+  const toolCols = tbNarrow ? 1 : tbMid ? 2 : 3;
 
   // Sub-route #/tools/thao opens the Thảo letter directly.
   useEffect(() => {
@@ -805,38 +815,60 @@ export function Toolbox() {
   }
 
   const tools = tab === 'public' ? PUBLIC_TOOLS : PRIVATE_TOOLS;
-  const accent = tab === 'public' ? COLORS.green : COLORS.red;
+  const tbAccent = tab === 'public' ? COLORS.green : COLORS.red;
+  const accent = tbAccent;
+  const subtitle = tab === 'public'
+    ? `${PUBLIC_TOOLS.length} public utilities — no sign-in`
+    : (unlocked ? `${PRIVATE_TOOLS.length} private tools — owner only` : 'Locked zone — PIN required');
 
   return (
     <Panel padding={0} style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%' }}>
       <div style={{
-        padding: '16px 20px', borderBottom: '1px solid ' + COLORS.line,
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '22px 24px', borderBottom: '1px solid ' + COLORS.line,
+        display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 24,
       }}>
-        <div style={{ display: 'flex', gap: 4 }}>
+        <div>
+          <div className="mono" style={{
+            fontSize: 10, letterSpacing: '0.26em', fontWeight: 800,
+            color: tbAccent, transition: 'color 250ms',
+          }}>02 · UTILITIES</div>
+          <h1 className="mono" style={{
+            fontSize: 34, margin: '10px 0 7px', color: COLORS.text,
+            fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1,
+          }}>Toolbox<span style={{ color: tbAccent, transition: 'color 250ms' }}>.</span></h1>
+          <p style={{ margin: 0, fontSize: 12.5, color: COLORS.muted }}>{subtitle}</p>
+        </div>
+        <div style={{
+          display: 'flex', gap: 6, flex: 'none', padding: 5,
+          background: COLORS.bg, border: '1px solid ' + COLORS.line, borderRadius: 12,
+        }}>
           {['public', 'private'].map((k) => {
             const active = tab === k;
             const c = k === 'public' ? COLORS.green : COLORS.red;
+            const list = k === 'public' ? PUBLIC_TOOLS : PRIVATE_TOOLS;
             return (
               <button
                 key={k}
                 onClick={() => { setTab(k); setActiveTool(null); }}
                 className="mono"
                 style={{
-                  padding: '10px 18px', borderRadius: 10,
-                  background: active ? c + '14' : 'transparent',
-                  border: `1px solid ${active ? c + '55' : 'transparent'}`,
+                  display: 'flex', alignItems: 'center', gap: 8,
+                  padding: '10px 18px', borderRadius: 9,
+                  background: active ? c + '1f' : 'transparent',
+                  border: `1px solid ${active ? c + '73' : 'transparent'}`,
                   color: active ? c : COLORS.muted,
-                  fontSize: 11, letterSpacing: '0.14em',
-                  textTransform: 'uppercase', fontWeight: 700, cursor: 'pointer',
+                  fontSize: 10.5, letterSpacing: '0.16em',
+                  textTransform: 'uppercase', fontWeight: 800, cursor: 'pointer',
+                  transition: 'all 180ms',
                 }}
               >
-                {k} {k === 'private' && !unlocked && '🔒'}
+                {k}
+                {k === 'public' && <span style={{ fontSize: 9, color: active ? c : COLORS.muted }}>0{PUBLIC_TOOLS.length}</span>}
+                {k === 'private' && !unlocked && <span style={{ fontSize: 11 }}>🔒</span>}
               </button>
             );
           })}
         </div>
-        <Kicker>{tools.length.toString().padStart(2, '0')} TOOLS</Kicker>
       </div>
 
       <div style={{ flex: 1, padding: 24, overflow: 'auto' }}>
@@ -883,49 +915,68 @@ export function Toolbox() {
             </div>
           </div>
         ) : activeTool ? (
-          <ToolDetail tool={activeTool} accent={accent} onBack={() => setActiveTool(null)} />
+          <ToolDetail tool={activeTool} accent={activeTool.accent || accent} onBack={() => setActiveTool(null)} />
         ) : (
           <div style={{
-            display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-            gap: 14, animation: 'fadeUp 200ms ease-out',
+            display: 'grid', gridTemplateColumns: `repeat(${toolCols}, minmax(0, 1fr))`,
+            gap: 16, animation: 'fadeUp 200ms ease-out',
           }}>
-            {tools.map((tool) => (
-              <button
-                key={tool.id}
-                onClick={() => setActiveTool(tool)}
-                style={{
-                  textAlign: 'left', padding: 18,
-                  border: '1px solid ' + COLORS.line, borderRadius: 12,
-                  background: COLORS.bg, cursor: 'pointer',
-                  transition: 'transform 120ms, border-color 120ms, background 120ms',
-                  display: 'flex', flexDirection: 'column', gap: 14, color: COLORS.text,
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.borderColor = accent + '60';
-                  e.currentTarget.style.background = accent + '0a';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.borderColor = COLORS.line;
-                  e.currentTarget.style.background = COLORS.bg;
-                }}
-              >
-                <div style={{
-                  width: 40, height: 40, display: 'grid', placeItems: 'center',
-                  borderRadius: 10, border: `1px solid ${accent}55`,
-                  color: accent, fontSize: 18, fontFamily: 'JetBrains Mono, monospace', fontWeight: 700,
-                }}>{tool.icon}</div>
-                <div>
-                  <div className="mono" style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-                    {t(tool.nameKey)}
+            {tools.map((tool) => {
+              const a = tool.accent || accent;
+              return (
+                <button
+                  key={tool.id}
+                  onClick={() => setActiveTool(tool)}
+                  className="tcard lit"
+                  style={{
+                    position: 'relative', overflow: 'hidden', textAlign: 'left',
+                    display: 'flex', flexDirection: 'column', gap: 16, padding: 22,
+                    border: '1px solid ' + COLORS.line, borderRadius: 14,
+                    background: COLORS.bg, cursor: 'pointer', color: COLORS.text,
+                    transition: 'transform 180ms, border-color 180ms, box-shadow 180ms',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-3px)';
+                    e.currentTarget.style.borderColor = a + '70';
+                    e.currentTarget.style.boxShadow = `0 18px 44px rgba(0,0,0,.4), 0 0 36px ${a}1f`;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.borderColor = COLORS.line;
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
+                >
+                  <span className="sheen" />
+                  <div className="wm mono" style={{
+                    position: 'absolute', top: -30, right: -14, fontSize: 104, fontWeight: 800,
+                    color: a + '12', lineHeight: 1, pointerEvents: 'none',
+                  }}>{tool.icon}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div className="tile mono" style={{
+                      width: 44, height: 44, display: 'grid', placeItems: 'center', borderRadius: 11,
+                      border: `1px solid ${a}55`, background: a + '12', color: a,
+                      fontSize: 18, fontWeight: 800,
+                    }}>{tool.icon}</div>
+                    <span className="mono" style={{
+                      fontSize: 8.5, letterSpacing: '0.2em', fontWeight: 800, color: a,
+                      border: `1px solid ${a}55`, borderRadius: 999, padding: '4px 10px',
+                    }}>{tool.tag}</span>
                   </div>
-                  <div style={{ fontSize: 12, color: COLORS.muted, marginTop: 4, lineHeight: 1.4 }}>
-                    {t(tool.descKey)}
+                  <div>
+                    <div className="mono" style={{ fontSize: 13, fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: COLORS.text }}>
+                      {t(tool.nameKey)}
+                    </div>
+                    <div style={{ fontSize: 12, color: COLORS.muted, marginTop: 6, lineHeight: 1.5 }}>
+                      {t(tool.descKey)}
+                    </div>
                   </div>
-                </div>
-              </button>
-            ))}
+                  <div className="mono" style={{
+                    marginTop: 'auto', display: 'flex', alignItems: 'center', gap: 8,
+                    fontSize: 9.5, letterSpacing: '0.2em', fontWeight: 800, color: a,
+                  }}>OPEN <span className="arrow">→</span></div>
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
@@ -3849,6 +3900,7 @@ const GAME_TILES = [
     glyph: '⌑',
     tagline: 'Roleplay engine',
     desc: 'Worlds, characters, lore AI, scene images. Discord + web.',
+    chips: ['DISCORD', 'WEB', 'LORE AI'],
     href: '/kata/tavern.html',
     external: true,
   },
@@ -3856,9 +3908,10 @@ const GAME_TILES = [
     id: 'ludo',
     label: 'Cờ Cá Ngựa',
     accent: '#ff5763',
-    glyph: '🎲',
+    glyph: '◆',
     tagline: 'Anime Fantasy Ludo',
     desc: 'Bàn cờ 3D phong cách anime, 4 tộc, AI đối thủ, 6 chủ đề. Chơi ngay trên web.',
+    chips: ['3D BOARD', 'VS AI', '6 THEMES'],
     href: '/games/ludo/',
     external: true,
   },
@@ -3873,6 +3926,8 @@ function readGameSubRoute() {
 
 export function GamePanel() {
   const [sub, setSub] = useState(readGameSubRoute);
+  // Two big venue cards side-by-side on desktop; stack on narrow/mobile.
+  const gameStack = useMediaQuery('(max-width: 720px)');
 
   useEffect(() => {
     function onHash() { setSub(readGameSubRoute()); }
@@ -3894,16 +3949,21 @@ export function GamePanel() {
 
   return (
     <Panel padding={0} style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%' }}>
-      <div style={{ padding: '16px 20px', borderBottom: '1px solid ' + COLORS.line }}>
-        <Kicker>GAME · HUB</Kicker>
-        <div className="mono" style={{ fontSize: 18, fontWeight: 700, marginTop: 4 }}>Pick a venue</div>
+      <div style={{ padding: '22px 24px', borderBottom: '1px solid ' + COLORS.line }}>
+        <div className="mono" style={{ fontSize: 10, letterSpacing: '0.26em', fontWeight: 800, color: COLORS.red }}>04 · GAME HUB</div>
+        <h1 className="mono" style={{
+          fontSize: 34, margin: '10px 0 7px', color: COLORS.text,
+          fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1,
+        }}>Pick a venue<span style={{ color: COLORS.red }}>.</span></h1>
+        <p style={{ margin: 0, fontSize: 12.5, color: COLORS.muted }}>
+          {GAME_TILES.length} venues live · web + Discord
+        </p>
       </div>
 
       <div style={{ flex: 1, padding: 24, overflow: 'auto' }}>
         <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
-          gap: 14,
+          display: 'grid', gridTemplateColumns: gameStack ? '1fr' : '1fr 1fr', gap: 18,
+          animation: 'fadeUp 200ms ease-out',
         }}>
           {GAME_TILES.map((t) => (
             <a
@@ -3915,52 +3975,86 @@ export function GamePanel() {
                   window.location.href = t.href;
                 }
               }}
+              className="gcard lit"
               style={{
-                display: 'flex', flexDirection: 'column', gap: 10,
-                padding: 18, borderRadius: 14,
+                position: 'relative', overflow: 'hidden',
+                display: 'flex', flexDirection: 'column', gap: 14,
+                padding: '30px 30px 26px', minHeight: 280, borderRadius: 18,
                 border: `1px solid ${COLORS.line}`,
-                background: `linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0))`,
+                background: 'linear-gradient(180deg, #141010, #100d0c)',
                 color: COLORS.text, textDecoration: 'none',
-                transition: 'border-color 160ms ease, transform 160ms ease',
+                transition: 'border-color 200ms ease, transform 200ms ease, box-shadow 200ms ease',
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.borderColor = t.accent; }}
-              onMouseLeave={(e) => { e.currentTarget.style.borderColor = COLORS.line; }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-4px)';
+                e.currentTarget.style.borderColor = t.accent + '70';
+                e.currentTarget.style.boxShadow = `0 24px 60px rgba(0,0,0,.5), 0 0 50px ${t.accent}26`;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.borderColor = COLORS.line;
+                e.currentTarget.style.boxShadow = 'none';
+              }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <span className="sheen" />
+              <div style={{
+                position: 'absolute', inset: 0, pointerEvents: 'none',
+                background: `radial-gradient(60% 70% at 85% 100%, ${t.accent}14 0%, transparent 70%)`,
+              }} />
+              <div className="gwm mono" style={{
+                position: 'absolute', bottom: -52, right: -22, fontSize: 190, lineHeight: 1,
+                color: t.accent + '16', pointerEvents: 'none', fontWeight: 800,
+              }}>{t.glyph}</div>
+
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span className="mono" style={{
-                  fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase',
-                  color: COLORS.muted,
+                  fontSize: 9.5, letterSpacing: '0.22em', fontWeight: 800, color: t.accent,
+                  border: `1px solid ${t.accent}55`, background: t.accent + '12',
+                  borderRadius: 999, padding: '5px 12px', textTransform: 'uppercase',
                 }}>{t.tagline}</span>
-                <span style={{ color: t.accent, fontSize: 22, lineHeight: 1 }}>{t.glyph}</span>
+                <span className="gglyph" style={{ fontSize: 26, color: t.accent, lineHeight: 1 }}>{t.glyph}</span>
               </div>
-              <div className="mono" style={{
-                fontSize: 22, fontWeight: 800, letterSpacing: '-0.02em', color: COLORS.text,
-              }}>{t.label}</div>
-              <div style={{ fontSize: 13, color: COLORS.muted, lineHeight: 1.55 }}>{t.desc}</div>
-              <div style={{ marginTop: 'auto', paddingTop: 8 }}>
+
+              <div style={{ position: 'relative' }}>
+                <div className="gtitle mono" style={{
+                  fontSize: 30, fontWeight: 800, letterSpacing: '-0.02em', color: COLORS.text,
+                }}>{t.label}</div>
+                <div style={{ fontSize: 12.5, color: COLORS.muted, marginTop: 8, lineHeight: 1.65, maxWidth: 380 }}>{t.desc}</div>
+              </div>
+
+              <div style={{ position: 'relative', display: 'flex', gap: 7, flexWrap: 'wrap' }}>
+                {t.chips.map((c) => (
+                  <span key={c} className="mono" style={{
+                    fontSize: 9, letterSpacing: '0.14em', fontWeight: 700, color: COLORS.muted,
+                    border: `1px solid ${COLORS.line}`, borderRadius: 999, padding: '4px 11px',
+                  }}>{c}</span>
+                ))}
+              </div>
+
+              <div style={{ position: 'relative', marginTop: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
+                <span className="gplay mono" style={{
+                  background: t.accent, color: '#ffffff', padding: '13px 26px', borderRadius: 10,
+                  fontWeight: 800, letterSpacing: '0.18em', fontSize: 10.5,
+                  whiteSpace: 'nowrap', flex: 'none', boxShadow: `0 10px 28px ${t.accent}45`,
+                }}>PLAY NOW →</span>
                 <span className="mono" style={{
-                  fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase',
-                  color: t.accent,
-                }}>open →</span>
+                  fontSize: 9.5, letterSpacing: '0.16em', color: COLORS.muted, fontWeight: 700,
+                }}>{t.href}</span>
               </div>
             </a>
           ))}
+        </div>
 
-          {/* Placeholder slot for upcoming modules — keeps the grid feeling alive
-              instead of looking like a 1-tile dead-end. */}
-          <div style={{
-            display: 'flex', flexDirection: 'column', justifyContent: 'center',
-            padding: 18, borderRadius: 14,
-            border: `1px dashed ${COLORS.line}`,
-            color: COLORS.muted, opacity: 0.55,
-          }}>
-            <div className="mono" style={{
-              fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase',
-            }}>more · soon</div>
-            <div style={{ fontSize: 13, marginTop: 6 }}>
-              Mini-games, leaderboards, arcade — placeholder per design brief.
-            </div>
-          </div>
+        {/* Slim "more soon" strip — keeps the hub feeling alive without a
+            hollow placeholder tile. */}
+        <div className="mono" style={{
+          marginTop: 18, display: 'flex', alignItems: 'center', gap: 14,
+          padding: '18px 24px', border: `1px dashed ${COLORS.line}`, borderRadius: 14,
+          color: COLORS.muted,
+        }}>
+          <span style={{ fontSize: 16 }}>✦</span>
+          <span style={{ fontSize: 10, letterSpacing: '0.2em', fontWeight: 800 }}>MORE · SOON</span>
+          <span style={{ fontSize: 11.5, color: COLORS.muted, letterSpacing: 0 }}>Mini-games, leaderboards, arcade</span>
         </div>
       </div>
     </Panel>

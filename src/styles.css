@@ -103,3 +103,33 @@ body {
 
 button { font-family: inherit; }
 input, textarea { font-family: inherit; }
+
+/* ── Toolbox & Game redesign — parent-hover child motion + light ──── */
+/* Spring-bounce micro-animations that can't be expressed with inline
+   style (they react to the *card's* :hover, not the element's own). */
+.tcard .wm    { transition: transform .45s cubic-bezier(.2,.8,.2,1), opacity .45s; }
+.tcard:hover .wm    { transform: scale(1.14) rotate(-8deg) translateX(-6px); }
+.tcard .tile  { transition: transform .35s cubic-bezier(.34,1.56,.64,1); }
+.tcard:hover .tile  { transform: scale(1.1) rotate(-6deg); }
+.tcard .arrow { display: inline-block; transition: transform .25s cubic-bezier(.2,.8,.2,1); }
+.tcard:hover .arrow { transform: translateX(7px); }
+
+.gcard .gwm    { transition: transform .55s cubic-bezier(.2,.8,.2,1); }
+.gcard:hover .gwm    { transform: scale(1.1) rotate(6deg) translateY(-8px); }
+.gcard .gglyph { transition: transform .4s cubic-bezier(.34,1.56,.64,1); }
+.gcard:hover .gglyph { transform: scale(1.25) rotate(-10deg); }
+.gcard .gtitle { transition: transform .35s cubic-bezier(.2,.8,.2,1); }
+.gcard:hover .gtitle { transform: translateX(6px); }
+.gcard .gplay  { transition: transform .18s ease, box-shadow .18s ease; }
+.gcard:hover .gplay  { transform: translateY(-2px); }
+
+/* Diagonal sheen that sweeps across a card on hover. */
+.lit { position: relative; }
+.lit .sheen {
+  position: absolute; top: 0; left: -130%; width: 70%; height: 100%;
+  pointer-events: none; z-index: 3; transform: skewX(-18deg);
+  background: linear-gradient(105deg, transparent 0%, rgba(255,255,255,.13) 45%,
+    rgba(255,255,255,.22) 50%, rgba(255,255,255,.13) 55%, transparent 100%);
+  transition: left .6s cubic-bezier(.22,.61,.36,1);
+}
+.lit:hover .sheen { left: 145%; }
