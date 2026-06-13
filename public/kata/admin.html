@@ -345,11 +345,13 @@ async function renderServers() {
       <div style="font-size:30px;font-weight:800;color:${color};margin-top:10px">${value}</div>
     </div>`;
 
-  // Sub-tile used by the mobile server card (COST / MSGS / EVENTS).
+  // Sub-stat used by the mobile server card (COST / MSGS / EVENTS) — flat
+  // column, no inner box, so each card is a single frame instead of boxes
+  // nested in boxes.
   const subTile = (label, value, color) => `
-    <div style="flex:1;background:#0e0b0a;border:1px solid #1f1a18;border-radius:9px;padding:9px 0;text-align:center">
+    <div style="flex:1;text-align:center">
       <div class="micro-label" style="font-size:7.5px;letter-spacing:.16em">${label}</div>
-      <div style="font-size:13px;font-weight:800;color:${color};margin-top:3px">${value}</div>
+      <div style="font-size:14px;font-weight:800;color:${color};margin-top:4px">${value}</div>
     </div>`;
 
   const rowsHtml = data.servers.map((s) => IS_MOBILE ? `
@@ -364,11 +366,11 @@ async function renderServers() {
           <div style="font-size:9.5px;color:#57504b;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(s.guildId)} · joined ${escapeHtml(fmtTime(s.joinedAt))}</div>
         </div>
       </div>
-      <div class="flex items-stretch" style="gap:8px;margin-top:13px">
+      <div class="flex items-center" style="gap:6px;margin-top:14px;padding-top:13px;border-top:1px solid #221c1a">
         ${subTile('COST', fmtUSD2(s.cost30d), '#D4A858')}
         ${subTile('MSGS', fmtNum(s.msgs30d), '#b9b0a8')}
         ${subTile('EVENTS', fmtNum(s.events30d), '#b9b0a8')}
-        <a href="overview.html?guild=${encodeURIComponent(s.guildId)}" class="btn-manage mono" style="flex:none;padding:0 15px;display:flex;align-items:center;margin:0">→</a>
+        <a href="overview.html?guild=${encodeURIComponent(s.guildId)}" class="mono" style="flex:none;color:var(--accent);font-size:18px;font-weight:800;text-decoration:none;padding:0 8px">→</a>
       </div>
     </div>
   ` : `
