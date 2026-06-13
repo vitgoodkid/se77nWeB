@@ -107,6 +107,60 @@
   .toast.warn { background: #201210; border-color: #5a342c; color: #E04545; }
 
   .guild-chip { display: inline-flex; align-items: center; gap: 7px; border: 1px solid #2c2522; border-radius: 99px; padding: 4px 11px; min-width: 0; }
+
+  /* ===================== MOBILE (≤768px) =====================
+     The .hdr-logo class on the header logo opts this page OUT of
+     _shell.js's generic drawer chrome — we render our own phone layout:
+     sidebar → horizontal tab-chip bar, single-column content. */
+  @media (max-width: 768px) {
+    header { padding-left: 14px !important; padding-right: 14px !important; }
+    .adm-sub, .adm-bc { display: none !important; }
+    #kata-header-actions { gap: 6px !important; }
+    #kata-header-actions > * { transform: scale(0.9); transform-origin: right center; }
+    #kata-user-name { display: none !important; }
+    #kata-theme-btn button > span:nth-child(2) { display: none !important; }
+
+    /* sidebar → sticky horizontal tab-chip rail under the header */
+    aside {
+      top: 58px !important; left: 0 !important; right: 0 !important; bottom: auto !important;
+      width: auto !important; height: auto !important;
+      border-right: none !important; border-bottom: 1px solid #1d1817 !important;
+      overflow-x: auto !important; overflow-y: hidden !important; -webkit-overflow-scrolling: touch;
+    }
+    aside::-webkit-scrollbar { height: 0; }
+    aside nav { flex-direction: row !important; padding: 12px 14px 11px !important; gap: 8px !important; min-height: 0 !important; }
+    .navitem { flex: 0 0 auto; justify-content: center; white-space: nowrap;
+      border-left: none !important; border: 1px solid #2c2522 !important; border-radius: 999px !important;
+      padding: 10px 16px !important; font-size: 10px !important; }
+    .navitem.on { background: color-mix(in srgb, var(--accent) 14%, transparent) !important;
+      border-color: color-mix(in srgb, var(--accent) 45%, transparent) !important; color: var(--accent) !important; transform: none !important; }
+    .navitem:hover { transform: none !important; }
+    .navitem .navdot { display: none !important; }
+    aside > div { display: none !important; }   /* MY SERVERS footer */
+
+    /* main: drop sidebar offset, clear fixed header + tab rail */
+    main { padding-left: 0 !important; padding-top: 116px !important; }
+    main > div { padding: 16px 16px 96px !important; max-width: 100% !important; }
+    main > div > div:first-child { margin-bottom: 18px !important; }
+    main h1.mono { font-size: 27px !important; margin: 8px 0 6px !important; }
+    #page-counts { font-size: 11px !important; }
+
+    /* collapse multi-column grids; keep the 3 stat tiles compact 3-up */
+    main .grid { grid-template-columns: 1fr !important; gap: 12px !important; }
+    main .grid.grid-cols-3 { grid-template-columns: 1fr 1fr 1fr !important; gap: 9px !important; }
+    main .grid.grid-cols-3 .card { padding: 13px 12px !important; }
+    main .grid.grid-cols-3 .card > div:last-child { font-size: 22px !important; margin-top: 6px !important; }
+    main .grid.grid-cols-3 .stat-label { font-size: 8px !important; letter-spacing: .14em !important; }
+
+    /* logs: let the header line wrap, push guild chip to its own line */
+    .card-log > .flex { flex-wrap: wrap; row-gap: 8px; }
+    .card-log .guild-chip { order: 9; }
+
+    /* settings: action buttons stretch full-width */
+    #settings-save, #settings-reload { flex: 1; padding: 14px 0 !important; text-align: center; }
+
+    .btn-accent:hover, .btn-ghost:hover, .card-row:hover, .card-log:hover, .card-lift:hover { transform: none !important; }
+  }
 </style>
 </head>
 <body class="bg-bg text-ink min-h-screen overflow-x-hidden">
@@ -115,11 +169,11 @@
 
 <header class="fixed top-0 inset-x-0 z-50 flex items-center justify-between px-6 backdrop-blur-md" style="height:58px;background:rgba(13,10,8,0.82);border-bottom:1px solid #1d1817">
   <div class="flex items-center" style="gap:22px">
-    <a href="/" class="flex flex-col items-start leading-none" title="Về se77n.com" style="gap:2px">
+    <a href="/" class="hdr-logo flex flex-col items-start leading-none" title="Về se77n.com" style="gap:2px">
       <div class="mono font-extrabold" style="font-size:17px;letter-spacing:-0.02em;color:#f3ede6">se<span class="glow77" style="color:var(--accent);transition:color .6s">77</span>n <span style="color:#57504b;font-weight:400">/</span> <span style="color:#b9b0a8">kata</span></div>
-      <div class="mono" style="font-size:8.5px;letter-spacing:.26em;color:#57504b">EXPERIMENT <span style="color:var(--accent);transition:color .6s">007</span> · ADMIN</div>
+      <div class="adm-sub mono" style="font-size:8.5px;letter-spacing:.26em;color:#57504b">EXPERIMENT <span style="color:var(--accent);transition:color .6s">007</span> · ADMIN</div>
     </a>
-    <div class="mono" style="font-size:10px;letter-spacing:.2em;color:#57504b">ADMIN <span style="color:var(--accent);transition:color .6s">·</span> <span id="bc-tab" style="color:#b9b0a8">SERVERS</span></div>
+    <div class="adm-bc mono" style="font-size:10px;letter-spacing:.2em;color:#57504b">ADMIN <span style="color:var(--accent);transition:color .6s">·</span> <span id="bc-tab" style="color:#b9b0a8">SERVERS</span></div>
   </div>
   <div id="kata-header-actions" class="flex items-center gap-2.5"></div>
 </header>
@@ -161,6 +215,7 @@
 const TABS = ['servers','logs','cost','settings'];
 const params = new URLSearchParams(location.search);
 let currentTab = TABS.includes(params.get('tab')) ? params.get('tab') : 'servers';
+const IS_MOBILE = window.matchMedia('(max-width: 768px)').matches;
 
 const PAGE_META = {
   servers:  { title: 'All Servers',     tag: 'SERVERS' },
@@ -290,7 +345,33 @@ async function renderServers() {
       <div style="font-size:30px;font-weight:800;color:${color};margin-top:10px">${value}</div>
     </div>`;
 
-  const rowsHtml = data.servers.map((s) => `
+  // Sub-tile used by the mobile server card (COST / MSGS / EVENTS).
+  const subTile = (label, value, color) => `
+    <div style="flex:1;background:#0e0b0a;border:1px solid #1f1a18;border-radius:9px;padding:9px 0;text-align:center">
+      <div class="micro-label" style="font-size:7.5px;letter-spacing:.16em">${label}</div>
+      <div style="font-size:13px;font-weight:800;color:${color};margin-top:3px">${value}</div>
+    </div>`;
+
+  const rowsHtml = data.servers.map((s) => IS_MOBILE ? `
+    <div class="card" style="padding:15px 16px">
+      <div class="flex items-center" style="gap:13px">
+        ${avatarTile(s.iconUrl, s.name, s.guildId, 42, 11)}
+        <div style="min-width:0;flex:1">
+          <div class="flex items-center" style="gap:8px">
+            <span style="font-size:13.5px;font-weight:700;color:#f3ede6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(s.name)}</span>
+            ${s.isActive ? '' : '<span class="tag-pill" style="color:#E04545;border-color:rgba(224,69,69,.4);flex:none">LEFT</span>'}
+          </div>
+          <div style="font-size:9.5px;color:#57504b;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(s.guildId)} · joined ${escapeHtml(fmtTime(s.joinedAt))}</div>
+        </div>
+      </div>
+      <div class="flex items-stretch" style="gap:8px;margin-top:13px">
+        ${subTile('COST', fmtUSD2(s.cost30d), '#D4A858')}
+        ${subTile('MSGS', fmtNum(s.msgs30d), '#b9b0a8')}
+        ${subTile('EVENTS', fmtNum(s.events30d), '#b9b0a8')}
+        <a href="overview.html?guild=${encodeURIComponent(s.guildId)}" class="btn-manage mono" style="flex:none;padding:0 15px;display:flex;align-items:center;margin:0">→</a>
+      </div>
+    </div>
+  ` : `
     <div class="card card-row flex items-center" style="gap:16px;padding:16px 20px">
       ${avatarTile(s.iconUrl, s.name, s.guildId, 44, 11)}
       <div style="min-width:0">
