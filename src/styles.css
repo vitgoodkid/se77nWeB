@@ -133,3 +133,16 @@ input, textarea { font-family: inherit; }
   transition: left .6s cubic-bezier(.22,.61,.36,1);
 }
 .lit:hover .sheen { left: 145%; }
+
+/* Mobile variants: no hover, so the sheen auto-sweeps and cards press on tap. */
+@keyframes sweep { 0% { left: -130%; } 55%, 100% { left: 145%; } }
+.msheen {
+  position: absolute; top: 0; left: -130%; width: 60%; height: 100%;
+  pointer-events: none; z-index: 3; transform: skewX(-18deg);
+  background: linear-gradient(105deg, transparent 0%, rgba(255,255,255,.12) 48%,
+    rgba(255,255,255,.2) 50%, rgba(255,255,255,.12) 52%, transparent 100%);
+  animation: sweep 7s ease-in-out infinite;
+}
+.mtap   { transition: transform .14s ease, box-shadow .2s ease; }
+.mtap:active   { transform: scale(.975); }
+.tabtap:active { transform: scale(.94); }

@@ -769,11 +769,12 @@ export function Toolbox() {
   const [err, setErr] = useState(false);
   const [activeTool, setActiveTool] = useState(null);
 
-  // Card grid is 3-up on desktop (per design), collapsing to 2 / 1 so the
-  // shared component stays usable inside the mobile shell.
-  const tbNarrow = useMediaQuery('(max-width: 560px)');
+  // Phone shell (≤768) gets the dedicated mobile layout: full-width segmented
+  // control + single-column horizontal tool rows. On desktop the cards are
+  // 3-up, collapsing to 2 on a narrow desktop window.
+  const isMobile = useMediaQuery('(max-width: 768px)');
   const tbMid = useMediaQuery('(max-width: 900px)');
-  const toolCols = tbNarrow ? 1 : tbMid ? 2 : 3;
+  const toolCols = tbMid ? 2 : 3;
 
   // Sub-route #/tools/thao opens the Thảo letter directly.
   useEffect(() => {
@@ -821,64 +822,92 @@ export function Toolbox() {
     ? `${PUBLIC_TOOLS.length} public utilities — no sign-in`
     : (unlocked ? `${PRIVATE_TOOLS.length} private tools — owner only` : 'Locked zone — PIN required');
 
-  return (
-    <Panel padding={0} style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%' }}>
-      <div style={{
-        padding: '22px 24px', borderBottom: '1px solid ' + COLORS.line,
-        display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 24,
-      }}>
-        <div>
-          <div className="mono" style={{
-            fontSize: 10, letterSpacing: '0.26em', fontWeight: 800,
-            color: tbAccent, transition: 'color 250ms',
-          }}>02 · UTILITIES</div>
-          <h1 className="mono" style={{
-            fontSize: 34, margin: '10px 0 7px', color: COLORS.text,
-            fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1,
-          }}>Toolbox<span style={{ color: tbAccent, transition: 'color 250ms' }}>.</span></h1>
-          <p style={{ margin: 0, fontSize: 12.5, color: COLORS.muted }}>{subtitle}</p>
-        </div>
-        <div style={{
-          display: 'flex', gap: 6, flex: 'none', padding: 5,
-          background: COLORS.bg, border: '1px solid ' + COLORS.line, borderRadius: 12,
-        }}>
-          {['public', 'private'].map((k) => {
-            const active = tab === k;
-            const c = k === 'public' ? COLORS.green : COLORS.red;
-            const list = k === 'public' ? PUBLIC_TOOLS : PRIVATE_TOOLS;
-            return (
-              <button
-                key={k}
-                onClick={() => { setTab(k); setActiveTool(null); }}
-                className="mono"
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 8,
-                  padding: '10px 18px', borderRadius: 9,
-                  background: active ? c + '1f' : 'transparent',
-                  border: `1px solid ${active ? c + '73' : 'transparent'}`,
-                  color: active ? c : COLORS.muted,
-                  fontSize: 10.5, letterSpacing: '0.16em',
-                  textTransform: 'uppercase', fontWeight: 800, cursor: 'pointer',
-                  transition: 'all 180ms',
-                }}
-              >
-                {k}
-                {k === 'public' && <span style={{ fontSize: 9, color: active ? c : COLORS.muted }}>0{PUBLIC_TOOLS.length}</span>}
-                {k === 'private' && !unlocked && <span style={{ fontSize: 11 }}>🔒</span>}
-              </button>
-            );
-          })}
-        </div>
-      </div>
+  // Segmented PUBLIC / PRIVATE — full-width on mobile, compact pill on desktop.
+  const segmented = (
+    <div style={{
+      display: 'flex', gap: 6, padding: 5,
+      background: COLORS.bg, border: '1px solid ' + COLORS.line,
+      borderRadius: isMobile ? 13 : 12, flex: isMobile ? undefined : 'none',
+    }}>
+      {['public', 'private'].map((k) => {
+        const active = tab === k;
+        const c = k === 'public' ? COLORS.green : COLORS.red;
+        return (
+          <button
+            key={k}
+            onClick={() => { setTab(k); setActiveTool(null); }}
+            className="mono tabtap"
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              gap: isMobile ? 7 : 8, flex: isMobile ? 1 : undefined,
+              padding: isMobile ? '12px 0' : '10px 18px', borderRadius: 9,
+              background: active ? c + '1f' : 'transparent',
+              border: `1px solid ${active ? c + '73' : 'transparent'}`,
+              color: active ? c : COLORS.muted,
+              fontSize: isMobile ? 11 : 10.5, letterSpacing: '0.16em',
+              textTransform: 'uppercase', fontWeight: 800, cursor: 'pointer',
+              transition: 'all 180ms',
+            }}
+          >
+            {k}
+            {k === 'public' && <span style={{ fontSize: 9, color: active ? c : COLORS.muted }}>0{PUBLIC_TOOLS.length}</span>}
+            {k === 'private' && !unlocked && <span style={{ fontSize: 11 }}>🔒</span>}
+          </button>
+        );
+      })}
+    </div>
+  );
 
-      <div style={{ flex: 1, padding: 24, overflow: 'auto' }}>
+  const header = (
+    <>
+      <div className="mono" style={{
+        fontSize: isMobile ? 9.5 : 10, letterSpacing: '0.26em', fontWeight: 800,
+        color: tbAccent, transition: 'color 250ms',
+      }}>02 · UTILITIES</div>
+      <h1 className="mono" style={{
+        fontSize: isMobile ? 32 : 34, margin: isMobile ? '8px 0 6px' : '10px 0 7px',
+        color: COLORS.text, fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1,
+      }}>Toolbox<span style={{ color: tbAccent, transition: 'color 250ms' }}>.</span></h1>
+      <p style={{ margin: 0, fontSize: isMobile ? 11.5 : 12.5, color: COLORS.muted, lineHeight: 1.5 }}>{subtitle}</p>
+    </>
+  );
+
+  return (
+    <Panel padding={0} style={{
+      display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%',
+      ...(isMobile ? { background: 'transparent', border: 'none', borderRadius: 0 } : {}),
+    }}>
+      {isMobile ? (
+        <div style={{ padding: '6px 2px 0' }}>
+          {header}
+          <div style={{ marginTop: 16 }}>{segmented}</div>
+        </div>
+      ) : (
+        <div style={{
+          padding: '22px 24px', borderBottom: '1px solid ' + COLORS.line,
+          display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 24,
+        }}>
+          <div>{header}</div>
+          {segmented}
+        </div>
+      )}
+
+      <div style={{ flex: 1, padding: isMobile ? '16px 2px 4px' : 24, overflow: 'auto' }}>
         {tab === 'private' && !unlocked ? (
-          <div style={{ display: 'grid', placeItems: 'center', minHeight: 360, animation: 'fadeUp 250ms ease-out' }}>
-            <div style={{
-              padding: 36, textAlign: 'center', border: '1px solid ' + COLORS.line,
-              borderRadius: 16, background: COLORS.bg, maxWidth: 360,
+          <div style={{
+            display: isMobile ? 'block' : 'grid', placeItems: 'center',
+            minHeight: isMobile ? 0 : 360, animation: 'fadeUp 250ms ease-out',
+          }}>
+            <div className={isMobile ? 'mtap' : ''} style={{
+              position: 'relative', overflow: 'hidden',
+              padding: isMobile ? '34px 26px' : 36, textAlign: 'center',
+              border: '1px solid ' + COLORS.line, borderRadius: isMobile ? 18 : 16,
+              background: isMobile ? '#131010' : COLORS.bg,
+              width: isMobile ? '100%' : undefined, maxWidth: isMobile ? undefined : 360,
               animation: err ? 'shake 350ms ease' : 'none',
+              boxShadow: isMobile ? `0 18px 44px rgba(0,0,0,.45), 0 0 40px ${COLORS.red}14` : 'none',
             }}>
+              {isMobile && <span className="msheen" />}
               <div style={{
                 width: 56, height: 56, margin: '0 auto 16px', borderRadius: 999,
                 display: 'grid', placeItems: 'center',
@@ -916,6 +945,46 @@ export function Toolbox() {
           </div>
         ) : activeTool ? (
           <ToolDetail tool={activeTool} accent={activeTool.accent || accent} onBack={() => setActiveTool(null)} />
+        ) : isMobile ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, animation: 'fadeUp 200ms ease-out' }}>
+            {tools.map((tool) => {
+              const a = tool.accent || accent;
+              return (
+                <button
+                  key={tool.id}
+                  onClick={() => setActiveTool(tool)}
+                  className="mtap"
+                  style={{
+                    position: 'relative', overflow: 'hidden', textAlign: 'left',
+                    display: 'flex', alignItems: 'center', gap: 15, padding: '16px 18px',
+                    border: '1px solid ' + COLORS.line, borderRadius: 15,
+                    background: '#131010', cursor: 'pointer', color: COLORS.text,
+                  }}
+                >
+                  <span className="msheen" />
+                  <div className="mono" style={{
+                    width: 50, height: 50, flex: 'none', display: 'grid', placeItems: 'center',
+                    borderRadius: 13, border: `1px solid ${a}55`, background: a + '12',
+                    color: a, fontSize: 20, fontWeight: 800,
+                  }}>{tool.icon}</div>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span className="mono" style={{
+                        fontSize: 13, fontWeight: 800, letterSpacing: '0.03em', textTransform: 'uppercase',
+                        color: COLORS.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                      }}>{t(tool.nameKey)}</span>
+                      <span className="mono" style={{
+                        fontSize: 7.5, letterSpacing: '0.16em', fontWeight: 800, color: a,
+                        border: `1px solid ${a}55`, borderRadius: 999, padding: '3px 8px', flex: 'none',
+                      }}>{tool.tag}</span>
+                    </div>
+                    <div style={{ fontSize: 11, color: COLORS.muted, marginTop: 5, lineHeight: 1.5 }}>{t(tool.descKey)}</div>
+                  </div>
+                  <span className="mono" style={{ flex: 'none', fontSize: 16, color: a, fontWeight: 800 }}>›</span>
+                </button>
+              );
+            })}
+          </div>
         ) : (
           <div style={{
             display: 'grid', gridTemplateColumns: `repeat(${toolCols}, minmax(0, 1fr))`,
@@ -3926,8 +3995,9 @@ function readGameSubRoute() {
 
 export function GamePanel() {
   const [sub, setSub] = useState(readGameSubRoute);
-  // Two big venue cards side-by-side on desktop; stack on narrow/mobile.
-  const gameStack = useMediaQuery('(max-width: 720px)');
+  // Two big venue cards side-by-side on desktop; stack into the dedicated
+  // mobile layout (full-width PLAY NOW, auto-sheen, tap press) on phones.
+  const isMobile = useMediaQuery('(max-width: 768px)');
 
   useEffect(() => {
     function onHash() { setSub(readGameSubRoute()); }
@@ -3948,21 +4018,27 @@ export function GamePanel() {
   }, [sub]);
 
   return (
-    <Panel padding={0} style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%' }}>
-      <div style={{ padding: '22px 24px', borderBottom: '1px solid ' + COLORS.line }}>
-        <div className="mono" style={{ fontSize: 10, letterSpacing: '0.26em', fontWeight: 800, color: COLORS.red }}>04 · GAME HUB</div>
+    <Panel padding={0} style={{
+      display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%',
+      ...(isMobile ? { background: 'transparent', border: 'none', borderRadius: 0 } : {}),
+    }}>
+      <div style={{
+        padding: isMobile ? '6px 2px 0' : '22px 24px',
+        borderBottom: isMobile ? 'none' : '1px solid ' + COLORS.line,
+      }}>
+        <div className="mono" style={{ fontSize: isMobile ? 9.5 : 10, letterSpacing: '0.26em', fontWeight: 800, color: COLORS.red }}>04 · GAME HUB</div>
         <h1 className="mono" style={{
-          fontSize: 34, margin: '10px 0 7px', color: COLORS.text,
+          fontSize: isMobile ? 32 : 34, margin: isMobile ? '8px 0 6px' : '10px 0 7px', color: COLORS.text,
           fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1,
         }}>Pick a venue<span style={{ color: COLORS.red }}>.</span></h1>
-        <p style={{ margin: 0, fontSize: 12.5, color: COLORS.muted }}>
+        <p style={{ margin: 0, fontSize: isMobile ? 11.5 : 12.5, color: COLORS.muted }}>
           {GAME_TILES.length} venues live · web + Discord
         </p>
       </div>
 
-      <div style={{ flex: 1, padding: 24, overflow: 'auto' }}>
+      <div style={{ flex: 1, padding: isMobile ? '16px 2px 4px' : 24, overflow: 'auto' }}>
         <div style={{
-          display: 'grid', gridTemplateColumns: gameStack ? '1fr' : '1fr 1fr', gap: 18,
+          display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 14 : 18,
           animation: 'fadeUp 200ms ease-out',
         }}>
           {GAME_TILES.map((t) => (
@@ -3975,34 +4051,36 @@ export function GamePanel() {
                   window.location.href = t.href;
                 }
               }}
-              className="gcard lit"
+              className={isMobile ? 'gcard mtap' : 'gcard lit'}
               style={{
                 position: 'relative', overflow: 'hidden',
-                display: 'flex', flexDirection: 'column', gap: 14,
-                padding: '30px 30px 26px', minHeight: 280, borderRadius: 18,
+                display: 'flex', flexDirection: 'column', gap: isMobile ? 13 : 14,
+                padding: isMobile ? '24px 22px 22px' : '30px 30px 26px',
+                minHeight: isMobile ? 'auto' : 280, borderRadius: 18,
                 border: `1px solid ${COLORS.line}`,
                 background: 'linear-gradient(180deg, #141010, #100d0c)',
                 color: COLORS.text, textDecoration: 'none',
                 transition: 'border-color 200ms ease, transform 200ms ease, box-shadow 200ms ease',
               }}
-              onMouseEnter={(e) => {
+              onMouseEnter={isMobile ? undefined : (e) => {
                 e.currentTarget.style.transform = 'translateY(-4px)';
                 e.currentTarget.style.borderColor = t.accent + '70';
                 e.currentTarget.style.boxShadow = `0 24px 60px rgba(0,0,0,.5), 0 0 50px ${t.accent}26`;
               }}
-              onMouseLeave={(e) => {
+              onMouseLeave={isMobile ? undefined : (e) => {
                 e.currentTarget.style.transform = 'translateY(0)';
                 e.currentTarget.style.borderColor = COLORS.line;
                 e.currentTarget.style.boxShadow = 'none';
               }}
             >
-              <span className="sheen" />
+              <span className={isMobile ? 'msheen' : 'sheen'} />
               <div style={{
                 position: 'absolute', inset: 0, pointerEvents: 'none',
                 background: `radial-gradient(60% 70% at 85% 100%, ${t.accent}14 0%, transparent 70%)`,
               }} />
               <div className="gwm mono" style={{
-                position: 'absolute', bottom: -52, right: -22, fontSize: 190, lineHeight: 1,
+                position: 'absolute', bottom: isMobile ? -42 : -52, right: isMobile ? -16 : -22,
+                fontSize: isMobile ? 150 : 190, lineHeight: 1,
                 color: t.accent + '16', pointerEvents: 'none', fontWeight: 800,
               }}>{t.glyph}</div>
 
@@ -4017,7 +4095,7 @@ export function GamePanel() {
 
               <div style={{ position: 'relative' }}>
                 <div className="gtitle mono" style={{
-                  fontSize: 30, fontWeight: 800, letterSpacing: '-0.02em', color: COLORS.text,
+                  fontSize: isMobile ? 27 : 30, fontWeight: 800, letterSpacing: '-0.02em', color: COLORS.text,
                 }}>{t.label}</div>
                 <div style={{ fontSize: 12.5, color: COLORS.muted, marginTop: 8, lineHeight: 1.65, maxWidth: 380 }}>{t.desc}</div>
               </div>
@@ -4031,16 +4109,25 @@ export function GamePanel() {
                 ))}
               </div>
 
-              <div style={{ position: 'relative', marginTop: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
-                <span className="gplay mono" style={{
-                  background: t.accent, color: '#ffffff', padding: '13px 26px', borderRadius: 10,
-                  fontWeight: 800, letterSpacing: '0.18em', fontSize: 10.5,
-                  whiteSpace: 'nowrap', flex: 'none', boxShadow: `0 10px 28px ${t.accent}45`,
-                }}>PLAY NOW →</span>
+              {isMobile ? (
                 <span className="mono" style={{
-                  fontSize: 9.5, letterSpacing: '0.16em', color: COLORS.muted, fontWeight: 700,
-                }}>{t.href}</span>
-              </div>
+                  position: 'relative', marginTop: 4, width: '100%', textAlign: 'center',
+                  background: t.accent, color: '#ffffff', padding: '14px 0', borderRadius: 11,
+                  fontWeight: 800, letterSpacing: '0.18em', fontSize: 11,
+                  boxShadow: `0 10px 26px ${t.accent}45`,
+                }}>PLAY NOW →</span>
+              ) : (
+                <div style={{ position: 'relative', marginTop: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <span className="gplay mono" style={{
+                    background: t.accent, color: '#ffffff', padding: '13px 26px', borderRadius: 10,
+                    fontWeight: 800, letterSpacing: '0.18em', fontSize: 10.5,
+                    whiteSpace: 'nowrap', flex: 'none', boxShadow: `0 10px 28px ${t.accent}45`,
+                  }}>PLAY NOW →</span>
+                  <span className="mono" style={{
+                    fontSize: 9.5, letterSpacing: '0.16em', color: COLORS.muted, fontWeight: 700,
+                  }}>{t.href}</span>
+                </div>
+              )}
             </a>
           ))}
         </div>
@@ -4048,13 +4135,22 @@ export function GamePanel() {
         {/* Slim "more soon" strip — keeps the hub feeling alive without a
             hollow placeholder tile. */}
         <div className="mono" style={{
-          marginTop: 18, display: 'flex', alignItems: 'center', gap: 14,
-          padding: '18px 24px', border: `1px dashed ${COLORS.line}`, borderRadius: 14,
-          color: COLORS.muted,
+          marginTop: isMobile ? 14 : 18, display: 'flex', alignItems: 'center', gap: isMobile ? 12 : 14,
+          padding: isMobile ? '16px 20px' : '18px 24px', border: `1px dashed ${COLORS.line}`,
+          borderRadius: 14, color: COLORS.muted,
         }}>
-          <span style={{ fontSize: 16 }}>✦</span>
-          <span style={{ fontSize: 10, letterSpacing: '0.2em', fontWeight: 800 }}>MORE · SOON</span>
-          <span style={{ fontSize: 11.5, color: COLORS.muted, letterSpacing: 0 }}>Mini-games, leaderboards, arcade</span>
+          <span style={{ fontSize: isMobile ? 15 : 16 }}>✦</span>
+          {isMobile ? (
+            <div>
+              <div style={{ fontSize: 9.5, letterSpacing: '0.18em', fontWeight: 800 }}>MORE · SOON</div>
+              <div style={{ fontSize: 10.5, color: COLORS.muted, marginTop: 3 }}>Mini-games, leaderboards, arcade</div>
+            </div>
+          ) : (
+            <>
+              <span style={{ fontSize: 10, letterSpacing: '0.2em', fontWeight: 800 }}>MORE · SOON</span>
+              <span style={{ fontSize: 11.5, color: COLORS.muted, letterSpacing: 0 }}>Mini-games, leaderboards, arcade</span>
+            </>
+          )}
         </div>
       </div>
     </Panel>
