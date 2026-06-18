@@ -262,47 +262,48 @@ function pairChatItems(items){
   }
   return blocks;
 }
-// One box per exchange: user message on top, bot reply below behind a gold
-// left rail + dashed divider. Orphans (reply older than the page window, or
-// message the bot never answered) render their half alone.
+// v2 conversation layout: the member message is a left-aligned speech bubble,
+// the bot reply a right-aligned gold bubble carrying KataS's full response —
+// plus the gold "K" bot avatar. Orphans (reply older than the page window, or
+// a message the bot never answered) render their half alone.
 function chatBlockHtml(b){
   const u = b.user, bot = b.bot;
   let userPart = '';
   if (u){
     const name = authorName(u);
     userPart = `
-    <header class="flex items-center justify-between gap-3 mb-3 flex-wrap">
-      <div class="flex items-center gap-2.5 min-w-0">
-        ${avatarTile(u, name)}
-        <span class="text-[14px] text-ink font-medium">${escapeHtml(name)}</span>
-        <span class="mono text-[11px] px-2 py-0.5 rounded-full" style="background:#E0454518;border:1px solid #E0454540;color:#E04545">user</span>
-        <span class="mono text-[12px] text-mute">#${u.channelId.slice(-6)}</span>
+    <div class="log-side" style="display:flex;align-items:flex-end;gap:11px;max-width:76%">
+      ${avatarTile(u, name)}
+      <div style="min-width:0">
+        <div class="flex items-center flex-wrap" style="gap:9px;margin:0 0 6px 4px">
+          <span class="text-[13px] text-ink font-medium whitespace-nowrap">${escapeHtml(name)}</span>
+          <span class="mono text-[10px] px-2 py-0.5 rounded-full flex-shrink-0" style="background:#E0454518;border:1px solid #E0454540;color:#E04545">user</span>
+          <span class="mono text-[11px] text-mute">#${u.channelId.slice(-6)}</span>
+          <span class="mono text-[11px] text-mute2" title="${escapeHtml(new Date(u.createdAt).toLocaleString('vi-VN', { hour12: false }))}">· ${relTime(u.createdAt)}</span>
+        </div>
+        <div class="text-[14px] leading-[1.55] whitespace-pre-wrap break-words" style="display:inline-block;background:#1c1614;border:1px solid #2c2522;border-radius:4px 16px 16px 16px;padding:13px 17px;color:#ece6df">${chatContentHtml(u)}</div>
       </div>
-      <span class="mono text-[12px] text-mute" title="${escapeHtml(new Date(u.createdAt).toLocaleString('vi-VN', { hour12: false }))}">${relTime(u.createdAt)}</span>
-    </header>
-    <div class="text-[15px] text-ink leading-[1.6] whitespace-pre-wrap break-words">${chatContentHtml(u)}</div>`;
+    </div>`;
   }
   let botPart = '';
   if (bot){
     const botMeta = chatMetaHtml(bot);
     botPart = `
-    <div class="${u ? 'mt-4 pt-4 border-t border-dashed' : ''}" style="${u ? 'border-color:rgba(212,168,88,0.22)' : ''}">
-      <div class="pl-4" style="border-left:2px solid rgba(212,168,88,0.4)">
-        <div class="flex items-center justify-between gap-3 mb-2 flex-wrap">
-          <div class="flex items-center gap-2.5 min-w-0">
-            <span class="w-7 h-7 rounded-full grid place-items-center mono text-[12px] font-bold flex-shrink-0" style="background:#D4A85822;color:#D4A858">K</span>
-            <span class="text-[14px] font-medium" style="color:#D4A858">KataS</span>
-            <span class="mono text-[11px] px-2 py-0.5 rounded-full" style="background:#D4A85818;border:1px solid #D4A85840;color:#D4A858">↳ bot</span>
-            ${u ? '' : `<span class="mono text-[12px] text-mute">#${bot.channelId.slice(-6)}</span>`}
-          </div>
-          <span class="mono text-[12px] text-mute" title="${escapeHtml(new Date(bot.createdAt).toLocaleString('vi-VN', { hour12: false }))}">${relTime(bot.createdAt)}</span>
+    <div class="log-side log-bot" style="display:flex;align-items:flex-end;justify-content:flex-end;gap:11px;max-width:80%;margin:${u ? '12px' : '0'} 0 0 auto">
+      <div style="min-width:0;text-align:right">
+        <div class="flex items-center flex-wrap" style="justify-content:flex-end;gap:9px;margin:0 4px 6px 0">
+          ${u ? '' : `<span class="mono text-[11px] text-mute">#${bot.channelId.slice(-6)}</span>`}
+          <span class="mono text-[10px] px-2 py-0.5 rounded-full flex-shrink-0" style="background:#D4A85818;border:1px solid #D4A85840;color:#D4A858">↳ bot</span>
+          <span class="text-[13px] font-medium" style="color:#D4A858">KataS</span>
+          <span class="mono text-[11px] text-mute2" title="${escapeHtml(new Date(bot.createdAt).toLocaleString('vi-VN', { hour12: false }))}">· ${relTime(bot.createdAt)}</span>
         </div>
-        <div class="text-[15px] text-ink leading-[1.6] whitespace-pre-wrap break-words">${chatContentHtml(bot)}</div>
-        ${botMeta ? `<div class="flex items-center gap-3 mono text-[11px] mt-3 pt-3 border-t border-line/60 flex-wrap text-mute2">${botMeta}</div>` : ''}
+        <div class="text-[14px] leading-[1.55] whitespace-pre-wrap break-words" style="display:inline-block;text-align:left;background:rgba(212,168,88,0.08);border:1px solid rgba(212,168,88,0.28);border-radius:16px 4px 16px 16px;padding:13px 17px;color:#ddd6cf">${chatContentHtml(bot)}</div>
+        ${botMeta ? `<div class="flex items-center flex-wrap mono text-[11px] text-mute2" style="justify-content:flex-end;gap:12px;margin:8px 6px 0 0">${botMeta}</div>` : ''}
       </div>
+      <span class="w-7 h-7 grid place-items-center mono text-[12px] font-bold flex-shrink-0" style="border-radius:9px;background:linear-gradient(135deg,#D4A858,#8a6a2e);color:#1a1408">K</span>
     </div>`;
   }
-  return `<article class="rounded-[14px] border border-line bg-panel p-5">${userPart}${botPart}</article>`;
+  return `<div class="log-thread" style="margin-bottom:14px">${userPart}${botPart}</div>`;
 }
 
 function rowImage(e){

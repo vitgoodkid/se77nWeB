@@ -441,7 +441,10 @@ async function renderLogs() {
     renderLogs();
   }));
 
-  const data = await fetchJson(`/api/kata/admin/logs?type=${encodeURIComponent(type)}`);
+  // Chat: pull assistant rows too (the API hides them unless role=all) so the
+  // bot bubble can carry KataS's real reply, not a synthesized stub.
+  const url = `/api/kata/admin/logs?type=${encodeURIComponent(type)}` + (type === 'chat' ? '&role=all' : '');
+  const data = await fetchJson(url);
   if (!data) return;
   clearAuthWarn();
   elCounts.textContent = `${data.items.length} loaded · realtime feed`;
@@ -453,74 +456,114 @@ async function renderLogs() {
     return;
   }
 
-  const rowsHtml = data.items.map((r) => {
-    const tag = TAG_STYLE[type] || TAG_STYLE.chat;
-    const authorName = r.user?.displayName ?? r.user?.username ?? (r.userId ? r.userId.slice(-6) : 'unknown');
-    const body = r.content ?? r.prompt ?? r.input ?? (r.command ? `/${r.command}` : '');
-    const ts = r.createdAt ? new Date(r.createdAt) : null;
-    const tsTitle = ts ? ts.toLocaleString('vi-VN', { hour12: false }) : '';
-
-    // Guild · channel label sits inline in the member header (text only,
-    // matching the v2 conversation design — no separate guild chip).
-    const guildLabel = escapeHtml((r.guild?.name ?? '?').toUpperCase());
-    const chanLabel = r.channelId ? `#${escapeHtml(r.channelId.slice(-6))}` : '';
-
-    // Bot side. Chat replies aren't persisted (only the user role is stored),
-    // so synthesize an outcome line per log type from the fields we do have.
-    const botReply = logBotReply(type, r);
-    const thumbUrl = (type === 'image' || type === 'video') ? r.outputUrl : null;
-
-    const meta = [];
-    if (r.modelUsed) meta.push(`<span style="color:#8a7f78;font-weight:700">${escapeHtml(r.modelUsed)}</span>`);
-    if (r.tokensIn != null || r.tokensOut != null) meta.push(`<span>in ${r.tokensIn ?? 0} · out ${r.tokensOut ?? 0}</span>`);
-    if (r.durationSec) meta.push(`<span>${r.durationSec}s</span>`);
-    if (r.latencyMs) meta.push(`<span>${r.latencyMs}ms</span>`);
-    if (r.costUSD != null) meta.push(`<span style="color:#D4A858;font-weight:700">${fmtUSD(r.costUSD)}</span>`);
-
-    const thumbHtml = thumbUrl
-      ? `<img src="${escapeHtml(thumbUrl)}" alt="" style="display:block;margin-top:9px;max-width:180px;max-height:120px;border-radius:9px;object-fit:cover" onerror="this.style.display='none'" />`
-      : '';
-
-    return `<div class="log-thread">
-      <!-- member bubble (left) -->
-      <div class="log-side" style="display:flex;align-items:flex-end;gap:11px;max-width:76%">
-        ${avatarTile(r.user?.avatarUrl, authorName, r.userId, 32, 99)}
-        <div style="min-width:0">
-          <div class="flex items-center" style="gap:9px;margin:0 0 6px 4px;flex-wrap:wrap">
-            <span style="font-size:12px;font-weight:700;color:#f3ede6;white-space:nowrap">${escapeHtml(authorName)}</span>
-            <span style="font-size:8px;letter-spacing:.16em;font-weight:800;color:${tag.color};border:1px solid ${tag.border};border-radius:99px;padding:2px 8px;flex:none">${type.toUpperCase()}</span>
-            <span style="font-size:9.5px;color:#57504b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px">${guildLabel}${chanLabel ? ` · ${chanLabel}` : ''}</span>
-            <span style="font-size:9.5px;color:#4a423d" title="${escapeHtml(tsTitle)}">· ${escapeHtml(fmtTime(r.createdAt))}</span>
-          </div>
-          <div style="display:inline-block;background:#1c1614;border:1px solid #2c2522;border-radius:4px 16px 16px 16px;padding:13px 17px;font-size:14px;line-height:1.55;color:#ece6df;word-break:break-word">${escapeHtml(body) || '<span style="color:#57504b">—</span>'}</div>
-        </div>
-      </div>
-
-      <!-- KataS bot bubble (right) -->
-      <div class="log-side log-bot" style="display:flex;align-items:flex-end;justify-content:flex-end;gap:11px;max-width:80%;margin:12px 0 0 auto">
-        <div style="min-width:0;text-align:right">
-          <div class="flex items-center" style="justify-content:flex-end;gap:9px;margin:0 4px 6px 0">
-            <span style="font-size:8px;letter-spacing:.14em;color:#6b6058;font-weight:800;border:1px solid #2c2522;border-radius:99px;padding:2px 8px">↳ BOT</span>
-            <span style="font-size:12px;font-weight:700;color:#D4A858">KataS</span>
-          </div>
-          <div style="display:inline-block;text-align:left;background:rgba(212,168,88,.08);border:1px solid rgba(212,168,88,.28);border-radius:16px 4px 16px 16px;padding:13px 17px;font-size:13.5px;line-height:1.55;color:#ddd6cf;word-break:break-word">${escapeHtml(botReply)}${thumbHtml}</div>
-          ${meta.length > 0 ? `<div class="flex items-center" style="justify-content:flex-end;flex-wrap:wrap;gap:12px;margin:8px 6px 0 0;font-size:10px;color:#57504b">${meta.join('')}</div>` : ''}
-        </div>
-        <span style="width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,#D4A858,#8a6a2e);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#1a1408;flex:none" title="KataS">K</span>
-      </div>
-    </div>`;
-  }).join('');
+  let rowsHtml;
+  if (type === 'chat') {
+    // Real two-sided exchange: user message ↔ KataS's full reply.
+    rowsHtml = pairChatItems(data.items).map((b) => {
+      const left = b.user ? logMemberSide(b.user, 'chat') : '';
+      let right = '';
+      if (b.bot) {
+        const reply = escapeHtml(b.bot.content ?? '') || '<span style="color:#57504b">—</span>';
+        right = logBotSide(reply, logMetaArr(b.bot));
+      }
+      return `<div class="log-thread">${left}${right}</div>`;
+    }).join('');
+  } else {
+    // image / video / command: one event row → member prompt + synthesized
+    // outcome (these collections store a result, not assistant prose).
+    rowsHtml = data.items.map((r) => {
+      const thumbUrl = (type === 'image' || type === 'video') ? r.outputUrl : null;
+      const thumbHtml = thumbUrl
+        ? `<img src="${escapeHtml(thumbUrl)}" alt="" style="display:block;margin-top:9px;max-width:180px;max-height:120px;border-radius:9px;object-fit:cover" onerror="this.style.display='none'" />`
+        : '';
+      const reply = escapeHtml(logBotReply(type, r)) + thumbHtml;
+      return `<div class="log-thread">${logMemberSide(r, type)}${logBotSide(reply, logMetaArr(r))}</div>`;
+    }).join('');
+  }
   listEl.outerHTML = `<div class="flex flex-col" style="gap:26px">${rowsHtml}</div>`;
 }
 
-// The bot's reply text isn't stored for chat (only the user role row), and the
-// media/command collections store an outcome rather than prose — so derive a
-// short, honest reply line per log type from the fields that exist.
+// Pair each assistant row with the user message that triggered it. Chatlogs has
+// no reply-id link, but assistant rows carry the requester's userId — so with
+// items newest-first, the trigger is the nearest OLDER user row with the same
+// userId + channelId (within 30min). Mirrors the per-server logs page.
+function pairChatItems(items) {
+  const blocks = [];
+  const used = new Array(items.length).fill(false);
+  for (let i = 0; i < items.length; i++) {
+    if (used[i]) continue;
+    const e = items[i];
+    used[i] = true;
+    if (e.role !== 'assistant') { blocks.push({ user: e, bot: null }); continue; }
+    let match = -1;
+    for (let j = i + 1; j < items.length; j++) {
+      if (used[j]) continue;
+      const u = items[j];
+      if (u.role !== 'user' || u.userId !== e.userId || u.channelId !== e.channelId) continue;
+      const dt = new Date(e.createdAt) - new Date(u.createdAt);
+      if (dt >= 0 && dt < 30 * 60 * 1000) match = j;
+      break;
+    }
+    if (match >= 0) { used[match] = true; blocks.push({ user: items[match], bot: e }); }
+    else blocks.push({ user: null, bot: e });
+  }
+  return blocks;
+}
+
+function logMetaArr(r) {
+  const meta = [];
+  if (r.modelUsed) meta.push(`<span style="color:#8a7f78;font-weight:700">${escapeHtml(r.modelUsed)}</span>`);
+  if (r.tokensIn != null || r.tokensOut != null) meta.push(`<span>in ${r.tokensIn ?? 0} · out ${r.tokensOut ?? 0}</span>`);
+  if (r.durationSec) meta.push(`<span>${r.durationSec}s</span>`);
+  if (r.latencyMs) meta.push(`<span>${r.latencyMs}ms</span>`);
+  if (r.costUSD != null) meta.push(`<span style="color:#D4A858;font-weight:700">${fmtUSD(r.costUSD)}</span>`);
+  return meta;
+}
+
+// Member message bubble (left). Body falls back across the per-type field names.
+function logMemberSide(r, type) {
+  const tag = TAG_STYLE[type] || TAG_STYLE.chat;
+  const authorName = r.user?.displayName ?? r.user?.username ?? (r.userId ? r.userId.slice(-6) : 'unknown');
+  const body = r.content ?? r.prompt ?? r.input ?? (r.command ? `/${r.command}` : '');
+  const tsTitle = r.createdAt ? new Date(r.createdAt).toLocaleString('vi-VN', { hour12: false }) : '';
+  const guildLabel = escapeHtml((r.guild?.name ?? '?').toUpperCase());
+  const chanLabel = r.channelId ? `#${escapeHtml(r.channelId.slice(-6))}` : '';
+  return `<div class="log-side" style="display:flex;align-items:flex-end;gap:11px;max-width:76%">
+    ${avatarTile(r.user?.avatarUrl, authorName, r.userId, 32, 99)}
+    <div style="min-width:0">
+      <div class="flex items-center" style="gap:9px;margin:0 0 6px 4px;flex-wrap:wrap">
+        <span style="font-size:12px;font-weight:700;color:#f3ede6;white-space:nowrap">${escapeHtml(authorName)}</span>
+        <span style="font-size:8px;letter-spacing:.16em;font-weight:800;color:${tag.color};border:1px solid ${tag.border};border-radius:99px;padding:2px 8px;flex:none">${type.toUpperCase()}</span>
+        <span style="font-size:9.5px;color:#57504b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px">${guildLabel}${chanLabel ? ` · ${chanLabel}` : ''}</span>
+        <span style="font-size:9.5px;color:#4a423d" title="${escapeHtml(tsTitle)}">· ${escapeHtml(fmtTime(r.createdAt))}</span>
+      </div>
+      <div style="display:inline-block;background:#1c1614;border:1px solid #2c2522;border-radius:4px 16px 16px 16px;padding:13px 17px;font-size:14px;line-height:1.55;color:#ece6df;word-break:break-word;white-space:pre-wrap">${escapeHtml(body) || '<span style="color:#57504b">—</span>'}</div>
+    </div>
+  </div>`;
+}
+
+// KataS bot reply bubble (right) + the gold "K" avatar. replyHtml is pre-escaped.
+function logBotSide(replyHtml, meta) {
+  return `<div class="log-side log-bot" style="display:flex;align-items:flex-end;justify-content:flex-end;gap:11px;max-width:80%;margin:12px 0 0 auto">
+    <div style="min-width:0;text-align:right">
+      <div class="flex items-center" style="justify-content:flex-end;gap:9px;margin:0 4px 6px 0">
+        <span style="font-size:8px;letter-spacing:.14em;color:#6b6058;font-weight:800;border:1px solid #2c2522;border-radius:99px;padding:2px 8px">↳ BOT</span>
+        <span style="font-size:12px;font-weight:700;color:#D4A858">KataS</span>
+      </div>
+      <div style="display:inline-block;text-align:left;background:rgba(212,168,88,.08);border:1px solid rgba(212,168,88,.28);border-radius:16px 4px 16px 16px;padding:13px 17px;font-size:13.5px;line-height:1.55;color:#ddd6cf;word-break:break-word;white-space:pre-wrap">${replyHtml}</div>
+      ${meta.length > 0 ? `<div class="flex items-center" style="justify-content:flex-end;flex-wrap:wrap;gap:12px;margin:8px 6px 0 0;font-size:10px;color:#57504b">${meta.join('')}</div>` : ''}
+    </div>
+    <span style="width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,#D4A858,#8a6a2e);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#1a1408;flex:none" title="KataS">K</span>
+  </div>`;
+}
+
+// Outcome line for non-chat events (image / video / command have no assistant
+// prose row — they store a result, so summarize it from the fields we have).
 function logBotReply(type, r) {
   if (type === 'image') return r.outputUrl ? 'Đã tạo ảnh.' : 'Đang xử lý ảnh…';
   if (type === 'video') return r.outputUrl ? `Đã tạo video${r.durationSec ? ` · ${r.durationSec}s` : ''}.` : 'Đang xử lý video…';
   if (type === 'command') return r.success === false ? `✗ ${r.errorMessage || 'Lỗi khi chạy lệnh'}` : '✓ Đã thực thi lệnh.';
-  return 'Đã trả lời.'; // chat — assistant prose not persisted in this row
+  return 'Đã trả lời.'; // unreached for chat — chat renders the real reply
 }
 
 /* ==================== GLOBAL COST ==================== */
