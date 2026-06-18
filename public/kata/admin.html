@@ -152,9 +152,9 @@
     main .grid.grid-cols-3 .card > div:last-child { font-size: 22px !important; margin-top: 6px !important; }
     main .grid.grid-cols-3 .stat-label { font-size: 8px !important; letter-spacing: .14em !important; }
 
-    /* logs: let the header line wrap, push guild chip to its own line */
-    .card-log > .flex { flex-wrap: wrap; row-gap: 8px; }
-    .card-log .guild-chip { order: 9; }
+    /* logs (v2 conversation): let bubbles use the full width on phones so the
+       member/bot text isn't crammed into a narrow column */
+    .log-thread .log-side { max-width: 100% !important; }
 
     /* settings: action buttons stretch full-width */
     #settings-save, #settings-reload { flex: 1; padding: 14px 0 !important; text-align: center; }
@@ -456,39 +456,71 @@ async function renderLogs() {
   const rowsHtml = data.items.map((r) => {
     const tag = TAG_STYLE[type] || TAG_STYLE.chat;
     const authorName = r.user?.displayName ?? r.user?.username ?? (r.userId ? r.userId.slice(-6) : 'unknown');
-    const body = r.content ?? r.prompt ?? r.input ?? '';
+    const body = r.content ?? r.prompt ?? r.input ?? (r.command ? `/${r.command}` : '');
     const ts = r.createdAt ? new Date(r.createdAt) : null;
     const tsTitle = ts ? ts.toLocaleString('vi-VN', { hour12: false }) : '';
 
+    // Guild · channel label sits inline in the member header (text only,
+    // matching the v2 conversation design — no separate guild chip).
+    const guildLabel = escapeHtml((r.guild?.name ?? '?').toUpperCase());
+    const chanLabel = r.channelId ? `#${escapeHtml(r.channelId.slice(-6))}` : '';
+
+    // Bot side. Chat replies aren't persisted (only the user role is stored),
+    // so synthesize an outcome line per log type from the fields we do have.
+    const botReply = logBotReply(type, r);
+    const thumbUrl = (type === 'image' || type === 'video') ? r.outputUrl : null;
+
     const meta = [];
-    if (r.modelUsed) meta.push(`<span>${escapeHtml(r.modelUsed)}</span>`);
-    if (r.tokensIn != null || r.tokensOut != null) meta.push(`<span>${r.tokensIn ?? 0}→${r.tokensOut ?? 0}</span>`);
+    if (r.modelUsed) meta.push(`<span style="color:#8a7f78;font-weight:700">${escapeHtml(r.modelUsed)}</span>`);
+    if (r.tokensIn != null || r.tokensOut != null) meta.push(`<span>in ${r.tokensIn ?? 0} · out ${r.tokensOut ?? 0}</span>`);
     if (r.durationSec) meta.push(`<span>${r.durationSec}s</span>`);
     if (r.latencyMs) meta.push(`<span>${r.latencyMs}ms</span>`);
-    if (r.costUSD != null) meta.push(`<span style="color:#D4A858">${fmtUSD(r.costUSD)}</span>`);
+    if (r.costUSD != null) meta.push(`<span style="color:#D4A858;font-weight:700">${fmtUSD(r.costUSD)}</span>`);
 
-    const guildIcon = r.guild?.iconUrl
-      ? `<img src="${escapeHtml(r.guild.iconUrl)}" alt="" style="width:12px;height:12px;border-radius:3px;object-fit:cover;flex:none" onerror="this.style.display='none'" />`
-      : `<span style="width:12px;height:12px;border-radius:3px;background:${tileColor(r.guild?.name)};flex:none"></span>`;
+    const thumbHtml = thumbUrl
+      ? `<img src="${escapeHtml(thumbUrl)}" alt="" style="display:block;margin-top:9px;max-width:180px;max-height:120px;border-radius:9px;object-fit:cover" onerror="this.style.display='none'" />`
+      : '';
 
-    return `<div class="card card-log" style="padding:16px 20px">
-      <div class="flex items-center" style="gap:10px">
-        ${avatarTile(r.user?.avatarUrl, authorName, r.userId, 30, 99)}
-        <span style="font-size:13px;font-weight:700;color:#f3ede6;white-space:nowrap">${escapeHtml(authorName)}</span>
-        <span class="guild-chip">
-          ${guildIcon}
-          <span style="font-size:9px;letter-spacing:.14em;color:#8a7f78;font-weight:700;white-space:nowrap;max-width:180px;overflow:hidden;text-overflow:ellipsis">${escapeHtml((r.guild?.name ?? '?').toUpperCase())}</span>
-          ${r.channelId ? `<span style="font-size:9px;color:#57504b">#${escapeHtml(r.channelId.slice(-6))}</span>` : ''}
-        </span>
-        <span class="flex-1"></span>
-        <span class="tag-pill" style="color:${tag.color};border-color:${tag.border}">${type.toUpperCase()}</span>
-        <span style="font-size:11px;color:#57504b;flex:none" title="${escapeHtml(tsTitle)}">${escapeHtml(fmtTime(r.createdAt))}</span>
+    return `<div class="log-thread">
+      <!-- member bubble (left) -->
+      <div class="log-side" style="display:flex;align-items:flex-end;gap:11px;max-width:76%">
+        ${avatarTile(r.user?.avatarUrl, authorName, r.userId, 32, 99)}
+        <div style="min-width:0">
+          <div class="flex items-center" style="gap:9px;margin:0 0 6px 4px;flex-wrap:wrap">
+            <span style="font-size:12px;font-weight:700;color:#f3ede6;white-space:nowrap">${escapeHtml(authorName)}</span>
+            <span style="font-size:8px;letter-spacing:.16em;font-weight:800;color:${tag.color};border:1px solid ${tag.border};border-radius:99px;padding:2px 8px;flex:none">${type.toUpperCase()}</span>
+            <span style="font-size:9.5px;color:#57504b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px">${guildLabel}${chanLabel ? ` · ${chanLabel}` : ''}</span>
+            <span style="font-size:9.5px;color:#4a423d" title="${escapeHtml(tsTitle)}">· ${escapeHtml(fmtTime(r.createdAt))}</span>
+          </div>
+          <div style="display:inline-block;background:#1c1614;border:1px solid #2c2522;border-radius:4px 16px 16px 16px;padding:13px 17px;font-size:14px;line-height:1.55;color:#ece6df;word-break:break-word">${escapeHtml(body) || '<span style="color:#57504b">—</span>'}</div>
+        </div>
       </div>
-      <div style="margin:10px 0 0 40px;font-size:13.5px;line-height:1.65;color:#cfc7bf;word-break:break-word">${escapeHtml(body)}</div>
-      ${meta.length > 0 ? `<div class="flex flex-wrap" style="gap:14px;margin:10px 0 0 40px;padding-top:10px;border-top:1px solid rgba(255,255,255,.04);font-size:10.5px;color:#57504b">${meta.join('')}</div>` : ''}
+
+      <!-- KataS bot bubble (right) -->
+      <div class="log-side log-bot" style="display:flex;align-items:flex-end;justify-content:flex-end;gap:11px;max-width:80%;margin:12px 0 0 auto">
+        <div style="min-width:0;text-align:right">
+          <div class="flex items-center" style="justify-content:flex-end;gap:9px;margin:0 4px 6px 0">
+            <span style="font-size:8px;letter-spacing:.14em;color:#6b6058;font-weight:800;border:1px solid #2c2522;border-radius:99px;padding:2px 8px">↳ BOT</span>
+            <span style="font-size:12px;font-weight:700;color:#D4A858">KataS</span>
+          </div>
+          <div style="display:inline-block;text-align:left;background:rgba(212,168,88,.08);border:1px solid rgba(212,168,88,.28);border-radius:16px 4px 16px 16px;padding:13px 17px;font-size:13.5px;line-height:1.55;color:#ddd6cf;word-break:break-word">${escapeHtml(botReply)}${thumbHtml}</div>
+          ${meta.length > 0 ? `<div class="flex items-center" style="justify-content:flex-end;flex-wrap:wrap;gap:12px;margin:8px 6px 0 0;font-size:10px;color:#57504b">${meta.join('')}</div>` : ''}
+        </div>
+        <span style="width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,#D4A858,#8a6a2e);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#1a1408;flex:none" title="KataS">K</span>
+      </div>
     </div>`;
   }).join('');
-  listEl.outerHTML = `<div class="flex flex-col" style="gap:12px">${rowsHtml}</div>`;
+  listEl.outerHTML = `<div class="flex flex-col" style="gap:26px">${rowsHtml}</div>`;
+}
+
+// The bot's reply text isn't stored for chat (only the user role row), and the
+// media/command collections store an outcome rather than prose — so derive a
+// short, honest reply line per log type from the fields that exist.
+function logBotReply(type, r) {
+  if (type === 'image') return r.outputUrl ? 'Đã tạo ảnh.' : 'Đang xử lý ảnh…';
+  if (type === 'video') return r.outputUrl ? `Đã tạo video${r.durationSec ? ` · ${r.durationSec}s` : ''}.` : 'Đang xử lý video…';
+  if (type === 'command') return r.success === false ? `✗ ${r.errorMessage || 'Lỗi khi chạy lệnh'}` : '✓ Đã thực thi lệnh.';
+  return 'Đã trả lời.'; // chat — assistant prose not persisted in this row
 }
 
 /* ==================== GLOBAL COST ==================== */
