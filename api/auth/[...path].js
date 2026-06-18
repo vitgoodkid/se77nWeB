@@ -652,7 +652,7 @@ async function handleKataServerGet(req, res, guildId) {
   const since48h = new Date(now - 2 * day);
   const since30d = new Date(now - 30 * day);
 
-  const [config, globalConfig, msg24h, msg48h, img24h, img48h, vid24h, vid48h, cmd24h, cmd48h, cost30d, hourly, topUsers, recent] = await Promise.all([
+  const [config, globalConfig, msg24h, msg48h, img24h, img48h, vid24h, vid48h, cmd24h, cmd48h, cost30d, hourly, topUsers, recent, msgs30d, img30d, vid30d, cmd30d, costByType] = await Promise.all([
     kataDb.collection('serverconfigs').findOne({ guildId }),
     kataDb.collection('globalconfigs').findOne({ scope: '_global' }),
     kataDb.collection('chatlogs').countDocuments({ guildId, role: 'user', createdAt: { $gte: since24h } }),
@@ -682,9 +682,38 @@ async function handleKataServerGet(req, res, guildId) {
       { guildId },
       { projection: { command: 1, userId: 1, input: 1, success: 1, costUSD: 1, errorMessage: 1, createdAt: 1 } },
     ).sort({ createdAt: -1 }).limit(15).toArray(),
+    // 30d per-type counts for the overview "activity by type" panel.
+    kataDb.collection('chatlogs').countDocuments({ guildId, role: 'user', createdAt: { $gte: since30d } }),
+    kataDb.collection('imagegens').countDocuments({ guildId, createdAt: { $gte: since30d } }),
+    kataDb.collection('videogens').countDocuments({ guildId, createdAt: { $gte: since30d } }),
+    kataDb.collection('commandhistories').countDocuments({ guildId, createdAt: { $gte: since30d } }),
+    // 30d cost split by activity type, inferred from the numeric fields the
+    // cost ledger already records (video duration / image count / tokens).
+    kataDb.collection('costentries').aggregate([
+      { $match: { guildId, timestamp: { $gte: since30d } } },
+      { $group: {
+        _id: { $switch: { branches: [
+          { case: { $gt: ['$videoDurationSec', 0] }, then: 'video' },
+          { case: { $gt: ['$imagesGen', 0] }, then: 'image' },
+          { case: { $or: [{ $gt: ['$tokensIn', 0] }, { $gt: ['$tokensOut', 0] }] }, then: 'chat' },
+        ], default: 'command' } },
+        cost: { $sum: '$costUSD' },
+      } },
+    ]).toArray(),
   ]);
 
   const cost30dTotal = cost30d[0]?.total ?? 0;
+
+  // 30d activity-by-type rows: real per-type counts, with cost folded in from
+  // the inferred-type aggregation above.
+  const costTypeMap = Object.fromEntries(costByType.map((r) => [r._id, Number(r.cost ?? 0)]));
+  const typeCounts = { chat: msgs30d, image: img30d, video: vid30d, command: cmd30d };
+  const events30d = msgs30d + img30d + vid30d + cmd30d;
+  const byType = ['chat', 'image', 'video', 'command'].map((t) => ({
+    type: t,
+    count: typeCounts[t],
+    cost: costTypeMap[t] ?? 0,
+  }));
 
   // Build a 24-slot hourly array, current hour first → previous hours back to 24h ago
   const currentHour = new Date().getHours();
@@ -757,6 +786,9 @@ async function handleKataServerGet(req, res, guildId) {
         cost30d: { value: cost30dTotal },
       },
       hourly: hourBars,
+      byType,
+      events30d,
+      msgs30d,
       topUsers: await (async () => {
         const meta = await hydrateUsernames(
           kataDb,

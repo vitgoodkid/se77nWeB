@@ -33,6 +33,10 @@
   .kpi:hover { border-color: rgba(255,255,255,0.18); }
   .bar { background: linear-gradient(180deg, #E04545 0%, #7a1e1e 100%); border-radius: 2px 2px 0 0; }
   .bar-now { background: linear-gradient(180deg, #E04545 0%, #E04545 100%); box-shadow: 0 0 8px #E0454566; }
+  .navrow { transition: background .18s, transform .18s, color .18s; }
+  .navrow:hover { transform: translateX(3px); }
+  .navrow.on { background: #1a1312; }
+  .act-row:hover { background: #1a1513; }
 </style>
 </head>
 <body class="bg-bg text-ink min-h-screen overflow-x-hidden">
@@ -62,180 +66,76 @@
   <div id="kata-header-actions" class="flex items-center gap-2.5"></div>
 </header>
 
-<!-- side nav (server context) -->
-<aside class="fixed top-16 left-0 bottom-0 w-[220px] z-40 border-r border-line backdrop-blur-md overflow-y-auto" style="background:rgba(13,10,8,0.6)">
-  <div class="p-5 border-b border-line">
-    <div id="kata-guild-icon" class="w-12 h-12 rounded-[10px] grid place-items-center mono text-[16px] font-extrabold mb-3" style="background:linear-gradient(135deg,#E04545,#7a1e1e);color:#0d0a08">--</div>
-    <div id="kata-guild-name" class="text-[14px] font-medium tracking-tight text-ink">Đang tải…</div>
-    <div id="kata-guild-meta" class="mono text-[10px] text-mute mt-1">—</div>
-    <div class="mono text-[9px] text-mute2 mt-2 tracking-label uppercase flex items-center gap-1.5"><span class="dot-pulse w-1.5 h-1.5 rounded-full bg-green"></span>online</div>
+<!-- side nav (server context) — profile card + subnav per Server Detail design -->
+<aside class="fixed top-16 left-0 bottom-0 w-[232px] z-40 border-r border-line backdrop-blur-md overflow-y-auto flex flex-col" style="background:rgba(13,10,8,0.6)">
+  <!-- profile card -->
+  <div class="flex flex-col items-center text-center px-4 pt-7 pb-5">
+    <div id="kata-guild-icon" class="grid place-items-center mono font-extrabold" style="width:74px;height:74px;border-radius:20px;background:linear-gradient(135deg,#5a4030,#3a2920);color:#e7c89a;font-size:22px;box-shadow:0 12px 30px rgba(0,0,0,.5);border:1px solid #4a3a2a">--</div>
+    <div id="kata-guild-name" class="text-[16px] font-bold tracking-tight text-ink mt-3.5 px-1">Đang tải…</div>
+    <div id="kata-guild-meta" class="mono text-[9.5px] text-mute mt-1.5">—</div>
+    <div class="flex items-center gap-1.5 mt-2.5">
+      <span class="dot-pulse w-1.5 h-1.5 rounded-full" style="background:#5BA868;box-shadow:0 0 7px rgba(91,168,104,.7)"></span>
+      <span class="mono text-[9px] tracking-label uppercase" style="color:#5BA868;font-weight:800">online</span>
+    </div>
   </div>
 
-  <nav class="px-3 py-4 mono text-[11px] tracking-label uppercase">
-    <a id="kata-tab-overview" href="#" class="flex items-center justify-between px-3 py-2 rounded-[8px] mb-1 text-red" style="background:#E0454510;border-left:2px solid #E04545">
-      <span>▸ overview</span><span class="text-[9px] text-mute2">#</span>
+  <!-- subnav -->
+  <nav class="px-3 mono">
+    <a id="kata-tab-overview" href="#" class="navrow on flex items-center gap-3 px-3.5 py-3 rounded-[10px] mb-1 text-[10.5px] tracking-label uppercase font-extrabold text-ink" style="border-left:2px solid var(--accent,#E04545)">
+      <span style="color:var(--accent,#E04545)">◰</span><span class="flex-1">overview</span>
     </a>
-    <a href="#" id="kata-tab-settings" class="flex items-center justify-between px-3 py-2 rounded-[8px] mb-1 text-mute hover:text-ink hover:bg-ink/[0.03]">
-      <span>▸ settings</span>
+    <a id="kata-tab-logs" href="#" class="navrow flex items-center gap-3 px-3.5 py-3 rounded-[10px] mb-1 text-[10.5px] tracking-label uppercase font-extrabold text-mute hover:text-ink" style="border-left:2px solid transparent">
+      <span class="text-mute2">✉</span><span class="flex-1">logs</span><span id="ov-nav-logs" class="text-[9px] text-mute2" style="letter-spacing:0">—</span>
     </a>
-    <a id="kata-tab-cost" href="#" class="flex items-center justify-between px-3 py-2 rounded-[8px] mt-2 mb-1 text-mute hover:text-ink hover:bg-ink/[0.03]">▸ cost</a>
-    <a id="kata-tab-logs" href="#" class="flex items-center justify-between px-3 py-2 rounded-[8px] mb-1 text-mute hover:text-ink hover:bg-ink/[0.03]">▸ logs</a>
+    <a id="kata-tab-cost" href="#" class="navrow flex items-center gap-3 px-3.5 py-3 rounded-[10px] mb-1 text-[10.5px] tracking-label uppercase font-extrabold text-mute hover:text-ink" style="border-left:2px solid transparent">
+      <span class="text-mute2">$</span><span class="flex-1">cost</span><span id="ov-nav-cost" class="text-[9px] text-mute2" style="letter-spacing:0">—</span>
+    </a>
+    <a id="kata-tab-settings" href="#" class="navrow flex items-center gap-3 px-3.5 py-3 rounded-[10px] mb-1 text-[10.5px] tracking-label uppercase font-extrabold text-mute hover:text-ink" style="border-left:2px solid transparent">
+      <span class="text-mute2">⚙</span><span class="flex-1">settings</span>
+    </a>
   </nav>
 
-  <div class="px-5 py-4 border-t border-line">
-    <a href="servers.html" class="mono text-[10px] tracking-label uppercase text-mute hover:text-ink flex items-center gap-2" data-i18n="btn.back-servers">← all servers</a>
+  <div class="flex-1"></div>
+  <div class="px-3 pb-5">
+    <a href="servers.html" class="mono flex items-center gap-2 px-3.5 py-3 rounded-[10px] text-[10.5px] tracking-label uppercase text-mute hover:text-ink" data-i18n="btn.back-servers" style="font-weight:700">← all servers</a>
   </div>
 </aside>
 
 <!-- main content -->
 <main class="relative z-10 pt-20 pb-16 pl-[244px] pr-8">
+  <div style="max-width:1100px;margin:0 auto">
 
-  <!-- tab header -->
-  <div class="flex items-end justify-between gap-6 mb-7">
-    <div>
-      <div class="mono text-[10px] uppercase tracking-kicker text-mute mb-2 flex items-center gap-3">
-        <span class="dot-pulse w-1.5 h-1.5 rounded-full bg-green"></span>
-        TAB · OVERVIEW · LAST SYNC 8S
-      </div>
-      <h1 class="mono text-[36px] leading-none font-extrabold tracking-[-0.035em] lowercase">overview<span class="text-red glow77">.</span></h1>
-    </div>
-    <div class="flex items-center gap-2">
-      <!-- period segmented -->
-      <div class="flex items-center gap-0.5 p-0.5 rounded-[10px] border border-line bg-bg mono text-[10px] tracking-label uppercase">
-        <button class="px-3 h-7 rounded-[8px] text-ink" style="background:#1c1813">24h</button>
-        <button class="px-3 h-7 rounded-[8px] text-mute hover:text-ink">7d</button>
-        <button class="px-3 h-7 rounded-[8px] text-mute hover:text-ink">30d</button>
-        <button class="px-3 h-7 rounded-[8px] text-mute hover:text-ink">90d</button>
-      </div>
-      <button class="mono h-9 px-3.5 rounded-[10px] border border-line text-mute hover:text-ink text-[10px] tracking-label uppercase" data-i18n="btn.refresh">↻ refresh</button>
-      <button class="mono h-9 px-3.5 rounded-[10px] text-[10px] tracking-label uppercase font-bold text-red" style="background:#E0454514;border:1px solid #E0454555">▸ playground</button>
-    </div>
-  </div>
-
-  <!-- KPI row -->
-  <div class="grid grid-cols-5 gap-3 mb-8">
-    <div class="kpi rounded-[14px] border border-line bg-panel p-5 transition-colors">
-      <div class="flex items-baseline justify-between">
-        <div class="mono text-[10px] uppercase tracking-label text-mute" data-i18n="overview.kpi.msg">tin nhắn · 24h</div>
-        <div id="kpi-msg-delta" class="mono text-[10px] text-mute">—</div>
-      </div>
-      <div id="kpi-msg-value" class="mono text-[36px] font-bold tracking-tight mt-3 leading-none">—</div>
-    </div>
-    <div class="kpi rounded-[14px] border border-line bg-panel p-5 transition-colors">
-      <div class="flex items-baseline justify-between">
-        <div class="mono text-[10px] uppercase tracking-label text-mute" data-i18n="overview.kpi.img">ảnh · 24h</div>
-        <div id="kpi-img-delta" class="mono text-[10px] text-mute">—</div>
-      </div>
-      <div id="kpi-img-value" class="mono text-[36px] font-bold tracking-tight mt-3 leading-none">—</div>
-    </div>
-    <div class="kpi rounded-[14px] border border-line bg-panel p-5 transition-colors">
-      <div class="flex items-baseline justify-between">
-        <div class="mono text-[10px] uppercase tracking-label text-mute" data-i18n="overview.kpi.vid">video · 24h</div>
-        <div id="kpi-vid-delta" class="mono text-[10px] text-mute">—</div>
-      </div>
-      <div id="kpi-vid-value" class="mono text-[36px] font-bold tracking-tight mt-3 leading-none">—</div>
-    </div>
-    <div class="kpi rounded-[14px] border border-line bg-panel p-5 transition-colors">
-      <div class="flex items-baseline justify-between">
-        <div class="mono text-[10px] uppercase tracking-label text-mute" data-i18n="overview.kpi.cmd">commands · 24h</div>
-        <div id="kpi-cmd-delta" class="mono text-[10px] text-mute">—</div>
-      </div>
-      <div id="kpi-cmd-value" class="mono text-[36px] font-bold tracking-tight mt-3 leading-none">—</div>
-    </div>
-    <div class="kpi rounded-[14px] border border-line bg-panel p-5 transition-colors">
-      <div class="flex items-baseline justify-between">
-        <div class="mono text-[10px] uppercase tracking-label text-mute" data-i18n="overview.kpi.cost30d">cost · 30d</div>
-      </div>
-      <div id="kpi-cost-value" class="mono text-[36px] font-bold tracking-tight mt-3 leading-none text-gold">—</div>
-    </div>
-  </div>
-
-  <!-- activity chart -->
-  <section class="mb-8">
-    <div class="flex items-baseline justify-between mb-3">
-      <div class="mono text-[10px] uppercase tracking-kicker text-mute flex items-center gap-3">
-        <span class="text-mute2">───</span>
-        <span>activity · 24h hourly</span>
-        <span class="dot-pulse w-1.5 h-1.5 rounded-full bg-green"></span>
-      </div>
-      <div id="activity-peak" class="mono text-[10px] tracking-label uppercase text-mute2">—</div>
-    </div>
-    <div class="rounded-[14px] border border-line bg-panel p-6">
-      <div id="activity-bars" class="flex items-end gap-1.5 h-[180px]"></div>
-      <div class="flex items-baseline justify-between mt-3 mono text-[9px] tracking-label uppercase text-mute2">
-        <span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span class="text-red">now</span>
-      </div>
-    </div>
-  </section>
-
-  <!-- two-column: top users + recent activity -->
-  <section class="grid grid-cols-[1fr_1.2fr] gap-3 mb-8">
-    <div class="rounded-[14px] border border-line bg-panel p-6">
-      <div class="flex items-baseline justify-between mb-4">
-        <div class="mono text-[10px] uppercase tracking-kicker text-mute">top users · 30d</div>
-      </div>
-      <table class="w-full">
-        <thead>
-          <tr class="mono text-[9px] tracking-label uppercase text-mute2 border-b border-line">
-            <th class="text-left font-normal py-2 w-10">#</th>
-            <th class="text-left font-normal py-2">user</th>
-            <th class="text-right font-normal py-2">calls</th>
-            <th class="text-right font-normal py-2">cost</th>
-          </tr>
-        </thead>
-        <tbody id="top-users" class="mono text-[12px]"></tbody>
-      </table>
-    </div>
-
-    <div class="rounded-[14px] border border-line bg-panel p-6">
-      <div class="flex items-baseline justify-between mb-4">
-        <div class="mono text-[10px] uppercase tracking-kicker text-mute flex items-center gap-3">
-          <span>recent activity</span>
-          <span class="dot-pulse w-1.5 h-1.5 rounded-full bg-green"></span>
-          <span id="recent-count" class="text-mute2 normal-case tracking-tag">—</span>
+    <!-- page header -->
+    <div class="flex items-end justify-between gap-6 mb-7">
+      <div>
+        <div class="mono text-[10px] uppercase tracking-kicker mb-2 flex items-center gap-3" style="color:var(--accent,#E04545)">
+          <span class="dot-pulse w-1.5 h-1.5 rounded-full" style="background:#5BA868"></span>
+          <span>server · overview</span>
         </div>
+        <h1 class="mono text-[36px] leading-none font-extrabold tracking-[-0.035em] lowercase">overview<span class="glow77" style="color:var(--accent,#E04545)">.</span></h1>
+        <p class="mono text-[12px] text-mute mt-2">Snapshot 30 ngày · realtime</p>
       </div>
-      <div id="recent-list" class="space-y-0.5 mono text-[12px]"></div>
+      <button id="ov-refresh" class="mono h-9 px-4 rounded-[10px] border border-line text-mute hover:text-ink text-[10px] tracking-label uppercase flex items-center gap-2" data-i18n="btn.refresh">↻ refresh</button>
     </div>
-  </section>
 
-  <!-- bottom: config snapshot -->
-  <section class="grid grid-cols-3 gap-3 mb-8">
-    <div class="rounded-[14px] border border-line bg-panel p-5">
-      <div class="mono text-[10px] uppercase tracking-kicker text-mute mb-3">active sysprompt</div>
-      <div id="cfg-sysprompt" class="mono text-[11px] text-mute leading-[1.6] line-clamp-3" style="display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">—</div>
-      <div id="cfg-sysprompt-meta" class="mono text-[10px] text-mute2 mt-3">—</div>
-      <button data-open-settings="sysprompt" class="mono text-[10px] tracking-label uppercase text-red mt-4 inline-flex items-center gap-1.5 hover:underline">edit →</button>
+    <!-- stat strip -->
+    <div id="ov-stats" class="flex items-stretch rounded-[16px] border border-line mb-[18px]" style="background:#131010;padding:22px 6px">
+      <div class="mono text-[11px] text-mute2 px-4 py-2">loading…</div>
     </div>
-    <div class="rounded-[14px] border border-line bg-panel p-5">
-      <div class="flex items-baseline justify-between mb-3">
-        <div class="mono text-[10px] uppercase tracking-kicker text-mute">models</div>
-        <span class="mono text-[9px] tracking-label uppercase px-1.5 py-0.5 rounded" style="background:#D4A85822;color:#D4A858;border:1px solid #D4A85844" title="Models do owner quản lý global — sửa trong /kata/admin?tab=settings">GLOBAL</span>
-      </div>
-      <div class="space-y-2 mono text-[11px]">
-        <div class="flex items-baseline justify-between"><span class="text-mute2">chat</span><span id="cfg-chat-model" class="text-ink">—</span></div>
-        <div class="flex items-baseline justify-between"><span class="text-mute2">image</span><span id="cfg-image-model" class="text-ink">—</span></div>
-        <div class="flex items-baseline justify-between"><span class="text-mute2">video</span><span id="cfg-video-model" class="text-ink">—</span></div>
-      </div>
-    </div>
-    <div class="rounded-[14px] border border-line bg-panel p-5">
-      <div class="flex items-baseline justify-between mb-3">
-        <div class="mono text-[10px] uppercase tracking-kicker text-mute">limits</div>
-        <button data-open-settings="moderation" class="mono text-[10px] tracking-label uppercase text-red hover:underline">edit →</button>
-      </div>
-      <div class="space-y-2 mono text-[11px]">
-        <div class="flex items-baseline justify-between"><span class="text-mute2">rate · msg/hr</span><span id="cfg-rate" class="text-ink">—</span></div>
-        <div class="flex items-baseline justify-between"><span class="text-mute2">channels</span><span id="cfg-channels" class="text-ink">—</span></div>
-      </div>
-    </div>
-  </section>
 
-  <!-- footer -->
-  <footer class="grid grid-cols-3 items-center mono text-[10px] tracking-kicker text-mute pt-5 border-t border-line">
-    <span class="text-left">KATAS · V0.3.1</span>
-    <span class="text-center flex items-center gap-2 justify-center"><span class="w-1.5 h-1.5 rounded-full bg-green dot-pulse"></span>STATUS · OK</span>
-    <span class="text-right">© SE77N</span>
-  </footer>
+    <!-- activity by type + top members -->
+    <div class="grid gap-[18px]" style="grid-template-columns:1.3fr 1fr">
+      <div class="rounded-[16px] border border-line" style="background:#131010;padding:22px 24px">
+        <div class="mono text-[9.5px] tracking-label uppercase text-mute mb-[18px]" style="font-weight:800">activity · by type</div>
+        <div id="ov-activity"></div>
+      </div>
+      <div class="rounded-[16px] border border-line" style="background:#131010;padding:22px 24px">
+        <div class="mono text-[9.5px] tracking-label uppercase text-mute mb-4" style="font-weight:800">top members</div>
+        <div id="ov-top"></div>
+      </div>
+    </div>
+
+  </div>
 </main>
 
 <!-- settings drawer (hidden by default) -->
@@ -390,8 +290,9 @@ async function loadOverview(){
   document.title = data.guild.name + ' · katas';
   const guildIcon = document.getElementById('kata-guild-icon');
   if (data.guild.iconUrl){
-    guildIcon.innerHTML = `<img src="${data.guild.iconUrl}" alt="" style="width:48px;height:48px;border-radius:10px;object-fit:cover" />`;
+    guildIcon.innerHTML = `<img src="${data.guild.iconUrl}" alt="" style="width:74px;height:74px;border-radius:20px;object-fit:cover" />`;
     guildIcon.style.background = 'transparent';
+    guildIcon.style.border = 'none';
   } else {
     const initials = data.guild.name.replace(/[^A-Za-z0-9À-ỹ]/g,'').slice(0,2).toUpperCase() || '??';
     guildIcon.textContent = initials;
@@ -400,103 +301,80 @@ async function loadOverview(){
   }
   document.getElementById('kata-guild-meta').textContent = `id · ${data.guild.id}`;
 
-  // KPIs
-  const fmtDelta = (n) => {
-    if (n === 0) return ['±0%', 'text-mute'];
-    if (n > 0)   return [`+${n}%`, 'text-green'];
-    return [`${n}%`, 'text-err'];
-  };
-  const setKpi = (valueId, deltaId, val, delta) => {
-    document.getElementById(valueId).textContent = val.toLocaleString('vi-VN');
-    if (deltaId){
-      const [t, c] = fmtDelta(delta);
-      const el = document.getElementById(deltaId);
-      el.textContent = t;
-      el.className = 'mono text-[10px] ' + c;
-    }
-  };
+  // ── Stat strip ──────────────────────────────────────────────
   const k = data.stats.kpis;
-  setKpi('kpi-msg-value','kpi-msg-delta', k.msg24h.value, k.msg24h.delta);
-  setKpi('kpi-img-value','kpi-img-delta', k.img24h.value, k.img24h.delta);
-  setKpi('kpi-vid-value','kpi-vid-delta', k.vid24h.value, k.vid24h.delta);
-  setKpi('kpi-cmd-value','kpi-cmd-delta', k.cmd24h.value, k.cmd24h.delta);
-  document.getElementById('kpi-cost-value').textContent = '$' + (k.cost30d.value || 0).toFixed(2);
+  const s = data.stats;
+  const fmtNum = (n) => Number(n || 0).toLocaleString('vi-VN');
+  const joinedAt = data.guild.joinedAt;
+  const statCells = [
+    { label: 'COST · 30D', value: '$' + (k.cost30d.value || 0).toFixed(2), note: 'tổng 30 ngày', color: '#D4A858' },
+    { label: 'MESSAGES',   value: fmtNum(s.msgs30d),   note: 'mentions · 30d', color: '#f5ede0' },
+    { label: 'EVENTS',     value: fmtNum(s.events30d), note: 'mọi loại',       color: '#f5ede0' },
+    { label: 'JOINED',     value: joinedAt ? agoLong(joinedAt) : '—', note: joinedAt ? new Date(joinedAt).toISOString().slice(0,10) : '', color: '#f5ede0' },
+  ];
+  document.getElementById('ov-stats').innerHTML = statCells.map((st, i) => `
+    <div style="flex:1;text-align:center;padding:0 14px;border-left:1px solid ${i === 0 ? 'transparent' : '#272120'}">
+      <div class="mono" style="font-size:8.5px;letter-spacing:.2em;color:rgba(245,237,224,0.5);font-weight:800">${st.label}</div>
+      <div class="mono" style="font-size:30px;font-weight:800;color:${st.color};margin-top:10px;line-height:1">${st.value}</div>
+      <div class="mono" style="font-size:10px;color:#57504b;margin-top:7px">${escapeHtml(st.note)}</div>
+    </div>`).join('');
 
-  // Activity bars
-  const barsWrap = document.getElementById('activity-bars');
-  const max = Math.max(1, ...data.stats.hourly.map(h=>h.count));
-  const peakH = data.stats.hourly.reduce((a,b)=>b.count>a.count?b:a, data.stats.hourly[0] || {count:0,hour:0});
-  document.getElementById('activity-peak').textContent = peakH.count > 0
-    ? `peak · ${String(peakH.hour).padStart(2,'0')}:00 · ${peakH.count} msg`
-    : 'không có hoạt động · 24h';
-  barsWrap.innerHTML = data.stats.hourly.map((h, i) => {
-    const pct = Math.max(2, Math.round((h.count / max) * 100));
-    const isNow = i === data.stats.hourly.length - 1;
-    return `<div class="flex-1 ${isNow ? 'bar-now' : 'bar'}" style="height:${pct}%" title="${String(h.hour).padStart(2,'0')}:00 · ${h.count}"></div>`;
-  }).join('');
+  // ── Activity by type ───────────────────────────────────────
+  const TYPE_META = {
+    chat:    { label: 'CHAT',    color: '#E04545' },
+    image:   { label: 'IMAGE',   color: '#D4A858' },
+    video:   { label: 'VIDEO',   color: '#c0563a' },
+    command: { label: 'COMMAND', color: '#5BA868' },
+  };
+  const byType = s.byType || [];
+  const maxCount = Math.max(1, ...byType.map((t) => t.count));
+  const gid = getGuildId();
+  document.getElementById('ov-activity').innerHTML = byType.map((t) => {
+    const m = TYPE_META[t.type] || { label: t.type.toUpperCase(), color: '#8a7f78' };
+    const pct = Math.max(2, Math.round((t.count / maxCount) * 100));
+    const href = `logs-image.html?guild=${encodeURIComponent(gid)}&tab=${t.type}`;
+    return `<a href="${href}" class="act-row block" style="margin:0 -6px 16px;padding:6px;border-radius:8px;text-decoration:none;color:inherit">
+      <div class="flex items-baseline gap-2.5">
+        <span style="width:9px;height:9px;border-radius:3px;background:${m.color};flex:none"></span>
+        <span class="mono" style="font-size:12.5px;font-weight:700;color:#ece6df;letter-spacing:.06em">${m.label}</span>
+        <span class="flex-1"></span>
+        <span class="mono" style="font-size:13px;font-weight:800;color:#f3ede6">${fmtNum(t.count)}</span>
+        <span class="mono" style="font-size:10px;color:#57504b">· $${Number(t.cost || 0).toFixed(2)}</span>
+      </div>
+      <div style="height:5px;border-radius:99px;background:#1d1817;margin:9px 0 0 19px;overflow:hidden"><div style="height:100%;border-radius:99px;width:${pct}%;background:${m.color};transition:width .5s ease"></div></div>
+    </a>`;
+  }).join('') || '<div class="text-mute2 text-[12px] py-4">Chưa có hoạt động 30 ngày</div>';
 
-  // Top users
-  const topWrap = document.getElementById('top-users');
-  if (data.stats.topUsers.length === 0){
-    topWrap.innerHTML = `<tr><td colspan="4" class="py-6 text-center text-mute2">Chưa có hoạt động trong 30 ngày</td></tr>`;
-  } else {
-    topWrap.innerHTML = data.stats.topUsers.map((u, i) => {
-      const accent = avatarSeed(u.userId);
-      const short = u.userId.slice(-4);
-      const display = u.displayName || u.username || `?${short}`;
-      const initial = display.slice(0, 1).toUpperCase();
-      return `<tr class="border-b border-line/50">
-        <td class="py-3 text-mute2">${String(i+1).padStart(2,'0')}</td>
-        <td class="py-3"><div class="flex items-center gap-2.5"><span class="w-6 h-6 rounded-full grid place-items-center text-[10px] font-extrabold flex-shrink-0" style="background:${accent}22;color:${accent}">${initial}</span><span class="text-ink truncate max-w-[180px]" title="${u.userId}">${display}</span></div></td>
-        <td class="py-3 text-right">${u.count}</td>
-        <td class="py-3 text-right text-gold">$${u.cost.toFixed(2)}</td>
-      </tr>`;
-    }).join('');
-  }
+  // ── Top members ─────────────────────────────────────────────
+  const top = data.stats.topUsers || [];
+  document.getElementById('ov-top').innerHTML = top.length === 0
+    ? '<div class="text-mute2 text-[12px] py-4 text-center">Chưa có hoạt động 30 ngày</div>'
+    : top.map((u) => {
+        const accent = avatarSeed(u.userId);
+        const name = u.displayName || u.username || ('?' + u.userId.slice(-4));
+        const ini = name.replace(/[^A-Za-z0-9À-ỹ]/g, '').slice(0, 2).toUpperCase() || '??';
+        return `<div class="flex items-center gap-[11px]" style="padding:9px 0">
+          <span style="width:30px;height:30px;border-radius:99px;background:${accent}33;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:${accent};flex:none">${escapeHtml(ini)}</span>
+          <span class="truncate" style="font-size:12.5px;color:#ddd6cf" title="${escapeHtml(u.userId)}">${escapeHtml(name)}</span>
+          <span class="flex-1"></span>
+          <span class="mono" style="font-size:12px;font-weight:800;color:#f3ede6" title="$${Number(u.cost || 0).toFixed(2)} · 30d">${fmtNum(u.count)}</span>
+        </div>`;
+      }).join('');
 
-  // Recent
-  const recentWrap = document.getElementById('recent-list');
-  document.getElementById('recent-count').textContent = `${data.stats.recent.length} events`;
-  if (data.stats.recent.length === 0){
-    recentWrap.innerHTML = `<div class="py-6 text-center text-mute2 text-[12px]">Chưa có hoạt động</div>`;
-  } else {
-    recentWrap.innerHTML = data.stats.recent.map((e, i) => {
-      const accent = avatarSeed(e.userId);
-      const short = e.userId.slice(-4);
-      const display = e.displayName || e.username || `?${short}`;
-      const initial = display.slice(0, 1).toUpperCase();
-      const cmdColor = e.success
-        ? (e.command === 'chat' ? 'text-green' : (e.command.startsWith('/img')||e.command.startsWith('/edit') ? 'text-red' : 'text-gold'))
-        : 'text-err';
-      const isFresh = i === 0;
-      const bg = e.success
-        ? (isFresh ? 'background:#E0454508;border:1px solid #E0454522' : '')
-        : 'background:#c4686810';
-      const wrapCls = isFresh && e.success ? 'rounded-[8px]' : (e.success ? 'rounded-[8px] hover:bg-ink/[0.02]' : 'rounded-[8px]');
-      const tag = e.success ? '' : `<span class="mono text-[10px] tracking-label uppercase px-2 py-0.5 rounded-full ml-2" style="background:#c4686818;border:1px solid #c4686844;color:#c46868">FAIL</span>`;
-      const cost = e.costUSD != null ? `$${e.costUSD.toFixed(3)}` : '—';
-      return `<div class="flex items-center gap-3 py-2 px-2 ${wrapCls}" style="${bg}">
-        <span class="${isFresh && e.success ? 'text-red' : 'text-mute2'} text-[10px] tracking-label uppercase w-[60px] flex-shrink-0">${isFresh && e.success ? 'now' : relTime(e.createdAt)}</span>
-        <span class="w-5 h-5 rounded-full grid place-items-center text-[9px] font-extrabold flex-shrink-0" style="background:${accent}22;color:${accent}">${initial}</span>
-        <span class="text-ink w-[100px] flex-shrink-0 truncate" title="${e.userId}">${display}</span>
-        <span class="${cmdColor} text-[10px] tracking-label uppercase w-[80px] flex-shrink-0 truncate">${escapeHtml(e.command)}</span>
-        <span class="text-mute truncate flex-1">${escapeHtml(e.input || '')}</span>
-        <span class="text-mute2 text-[10px]">${cost}</span>
-        ${tag}
-      </div>`;
-    }).join('');
-  }
+  // Sidebar nav meta counts
+  const navLogs = document.getElementById('ov-nav-logs');
+  if (navLogs) navLogs.textContent = fmtNum(s.events30d);
+  const navCost = document.getElementById('ov-nav-cost');
+  if (navCost) navCost.textContent = '$' + (k.cost30d.value || 0).toFixed(2);
+}
 
-  // Config snapshot
-  const c = CURRENT_CONFIG;
-  document.getElementById('cfg-sysprompt').textContent = c.systemPrompt && c.systemPrompt.trim() ? c.systemPrompt : '(Để trống — bot dùng prompt mặc định)';
-  document.getElementById('cfg-sysprompt-meta').textContent = c.updatedAt ? `cập nhật ${relTime(c.updatedAt)} trước` : 'chưa từng cập nhật';
-  document.getElementById('cfg-chat-model').textContent = c.chatModel || 'grok-4-fast';
-  document.getElementById('cfg-image-model').textContent = (c.imageModel || '').replace(/^fal-ai\//,'') || '—';
-  document.getElementById('cfg-video-model').textContent = (c.videoModel || '').split('/').slice(-2).join('/') || '—';
-  document.getElementById('cfg-rate').textContent = c.rateLimitPerUser ?? 30;
-  const chCount = (c.allowedChannels || []).length;
-  document.getElementById('cfg-channels').textContent = chCount ? `${chCount} channels` : 'tất cả';
+// Coarse "time since join" for the stat strip — days → months → years.
+function agoLong(d) {
+  const days = (Date.now() - new Date(d).getTime()) / 86400000;
+  if (days < 1) return Math.max(1, Math.round(days * 24)) + 'h';
+  if (days < 30) return Math.round(days) + 'd';
+  if (days < 365) return Math.round(days / 30) + 'mo';
+  return Math.round(days / 365) + 'y';
 }
 
 // Settings drawer
@@ -626,6 +504,8 @@ if (_gid){
   const logsLink = document.getElementById('kata-tab-logs');
   if (logsLink) logsLink.href = 'logs-image.html?guild=' + encodeURIComponent(_gid);
 }
+// Active nav row — already on overview, so just stop the # jump.
+document.getElementById('kata-tab-overview')?.addEventListener('click', (e) => e.preventDefault());
 document.getElementById('settings-close').addEventListener('click', closeSettings);
 document.getElementById('settings-cancel').addEventListener('click', closeSettings);
 document.getElementById('settings-backdrop').addEventListener('click', closeSettings);
@@ -679,9 +559,7 @@ document.getElementById('settings-form').addEventListener('submit', async (e)=>{
   }
 });
 
-document.querySelector('button.text-mute.hover\\:text-ink:not([disabled])')?.addEventListener('click', ()=>{}); // no-op for the unused refresh — wire below if needed
-const refreshBtn = [...document.querySelectorAll('button')].find(b => b.textContent.includes('refresh'));
-if (refreshBtn) refreshBtn.addEventListener('click', loadOverview);
+document.getElementById('ov-refresh')?.addEventListener('click', () => { loadOverview(); showToast('↻ Đã tải lại', 'ok'); });
 
 loadOverview();
 </script>
