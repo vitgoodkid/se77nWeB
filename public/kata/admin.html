@@ -59,6 +59,9 @@
   .btn-ghost:hover { border-color: #57504b; color: #ece6df; transform: translateY(-2px); }
   .btn-manage { padding: 11px 18px; border-radius: 9px; background: transparent; border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); color: var(--accent); font-family: inherit; font-size: 10px; font-weight: 800; letter-spacing: .16em; cursor: pointer; transition: all .18s; white-space: nowrap; text-decoration: none; display: inline-block; }
   .btn-manage:hover { background: var(--accent); color: var(--accent-fg, #fff); transform: translateX(3px); box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 35%, transparent); }
+  .btn-join { padding: 11px 16px; border-radius: 9px; background: transparent; border: 1px solid #2c2522; color: #8a7f78; font-family: inherit; font-size: 10px; font-weight: 800; letter-spacing: .16em; cursor: pointer; transition: all .18s; white-space: nowrap; }
+  .btn-join:hover { border-color: color-mix(in srgb, var(--accent) 50%, transparent); color: #ece6df; transform: translateY(-1px); }
+  .btn-join:disabled { opacity: .5; cursor: default; transform: none; }
   .btn-step { width: 40px; height: 40px; border-radius: 10px; background: #0e0b0a; border: 1px solid #2c2522; color: #8a7f78; font-family: inherit; font-size: 17px; cursor: pointer; transition: all .15s; }
   .btn-step:hover { border-color: color-mix(in srgb, var(--accent) 50%, transparent); color: #ece6df; transform: translateY(-1px); }
   .btn-use { padding: 0 18px; border-radius: 8px; border: none; color: #0b0908; font-family: inherit; font-size: 10.5px; font-weight: 800; letter-spacing: .16em; cursor: pointer; transition: transform .15s, box-shadow .15s; }
@@ -365,6 +368,7 @@ async function renderServers() {
           <div style="font-size:14.5px;font-weight:800;color:#D4A858">${fmtUSD2(s.cost30d)}</div>
           <div style="font-size:9px;color:#57504b;margin-top:3px">joined ${escapeHtml(fmtTime(s.joinedAt))}</div>
         </div>
+        ${s.isActive ? `<span data-join="${escapeHtml(s.guildId)}" role="button" class="mono" style="flex:none;font-size:9px;letter-spacing:.12em;font-weight:800;color:var(--accent);border:1px solid color-mix(in srgb,var(--accent) 40%,transparent);border-radius:8px;padding:7px 10px">JOIN</span>` : ''}
         <span style="color:#4a423d;font-size:15px;flex:none">›</span>
       </a>`).join('');
 
@@ -404,7 +408,10 @@ async function renderServers() {
         <div><div class="micro-label">MSGS</div><div style="font-size:15px;font-weight:700;color:#b9b0a8;margin-top:4px">${fmtNum(s.msgs30d)}</div></div>
         <div><div class="micro-label">EVENTS</div><div style="font-size:15px;font-weight:700;color:#b9b0a8;margin-top:4px">${fmtNum(s.events30d)}</div></div>
       </div>
-      <a href="overview.html?guild=${encodeURIComponent(s.guildId)}" class="btn-manage mono" style="margin-left:10px">MANAGE →</a>
+      <div class="flex items-center" style="gap:8px;margin-left:10px">
+        ${s.isActive ? `<button type="button" data-join="${escapeHtml(s.guildId)}" class="btn-join mono" title="Lấy link mời vào server">JOIN ↗</button>` : ''}
+        <a href="overview.html?guild=${encodeURIComponent(s.guildId)}" class="btn-manage mono">MANAGE →</a>
+      </div>
     </div>
   `).join('');
 
@@ -1004,6 +1011,44 @@ async function saveSettings() {
     btn.disabled = false; btn.style.opacity = '';
   }
 }
+
+/* ==================== join server (invite) ==================== */
+// Fetch an invite link into a guild the bot is in, then open it. The link is
+// minted server-side (stored URL → bot instant invite → guild widget).
+async function joinServer(btn) {
+  const guildId = btn.getAttribute('data-join');
+  if (!guildId || btn.dataset.busy === '1') return;
+  btn.dataset.busy = '1';
+  const label = btn.textContent;
+  btn.textContent = '…';
+  if (btn.tagName === 'BUTTON') btn.disabled = true;
+  try {
+    const r = await fetch(`/api/kata/admin/servers/${encodeURIComponent(guildId)}/invite`, { credentials: 'include' });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok || !data.url) {
+      showToast('⚠ ' + (data.message || `Không lấy được invite (lỗi ${r.status})`), true);
+      return;
+    }
+    window.open(data.url, '_blank', 'noopener');
+    showToast('✓ Mở link invite…');
+  } catch {
+    showToast('⚠ Lỗi mạng — chưa lấy được invite', true);
+  } finally {
+    btn.dataset.busy = '';
+    btn.textContent = label;
+    if (btn.tagName === 'BUTTON') btn.disabled = false;
+  }
+}
+
+// Delegated so it survives re-renders of the servers list (mobile JOIN sits
+// inside the row's <a>, so we must stop it from navigating to overview).
+elContent.addEventListener('click', (e) => {
+  const j = e.target.closest('[data-join]');
+  if (!j) return;
+  e.preventDefault();
+  e.stopPropagation();
+  joinServer(j);
+});
 
 /* ==================== tab routing ==================== */
 const renderers = { servers: renderServers, logs: renderLogs, cost: renderCost, settings: renderSettings };

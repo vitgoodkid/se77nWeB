@@ -304,6 +304,14 @@ async function handleKata(req, res) {
     return handleKataAdminGlobalConfigPatch(req, res);
   }
 
+  // /api/kata/admin/servers/<guildId>/invite — owner-only. Returns an invite
+  // link into a guild the bot is already in, so the owner can hop in to look
+  // around. MUST precede the generic /admin/<section> match below.
+  const inviteMatch = kataPath.match(/^admin\/servers\/(\d+)\/invite$/);
+  if (inviteMatch && req.method === 'GET') {
+    return handleKataAdminServerInvite(req, res, inviteMatch[1]);
+  }
+
   // /api/kata/admin/<section> — owner-only aggregate dashboards
   const adminMatch = kataPath.match(/^admin\/([a-z-]+)$/);
   if (adminMatch && req.method === 'GET') {
@@ -1356,6 +1364,96 @@ async function adminServers(req, res, kataDb) {
       msgs30d: Number(msgMap[s.guildId] ?? 0),
     })),
   });
+}
+
+// ── /admin/servers/:guildId/invite ─────────────────────────────
+// Resolve a Discord invite link into a guild the bot is already in. Tried in
+// order: (1) an invite/vanity URL stored on the server doc, (2) the bot
+// minting a fresh 7-day instant invite (needs DISCORD_BOT_TOKEN + a channel
+// where the bot has CREATE_INSTANT_INVITE), (3) the guild widget's public
+// instant invite (only if the guild enabled its widget). Cached 30min.
+async function handleKataAdminServerInvite(req, res, guildId) {
+  const auth = await requireOwner(req);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error, message: auth.message });
+
+  const kataDb = await getKataDb();
+  const server = await kataDb.collection('servers').findOne(
+    { guildId },
+    { projection: { guildId: 1, name: 1, isActive: 1, inviteUrl: 1, vanityUrl: 1 } },
+  );
+  if (!server) return res.status(404).json({ error: 'not_in_guild', message: 'Bot không ở trong server này.' });
+
+  const { value } = await cached(`kata:admin:invite:${guildId}`, 1800, async () => {
+    // 1) stored link wins — zero API cost, survives token/widget gaps.
+    const stored = server.inviteUrl || server.vanityUrl;
+    if (stored) return { url: String(stored), source: 'stored' };
+
+    // 2) mint via the bot (most reliable when configured).
+    const botToken = env('DISCORD_BOT_TOKEN');
+    if (botToken) {
+      const minted = await createBotInvite(guildId, botToken);
+      if (minted) return { url: minted, source: 'bot' };
+    }
+
+    // 3) public widget fallback — works without any secret, but only when the
+    //    guild has its widget enabled.
+    const widget = await fetchWidgetInvite(guildId);
+    if (widget) return { url: widget, source: 'widget' };
+
+    return null;
+  });
+
+  if (!value) {
+    return res.status(404).json({
+      error: 'no_invite',
+      message: 'Không tạo được invite. Cần bật server widget hoặc đặt DISCORD_BOT_TOKEN cho web.',
+    });
+  }
+  return res.status(200).json({ guildId, ...value });
+}
+
+// Create a 7-day instant invite. Walks the guild's text/announcement channels
+// (by position) until one accepts the invite — channels can individually deny
+// the bot CREATE_INSTANT_INVITE, so a single 403 isn't fatal.
+async function createBotInvite(guildId, botToken) {
+  const headers = { Authorization: `Bot ${botToken}` };
+  let channels;
+  try {
+    const r = await fetch(`https://discord.com/api/v10/guilds/${guildId}/channels`, { headers });
+    if (!r.ok) return null;
+    channels = await r.json();
+  } catch { return null; }
+  if (!Array.isArray(channels)) return null;
+
+  const candidates = channels
+    .filter((c) => c.type === 0 || c.type === 5) // GUILD_TEXT, GUILD_ANNOUNCEMENT
+    .sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
+    .slice(0, 6);
+
+  for (const ch of candidates) {
+    try {
+      const r = await fetch(`https://discord.com/api/v10/channels/${ch.id}/invites`, {
+        method: 'POST',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ max_age: 604800, max_uses: 0, unique: false }),
+      });
+      if (r.ok) {
+        const inv = await r.json();
+        if (inv?.code) return `https://discord.gg/${inv.code}`;
+      }
+    } catch { /* try next channel */ }
+  }
+  return null;
+}
+
+// Public guild widget — returns instant_invite when the guild enabled it.
+async function fetchWidgetInvite(guildId) {
+  try {
+    const r = await fetch(`https://discord.com/api/v10/guilds/${guildId}/widget.json`);
+    if (!r.ok) return null;
+    const w = await r.json();
+    return w?.instant_invite || null;
+  } catch { return null; }
 }
 
 // ── /admin/logs ────────────────────────────────────────────────
