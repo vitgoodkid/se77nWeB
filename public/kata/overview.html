@@ -90,9 +90,6 @@
     <a id="kata-tab-cost" href="#" class="navrow flex items-center gap-3 px-3.5 py-3 rounded-[10px] mb-1 text-[10.5px] tracking-label uppercase font-extrabold text-mute hover:text-ink" style="border-left:2px solid transparent">
       <span class="text-mute2">$</span><span class="flex-1">cost</span><span id="ov-nav-cost" class="text-[9px] text-mute2" style="letter-spacing:0">—</span>
     </a>
-    <a id="kata-tab-settings" href="#" class="navrow flex items-center gap-3 px-3.5 py-3 rounded-[10px] mb-1 text-[10.5px] tracking-label uppercase font-extrabold text-mute hover:text-ink" style="border-left:2px solid transparent">
-      <span class="text-mute2">⚙</span><span class="flex-1">settings</span>
-    </a>
   </nav>
 
   <div class="flex-1"></div>
@@ -135,54 +132,55 @@
       </div>
     </div>
 
-  </div>
-</main>
-
-<!-- settings drawer (hidden by default) -->
-<div id="settings-drawer" class="fixed inset-0 z-[100] hidden">
-  <div id="settings-backdrop" class="absolute inset-0" style="background:rgba(0,0,0,0.6)"></div>
-  <div class="absolute right-0 top-0 bottom-0 w-[640px] max-w-[100vw] bg-panel border-l border-line overflow-y-auto" style="box-shadow:-32px 0 80px -20px rgba(0,0,0,0.6)">
-    <div class="sticky top-0 z-10 flex items-center justify-between px-6 py-4 border-b border-line backdrop-blur-md" style="background:rgba(21,17,13,0.92)">
-      <div>
-        <div class="mono text-[9px] uppercase tracking-kicker text-mute">SETTINGS</div>
-        <h2 id="settings-title" class="mono text-[20px] font-bold tracking-tight lowercase mt-1">config<span class="text-red">.</span></h2>
+    <!-- config (settings integrated into overview) -->
+    <form id="settings-form" class="rounded-[16px] border border-line mt-[18px]" style="background:#131010">
+      <div class="flex items-center justify-between" style="padding:20px 24px;border-bottom:1px solid #272120">
+        <div class="mono text-[9.5px] tracking-label uppercase text-mute" style="font-weight:800">config</div>
+        <span id="ovr-count" class="mono text-[9px] tracking-label uppercase" style="color:#8a7f78">—</span>
       </div>
-      <button id="settings-close" class="mono h-9 w-9 rounded-[8px] border border-line text-mute hover:text-ink hover:border-ink/30 grid place-items-center">✕</button>
-    </div>
-    <form id="settings-form" class="p-6 space-y-6">
+      <div style="padding:22px 24px" class="space-y-6">
 
-      <section data-section="sysprompt">
-        <div class="mono text-[10px] uppercase tracking-kicker text-mute mb-2">system prompt</div>
-        <textarea id="f-systemPrompt" rows="8" maxlength="4000" class="w-full bg-bg border border-line rounded-[10px] p-3 text-[12px] text-ink mono leading-relaxed resize-y focus:outline-none focus:border-red/60 placeholder:text-mute2" placeholder="Để trống = mặc định"></textarea>
-        <div class="mono text-[10px] text-mute2 mt-1.5"><span id="f-systemPrompt-count">0</span> / 4000 ký tự</div>
-      </section>
-
-      <section data-section="moderation" class="grid grid-cols-2 gap-3">
-        <div>
-          <div class="mono text-[10px] uppercase tracking-kicker text-mute mb-2">rate limit · msg/hr per user</div>
-          <input id="f-rateLimitPerUser" type="number" min="1" max="1000" step="1" class="w-full bg-bg border border-line rounded-[10px] h-10 px-3 text-[12px] text-ink mono focus:outline-none focus:border-red/60" />
+        <div data-fld="systemPrompt">
+          <div class="flex items-center gap-2.5 mb-2">
+            <span class="mono text-[10px] tracking-label uppercase text-mute" style="font-weight:800">system prompt</span>
+            <span data-badge="systemPrompt"></span>
+            <button type="button" data-reset="systemPrompt" class="mono text-[9px] tracking-label uppercase text-mute hover:text-ink" style="display:none">reset</button>
+          </div>
+          <textarea id="f-systemPrompt" rows="6" maxlength="4000" class="w-full rounded-[10px] p-3 text-[12px] text-ink mono leading-relaxed resize-y focus:outline-none placeholder:text-mute2" style="background:#0e0b0a;border:1px solid #2c2522" placeholder="Để trống = mặc định"></textarea>
+          <div class="mono text-[10px] text-mute2 mt-1.5"><span id="f-systemPrompt-count">0</span> / 4000 ký tự</div>
         </div>
-      </section>
 
-      <section data-section="channels">
-        <div class="flex items-baseline justify-between mb-2">
-          <div class="mono text-[10px] uppercase tracking-kicker text-mute">allowed channels</div>
-          <div class="mono text-[10px] text-mute2">Để trống = mọi channel</div>
+        <div class="grid gap-6" style="grid-template-columns:1fr 1.5fr">
+          <div data-fld="rateLimitPerUser">
+            <div class="flex items-center gap-2.5 mb-2">
+              <span class="mono text-[10px] tracking-label uppercase text-mute" style="font-weight:800">rate limit · msg/hr</span>
+              <span data-badge="rateLimitPerUser"></span>
+              <button type="button" data-reset="rateLimitPerUser" class="mono text-[9px] tracking-label uppercase text-mute hover:text-ink" style="display:none">reset</button>
+            </div>
+            <input id="f-rateLimitPerUser" type="number" min="1" max="1000" step="1" class="w-full rounded-[10px] h-10 px-3 text-[12px] text-ink mono focus:outline-none" style="background:#0e0b0a;border:1px solid #2c2522" />
+          </div>
+          <div data-fld="allowedChannels">
+            <div class="flex items-center gap-2.5 mb-2">
+              <span class="mono text-[10px] tracking-label uppercase text-mute" style="font-weight:800">allowed channels</span>
+              <span data-badge="allowedChannels"></span>
+              <button type="button" data-reset="allowedChannels" class="mono text-[9px] tracking-label uppercase text-mute hover:text-ink" style="display:none">reset</button>
+              <span class="flex-1"></span>
+              <span class="mono text-[10px] text-mute2">trống = mọi channel</span>
+            </div>
+            <input id="f-allowedChannels" class="w-full rounded-[10px] h-10 px-3 text-[12px] text-ink mono focus:outline-none placeholder:text-mute2" style="background:#0e0b0a;border:1px solid #2c2522" placeholder="123456789012345678, 234567890123456789" />
+            <div class="mono text-[10px] text-mute2 mt-1.5">Channel IDs cách nhau bằng dấu phẩy</div>
+          </div>
         </div>
-        <input id="f-allowedChannels" class="w-full bg-bg border border-line rounded-[10px] h-10 px-3 text-[12px] text-ink mono focus:outline-none focus:border-red/60" placeholder="123456789012345678, 234567890123456789" />
-        <div class="mono text-[10px] text-mute2 mt-1.5">Channel IDs cách nhau bằng dấu phẩy</div>
-      </section>
 
-      <div class="sticky bottom-0 -mx-6 -mb-6 px-6 py-4 border-t border-line backdrop-blur-md flex items-center justify-between gap-3" style="background:rgba(21,17,13,0.92)">
+      </div>
+      <div class="flex items-center justify-between gap-3" style="padding:16px 24px;border-top:1px solid #272120">
         <div id="settings-status" class="mono text-[11px] text-mute2"></div>
-        <div class="flex items-center gap-2">
-          <button type="button" id="settings-cancel" class="mono h-9 px-4 rounded-[10px] border border-line text-mute hover:text-ink text-[10px] tracking-label uppercase" data-i18n="btn.cancel">huỷ</button>
-          <button type="submit" id="settings-save" class="mono h-9 px-5 rounded-[10px] text-[10px] tracking-label uppercase font-bold text-bg" style="background:#E04545" data-i18n="btn.save">▸ lưu</button>
-        </div>
+        <button type="submit" id="settings-save" class="mono" style="background:var(--accent,#E04545);color:#fff;padding:11px 26px;border-radius:10px;font-size:10px;letter-spacing:.16em;font-weight:800;text-transform:uppercase;cursor:pointer;border:none" data-i18n="btn.save">▸ lưu</button>
       </div>
     </form>
+
   </div>
-</div>
+</main>
 
 <!-- toast -->
 <div id="toast" class="fixed top-20 right-6 z-[110] pointer-events-none"></div>
@@ -366,6 +364,9 @@ async function loadOverview(){
   if (navLogs) navLogs.textContent = fmtNum(s.events30d);
   const navCost = document.getElementById('ov-nav-cost');
   if (navCost) navCost.textContent = '$' + (k.cost30d.value || 0).toFixed(2);
+
+  // Inline config form (settings integrated into overview).
+  fillSettings();
 }
 
 // Coarse "time since join" for the stat strip — days → months → years.
@@ -404,54 +405,26 @@ function fieldSource(cfg, key) {
   return 'code';
 }
 
+// Stamp the source badge (OVERRIDE / GLOBAL / CODE) per field + toggle its
+// reset button, and update the override counter in the config header.
 function paintFieldSources(cfg) {
-  for (const { key, input } of SETTINGS_FIELD_MAP) {
-    const inputEl = document.getElementById(input);
-    if (!inputEl) continue;
-    // Walk up to the row container — heuristic: nearest section header
-    // sibling. Simpler: stamp a badge into the input's parent label.
-    let labelHost = inputEl.closest('label, .field, [data-field-host]');
-    if (!labelHost) labelHost = inputEl.parentElement;
-    if (!labelHost) continue;
-    // Remove any previous badge so re-opens don't stack them.
-    labelHost.querySelectorAll('[data-source-badge]').forEach((n) => n.remove());
-
+  let overrides = 0;
+  for (const { key } of SETTINGS_FIELD_MAP) {
     const source = fieldSource(cfg, key);
-    const badge = document.createElement('span');
-    badge.setAttribute('data-source-badge', '1');
-    badge.className = 'mono text-[9px] tracking-label uppercase px-1.5 py-0.5 rounded ml-2 align-middle';
-    if (source === 'override') {
-      badge.style.background = '#E0454522';
-      badge.style.color = '#E04545';
-      badge.style.border = '1px solid #E0454544';
-      badge.textContent = 'OVERRIDE';
-    } else if (source === 'global') {
-      badge.style.background = '#D4A85822';
-      badge.style.color = '#D4A858';
-      badge.style.border = '1px solid #D4A85844';
-      badge.textContent = 'GLOBAL';
-    } else {
-      badge.style.background = 'rgba(245,237,224,0.05)';
-      badge.style.color = 'rgba(245,237,224,0.5)';
-      badge.style.border = '1px solid rgba(245,237,224,0.10)';
-      badge.textContent = 'CODE';
+    if (source === 'override') overrides++;
+    const badge = document.querySelector(`[data-badge="${key}"]`);
+    if (badge) {
+      badge.className = 'mono text-[9px] tracking-label uppercase';
+      badge.style.cssText = 'border-radius:99px;padding:2px 8px';
+      if (source === 'override') { badge.textContent = 'OVERRIDE'; badge.style.background = '#E0454522'; badge.style.color = '#E04545'; badge.style.border = '1px solid #E0454544'; }
+      else if (source === 'global') { badge.textContent = 'GLOBAL'; badge.style.background = '#D4A85822'; badge.style.color = '#D4A858'; badge.style.border = '1px solid #D4A85844'; }
+      else { badge.textContent = 'CODE'; badge.style.background = 'rgba(245,237,224,0.05)'; badge.style.color = 'rgba(245,237,224,0.5)'; badge.style.border = '1px solid rgba(245,237,224,0.10)'; }
     }
-    // Find the leading element to append onto — usually the first <div> with
-    // section heading text. Append into it; if none, prepend to the host.
-    const heading = labelHost.querySelector(':scope > .mono.text-\\[11px\\], :scope > .mono.text-\\[12px\\], :scope > div:first-child') || labelHost;
-    heading.appendChild(badge);
-
-    if (source === 'override') {
-      const reset = document.createElement('button');
-      reset.type = 'button';
-      reset.setAttribute('data-source-badge', '1');
-      reset.className = 'mono text-[10px] tracking-label uppercase text-mute hover:text-ink ml-2';
-      reset.textContent = 'reset';
-      reset.title = 'Clear this guild override; field will inherit from global / code';
-      reset.addEventListener('click', () => resetFieldToInherit(key));
-      heading.appendChild(reset);
-    }
+    const reset = document.querySelector(`[data-reset="${key}"]`);
+    if (reset) reset.style.display = source === 'override' ? '' : 'none';
   }
+  const cnt = document.getElementById('ovr-count');
+  if (cnt) cnt.textContent = `${overrides}/${SETTINGS_FIELD_MAP.length} override`;
 }
 
 async function resetFieldToInherit(key) {
@@ -472,31 +445,23 @@ async function resetFieldToInherit(key) {
       return;
     }
     showToast('Reset xong — field đã trả về kế thừa', 'ok');
-    closeSettings();
     loadOverview();
   } catch (err) {
     if (status) { status.textContent = '⚠ ' + (err.message || 'lỗi mạng'); status.className = 'mono text-[11px] text-err'; }
   }
 }
 
-function openSettings(focusSection){
-  if (!CURRENT_CONFIG){ showToast('Đang tải config…', 'info'); return; }
+// Populate the inline config form from the loaded config + paint source badges.
+function fillSettings() {
   const c = CURRENT_CONFIG;
+  if (!c) return;
   document.getElementById('f-systemPrompt').value = c.systemPrompt || '';
   document.getElementById('f-systemPrompt-count').textContent = (c.systemPrompt || '').length;
   document.getElementById('f-rateLimitPerUser').value = c.rateLimitPerUser ?? 30;
   document.getElementById('f-allowedChannels').value = (c.allowedChannels || []).join(', ');
-  document.getElementById('settings-status').textContent = '';
-  document.getElementById('settings-drawer').classList.remove('hidden');
   paintFieldSources(c);
-  if (focusSection){
-    const target = document.querySelector(`#settings-form [data-section="${focusSection}"]`);
-    if (target) target.scrollIntoView({ behavior:'smooth', block:'start' });
-  }
 }
-function closeSettings(){ document.getElementById('settings-drawer').classList.add('hidden'); }
 
-document.getElementById('kata-tab-settings').addEventListener('click', (e)=>{ e.preventDefault(); openSettings(); });
 const _gid = getGuildId();
 if (_gid){
   const costLink = document.getElementById('kata-tab-cost');
@@ -506,12 +471,9 @@ if (_gid){
 }
 // Active nav row — already on overview, so just stop the # jump.
 document.getElementById('kata-tab-overview')?.addEventListener('click', (e) => e.preventDefault());
-document.getElementById('settings-close').addEventListener('click', closeSettings);
-document.getElementById('settings-cancel').addEventListener('click', closeSettings);
-document.getElementById('settings-backdrop').addEventListener('click', closeSettings);
-document.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') closeSettings(); });
-for (const btn of document.querySelectorAll('[data-open-settings]')){
-  btn.addEventListener('click', (e)=>{ e.preventDefault(); openSettings(btn.dataset.openSettings); });
+// Per-field reset (clear the guild override → inherit global/code).
+for (const btn of document.querySelectorAll('[data-reset]')){
+  btn.addEventListener('click', () => resetFieldToInherit(btn.getAttribute('data-reset')));
 }
 document.getElementById('f-systemPrompt').addEventListener('input', (e)=>{
   document.getElementById('f-systemPrompt-count').textContent = e.target.value.length;
@@ -549,7 +511,7 @@ document.getElementById('settings-form').addEventListener('submit', async (e)=>{
     status.textContent = 'OK · published config:updated:' + getGuildId();
     status.className = 'mono text-[11px] text-green';
     CURRENT_CONFIG = data.config || CURRENT_CONFIG;
-    setTimeout(()=>{ closeSettings(); loadOverview(); }, 800);
+    setTimeout(loadOverview, 800);
   } catch (err){
     status.textContent = '⚠ ' + (err.message || 'lỗi mạng');
     status.className = 'mono text-[11px] text-err';
@@ -561,11 +523,7 @@ document.getElementById('settings-form').addEventListener('submit', async (e)=>{
 
 document.getElementById('ov-refresh')?.addEventListener('click', () => { loadOverview(); showToast('↻ Đã tải lại', 'ok'); });
 
-// Open the settings drawer straight away when arrived via the sidebar SETTINGS
-// row on logs/cost (?settings=1).
-loadOverview().then(() => {
-  if (new URLSearchParams(location.search).get('settings') === '1') openSettings();
-});
+loadOverview();
 </script>
 
 </body>
