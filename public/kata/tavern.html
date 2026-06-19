@@ -54,6 +54,24 @@
   .set-grid { display: grid; grid-template-columns: minmax(0,1fr) 380px; gap: 24px; align-items: start; }
   .set-main { display: flex; flex-direction: column; gap: 16px; }
   .set-card { background: rgba(21,17,13,0.45); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 22px; }
+  /* segmented sub-nav (Tavern Setting design) */
+  .set-segnav { display: flex; gap: 7px; padding: 6px; background: rgba(21,17,13,0.55); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; }
+  .segtab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 8px; border-radius: 11px; border: 1px solid transparent; background: transparent; color: rgba(245,237,224,0.5); cursor: pointer; font-family: inherit; transition: background .16s ease, color .16s ease, border-color .16s ease, transform .16s ease; }
+  .segtab:hover { color: #f5ede0; transform: translateY(-1px); }
+  .segtab .ico { font-size: 17px; line-height: 1; }
+  .segtab .lbl { display: flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 800; }
+  .segtab .dot { width: 5px; height: 5px; border-radius: 99px; background: transparent; }
+  .segtab .dot.cust { background: #D4A858; }
+  .segtab.on { background: linear-gradient(135deg, #8a4fff, #5f33b8); color: #fff; border-color: rgba(138,79,255,0.55); box-shadow: 0 10px 24px rgba(138,79,255,0.42); }
+  .segtab.on .dot.cust { background: rgba(255,255,255,0.95); }
+  .set-panel { display: none; animation: setPanelIn .22s ease; }
+  .set-panel.on { display: block; }
+  .set-panel.set-panel-imagery.on { display: flex; flex-direction: column; gap: 16px; }
+  @keyframes setPanelIn { from { transform: translateY(8px); opacity: .55; } to { transform: none; opacity: 1; } }
+  .set-narr-head { display: flex; align-items: center; gap: 13px; margin-bottom: 18px; }
+  .set-narr-ico { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 10px; background: linear-gradient(135deg, #8a4fff, #5a2fb0); color: #fff; font-size: 16px; box-shadow: 0 6px 18px rgba(138,79,255,0.4); flex: none; }
+  .set-narr-t { font-size: 17px; font-weight: 700; letter-spacing: -.01em; }
+  .set-narr-s { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 10px; color: rgba(245,237,224,0.4); margin-top: 3px; }
   .set-sec { display: flex; align-items: center; gap: 11px; margin-bottom: 18px; }
   .set-num { flex: 0 0 auto; width: 26px; height: 26px; display: grid; place-items: center; border-radius: 7px;
     background: rgba(138,79,255,0.12); border: 1px solid rgba(138,79,255,0.30); color: #8a4fff;
@@ -1131,72 +1149,110 @@ async function renderDefaults() {
   const provDisplay = (v) => (v && v.includes(':') ? v.split(':').slice(1).join(':') : v);
   const provName = (v) => (!v ? 'default' : v.includes(':') ? v.split(':')[0] : 'yunwu');
 
+  const cust = {
+    narration: !!(t.storytellerSystemPrompt && t.storytellerSystemPrompt.trim()),
+    models: SET_MODEL_ROWS.some((m) => t[m.key]),
+    imagery: chains.sceneImageModels.length > 0 || chains.coverImageModels.length > 0 || !!(t.imagePromptTemplate || '').trim() || !!(t.imageNegativePrompt || '').trim(),
+    tuning: t.turnTemperature != null || t.turnMaxTokens != null || t.memoryWindowSize != null,
+  };
+  const seg = (id, icon, label) => `
+    <button type="button" class="segtab${id === 'narration' ? ' on' : ''}" data-panel="${id}">
+      <span class="ico">${icon}</span>
+      <span class="lbl">${label}<span class="dot${cust[id] ? ' cust' : ''}"></span></span>
+    </button>`;
+
   elContent.innerHTML = `
     <div class="set-grid">
       <div class="set-main">
         <div class="mono text-[11px] text-mute" style="line-height:1.6">
-          Baseline áp dụng cho mọi world. Bỏ trống → field rơi xuống engine code default · per-world override luôn thắng.
+          Baseline áp dụng cho mọi world. Bỏ trống → field rơi xuống engine code default · <span style="color:rgba(245,237,224,0.75)">per-world override luôn thắng.</span>
         </div>
 
-        <section class="set-card">
-          <div class="set-sec"><span class="set-num">01</span><span class="set-sec-h">narration</span></div>
-          <div class="set-flabel"><span class="l">system prompt</span><span class="h">empty → engine novelist default</span></div>
-          <textarea class="field" data-t="storytellerSystemPrompt" rows="9" placeholder="Describe how the storyteller should narrate, stay in character, pace scenes…">${escapeHtml(t.storytellerSystemPrompt ?? '')}</textarea>
-        </section>
+        <div class="set-segnav">
+          ${seg('narration', '✎', 'narration')}
+          ${seg('models', '◈', 'models')}
+          ${seg('imagery', '◳', 'imagery')}
+          ${seg('tuning', '⊹', 'tuning')}
+        </div>
 
-        <section class="set-card">
-          <div class="set-sec"><span class="set-num">02</span><span class="set-sec-h">models</span></div>
-          <div class="set-grid2">
-            ${SET_MODEL_ROWS.map((m) => `
+        <!-- ===== NARRATION ===== -->
+        <div class="set-panel set-panel-narration on" data-panelbody="narration">
+          <section class="set-card" style="border-top:2px solid #8a4fff;box-shadow:0 -1px 24px rgba(138,79,255,0.12)">
+            <div class="set-narr-head">
+              <span class="set-narr-ico mono">✎</span>
+              <div style="flex:1">
+                <div class="set-narr-t">System prompt</div>
+                <div class="set-narr-s">drives how the storyteller narrates every turn</div>
+              </div>
+              <span class="mono" id="sys-count" style="font-size:11px;font-weight:700;color:#8a4fff;flex:none">0 chars</span>
+            </div>
+            <textarea class="field" data-t="storytellerSystemPrompt" rows="14" placeholder="Describe how the storyteller should narrate, stay in character, pace scenes, handle dialogue…">${escapeHtml(t.storytellerSystemPrompt ?? '')}</textarea>
+            <div class="mono" style="font-size:10px;color:rgba(245,237,224,0.35);margin-top:12px;line-height:1.6">Empty → engine novelist default. Markdown được giữ nguyên khi gửi tới model.</div>
+          </section>
+        </div>
+
+        <!-- ===== MODELS ===== -->
+        <div class="set-panel set-panel-models" data-panelbody="models">
+          <section class="set-card">
+            <div class="mono" style="font-size:13px;letter-spacing:.16em;text-transform:uppercase;font-weight:800;margin-bottom:4px">model routing</div>
+            <div class="mono" style="font-size:10px;color:rgba(245,237,224,0.4);margin-bottom:20px">mỗi vai trò có thể chọn model riêng · bỏ trống = engine default</div>
+            <div class="set-grid2">
+              ${SET_MODEL_ROWS.map((m) => `
+                <div>
+                  <div class="set-flabel"><span class="l">${escapeHtml(m.label)}</span><span class="h">${escapeHtml(m.hint)}</span></div>
+                  ${modelPickerHtml({ scope: 'tmp', key: m.key }, t[m.key], SET_DEFAULTS[m.key],
+                    m.key === 'subjectModel' ? TAVERN_SUBJECT_MODELS_BY_PROVIDER : TAVERN_CHAT_MODELS_BY_PROVIDER)}
+                </div>`).join('')}
+            </div>
+          </section>
+        </div>
+
+        <!-- ===== IMAGERY ===== -->
+        <div class="set-panel set-panel-imagery" data-panelbody="imagery">
+          <section class="set-card">
+            <div class="set-flabel"><span class="l">scene image chain</span><span class="h">fal.ai · tried top → bottom, first success wins</span></div>
+            <div data-chain="sceneImageModels"></div>
+          </section>
+          <section class="set-card">
+            <div class="set-flabel"><span class="l">cover image chain</span><span class="h">fal.ai · tried top → bottom, first success wins</span></div>
+            <div data-chain="coverImageModels"></div>
+          </section>
+          <section class="set-card">
+            <div class="mono" style="font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:800;margin-bottom:16px">prompt templating</div>
+            <div class="set-grid2">
               <div>
-                <div class="set-flabel"><span class="l">${escapeHtml(m.label)}</span><span class="h">${escapeHtml(m.hint)}</span></div>
-                ${modelPickerHtml({ scope: 'tmp', key: m.key }, t[m.key], SET_DEFAULTS[m.key],
-                  m.key === 'subjectModel' ? TAVERN_SUBJECT_MODELS_BY_PROVIDER : TAVERN_CHAT_MODELS_BY_PROVIDER)}
-              </div>`).join('')}
-          </div>
-
-          <div class="set-rule"></div>
-
-          <div class="set-flabel"><span class="l">scene image chain</span><span class="h">fal.ai · tried top → bottom, first success wins</span></div>
-          <div data-chain="sceneImageModels"></div>
-
-          <div style="height:14px"></div>
-
-          <div class="set-flabel"><span class="l">cover image chain</span><span class="h">fal.ai · tried top → bottom, first success wins</span></div>
-          <div data-chain="coverImageModels"></div>
-        </section>
-
-        <section class="set-card">
-          <div class="set-sec"><span class="set-num">03</span><span class="set-sec-h">scene imagery</span></div>
-          <div class="set-grid2">
-            <div>
-              <div class="set-flabel"><span class="l">image prompt template</span><span class="h">{character_base}, {keywords}, {style}</span></div>
-              <input class="field" data-t="imagePromptTemplate" value="${escapeHtml(t.imagePromptTemplate ?? '')}" placeholder="{character_base}, {keywords}, {style}" />
+                <div class="set-flabel"><span class="l">image prompt template</span><span class="h">{character_base}, {keywords}, {style}</span></div>
+                <input class="field" data-t="imagePromptTemplate" value="${escapeHtml(t.imagePromptTemplate ?? '')}" placeholder="{character_base}, {keywords}, {style}" />
+              </div>
+              <div>
+                <div class="set-flabel"><span class="l">image negative prompt</span><span class="h">applied to every render</span></div>
+                <input class="field" data-t="imageNegativePrompt" value="${escapeHtml(t.imageNegativePrompt ?? '')}" placeholder="low quality, blurry, extra fingers…" />
+              </div>
             </div>
-            <div>
-              <div class="set-flabel"><span class="l">image negative prompt</span><span class="h">low quality, blurry…</span></div>
-              <input class="field" data-t="imageNegativePrompt" value="${escapeHtml(t.imageNegativePrompt ?? '')}" placeholder="low quality, blurry, extra fingers…" />
-            </div>
-          </div>
-        </section>
+          </section>
+        </div>
 
-        <section class="set-card">
-          <div class="set-sec"><span class="set-num">04</span><span class="set-sec-h">tuning</span></div>
-          <div class="set-grid3">
-            <div>
-              <div class="set-flabel"><span class="l">turn temperature</span><span class="h">0 – 2</span></div>
-              <input class="field" data-tnum="turnTemperature" type="number" step="0.05" min="0" max="2" value="${typeof t.turnTemperature === 'number' ? t.turnTemperature : ''}" placeholder="${SET_DEFAULTS.turnTemperature}" />
+        <!-- ===== TUNING ===== -->
+        <div class="set-panel set-panel-tuning" data-panelbody="tuning">
+          <section class="set-card">
+            <div class="mono" style="font-size:13px;letter-spacing:.16em;text-transform:uppercase;font-weight:800;margin-bottom:4px">generation tuning</div>
+            <div class="mono" style="font-size:10px;color:rgba(245,237,224,0.4);margin-bottom:22px">bỏ trống → engine code default trong ngoặc</div>
+            <div class="set-grid3">
+              <div>
+                <div class="set-flabel"><span class="l">turn temperature</span><span class="h">0 – 2</span></div>
+                <input class="field" data-tnum="turnTemperature" type="number" step="0.05" min="0" max="2" value="${typeof t.turnTemperature === 'number' ? t.turnTemperature : ''}" placeholder="${SET_DEFAULTS.turnTemperature}" />
+              </div>
+              <div>
+                <div class="set-flabel"><span class="l">turn max tokens</span><span class="h">per reply</span></div>
+                <input class="field" data-tnum="turnMaxTokens" type="number" min="1" max="32000" value="${typeof t.turnMaxTokens === 'number' ? t.turnMaxTokens : ''}" placeholder="${SET_DEFAULTS.turnMaxTokens}" />
+              </div>
+              <div>
+                <div class="set-flabel"><span class="l">memory window</span><span class="h">turns kept</span></div>
+                <input class="field" data-tnum="memoryWindowSize" type="number" min="1" max="500" value="${typeof t.memoryWindowSize === 'number' ? t.memoryWindowSize : ''}" placeholder="${SET_DEFAULTS.memoryWindowSize}" />
+              </div>
             </div>
-            <div>
-              <div class="set-flabel"><span class="l">turn max tokens</span><span class="h">per reply</span></div>
-              <input class="field" data-tnum="turnMaxTokens" type="number" min="1" max="32000" value="${typeof t.turnMaxTokens === 'number' ? t.turnMaxTokens : ''}" placeholder="${SET_DEFAULTS.turnMaxTokens}" />
-            </div>
-            <div>
-              <div class="set-flabel"><span class="l">memory window</span><span class="h">turns kept</span></div>
-              <input class="field" data-tnum="memoryWindowSize" type="number" min="1" max="500" value="${typeof t.memoryWindowSize === 'number' ? t.memoryWindowSize : ''}" placeholder="${SET_DEFAULTS.memoryWindowSize}" />
-            </div>
-          </div>
-        </section>
+          </section>
+        </div>
 
         <div class="set-savebar">
           <span class="set-savenote" id="set-savenote">unsaved · per-world override still wins</span>
@@ -1206,6 +1262,17 @@ async function renderDefaults() {
 
       <div class="resolved" id="resolved-rail"></div>
     </div>`;
+
+  // segmented panel switching + narration char count
+  elContent.querySelectorAll('[data-panel]').forEach((b) => b.addEventListener('click', () => {
+    const p = b.dataset.panel;
+    elContent.querySelectorAll('[data-panel]').forEach((x) => x.classList.toggle('on', x.dataset.panel === p));
+    elContent.querySelectorAll('[data-panelbody]').forEach((d) => d.classList.toggle('on', d.dataset.panelbody === p));
+  }));
+  const sysEl = elContent.querySelector('[data-t="storytellerSystemPrompt"]');
+  const sysCountEl = document.getElementById('sys-count');
+  const updSysCount = () => { if (sysCountEl && sysEl) sysCountEl.textContent = `${sysEl.value.length} chars`; };
+  if (sysEl) { sysEl.addEventListener('input', updSysCount); updSysCount(); }
 
   // ── live resolved preview ───────────────────────────────────
   const rail = document.getElementById('resolved-rail');
