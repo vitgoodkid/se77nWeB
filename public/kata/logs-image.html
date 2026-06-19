@@ -42,6 +42,17 @@
   .ph-8 { background: linear-gradient(135deg, #0d2818 0%, #2e5a45 50%, #8aca9a 100%); }
   .ph-9 { background: linear-gradient(135deg, #4a2a12 0%, #8a5a2e 50%, #e0c891 100%); }
   .ph-10 { background: linear-gradient(135deg, #1a2a3a 0%, #3a5a7a 30%, #c46868 80%); }
+
+  /* server subnav (shared Server Detail design) */
+  .navrow { transition: background .18s, transform .18s, color .18s; }
+  .navrow:hover { transform: translateX(3px); }
+  .navrow.on { background: #1a1312; }
+  /* log-type chips */
+  .kata-tab { display:flex; align-items:center; gap:8px; padding:9px 18px; border-radius:99px; font-size:10px; letter-spacing:.18em; font-weight:800; cursor:pointer; border:1px solid #2c2522; background:transparent; color:#8a7f78; transition:all .18s; text-transform:uppercase; font-family:'JetBrains Mono',ui-monospace,monospace; }
+  .kata-tab:hover { transform: translateY(-2px); color:#ece6df; }
+  .kata-tab.on { background:#E0454514; color:#E04545; border-color:#E0454573; }
+  .kata-tab .tab-count { font-size:9px; color:#57504b; }
+  .kata-tab.on .tab-count { color:#E04545; }
 </style>
 </head>
 <body class="bg-bg text-ink min-h-screen overflow-x-hidden">
@@ -71,25 +82,34 @@
   <div id="kata-header-actions" class="flex items-center gap-2.5"></div>
 </header>
 
-<!-- side nav -->
-<aside class="fixed top-16 left-0 bottom-0 w-[220px] z-40 border-r border-line backdrop-blur-md overflow-y-auto" style="background:rgba(13,10,8,0.6)">
-  <div class="p-5 border-b border-line">
-    <div id="kata-guild-icon" class="w-12 h-12 rounded-[10px] grid place-items-center mono text-[16px] font-extrabold mb-3" style="background:linear-gradient(135deg,#E04545,#7a1e1e);color:#0d0a08">--</div>
-    <div id="kata-guild-name" class="text-[14px] font-medium tracking-tight text-ink">Đang tải…</div>
-    <div id="kata-guild-meta" class="mono text-[10px] text-mute mt-1">—</div>
-    <div class="mono text-[9px] text-mute2 mt-2 tracking-label uppercase flex items-center gap-1.5"><span class="dot-pulse w-1.5 h-1.5 rounded-full bg-green"></span>online</div>
+<!-- side nav (server context) — profile card + subnav per Server Detail design -->
+<aside class="fixed top-16 left-0 bottom-0 w-[232px] z-40 border-r border-line backdrop-blur-md overflow-y-auto flex flex-col" style="background:rgba(13,10,8,0.6)">
+  <div class="flex flex-col items-center text-center px-4 pt-7 pb-5">
+    <div id="kata-guild-icon" class="grid place-items-center mono font-extrabold" style="width:74px;height:74px;border-radius:20px;background:linear-gradient(135deg,#5a4030,#3a2920);color:#e7c89a;font-size:22px;box-shadow:0 12px 30px rgba(0,0,0,.5);border:1px solid #4a3a2a">--</div>
+    <div id="kata-guild-name" class="text-[16px] font-bold tracking-tight text-ink mt-3.5 px-1">Đang tải…</div>
+    <div id="kata-guild-meta" class="mono text-[9.5px] text-mute mt-1.5">—</div>
+    <div class="flex items-center gap-1.5 mt-2.5">
+      <span class="dot-pulse w-1.5 h-1.5 rounded-full" style="background:#5BA868;box-shadow:0 0 7px rgba(91,168,104,.7)"></span>
+      <span class="mono text-[9px] tracking-label uppercase" style="color:#5BA868;font-weight:800">online</span>
+    </div>
   </div>
-  <nav class="px-3 py-4 mono text-[11px] tracking-label uppercase">
-    <a id="nav-overview" href="#" class="flex items-center justify-between px-3 py-2 rounded-[8px] mb-1 text-mute hover:text-ink hover:bg-ink/[0.03]">▸ overview</a>
-    <div class="px-3 py-2 mb-1 text-ink">▸ logs</div>
-    <a data-tab="chat" class="block px-3 py-1.5 ml-3 rounded-[8px] text-mute hover:text-ink hover:bg-ink/[0.03] cursor-pointer"><span data-i18n="logs.tab.chat">↳ chat</span></a>
-    <a data-tab="image" class="block px-3 py-1.5 ml-3 rounded-[8px] text-mute hover:text-ink hover:bg-ink/[0.03] cursor-pointer"><span data-i18n="logs.tab.image">↳ image</span></a>
-    <a data-tab="video" class="block px-3 py-1.5 ml-3 rounded-[8px] text-mute hover:text-ink hover:bg-ink/[0.03] cursor-pointer"><span data-i18n="logs.tab.video">↳ video</span></a>
-    <a data-tab="command" class="block px-3 py-1.5 ml-3 rounded-[8px] text-mute hover:text-ink hover:bg-ink/[0.03] cursor-pointer"><span data-i18n="logs.tab.command">↳ commands</span></a>
-    <a id="nav-cost" href="#" class="flex items-center justify-between px-3 py-2 rounded-[8px] mt-2 mb-1 text-mute hover:text-ink hover:bg-ink/[0.03]">▸ cost</a>
+  <nav class="px-3 mono">
+    <a id="nav-overview" href="#" class="navrow flex items-center gap-3 px-3.5 py-3 rounded-[10px] mb-1 text-[10.5px] tracking-label uppercase font-extrabold text-mute hover:text-ink" style="border-left:2px solid transparent">
+      <span class="text-mute2">◰</span><span class="flex-1">overview</span>
+    </a>
+    <a id="nav-logs" href="#" class="navrow on flex items-center gap-3 px-3.5 py-3 rounded-[10px] mb-1 text-[10.5px] tracking-label uppercase font-extrabold text-ink" style="border-left:2px solid #E04545">
+      <span style="color:#E04545">✉</span><span class="flex-1">logs</span><span id="nav-logs-meta" class="text-[9px] text-mute2" style="letter-spacing:0">—</span>
+    </a>
+    <a id="nav-cost" href="#" class="navrow flex items-center gap-3 px-3.5 py-3 rounded-[10px] mb-1 text-[10.5px] tracking-label uppercase font-extrabold text-mute hover:text-ink" style="border-left:2px solid transparent">
+      <span class="text-mute2">$</span><span class="flex-1">cost</span><span id="nav-cost-meta" class="text-[9px] text-mute2" style="letter-spacing:0">—</span>
+    </a>
+    <a id="nav-settings" href="#" class="navrow flex items-center gap-3 px-3.5 py-3 rounded-[10px] mb-1 text-[10.5px] tracking-label uppercase font-extrabold text-mute hover:text-ink" style="border-left:2px solid transparent">
+      <span class="text-mute2">⚙</span><span class="flex-1">settings</span>
+    </a>
   </nav>
-  <div class="px-5 py-4 border-t border-line">
-    <a href="servers.html" class="mono text-[10px] tracking-label uppercase text-mute hover:text-ink flex items-center gap-2" data-i18n="btn.back-servers">← all servers</a>
+  <div class="flex-1"></div>
+  <div class="px-3 pb-5">
+    <a href="servers.html" class="mono flex items-center gap-2 px-3.5 py-3 rounded-[10px] text-[10.5px] tracking-label uppercase text-mute hover:text-ink" data-i18n="btn.back-servers" style="font-weight:700">← all servers</a>
   </div>
 </aside>
 
@@ -111,12 +131,12 @@
     </div>
   </div>
 
-  <!-- log type tabs -->
-  <div class="flex items-center gap-1 mb-5 border-b border-line">
-    <button data-tab="chat" class="kata-tab mono text-[11px] tracking-label uppercase px-4 pb-3 pt-2 text-mute hover:text-ink relative" data-i18n="logs.tab.chat">chat</button>
-    <button data-tab="image" class="kata-tab mono text-[11px] tracking-label uppercase px-4 pb-3 pt-2 text-mute hover:text-ink relative" data-i18n="logs.tab.image">image</button>
-    <button data-tab="video" class="kata-tab mono text-[11px] tracking-label uppercase px-4 pb-3 pt-2 text-mute hover:text-ink relative" data-i18n="logs.tab.video">video</button>
-    <button data-tab="command" class="kata-tab mono text-[11px] tracking-label uppercase px-4 pb-3 pt-2 text-mute hover:text-ink relative" data-i18n="logs.tab.command">commands</button>
+  <!-- log type chips -->
+  <div class="flex items-center gap-2 mb-5 flex-wrap">
+    <button data-tab="chat" class="kata-tab" data-i18n="logs.tab.chat">chat</button>
+    <button data-tab="image" class="kata-tab" data-i18n="logs.tab.image">image</button>
+    <button data-tab="video" class="kata-tab" data-i18n="logs.tab.video">video</button>
+    <button data-tab="command" class="kata-tab" data-i18n="logs.tab.command">commands</button>
   </div>
 
   <!-- filters -->
@@ -184,25 +204,7 @@ let CURRENT_GUILD_DATA = null;
 
 function renderTabsActive(){
   for (const btn of document.querySelectorAll('.kata-tab')){
-    const active = btn.dataset.tab === CURRENT_TAB;
-    btn.classList.toggle('text-red', active);
-    btn.classList.toggle('font-bold', active);
-    btn.classList.toggle('text-mute', !active);
-    let underline = btn.querySelector('.tab-underline');
-    if (active && !underline){
-      underline = document.createElement('span');
-      underline.className = 'tab-underline absolute left-2 right-2 bottom-[-1px] h-[2px] bg-red';
-      btn.appendChild(underline);
-    } else if (!active && underline){
-      underline.remove();
-    }
-  }
-  for (const a of document.querySelectorAll('aside [data-tab]')){
-    const active = a.dataset.tab === CURRENT_TAB;
-    a.classList.toggle('text-red', active);
-    a.classList.toggle('text-mute', !active);
-    a.style.background = active ? '#E0454510' : 'transparent';
-    a.style.borderLeft = active ? '2px solid #E04545' : 'none';
+    btn.classList.toggle('on', btn.dataset.tab === CURRENT_TAB);
   }
   document.getElementById('page-tab-label').textContent = ' · ' + TAB_LABELS[CURRENT_TAB].vi;
   document.getElementById('page-tag').textContent = `TAB · LOGS / ${TAB_LABELS[CURRENT_TAB].vi.toUpperCase()} · ${TAB_LABELS[CURRENT_TAB].tagline}`;
@@ -428,9 +430,11 @@ async function loadGuildBootstrap(){
       + `<span class="text-mute text-[9px]">▾</span>`;
   }).catch(()=>{});
 
-  document.getElementById('nav-overview').href = `overview.html?guild=${encodeURIComponent(guildId)}`;
-  document.getElementById('nav-cost').href = `cost.html?guild=${encodeURIComponent(guildId)}`;
-  document.getElementById('bc-guild').href = `overview.html?guild=${encodeURIComponent(guildId)}`;
+  const gq = encodeURIComponent(guildId);
+  document.getElementById('nav-overview').href = `overview.html?guild=${gq}`;
+  document.getElementById('nav-cost').href = `cost.html?guild=${gq}`;
+  document.getElementById('nav-settings').href = `overview.html?guild=${gq}&settings=1`;
+  document.getElementById('bc-guild').href = `overview.html?guild=${gq}`;
 
   // Pull guild meta from /api/kata/server/:id (also serves as auth probe)
   let r;
@@ -459,10 +463,17 @@ async function loadGuildBootstrap(){
   document.getElementById('kata-guild-name').textContent = data.guild.name;
   document.getElementById('bc-guild').textContent = data.guild.name;
   document.getElementById('kata-guild-meta').textContent = `id · ${data.guild.id}`;
+  // Sidebar nav meta counts (shared with the overview design).
+  const st = data.stats || {};
+  const navLogsMeta = document.getElementById('nav-logs-meta');
+  if (navLogsMeta && st.events30d != null) navLogsMeta.textContent = Number(st.events30d).toLocaleString('vi-VN');
+  const navCostMeta = document.getElementById('nav-cost-meta');
+  if (navCostMeta && st.kpis?.cost30d) navCostMeta.textContent = '$' + (st.kpis.cost30d.value || 0).toFixed(2);
   const guildIcon = document.getElementById('kata-guild-icon');
   if (data.guild.iconUrl){
-    guildIcon.innerHTML = `<img src="${data.guild.iconUrl}" alt="" style="width:48px;height:48px;border-radius:10px;object-fit:cover" />`;
+    guildIcon.innerHTML = `<img src="${data.guild.iconUrl}" alt="" style="width:74px;height:74px;border-radius:20px;object-fit:cover" />`;
     guildIcon.style.background = 'transparent';
+    guildIcon.style.border = 'none';
   } else {
     const initials = data.guild.name.replace(/[^A-Za-z0-9À-ỹ]/g,'').slice(0,2).toUpperCase() || '??';
     guildIcon.textContent = initials;

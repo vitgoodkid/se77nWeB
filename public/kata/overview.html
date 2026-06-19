@@ -561,7 +561,11 @@ document.getElementById('settings-form').addEventListener('submit', async (e)=>{
 
 document.getElementById('ov-refresh')?.addEventListener('click', () => { loadOverview(); showToast('↻ Đã tải lại', 'ok'); });
 
-loadOverview();
+// Open the settings drawer straight away when arrived via the sidebar SETTINGS
+// row on logs/cost (?settings=1).
+loadOverview().then(() => {
+  if (new URLSearchParams(location.search).get('settings') === '1') openSettings();
+});
 </script>
 
 </body>
