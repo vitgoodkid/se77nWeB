@@ -43,6 +43,20 @@
   .btn-danger:hover { background: rgba(224,69,69,0.10); border-color: rgba(224,69,69,0.50); }
   .lock-badge { display: inline-block; padding: 2px 8px; border-radius: 999px; background: rgba(224,69,69,0.10); border: 1px solid rgba(224,69,69,0.30); color: #E04545; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; }
   .live-badge { display: inline-block; padding: 2px 8px; border-radius: 999px; background: rgba(91,168,104,0.10); border: 1px solid rgba(91,168,104,0.30); color: #5BA868; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; }
+  /* ── Tavern Worlds landing (design) ── */
+  @keyframes cardIn { from { transform: translateY(14px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .navitem { transition: background .16s ease, color .16s ease, transform .16s ease, border-color .16s ease; }
+  .navitem:hover { color: #f5ede0 !important; transform: translateX(3px); }
+  .wcard { transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease; }
+  .wcard:hover { transform: translateY(-5px); border-color: rgba(138,79,255,0.42) !important; box-shadow: 0 22px 50px rgba(0,0,0,0.5), 0 0 36px rgba(138,79,255,0.16); }
+  .wcard:hover .wcover { transform: scale(1.06); }
+  .wcover { transition: transform .45s cubic-bezier(.22,1,.36,1); }
+  .createtile { transition: border-color .18s ease, background .18s ease, transform .18s ease; }
+  .createtile:hover { border-color: rgba(138,79,255,0.6) !important; background: rgba(138,79,255,0.06) !important; transform: translateY(-5px); }
+  .pbtn { transition: transform .15s ease, box-shadow .15s ease, background .15s ease; }
+  .pbtn:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(138,79,255,0.4); background: rgba(138,79,255,0.32) !important; }
+  .gbtn { transition: color .15s ease, border-color .15s ease, background .15s ease; }
+  .gbtn:hover { color: #f5ede0 !important; border-color: rgba(255,255,255,0.28) !important; background: rgba(255,255,255,0.04) !important; }
   details summary { cursor: pointer; list-style: none; }
   details summary::-webkit-details-marker { display: none; }
   details[open] summary .chev { transform: rotate(90deg); }
@@ -165,10 +179,9 @@
     main h1.mono { font-size: 26px; }
     /* every 2/3/12-col grid collapses to one column */
     main .grid { grid-template-columns: 1fr !important; }
-    /* list cards (worlds / characters) stack: cover+info on top, buttons full-width below */
-    .tv-card { flex-direction: column; align-items: stretch !important; }
-    .tv-card .tv-actions { flex-direction: row; }
-    .tv-card .tv-actions .btn, .tv-card .tv-actions a.btn { flex: 1; }
+    /* world cards stack: cover on top (fixed height), content below */
+    .wcard-world { flex-direction: column; }
+    .wcard-world > div:first-child { width: 100% !important; height: 150px; align-self: auto !important; }
     /* story log unsticks + uncaps so it flows under the editor instead of overlapping */
     .row.sticky { position: static !important; max-height: none !important; }
 
@@ -215,24 +228,21 @@
   <div id="kata-header-actions" class="flex items-center gap-2.5"></div>
 </header>
 
-<aside class="fixed top-16 left-0 bottom-0 w-[220px] z-40 border-r border-line backdrop-blur-md overflow-y-auto" style="background:rgba(13,10,8,0.6)">
-  <div class="p-5 border-b border-line">
+<aside class="fixed top-16 left-0 bottom-0 w-[234px] z-40 border-r border-line backdrop-blur-md overflow-y-auto flex flex-col" style="background:rgba(13,10,8,0.55)">
+  <div style="padding:18px 16px 16px">
     <div class="mono text-[10px] tracking-label uppercase text-purple">tavern</div>
-    <div class="text-[14px] font-medium tracking-tight text-ink mt-1">roleplay engine</div>
+    <div class="text-[15px] font-semibold tracking-tight text-ink mt-1.5">roleplay engine</div>
     <div class="mono text-[10px] text-mute mt-1">your worlds + characters</div>
   </div>
-  <nav class="px-3 py-4 mono text-[11px] tracking-label uppercase">
-    <a data-tab="worlds" class="block px-3 py-2 rounded-[8px] border border-transparent text-mute hover:text-ink cursor-pointer mb-1">▸ my worlds</a>
-    <a data-tab="characters" class="block px-3 py-2 rounded-[8px] border border-transparent text-mute hover:text-ink cursor-pointer mb-1">▸ characters</a>
-    <a data-tab="defaults" id="nav-defaults" class="block px-3 py-2 rounded-[8px] border border-transparent text-mute hover:text-ink cursor-pointer mb-1">▸ tavern setting <span class="text-gold">(owner)</span></a>
-  </nav>
-  <div class="px-5 py-4 border-t border-line">
-    <a href="index.html" class="mono text-[10px] tracking-label uppercase text-mute hover:text-ink">← my servers</a>
+  <nav id="tav-nav" class="flex flex-col gap-1.5 px-3"></nav>
+  <div class="flex-1"></div>
+  <div class="px-3 pb-4 pt-3" style="border-top:1px solid rgba(255,255,255,0.08)">
+    <a href="index.html" class="navitem mono block" style="padding:11px 14px;border-radius:10px;font-size:10px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:rgba(245,237,224,0.45)">← my servers</a>
   </div>
 </aside>
 <div id="nav-scrim" aria-hidden></div>
 
-<main class="relative z-10 pt-20 pb-16 pl-[244px] pr-8">
+<main class="relative z-10 pt-20 pb-16 pl-[258px] pr-8">
 
   <div class="flex items-end justify-between gap-6 mb-6">
     <div>
@@ -272,13 +282,53 @@ const elNavDefaults = document.getElementById('nav-defaults');
 
 const TAB_LABEL = { worlds: 'my worlds', characters: 'characters', defaults: 'tavern setting' };
 
+// Sidebar nav — built dynamically so the active state + live counts (worlds /
+// characters) can repaint without reflowing the layout.
+const NAV_ITEMS = [
+  { id: 'worlds', icon: '◳', label: 'my worlds', countKey: 'worlds' },
+  { id: 'characters', icon: '☻', label: 'characters', countKey: 'characters' },
+  { id: 'defaults', icon: '⚙', label: 'tavern setting', owner: true },
+];
+const navCounts = { worlds: null, characters: null };
+
+function renderNav() {
+  const navEl = document.getElementById('tav-nav');
+  if (!navEl) return;
+  navEl.innerHTML = NAV_ITEMS.map((n) => {
+    const on = currentTab === n.id;
+    const count = n.countKey ? navCounts[n.countKey] : null;
+    const bg = on ? 'linear-gradient(135deg, rgba(138,79,255,0.9), rgba(95,51,184,0.85))' : 'transparent';
+    const color = on ? '#ffffff' : 'rgba(245,237,224,0.5)';
+    const iconColor = on ? '#ffffff' : 'rgba(245,237,224,0.4)';
+    const border = on ? 'rgba(138,79,255,0.5)' : 'transparent';
+    const shadow = on ? '0 10px 24px rgba(138,79,255,0.4)' : 'none';
+    const countColor = on ? '#ffffff' : 'rgba(245,237,224,0.55)';
+    const countBg = on ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.07)';
+    return `<a data-tab="${n.id}" class="navitem mono" style="display:flex;align-items:center;gap:11px;padding:12px 13px;border-radius:11px;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:800;cursor:pointer;background:${bg};color:${color};border:1px solid ${border};box-shadow:${shadow}">
+      <span style="font-size:15px;line-height:1;color:${iconColor}">${n.icon}</span>
+      <span style="flex:1">${escapeHtml(n.label)}</span>
+      ${count != null ? `<span style="font-size:10px;font-weight:800;color:${countColor};background:${countBg};border-radius:99px;min-width:20px;text-align:center;padding:2px 7px">${count}</span>` : ''}
+      ${n.owner ? '<span style="font-size:8px;font-weight:800;letter-spacing:.1em;color:#D4A858;border:1px solid rgba(212,168,88,0.35);border-radius:99px;padding:2px 6px">OWNER</span>' : ''}
+    </a>`;
+  }).join('');
+}
+
 function setTabUI() {
-  document.querySelectorAll('[data-tab]').forEach(a => {
-    a.classList.toggle('tab-active', a.dataset.tab === currentTab);
-  });
+  renderNav();
   elTag.textContent = currentTab.toUpperCase();
   elLabel.textContent = ` · ${TAB_LABEL[currentTab] ?? currentTab}`;
   elBcTab.textContent = TAB_LABEL[currentTab] ?? currentTab;
+}
+
+// Seed nav badge counts without tripping the auth warning (silent fetch).
+async function seedNavCounts() {
+  const [w, c] = await Promise.all([
+    fetch('/api/kata/tavern/me/worlds', { credentials: 'include' }).then((r) => (r.ok ? r.json() : null)).catch(() => null),
+    fetch('/api/kata/tavern/character', { credentials: 'include' }).then((r) => (r.ok ? r.json() : null)).catch(() => null),
+  ]);
+  if (Array.isArray(w?.worlds)) navCounts.worlds = w.worlds.length;
+  if (Array.isArray(c?.characters)) navCounts.characters = c.characters.length;
+  renderNav();
 }
 
 function escapeHtml(s) {
@@ -344,11 +394,15 @@ async function bootstrap() {
     isOwner = !!(me?.user?.isOwner);
   }
   setTabUI();
+  seedNavCounts();
   switchTab(currentTab);
 }
 
 function switchTab(tab) {
   currentTab = tab;
+  // Leaving a world detail/create sub-view: drop those params so the list shows.
+  params.delete('world');
+  params.delete('new');
   setTabUI();
   history.replaceState(null, '', `?tab=${tab}`);
   elActions.innerHTML = '';
@@ -357,8 +411,12 @@ function switchTab(tab) {
   if (tab === 'defaults') return renderDefaults();
 }
 
-document.querySelectorAll('[data-tab]').forEach(a => {
-  a.addEventListener('click', (e) => { e.preventDefault(); switchTab(a.dataset.tab); });
+// Delegated so the dynamically-rendered nav items keep working after repaint.
+document.getElementById('tav-nav')?.addEventListener('click', (e) => {
+  const a = e.target.closest('[data-tab]');
+  if (!a) return;
+  e.preventDefault();
+  switchTab(a.dataset.tab);
 });
 
 // ── My Worlds ─────────────────────────────────────────────────
@@ -373,6 +431,7 @@ async function renderWorlds() {
   clearAuthWarn();
   const worlds = data.worlds ?? [];
   elCounts.textContent = `${worlds.length} world${worlds.length === 1 ? '' : 's'}`;
+  navCounts.worlds = worlds.length; renderNav();
 
   elActions.innerHTML = '<a href="?tab=worlds&new=1" id="world-new-btn" class="btn btn-primary">+ new world</a>';
   document.getElementById('world-new-btn').addEventListener('click', (e) => {
@@ -399,40 +458,70 @@ async function renderWorlds() {
     return;
   }
 
-  const rowsHtml = worlds.map((w) => {
+  const rowsHtml = worlds.map((w, i) => {
+    const id = escapeHtml(w._id);
     const status = w.isLocked
       ? '<span class="lock-badge">🔒 locked</span>'
       : '<span class="live-badge">▶ live</span>';
-    const cover = w.coverImageUrl
-      ? `<img src="${escapeHtml(w.coverImageUrl)}" alt="" class="rounded-[8px] object-cover" style="width:64px;height:64px;flex:0 0 64px" />`
-      : `<div class="rounded-[8px] grid place-items-center mono text-[10px] tracking-label uppercase text-mute2" style="width:64px;height:64px;flex:0 0 64px;background:rgba(138,79,255,0.06);border:1px solid rgba(138,79,255,0.18)">⌑</div>`;
+    const coverInner = w.coverImageUrl
+      ? `<div class="wcover" style="position:absolute;inset:0;background:center/cover no-repeat url('${escapeHtml(w.coverImageUrl)}')"></div>`
+      : `<div class="wcover" style="position:absolute;inset:0;background:radial-gradient(120% 95% at 28% 8%, rgba(201,168,255,0.4), transparent 52%), linear-gradient(165deg,#34215c,#1c1438 55%,#0d0a18)"></div><span style="position:absolute;inset:0;display:grid;place-items:center;font-size:30px;color:rgba(245,237,224,0.25)">⌑</span>`;
+    const excerpt = w.setting && w.setting.trim()
+      ? escapeHtml(w.setting)
+      : '<span style="color:rgba(245,237,224,0.3)">— chưa có mô tả setting —</span>';
+    const playBtn = w.isLocked
+      ? '<span class="mono" title="world locked" style="flex:none;display:inline-flex;align-items:center;justify-content:center;height:40px;padding:0 24px;border-radius:10px;border:1px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.03);color:rgba(245,237,224,0.35);font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:800;cursor:not-allowed">🔒 locked</span>'
+      : `<a href="tavern-play.html?world=${id}" class="pbtn mono" style="flex:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 26px;border-radius:10px;border:1px solid rgba(138,79,255,0.45);background:rgba(138,79,255,0.2);color:#f5ede0;font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:800;cursor:pointer">▶ play</a>`;
     return `
-      <div class="row tv-card flex items-center gap-4">
-        ${cover}
-        <div class="flex-1 min-w-0 cursor-pointer" data-world-id="${escapeHtml(w._id)}">
-          <div class="flex items-center gap-3 flex-wrap">
-            <div class="text-[15px] font-semibold tracking-tight">${escapeHtml(w.name)}</div>
+      <div class="wcard wcard-world" style="display:flex;background:rgba(21,17,13,0.5);border:1px solid rgba(255,255,255,0.09);border-radius:18px;overflow:hidden;min-height:200px;animation:cardIn .3s ease backwards;animation-delay:${(i * 0.06).toFixed(2)}s">
+        <div class="cursor-pointer" data-world-id="${id}" style="position:relative;width:200px;flex:none;align-self:stretch;overflow:hidden">${coverInner}</div>
+        <div style="flex:1;min-width:0;padding:22px 24px;display:flex;flex-direction:column">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div class="cursor-pointer" data-world-id="${id}" style="font-size:20px;font-weight:700;letter-spacing:-.015em;line-height:1.15;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(w.name)}</div>
+            <span style="flex:1"></span>
             ${status}
-            <span class="mono text-[9px] tracking-label uppercase text-mute2">${escapeHtml(w.mode)} · ${escapeHtml(w.difficulty)}</span>
+            <span class="mono" style="flex:none;padding:5px 11px;border-radius:99px;background:rgba(138,79,255,0.12);border:1px solid rgba(138,79,255,0.28);color:#a87aff;font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;font-weight:700">${escapeHtml(w.mode)} · ${escapeHtml(w.difficulty)}</span>
           </div>
-          <div class="mono text-[10px] text-mute mt-1">
-            ${fmtNum(w.messageCount)} turns · last ${escapeHtml(fmtTime(w.lastActiveAt))} · guild ${escapeHtml(w.guildId)}
+          <p style="margin:11px 0 0;font-size:13px;line-height:1.6;color:rgba(245,237,224,0.62);display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden">${excerpt}</p>
+          <div style="flex:1;min-height:14px"></div>
+          <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap">
+            <div style="display:flex;flex-direction:column;gap:2px">
+              <span class="mono" style="font-size:16px;font-weight:700;color:#f5ede0;line-height:1">${fmtNum(w.messageCount)}</span>
+              <span class="mono" style="font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:rgba(245,237,224,0.35)">turns</span>
+            </div>
+            <div style="width:1px;height:26px;background:rgba(255,255,255,0.1)"></div>
+            <div style="display:flex;flex-direction:column;gap:3px;min-width:0;flex:1">
+              <span class="mono" style="font-size:11px;color:rgba(245,237,224,0.7)">last ${escapeHtml(fmtTime(w.lastActiveAt))}</span>
+              <span class="mono" style="font-size:9px;color:rgba(245,237,224,0.32);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">guild ${escapeHtml(w.guildId)}</span>
+            </div>
+            ${playBtn}
+            <button class="gbtn mono" data-world-id="${id}" style="flex:none;height:40px;padding:0 18px;border-radius:10px;border:1px solid rgba(255,255,255,0.14);background:transparent;color:rgba(245,237,224,0.65);font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;cursor:pointer">edit</button>
           </div>
-        </div>
-        <div class="tv-actions flex flex-col gap-1">
-          <a href="tavern-play.html?world=${escapeHtml(w._id)}" class="btn btn-primary" ${w.isLocked ? 'style="opacity:0.5;pointer-events:none"' : ''}>▶ play</a>
-          <button class="btn" data-world-id="${escapeHtml(w._id)}">edit</button>
         </div>
       </div>`;
   }).join('');
-  elContent.innerHTML = `<div class="space-y-2">${rowsHtml}</div>`;
+  const createTile = `
+    <div class="createtile" id="world-create-tile" style="display:flex;align-items:center;gap:14px;min-height:80px;border:1.5px dashed rgba(138,79,255,0.3);border-radius:18px;background:transparent;cursor:pointer;padding:0 22px">
+      <span style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#8a4fff,#5a2fb0);display:grid;place-items:center;font-size:20px;color:#fff;box-shadow:0 8px 22px rgba(138,79,255,0.4);flex:none">+</span>
+      <div>
+        <div class="mono" style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:800;color:#a87aff">new world</div>
+        <div class="mono" style="font-size:10px;color:rgba(245,237,224,0.4);margin-top:4px">tạo trên web · hoặc <code style="color:rgba(245,237,224,0.6)">/worldcreate</code> trên Discord</div>
+      </div>
+    </div>`;
+  elContent.innerHTML = `<div style="display:flex;flex-direction:column;gap:18px">${rowsHtml}${createTile}</div>`;
+
+  const openDetail = (id) => {
+    params.set('world', id);
+    history.replaceState(null, '', `?tab=worlds&world=${id}`);
+    renderWorldDetail(id);
+  };
   elContent.querySelectorAll('[data-world-id]').forEach((el) => {
-    el.addEventListener('click', () => {
-      const id = el.dataset.worldId;
-      params.set('world', id);
-      history.replaceState(null, '', `?tab=worlds&world=${id}`);
-      renderWorldDetail(id);
-    });
+    el.addEventListener('click', () => openDetail(el.dataset.worldId));
+  });
+  document.getElementById('world-create-tile')?.addEventListener('click', () => {
+    params.set('new', '1');
+    history.replaceState(null, '', '?tab=worlds&new=1');
+    renderWorldCreate();
   });
 }
 
@@ -1021,32 +1110,51 @@ async function renderCharacters() {
   clearAuthWarn();
   const chars = data.characters ?? [];
   elCounts.textContent = `${chars.length} character${chars.length === 1 ? '' : 's'}`;
+  navCounts.characters = chars.length; renderNav();
 
-  elActions.innerHTML = '<button id="char-new" class="btn btn-primary">+ new</button>';
+  elActions.innerHTML = '<button id="char-new" class="btn btn-primary">+ new character</button>';
   document.getElementById('char-new').addEventListener('click', () => openCharForm(null));
 
-  if (chars.length === 0) {
-    elContent.innerHTML = `
-      <div class="row text-center py-12">
-        <div class="text-[14px] text-mute">Chưa có character nào.</div>
-        <div class="mono text-[10px] text-mute2 mt-2">Hoặc tạo trên Discord bằng <code class="text-ink">/charcreate</code></div>
-      </div>`;
-    return;
-  }
+  // Deterministic avatar gradient from the name so each card reads distinctly.
+  const AV_GRADS = [
+    'linear-gradient(135deg, #8a4fff, #4a2a8a)', 'linear-gradient(135deg, #D4A858, #8a6a2e)',
+    'linear-gradient(135deg, #5bd0a8, #2e7a5e)', 'linear-gradient(135deg, #E04545, #7a1e1e)',
+    'linear-gradient(135deg, #5b9bd0, #2e4f7a)', 'linear-gradient(135deg, #c97ad0, #6a2e7a)',
+  ];
+  const avGrad = (s) => AV_GRADS[[...String(s || '?')].reduce((a, ch) => a + ch.charCodeAt(0), 0) % AV_GRADS.length];
+  const initials = (s) => String(s || '?').replace(/[^A-Za-z0-9À-ỹ ]/g, '').trim().split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase() || '?';
 
-  const rowsHtml = chars.map((c) => `
-    <div class="row tv-card flex items-start gap-4">
-      <div class="flex-1 min-w-0">
-        <div class="text-[15px] font-semibold tracking-tight">${escapeHtml(c.name)}</div>
-        ${c.appearance ? `<div class="text-[12px] text-mute mt-1 truncate-2">${escapeHtml(c.appearance)}</div>` : ''}
-        ${c.imageBasePrompt ? `<div class="mono text-[10px] text-mute2 mt-1 truncate">img base: ${escapeHtml(c.imageBasePrompt)}</div>` : ''}
-      </div>
-      <div class="tv-actions flex flex-col gap-1">
-        <button class="btn" data-char-edit="${escapeHtml(c._id)}">edit</button>
-        <button class="btn btn-danger" data-char-del="${escapeHtml(c._id)}">delete</button>
-      </div>
-    </div>`).join('');
-  elContent.innerHTML = `<div class="space-y-2">${rowsHtml}</div>`;
+  const cardsHtml = chars.map((c, i) => {
+    const id = escapeHtml(c._id);
+    const tagline = c.appearance?.trim() || c.persona?.trim() || '';
+    const taglineHtml = tagline
+      ? escapeHtml(tagline)
+      : '<span style="color:rgba(245,237,224,0.3)">— chưa có mô tả —</span>';
+    return `
+      <div class="wcard" style="background:rgba(21,17,13,0.5);border:1px solid rgba(255,255,255,0.09);border-radius:16px;padding:20px;display:flex;flex-direction:column;animation:cardIn .3s ease backwards;animation-delay:${(i * 0.05).toFixed(2)}s">
+        <div style="display:flex;align-items:center;gap:13px">
+          <span style="width:50px;height:50px;border-radius:13px;background:${avGrad(c.name)};display:grid;place-items:center;font-size:16px;font-weight:800;color:rgba(255,255,255,0.92);flex:none">${escapeHtml(initials(c.name))}</span>
+          <div style="min-width:0">
+            <div style="font-size:15px;font-weight:700;letter-spacing:-.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(c.name)}</div>
+            ${c.imageBasePrompt ? `<div class="mono" style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#8a4fff;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">img base set</div>` : '<div class="mono" style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:rgba(245,237,224,0.3);margin-top:4px">character</div>'}
+          </div>
+        </div>
+        <p style="margin:14px 0 0;font-size:12.5px;line-height:1.55;color:rgba(245,237,224,0.6);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">${taglineHtml}</p>
+        <div style="flex:1;min-height:10px"></div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.07)">
+          <button class="gbtn mono" data-char-del="${id}" style="font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:#E04545;border:1px solid rgba(224,69,69,0.30);border-radius:8px;padding:6px 12px;background:transparent;cursor:pointer">delete</button>
+          <span style="flex:1"></span>
+          <button class="gbtn mono" data-char-edit="${id}" style="font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:rgba(245,237,224,0.6);border:1px solid rgba(255,255,255,0.14);border-radius:8px;padding:6px 12px;background:transparent;cursor:pointer">edit</button>
+        </div>
+      </div>`;
+  }).join('');
+  const newTile = `
+    <div class="createtile" id="char-create-tile" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:168px;border:1.5px dashed rgba(138,79,255,0.3);border-radius:16px;background:transparent;cursor:pointer">
+      <span style="width:46px;height:46px;border-radius:13px;background:linear-gradient(135deg,#8a4fff,#5a2fb0);display:grid;place-items:center;font-size:22px;color:#fff;box-shadow:0 8px 22px rgba(138,79,255,0.4)">+</span>
+      <div class="mono" style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:800;color:#a87aff">new character</div>
+    </div>`;
+  elContent.innerHTML = `<div class="grid grid-cols-3 gap-[18px]">${cardsHtml}${newTile}</div>`;
+  document.getElementById('char-create-tile')?.addEventListener('click', () => openCharForm(null));
 
   elContent.querySelectorAll('[data-char-edit]').forEach((b) => {
     b.addEventListener('click', () => {
