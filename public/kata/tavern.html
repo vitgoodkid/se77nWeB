@@ -268,6 +268,17 @@ const params = new URLSearchParams(location.search);
 let currentTab = TABS.includes(params.get('tab')) ? params.get('tab') : 'worlds';
 let isOwner = false;
 let me = null;
+const WORLD_DETAIL_LIMIT = 80;
+const PLAY_WORLD_LIMIT = 120;
+let worldsCache = null;
+let worldsPromise = null;
+let worldsPromiseSilent = false;
+let characterCache = null;
+let characterPromise = null;
+let characterPromiseSilent = false;
+let worldDetailSeq = 0;
+const worldPreviewCache = new Map();
+const worldDetailCache = new Map();
 
 const elTag = document.getElementById('page-tag');
 const elLabel = document.getElementById('page-tab-label');
@@ -323,8 +334,8 @@ function setTabUI() {
 // Seed nav badge counts without tripping the auth warning (silent fetch).
 async function seedNavCounts() {
   const [w, c] = await Promise.all([
-    fetch('/api/kata/tavern/me/worlds', { credentials: 'include' }).then((r) => (r.ok ? r.json() : null)).catch(() => null),
-    fetch('/api/kata/tavern/character', { credentials: 'include' }).then((r) => (r.ok ? r.json() : null)).catch(() => null),
+    fetchWorldsCached({ silent: true }),
+    fetchCharactersCached({ silent: true }),
   ]);
   if (Array.isArray(w?.worlds)) navCounts.worlds = w.worlds.length;
   if (Array.isArray(c?.characters)) navCounts.characters = c.characters.length;
@@ -372,6 +383,117 @@ async function fetchJson(url, opts = {}) {
   }
   return body;
 }
+
+async function fetchJsonQuiet(url) {
+  const r = await fetch(url, { credentials: 'include' });
+  if (!r.ok) return null;
+  try { return await r.json(); } catch { return null; }
+}
+
+function worldSnapshotKey(id) {
+  return `kata.tavern.world.${id}`;
+}
+
+function rememberWorldSnapshot(id, data, full = false) {
+  try {
+    sessionStorage.setItem(worldSnapshotKey(id), JSON.stringify({ ts: Date.now(), full, data }));
+  } catch {}
+}
+
+function rememberWorldPreview(w) {
+  const id = String(w?._id || '');
+  if (!id) return;
+  worldPreviewCache.set(id, w);
+  rememberWorldSnapshot(id, { world: w, messages: [], messageCount: w.messageCount ?? 0 }, false);
+}
+
+function invalidateWorldCaches(id) {
+  const sid = String(id || '');
+  worldsCache = null;
+  worldsPromise = null;
+  worldPreviewCache.delete(sid);
+  for (const key of worldDetailCache.keys()) {
+    if (key.startsWith(`${sid}:`)) worldDetailCache.delete(key);
+  }
+  try { sessionStorage.removeItem(worldSnapshotKey(sid)); } catch {}
+}
+
+function invalidateCharacterCache() {
+  characterCache = null;
+  characterPromise = null;
+}
+
+async function fetchWorldsCached({ silent = false, force = false } = {}) {
+  if (!force && worldsCache) return worldsCache;
+  if (!force && worldsPromise && (silent || !worldsPromiseSilent)) return worldsPromise;
+  worldsPromiseSilent = silent;
+  const loader = silent ? fetchJsonQuiet : fetchJson;
+  worldsPromise = loader('/api/kata/tavern/me/worlds').then((data) => {
+    if (Array.isArray(data?.worlds)) {
+      worldsCache = data;
+      data.worlds.forEach(rememberWorldPreview);
+    }
+    return data;
+  }).finally(() => { worldsPromise = null; });
+  return worldsPromise;
+}
+
+async function fetchCharactersCached({ silent = false, force = false } = {}) {
+  if (!force && characterCache) return characterCache;
+  if (!force && characterPromise && (silent || !characterPromiseSilent)) return characterPromise;
+  characterPromiseSilent = silent;
+  const loader = silent ? fetchJsonQuiet : fetchJson;
+  characterPromise = loader('/api/kata/tavern/character').then((data) => {
+    if (Array.isArray(data?.characters)) characterCache = data;
+    return data;
+  }).finally(() => { characterPromise = null; });
+  return characterPromise;
+}
+
+async function fetchWorldDetailCached(id, { limit = WORLD_DETAIL_LIMIT, silent = false, force = false } = {}) {
+  const key = `${id}:${limit}`;
+  const cached = worldDetailCache.get(key);
+  if (!force && cached?.data) return cached.data;
+  if (!force && cached?.promise && (silent || !cached.silent)) return cached.promise;
+  const loader = silent ? fetchJsonQuiet : fetchJson;
+  const promise = loader(`/api/kata/tavern/world/${id}?limit=${limit}`).then((data) => {
+    if (data?.world) {
+      worldDetailCache.set(key, { data, silent: false });
+      rememberWorldPreview({ ...data.world, messageCount: data.messageCount ?? 0 });
+      rememberWorldSnapshot(id, data, true);
+    }
+    return data;
+  }).catch((err) => {
+    worldDetailCache.delete(key);
+    if (!silent) throw err;
+    return null;
+  });
+  worldDetailCache.set(key, { promise, silent });
+  return promise;
+}
+
+function prefetchWorldDetail(id, limit = WORLD_DETAIL_LIMIT) {
+  if (!id) return;
+  fetchWorldDetailCached(id, { limit, silent: true }).catch(() => {});
+}
+
+function renderWorldDetailLoading(preview) {
+  if (!preview) return '<div class="mono text-[11px] text-mute">loading world...</div>';
+  const cover = preview.coverImageUrl
+    ? `<div style="width:96px;height:96px;border-radius:14px;background:center/cover no-repeat url('${escapeHtml(preview.coverImageUrl)}');border:1px solid rgba(138,79,255,0.25);flex:none"></div>`
+    : '<div style="width:96px;height:96px;border-radius:14px;background:linear-gradient(165deg,#34215c,#1c1438 55%,#0d0a18);border:1px solid rgba(138,79,255,0.25);flex:none"></div>';
+  return `
+    <div class="row" style="display:flex;align-items:center;gap:16px;min-height:132px">
+      ${cover}
+      <div style="min-width:0;flex:1">
+        <div class="mono text-[10px] tracking-label uppercase text-purple mb-2">opening world</div>
+        <div style="font-size:22px;font-weight:700;letter-spacing:-.015em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(preview.name)}</div>
+        <div class="mono text-[10px] text-mute mt-2">${escapeHtml(preview.mode)} · ${escapeHtml(preview.difficulty)} · ${fmtNum(preview.messageCount)} turns</div>
+        <div style="font-size:13px;color:rgba(245,237,224,0.55);line-height:1.55;margin-top:10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${escapeHtml(preview.setting || 'loading detail...')}</div>
+      </div>
+      <div class="mono text-[11px] text-mute2" style="flex:none">loading...</div>
+    </div>`;
+}
 function clearAuthWarn() {
   elAuthWarn.classList.add('hidden');
   elAuthLogin.classList.add('hidden');
@@ -394,8 +516,8 @@ async function bootstrap() {
     isOwner = !!(me?.user?.isOwner);
   }
   setTabUI();
-  seedNavCounts();
   switchTab(currentTab);
+  seedNavCounts();
 }
 
 function switchTab(tab) {
@@ -423,13 +545,15 @@ document.getElementById('tav-nav')?.addEventListener('click', (e) => {
 async function renderWorlds() {
   const detailId = params.get('world');
   if (detailId) return renderWorldDetail(detailId);
+  worldDetailSeq++;
   const isNew = params.get('new') === '1';
   if (isNew) return renderWorldCreate();
   elContent.innerHTML = '<div class="mono text-[11px] text-mute">loading…</div>';
-  const data = await fetchJson('/api/kata/tavern/me/worlds');
+  const data = await fetchWorldsCached();
   if (!data) return;
   clearAuthWarn();
   const worlds = data.worlds ?? [];
+  worlds.forEach(rememberWorldPreview);
   elCounts.textContent = `${worlds.length} world${worlds.length === 1 ? '' : 's'}`;
   navCounts.worlds = worlds.length; renderNav();
 
@@ -471,7 +595,7 @@ async function renderWorlds() {
       : '<span style="color:rgba(245,237,224,0.3)">— chưa có mô tả setting —</span>';
     const playBtn = w.isLocked
       ? '<span class="mono" title="world locked" style="flex:none;display:inline-flex;align-items:center;justify-content:center;height:40px;padding:0 24px;border-radius:10px;border:1px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.03);color:rgba(245,237,224,0.35);font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:800;cursor:not-allowed">🔒 locked</span>'
-      : `<a href="tavern-play.html?world=${id}" class="pbtn mono" style="flex:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 26px;border-radius:10px;border:1px solid rgba(138,79,255,0.45);background:rgba(138,79,255,0.2);color:#f5ede0;font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:800;cursor:pointer">▶ play</a>`;
+      : `<a href="tavern-play.html?world=${id}" data-play-world-id="${id}" class="pbtn mono" style="flex:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 26px;border-radius:10px;border:1px solid rgba(138,79,255,0.45);background:rgba(138,79,255,0.2);color:#f5ede0;font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:800;cursor:pointer">▶ play</a>`;
     return `
       <div class="wcard wcard-world" style="display:flex;background:rgba(21,17,13,0.5);border:1px solid rgba(255,255,255,0.09);border-radius:18px;overflow:hidden;min-height:200px;animation:cardIn .3s ease backwards;animation-delay:${(i * 0.06).toFixed(2)}s">
         <div class="cursor-pointer" data-world-id="${id}" style="position:relative;width:200px;flex:none;align-self:stretch;overflow:hidden">${coverInner}</div>
@@ -516,7 +640,20 @@ async function renderWorlds() {
     renderWorldDetail(id);
   };
   elContent.querySelectorAll('[data-world-id]').forEach((el) => {
+    el.addEventListener('pointerenter', () => prefetchWorldDetail(el.dataset.worldId));
+    el.addEventListener('focus', () => prefetchWorldDetail(el.dataset.worldId));
+    el.addEventListener('mousedown', () => prefetchWorldDetail(el.dataset.worldId));
     el.addEventListener('click', () => openDetail(el.dataset.worldId));
+  });
+  elContent.querySelectorAll('[data-play-world-id]').forEach((el) => {
+    const id = el.dataset.playWorldId;
+    el.addEventListener('pointerenter', () => prefetchWorldDetail(id, PLAY_WORLD_LIMIT));
+    el.addEventListener('focus', () => prefetchWorldDetail(id, PLAY_WORLD_LIMIT));
+    el.addEventListener('mousedown', () => prefetchWorldDetail(id, PLAY_WORLD_LIMIT));
+    el.addEventListener('click', () => {
+      const preview = worldPreviewCache.get(String(id));
+      if (preview) rememberWorldSnapshot(id, { world: preview, messages: [], messageCount: preview.messageCount ?? 0 }, false);
+    });
   });
   document.getElementById('world-create-tile')?.addEventListener('click', () => {
     params.set('new', '1');
@@ -530,7 +667,7 @@ async function renderWorldCreate() {
   elActions.innerHTML = '';
   elCounts.textContent = 'tạo world mới';
   // Pull character library so user can pick a protagonist.
-  const charData = await fetchJson('/api/kata/tavern/character');
+  const charData = await fetchCharactersCached();
   if (!charData) return;
   clearAuthWarn();
   const chars = charData.characters ?? [];
@@ -771,6 +908,7 @@ async function renderWorldCreate() {
     submitBtn.disabled = false; submitBtn.textContent = 'create world';
     if (r?.world) {
       // Drop straight into the new world's detail.
+      invalidateWorldCaches(r.world._id);
       params.delete('new');
       params.set('world', r.world._id);
       history.replaceState(null, '', `?tab=worlds&world=${r.world._id}`);
@@ -780,8 +918,13 @@ async function renderWorldCreate() {
 }
 
 async function renderWorldDetail(id) {
-  elContent.innerHTML = '<div class="mono text-[11px] text-mute">loading world…</div>';
-  const data = await fetchJson(`/api/kata/tavern/world/${id}`);
+  const sid = String(id);
+  const seq = ++worldDetailSeq;
+  const preview = worldPreviewCache.get(sid);
+  elContent.innerHTML = renderWorldDetailLoading(preview);
+  if (preview) elCounts.textContent = `${escapeHtml(preview.name)} · ${preview.messageCount ?? 0} turns`;
+  const data = await fetchWorldDetailCached(sid, { limit: WORLD_DETAIL_LIMIT });
+  if (seq !== worldDetailSeq || params.get('world') !== sid) return;
   if (!data) return;
   clearAuthWarn();
   const w = data.world;
@@ -816,7 +959,7 @@ async function renderWorldDetail(id) {
   elContent.innerHTML = `
     <div class="mb-4">
       <button id="back-to-worlds" class="btn">← back to worlds</button>
-      <a href="tavern-play.html?world=${escapeHtml(w._id)}" class="btn btn-primary" style="margin-left:8px">▶ play on web</a>
+      <a href="tavern-play.html?world=${escapeHtml(w._id)}" data-play-world-id="${escapeHtml(w._id)}" class="btn btn-primary" style="margin-left:8px">▶ play on web</a>
     </div>
     <div class="grid grid-cols-12 gap-4">
       <div class="col-span-7 space-y-3">
@@ -974,6 +1117,10 @@ async function renderWorldDetail(id) {
     history.replaceState(null, '', '?tab=worlds');
     renderWorlds();
   });
+  elContent.querySelectorAll('[data-play-world-id]').forEach((el) => {
+    const playId = el.dataset.playWorldId;
+    el.addEventListener('click', () => rememberWorldSnapshot(playId, data, true));
+  });
 
   document.getElementById('save-world').addEventListener('click', async () => {
     const body = {};
@@ -984,7 +1131,10 @@ async function renderWorldDetail(id) {
       body[k] = v;
     });
     const r = await fetchJson(`/api/kata/tavern/world/${id}`, { method: 'PATCH', body });
-    if (r) flash('saved');
+    if (r) {
+      invalidateWorldCaches(id);
+      flash('saved');
+    }
   });
 
   document.getElementById('save-overrides').addEventListener('click', async () => {
@@ -1008,7 +1158,10 @@ async function renderWorldDetail(id) {
       if (Number.isFinite(n)) overrides[el.dataset.ovnum] = n;
     });
     const r = await fetchJson(`/api/kata/tavern/world/${id}`, { method: 'PATCH', body: { overrides } });
-    if (r) flash('overrides saved', 'success');
+    if (r) {
+      invalidateWorldCaches(id);
+      flash('overrides saved', 'success');
+    }
   });
 
   // Wire the model-picker triggers (storyteller / lore / worldgen / subject).
@@ -1022,7 +1175,7 @@ async function renderWorldDetail(id) {
       method: 'PATCH',
       body: { coverImageUrl: url || null },
     });
-    if (r) { flash('cover saved'); renderWorldDetail(id); }
+    if (r) { invalidateWorldCaches(id); flash('cover saved'); renderWorldDetail(id); }
   });
   const coverGenBtn = document.getElementById('cover-ai-gen');
   if (coverGenBtn) coverGenBtn.addEventListener('click', async () => {
@@ -1042,7 +1195,7 @@ async function renderWorldDetail(id) {
         method: 'PATCH',
         body: { coverImageUrl: gen.url },
       });
-      if (r) { flash('cover generated'); renderWorldDetail(id); return; }
+      if (r) { invalidateWorldCaches(id); flash('cover generated'); renderWorldDetail(id); return; }
     }
     coverGenBtn.disabled = false;
     coverGenBtn.textContent = '🎨 AI gen từ lore';
@@ -1053,7 +1206,7 @@ async function renderWorldDetail(id) {
       method: 'PATCH',
       body: { coverImageUrl: null },
     });
-    if (r) { flash('cover cleared'); renderWorldDetail(id); }
+    if (r) { invalidateWorldCaches(id); flash('cover cleared'); renderWorldDetail(id); }
   });
 
   const endBtn = document.getElementById('end-world');
@@ -1064,7 +1217,7 @@ async function renderWorldDetail(id) {
     );
     if (!ok) return;
     const r = await fetchJson(`/api/kata/tavern/world/${id}/end`, { method: 'POST' });
-    if (r) renderWorldDetail(id);
+    if (r) { invalidateWorldCaches(id); renderWorldDetail(id); }
   });
 
   // AI rewrite buttons (FIX = improve current text; gen = brief → write)
@@ -1105,7 +1258,7 @@ async function renderWorldDetail(id) {
 // ── Characters ───────────────────────────────────────────────
 async function renderCharacters() {
   elContent.innerHTML = '<div class="mono text-[11px] text-mute">loading…</div>';
-  const data = await fetchJson('/api/kata/tavern/character');
+  const data = await fetchCharactersCached();
   if (!data) return;
   clearAuthWarn();
   const chars = data.characters ?? [];
@@ -1167,7 +1320,7 @@ async function renderCharacters() {
       const ok = await window.KataShell.confirm('Xoá character?', { title: 'Xoá character', danger: true, okLabel: 'xoá' });
       if (!ok) return;
       const r = await fetchJson(`/api/kata/tavern/character/${b.dataset.charDel}`, { method: 'DELETE' });
-      if (r) renderCharacters();
+      if (r) { invalidateCharacterCache(); renderCharacters(); }
     });
   });
 }
@@ -1203,7 +1356,7 @@ function openCharForm(existing) {
     const url = isEdit ? `/api/kata/tavern/character/${existing._id}` : '/api/kata/tavern/character';
     const method = isEdit ? 'PATCH' : 'POST';
     const r = await fetchJson(url, { method, body });
-    if (r) renderCharacters();
+    if (r) { invalidateCharacterCache(); renderCharacters(); }
   });
 }
 

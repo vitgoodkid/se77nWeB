@@ -148,6 +148,7 @@
 <script>
 const params = new URLSearchParams(location.search);
 const worldId = params.get('world');
+const PLAY_WORLD_LIMIT = 120;
 
 const elTranscript = document.getElementById('transcript');
 const elTitle = document.getElementById('world-title');
@@ -170,6 +171,25 @@ function fmtTs(ts) {
   if (!ts) return '';
   const d = new Date(ts);
   return d.toISOString().slice(11,16);
+}
+
+function worldSnapshotKey(id) {
+  return `kata.tavern.world.${id}`;
+}
+
+function readWorldSnapshot(id) {
+  try {
+    const snap = JSON.parse(sessionStorage.getItem(worldSnapshotKey(id)) || 'null');
+    if (!snap?.data?.world) return null;
+    if (Date.now() - (snap.ts || 0) > 5 * 60 * 1000) return null;
+    return snap;
+  } catch { return null; }
+}
+
+function rememberWorldSnapshot(id, data) {
+  try {
+    sessionStorage.setItem(worldSnapshotKey(id), JSON.stringify({ ts: Date.now(), full: true, data }));
+  } catch {}
 }
 
 async function fetchJson(url, opts = {}) {
@@ -246,6 +266,38 @@ function paint() {
   setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }), 50);
 }
 
+function paintWorldData(data, { preview = false } = {}) {
+  world = data.world;
+  if (Array.isArray(data.messages)) messages = data.messages;
+  elTitle.innerHTML = `${escapeHtml(world.name)}<span class="text-purple glow77">.</span>`;
+  elBcName.textContent = world.name;
+  elMeta.textContent = `${world.mode} · ${world.difficulty} · ${world.participation}${world.isLocked ? ' · 🔒 locked' : ''}`;
+
+  const header = document.getElementById('world-header');
+  let coverWrap = document.getElementById('world-cover-wrap');
+  if (world.coverImageUrl) {
+    if (!coverWrap) {
+      coverWrap = document.createElement('div');
+      coverWrap.id = 'world-cover-wrap';
+      coverWrap.style.cssText = 'margin-top:16px;border-radius:12px;overflow:hidden;border:1px solid rgba(138,79,255,0.20);max-width:520px';
+      header.appendChild(coverWrap);
+    }
+    coverWrap.innerHTML = `<img src="${escapeHtml(world.coverImageUrl)}" alt="" style="width:100%;display:block" />`;
+  } else if (coverWrap) {
+    coverWrap.remove();
+  }
+
+  elInput.disabled = !!world.isLocked;
+  elSend.disabled = !!world.isLocked;
+  elInput.placeholder = world.isLocked ? 'World đã locked — chỉ đọc.' : 'Player turn… (((wrap in double parens for OOC director note)))';
+
+  if (!preview || messages.length) {
+    paint();
+  } else {
+    elTranscript.innerHTML = '<div class="mono text-[11px] text-mute">loading story log...</div>';
+  }
+}
+
 function appendTyping() {
   const el = document.createElement('div');
   el.id = 'typing';
@@ -267,25 +319,13 @@ async function loadWorld() {
     elAuthWarn.classList.remove('hidden');
     return;
   }
-  const data = await fetchJson(`/api/kata/tavern/world/${worldId}`);
+  const snap = readWorldSnapshot(worldId);
+  if (snap) paintWorldData(snap.data, { preview: !snap.full });
+
+  const data = await fetchJson(`/api/kata/tavern/world/${worldId}?limit=${PLAY_WORLD_LIMIT}`);
   if (!data) return;
-  world = data.world;
-  messages = data.messages ?? [];
-  elTitle.innerHTML = `${escapeHtml(world.name)}<span class="text-purple glow77">.</span>`;
-  elBcName.textContent = world.name;
-  elMeta.textContent = `${world.mode} · ${world.difficulty} · ${world.participation}${world.isLocked ? ' · 🔒 locked' : ''}`;
-  if (world.coverImageUrl) {
-    const coverWrap = document.createElement('div');
-    coverWrap.style.cssText = 'margin-top:16px;border-radius:12px;overflow:hidden;border:1px solid rgba(138,79,255,0.20);max-width:520px';
-    coverWrap.innerHTML = `<img src="${escapeHtml(world.coverImageUrl)}" alt="" style="width:100%;display:block" />`;
-    document.getElementById('world-header').appendChild(coverWrap);
-  }
-  if (world.isLocked) {
-    elInput.disabled = true;
-    elSend.disabled = true;
-    elInput.placeholder = 'World đã locked — chỉ đọc.';
-  }
-  paint();
+  rememberWorldSnapshot(worldId, data);
+  paintWorldData(data);
 }
 
 async function sendTurn() {

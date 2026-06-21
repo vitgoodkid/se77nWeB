@@ -2091,6 +2091,12 @@ async function loadTavernWorldOrFail(kataDb, id, auth) {
   return { world };
 }
 
+function tavernMessageLimit(req, fallback = 120) {
+  const n = Number.parseInt(req.query?.limit, 10);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.min(200, Math.max(1, n));
+}
+
 async function tavernWorldGet(req, res, id) {
   const auth = await requireUser(req);
   if (auth.error) return res.status(auth.status).json({ error: auth.error });
@@ -2098,18 +2104,29 @@ async function tavernWorldGet(req, res, id) {
   const r = await loadTavernWorldOrFail(kataDb, id, auth);
   if (r.error) return res.status(r.status).json({ error: r.error });
 
-  const session = await kataDb
-    .collection('tavern_sessions')
-    .findOne({ worldId: r.world._id });
+  const limit = tavernMessageLimit(req);
+  const [session, character] = await Promise.all([
+    kataDb
+      .collection('tavern_sessions')
+      .findOne(
+        { worldId: r.world._id },
+        {
+          projection: {
+            summary: 1,
+            directorNotes: 1,
+            messageCount: 1,
+            messages: { $slice: -(limit * 2) },
+          },
+        },
+      ),
+    r.world.characterId
+      ? kataDb.collection('tavern_characters').findOne({ _id: r.world.characterId })
+      : Promise.resolve(null),
+  ]);
 
-  // Truncate to last 200 non-OOC messages so the response stays bounded.
+  // Truncate to the last non-OOC messages so the response stays bounded.
   const allMessages = (session?.messages ?? []).filter((m) => !m.isOOC);
-  const messages = allMessages.slice(-200);
-
-  let character = null;
-  if (r.world.characterId) {
-    character = await kataDb.collection('tavern_characters').findOne({ _id: r.world.characterId });
-  }
+  const messages = allMessages.slice(-limit);
 
   return res.status(200).json({
     world: r.world,
