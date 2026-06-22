@@ -749,6 +749,7 @@ const PUBLIC_TOOLS = [
   { id: 'short',   nameKey: 'tools.short.name',   descKey: 'tools.short.desc',   icon: '/',  accent: COLORS.green, tag: 'WEB' },
   { id: 'pst',     nameKey: 'tools.pst.name',     descKey: 'tools.pst.desc',     icon: '¶',  accent: COLORS.green, tag: 'WEB' },
   { id: 'game',    nameKey: 'tools.game.name',    descKey: 'tools.game.desc',    icon: '◉',  accent: COLORS.gold,  tag: 'ARCHIVE' },
+  { id: 'bmi',     nameKey: 'tools.bmi.name',     descKey: 'tools.bmi.desc',     icon: '⚖',  accent: COLORS.green, tag: 'HEALTH' },
   { id: 'convert', nameKey: 'tools.convert.name', descKey: 'tools.convert.desc', icon: '⇄',  accent: COLORS.gold,  tag: 'MEDIA' },
   { id: 'hex',     nameKey: 'tools.hex.name',     descKey: 'tools.hex.desc',     icon: '0x', accent: COLORS.green, tag: 'DEV' },
   { id: '2fa',     nameKey: 'tools.2fa.name',     descKey: 'tools.2fa.desc',     icon: '2F', accent: COLORS.red,   tag: 'SECURITY' },
@@ -1071,6 +1072,7 @@ function ToolDetail({ tool, accent, onBack }) {
          tool.id === 'pst'     ? <PastebinTool accent={accent} /> :
          tool.id === 'convert' ? <ConverterTool accent={accent} /> :
          tool.id === 'hex'     ? <HexToTextTool accent={accent} /> :
+         tool.id === 'bmi'     ? <BMICalculatorTool accent={accent} /> :
          tool.id === '2fa'     ? <TotpAuthenticatorTool accent={accent} /> :
          tool.id === 'fin'     ? <FinanceTool accent={accent} /> :
          tool.id === 'game'    ? <GameResourcesTool accent={accent} /> :
@@ -1417,6 +1419,135 @@ function HexToTextTool({ accent }) {
             rows={7}
             style={{ ...textAreaStyle, borderColor: accent + '55' }}
           />
+        </div>
+      )}
+    </div>
+  );
+}
+
+// WHO BMI bands, scaled onto a 12–40 axis so the marker + segmented gauge
+// share one coordinate space. Asia-Pacific cutoffs differ (overweight ≥23),
+// but we keep the standard WHO bands and surface the healthy-weight RANGE for
+// the user's height, which is the more actionable number anyway.
+const BMI_BANDS = [
+  { max: 18.5, label: 'Thiếu cân',   color: '#6aa0d8' },
+  { max: 25,   label: 'Bình thường', color: COLORS.green },
+  { max: 30,   label: 'Thừa cân',    color: COLORS.gold },
+  { max: Infinity, label: 'Béo phì', color: COLORS.red },
+];
+const BMI_AXIS_MIN = 12;
+const BMI_AXIS_MAX = 40;
+
+function bmiBandFor(bmi) {
+  return BMI_BANDS.find((b) => bmi < b.max) || BMI_BANDS[BMI_BANDS.length - 1];
+}
+
+function BMICalculatorTool({ accent }) {
+  const [height, setHeight] = useState(''); // cm
+  const [weight, setWeight] = useState(''); // kg
+
+  const h = parseFloat(height.replace(',', '.'));
+  const w = parseFloat(weight.replace(',', '.'));
+  const valid = h > 0 && h < 300 && w > 0 && w < 600;
+
+  const hM = h / 100;
+  const bmi = valid ? w / (hM * hM) : null;
+  const band = bmi != null ? bmiBandFor(bmi) : null;
+  const idealMin = valid ? 18.5 * hM * hM : null;
+  const idealMax = valid ? 24.9 * hM * hM : null;
+  const markerPct = bmi == null
+    ? 0
+    : Math.max(0, Math.min(100, ((bmi - BMI_AXIS_MIN) / (BMI_AXIS_MAX - BMI_AXIS_MIN)) * 100));
+
+  // Segment widths along the 12–40 axis, in %.
+  const segments = BMI_BANDS.map((b, i) => {
+    const lo = i === 0 ? BMI_AXIS_MIN : BMI_BANDS[i - 1].max;
+    const hi = b.max === Infinity ? BMI_AXIS_MAX : b.max;
+    return { color: b.color, pct: ((hi - lo) / (BMI_AXIS_MAX - BMI_AXIS_MIN)) * 100 };
+  });
+
+  function reset() { setHeight(''); setWeight(''); }
+
+  const labelStyle = { marginBottom: 8 };
+
+  return (
+    <div style={{ display: 'grid', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        <div>
+          <Kicker style={labelStyle}>CHIỀU CAO (cm)</Kicker>
+          <Field
+            value={height}
+            onChange={(v) => setHeight(v.replace(/[^\d.,]/g, ''))}
+            placeholder="170"
+            style={{ fontSize: 16 }}
+          />
+        </div>
+        <div>
+          <Kicker style={labelStyle}>CÂN NẶNG (kg)</Kicker>
+          <Field
+            value={weight}
+            onChange={(v) => setWeight(v.replace(/[^\d.,]/g, ''))}
+            placeholder="65"
+            style={{ fontSize: 16 }}
+          />
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: 10 }}>
+        <Btn variant="ghost" onClick={reset} disabled={!height && !weight}>Xóa</Btn>
+      </div>
+
+      {bmi != null ? (
+        <div style={{
+          border: `1px solid ${band.color}55`, borderRadius: 12,
+          padding: 20, background: band.color + '0e',
+          animation: 'fadeUp 200ms ease-out',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+            <div className="mono" style={{ fontSize: 40, fontWeight: 800, color: band.color, lineHeight: 1 }}>
+              {bmi.toFixed(1)}
+            </div>
+            <div className="mono" style={{
+              fontSize: 12, letterSpacing: '0.16em', textTransform: 'uppercase',
+              fontWeight: 800, color: band.color,
+              border: `1px solid ${band.color}66`, borderRadius: 999, padding: '6px 14px',
+            }}>{band.label}</div>
+          </div>
+
+          {/* Segmented WHO gauge + marker */}
+          <div style={{ marginTop: 20, position: 'relative' }}>
+            <div style={{ display: 'flex', height: 8, borderRadius: 999, overflow: 'hidden' }}>
+              {segments.map((s, i) => (
+                <div key={i} style={{ width: s.pct + '%', background: s.color, opacity: 0.85 }} />
+              ))}
+            </div>
+            <div style={{
+              position: 'absolute', top: -4, left: `calc(${markerPct}% - 1px)`,
+              width: 2, height: 16, background: COLORS.text,
+              boxShadow: '0 0 6px rgba(0,0,0,0.6)', transition: 'left 260ms ease',
+            }} />
+            <div className="mono" style={{
+              display: 'flex', justifyContent: 'space-between',
+              fontSize: 9, color: COLORS.muted, marginTop: 8, letterSpacing: '0.08em',
+            }}>
+              <span>18.5</span><span>25</span><span>30</span>
+            </div>
+          </div>
+
+          <div className="mono" style={{ fontSize: 11.5, color: COLORS.muted, marginTop: 16, lineHeight: 1.6 }}>
+            Cân nặng hợp lý cho {h} cm:{' '}
+            <span style={{ color: COLORS.green, fontWeight: 700 }}>
+              {idealMin.toFixed(1)}–{idealMax.toFixed(1)} kg
+            </span>
+          </div>
+        </div>
+      ) : (
+        <div className="mono" style={{
+          padding: '14px 16px', borderRadius: 10, border: '1px solid ' + COLORS.line,
+          background: COLORS.bg, color: COLORS.muted, fontSize: 11.5, lineHeight: 1.6,
+        }}>
+          Nhập chiều cao &amp; cân nặng để tính BMI. Công thức:{' '}
+          <span style={{ color: accent }}>cân nặng (kg) ÷ chiều cao² (m)</span>.
         </div>
       )}
     </div>
