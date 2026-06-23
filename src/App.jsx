@@ -1309,30 +1309,31 @@ function HomeView({ nav, ambient, ambientOn }) {
 
         <div style={{ position: 'relative', zIndex: 1 }}>
           <Kicker style={{ marginBottom: 14, color: COLORS.red }}>● ONLINE · EXP {EXPERIMENT_NUMBER}</Kicker>
-          <h1 style={{
-            margin: 0,
-            fontFamily: 'JetBrains Mono, monospace',
-            fontSize: 50, lineHeight: 1.16, fontWeight: 800, letterSpacing: '-0.025em',
-            maxWidth: 1000, minHeight: 116,
-          }}>
-            {[...typed].map((ch, idx) => {
-              const glow = glowSet.has(idx);
-              return (
-                <span
-                  key={idx}
-                  className={glow ? 'qglow' : undefined}
-                  style={{ color: glow ? COLORS.red : COLORS.text, animation: 'fadeIn 150ms ease-out' }}
-                >{ch}</span>
-              );
-            })}
-            <span style={{
-              display: 'inline-block', width: 13, height: 38,
-              marginLeft: 10, verticalAlign: '-3px',
-              background: COLORS.red,
-              boxShadow: `0 0 18px ${COLORS.red}66`,
-              animation: 'blink 1s steps(1) infinite',
-            }} />
-          </h1>
+          <div style={{ maxWidth: 1000, minHeight: 152, display: 'grid', alignItems: 'center' }}>
+            <h1 style={{
+              margin: 0,
+              fontFamily: 'JetBrains Mono, monospace',
+              fontSize: 62, lineHeight: 1.12, fontWeight: 800, letterSpacing: '-0.03em',
+            }}>
+              {[...typed].map((ch, idx) => {
+                const glow = glowSet.has(idx);
+                return (
+                  <span
+                    key={idx}
+                    className={glow ? 'qglow' : undefined}
+                    style={{ color: glow ? COLORS.red : COLORS.text, animation: 'fadeIn 150ms ease-out' }}
+                  >{ch}</span>
+                );
+              })}
+              <span style={{
+                display: 'inline-block', width: 14, height: 46,
+                marginLeft: 10, verticalAlign: '-7px',
+                background: COLORS.red,
+                boxShadow: `0 0 18px ${COLORS.red}66`,
+                animation: 'blink 1s steps(1) infinite',
+              }} />
+            </h1>
+          </div>
           <p style={{
             margin: '20px 0 0', maxWidth: 720,
             fontSize: 16, color: COLORS.muted, lineHeight: 1.6,
