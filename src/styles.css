@@ -187,3 +187,17 @@ input, textarea { font-family: inherit; }
 [data-theme="light"] [style*="solid rgba(255, 255, 255, 0.08)"],
 [data-theme="light"] [style*="solid rgba(255,255,255,0.08)"],
 [data-theme="light"] [style*="border-color: rgba(255, 255, 255, 0.08)"] { border-color: rgba(33, 28, 22, 0.12) !important; }
+
+/* Translucent dark chrome (header / nav rail / ticker / popovers + modals) →
+   light chrome. These are authored as literal rgba(13,10,8,A); the browser
+   serializes them with spaces. */
+[data-theme="light"] [style*="background: rgba(13, 10, 8, 0.5)"],
+[data-theme="light"] [style*="background:rgba(13,10,8,0.5)"] { background-color: rgba(248, 244, 237, 0.72) !important; }
+[data-theme="light"] [style*="background: rgba(13, 10, 8, 0.6)"],
+[data-theme="light"] [style*="background:rgba(13,10,8,0.6)"] { background-color: rgba(248, 244, 237, 0.80) !important; }
+[data-theme="light"] [style*="background: rgba(13, 10, 8, 0.7)"],
+[data-theme="light"] [style*="background:rgba(13,10,8,0.7)"] { background-color: rgba(248, 244, 237, 0.85) !important; }
+[data-theme="light"] [style*="background: rgba(13, 10, 8, 0.78)"],
+[data-theme="light"] [style*="background:rgba(13,10,8,0.78)"] { background-color: rgba(248, 244, 237, 0.88) !important; }
+[data-theme="light"] [style*="background: rgba(13, 10, 8, 0.92)"],
+[data-theme="light"] [style*="background:rgba(13,10,8,0.92)"] { background-color: rgba(255, 255, 255, 0.95) !important; }
