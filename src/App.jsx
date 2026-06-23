@@ -1221,17 +1221,31 @@ function HomeView({ nav, ambient, ambientOn }) {
   const { t } = useLang();
   const { user } = useAuth();
   const [quoteIdx, setQuoteIdx] = useState(() => Math.floor(Math.random() * QUOTES.length));
+  const [typed, setTyped] = useState('');
   const [markets, setMarkets] = useState({ btc: null, gold: null, twd: null, vnd: null });
+  // Typewriter reveal of the active quote (one char at a time).
   useEffect(() => {
+    const full = QUOTES[quoteIdx];
+    setTyped('');
+    let i = 0;
     const id = setInterval(() => {
+      i += 1;
+      setTyped(full.slice(0, i));
+      if (i >= full.length) clearInterval(id);
+    }, 45);
+    return () => clearInterval(id);
+  }, [quoteIdx]);
+  // Hold the quote for ~10s, then jump to a new random one (no back-to-back repeat).
+  useEffect(() => {
+    const id = setTimeout(() => {
       setQuoteIdx((cur) => {
         let n = Math.floor(Math.random() * QUOTES.length);
-        if (QUOTES.length > 1 && n === cur) n = (n + 1) % QUOTES.length; // never repeat back-to-back
+        if (QUOTES.length > 1 && n === cur) n = (n + 1) % QUOTES.length;
         return n;
       });
-    }, 4200);
-    return () => clearInterval(id);
-  }, []);
+    }, 10000);
+    return () => clearTimeout(id);
+  }, [quoteIdx]);
 
   // Live BTC + gold + TWD↔VND for the ticker. /api/crypto polls CoinGecko + FX
   // upstream and exposes them on a single endpoint. Refresh every 60s like the
@@ -1277,14 +1291,13 @@ function HomeView({ nav, ambient, ambientOn }) {
 
         <div style={{ position: 'relative', zIndex: 1 }}>
           <Kicker style={{ marginBottom: 14, color: COLORS.red }}>● ONLINE · EXP {EXPERIMENT_NUMBER}</Kicker>
-          <h1 key={quoteIdx} style={{
+          <h1 style={{
             margin: 0,
             fontFamily: 'JetBrains Mono, monospace',
             fontSize: 50, lineHeight: 1.16, fontWeight: 800, letterSpacing: '-0.025em',
             maxWidth: 1000, minHeight: 116,
-            animation: 'fadeUp 420ms ease-out',
           }}>
-            <span style={{ color: COLORS.text }}>{QUOTES[quoteIdx]}</span>
+            <span style={{ color: COLORS.text }}>{typed}</span>
             <span style={{
               display: 'inline-block', width: 13, height: 38,
               marginLeft: 10, verticalAlign: '-3px',
