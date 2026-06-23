@@ -22,7 +22,13 @@ const TodoList           = lazy(() => import('./featuresB.jsx').then((m) => ({ d
 const Feed               = lazy(() => import('./featuresB.jsx').then((m) => ({ default: m.Feed })));
 
 const FEATURES = [
-  { id: 'home',   label: 'Home',                  icon: '⌂',   accent: COLORS.text,  short: '00' },
+  { id: 'home',   label: 'Home',                  icon: (c) => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 10.7 12 3l9 7.7" />
+      <path d="M5.5 9.4V20h13V9.4" />
+      <path d="M10 20v-5h4v5" />
+    </svg>
+  ), accent: COLORS.text,  short: '00' },
   { id: 'ai',     label: 'AI Playground',         icon: '✦',   accent: COLORS.red,   short: '01', desc: 'Chat · image · video' },
   { id: 'tools',  label: 'Toolbox',               icon: '⚒',   accent: COLORS.green, short: '02', desc: 'Public + private utilities' },
   { id: 'tv4',    label: 'Travel Plan',           icon: (c) => <GlobeIcon color={c} size={20} />, accent: COLORS.gold,  short: '03', desc: 'Trips · plans · expenses' },
@@ -871,7 +877,7 @@ function NavRail({ route, nav }) {
               fontFamily: 'JetBrains Mono, monospace', fontSize: 18, fontWeight: 700, lineHeight: 1,
               display: 'grid', placeItems: 'center', height: 20,
             }}>
-              {typeof f.icon === 'function' ? f.icon(active ? f.accent : COLORS.muted) : f.icon}
+              {typeof f.icon === 'function' ? f.icon('currentColor') : f.icon}
             </span>
             <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, letterSpacing: '0.16em' }}>
               {f.short}
