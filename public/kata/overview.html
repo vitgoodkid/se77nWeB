@@ -242,7 +242,7 @@ async function loadOverview(){
 
   let r;
   try {
-    r = await fetch(`/api/kata/server/${encodeURIComponent(guildId)}`, { credentials:'same-origin' });
+    r = await fetch(`/api/kata/server/${encodeURIComponent(guildId)}?lite=1`, { credentials:'same-origin' });
   } catch (e) {
     showToast('Lỗi mạng khi tải dữ liệu', 'err');
     return;
@@ -278,7 +278,7 @@ async function loadOverview(){
     return;
   }
 
-  const data = await r.json();
+  let data = await r.json();
   CURRENT_GUILD = data.guild;
   CURRENT_CONFIG = data.config || {};
 
@@ -300,6 +300,20 @@ async function loadOverview(){
   document.getElementById('kata-guild-meta').textContent = `id · ${data.guild.id}`;
 
   // ── Stat strip ──────────────────────────────────────────────
+  fillSettings();
+
+  try {
+    r = await fetch(`/api/kata/server/${encodeURIComponent(guildId)}`, { credentials:'same-origin' });
+  } catch (e) {
+    showToast('Settings loaded, stats network error', 'err');
+    return;
+  }
+  if (!r.ok){
+    showToast(`Settings loaded; stats HTTP ${r.status}`, 'err');
+    return;
+  }
+  data = await r.json();
+
   const k = data.stats.kpis;
   const s = data.stats;
   const fmtNum = (n) => Number(n || 0).toLocaleString('vi-VN');

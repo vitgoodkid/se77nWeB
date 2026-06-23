@@ -641,11 +641,66 @@ async function hydrateUsernames(kataDb, userIds) {
   }
 }
 
+const KATA_SERVER_CONFIG_DEFAULTS = {
+  systemPrompt: '',
+  chatModel: 'grok-4-fast',
+  imageModel: 'fal-ai/nano-banana-pro',
+  videoModel: 'bytedance/seedance-2.0/image-to-video',
+  rateLimitPerUser: 30,
+  allowedChannels: [],
+};
+
+function buildServerGuildPayload(guildId, serverDoc) {
+  return {
+    id: guildId,
+    name: serverDoc.name,
+    iconUrl: serverDoc.iconUrl ?? null,
+    ownerId: serverDoc.ownerId,
+    joinedAt: serverDoc.joinedAt,
+  };
+}
+
+function resolveServerConfig(config, globalConfig) {
+  const guildOverride = {};
+  const globalLayer = {};
+  const effective = { ...KATA_SERVER_CONFIG_DEFAULTS };
+  for (const k of Object.keys(KATA_SERVER_CONFIG_DEFAULTS)) {
+    const g = globalConfig ? globalConfig[k] : undefined;
+    const p = config ? config[k] : undefined;
+    if (g !== undefined && g !== null) {
+      globalLayer[k] = g;
+      effective[k] = g;
+    }
+    if (p !== undefined && p !== null) {
+      guildOverride[k] = p;
+      effective[k] = p;
+    }
+  }
+  return {
+    ...effective,
+    guildOverride,
+    global: globalLayer,
+    updatedAt: config?.updatedAt ?? null,
+  };
+}
+
 async function handleKataServerGet(req, res, guildId) {
   const auth = await authorizeGuildAccess(req, guildId);
   if (auth.error) return res.status(auth.status).json({ error: auth.error });
 
   const { kataDb, serverDoc } = auth;
+  if (String(req.query?.lite || '') === '1') {
+    const [config, globalConfig] = await Promise.all([
+      kataDb.collection('serverconfigs').findOne({ guildId }),
+      kataDb.collection('globalconfigs').findOne({ scope: '_global' }),
+    ]);
+    return res.status(200).json({
+      guild: buildServerGuildPayload(guildId, serverDoc),
+      config: resolveServerConfig(config, globalConfig),
+      stats: null,
+    });
+  }
+
   const now = Date.now();
   const day = 24 * 60 * 60 * 1000;
   const since24h = new Date(now - day);
@@ -731,13 +786,7 @@ async function handleKataServerGet(req, res, guildId) {
   };
 
   return res.status(200).json({
-    guild: {
-      id: guildId,
-      name: serverDoc.name,
-      iconUrl: serverDoc.iconUrl ?? null,
-      ownerId: serverDoc.ownerId,
-      joinedAt: serverDoc.joinedAt,
-    },
+    guild: buildServerGuildPayload(guildId, serverDoc),
     config: (() => {
       // Three layers exposed to the FE:
       //   guildOverride: only fields explicitly set on this guild's doc
@@ -747,14 +796,7 @@ async function handleKataServerGet(req, res, guildId) {
       // value came from (matches the bot's resolution order verbatim).
       // Mirror of the bot's DEFAULT_CONFIG (apps/bot/src/services/guildConfig.ts).
       // chatMode + NSFW thresholds are gone — the bot dropped that machinery.
-      const codeDefaults = {
-        systemPrompt: '',
-        chatModel: 'grok-4-fast',
-        imageModel: 'fal-ai/nano-banana-pro',
-        videoModel: 'bytedance/seedance-2.0/image-to-video',
-        rateLimitPerUser: 30,
-        allowedChannels: [],
-      };
+      const codeDefaults = KATA_SERVER_CONFIG_DEFAULTS;
       const guildOverride = {};
       const globalLayer = {};
       const effective = { ...codeDefaults };
@@ -985,6 +1027,7 @@ async function handleKataMeHistory(req, res) {
   if (!spec) return res.status(400).json({ error: 'invalid_type', allowed: Object.keys(LOG_TYPES) });
 
   const limit = Math.min(MAX_LOG_LIMIT, Math.max(1, parseInt(req.query?.limit, 10) || DEFAULT_LOG_LIMIT));
+  const includeTotal = String(req.query?.count ?? '1') !== '0';
   const cursorRaw = req.query?.cursor;
 
   const filter = { userId: user.providerUserId };
@@ -1027,12 +1070,9 @@ async function handleKataMeHistory(req, res) {
   }
 
   let total = null;
-  if (!cursorRaw) {
+  if (!cursorRaw && includeTotal) {
     try {
-      total = await kataDb.collection(spec.coll).countDocuments({
-        userId: user.providerUserId,
-        ...(filter.role ? { role: filter.role } : {}),
-      });
+      total = await kataDb.collection(spec.coll).countDocuments(filter);
     } catch { /* total is best-effort */ }
   }
 
@@ -1057,6 +1097,7 @@ async function handleKataServerLogs(req, res, guildId) {
   if (!spec) return res.status(400).json({ error: 'invalid_type', allowed: Object.keys(LOG_TYPES) });
 
   const limit = Math.min(MAX_LOG_LIMIT, Math.max(1, parseInt(req.query?.limit, 10) || DEFAULT_LOG_LIMIT));
+  const includeTotal = String(req.query?.count ?? '1') !== '0';
   const cursorRaw = req.query?.cursor;
   const filter = { guildId };
   if (cursorRaw) {
@@ -1097,9 +1138,9 @@ async function handleKataServerLogs(req, res, guildId) {
   // Total count is expensive on large collections — only return when no cursor
   // (first page) so the UI can show "X total" once.
   let total = null;
-  if (!cursorRaw) {
+  if (!cursorRaw && includeTotal) {
     try {
-      total = await kataDb.collection(spec.coll).countDocuments({ guildId, ...(filter.role ? { role: filter.role } : {}) });
+      total = await kataDb.collection(spec.coll).countDocuments(filter);
     } catch {
       total = null;
     }

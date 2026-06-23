@@ -277,7 +277,7 @@ async function loadGuildBootstrap(){
   document.getElementById('bc-guild').href = 'overview.html?guild=' + encodeURIComponent(guildId);
 
   let r;
-  try { r = await fetch('/api/kata/server/' + encodeURIComponent(guildId), { credentials:'same-origin' }); }
+  try { r = await fetch('/api/kata/server/' + encodeURIComponent(guildId) + '?lite=1', { credentials:'same-origin' }); }
   catch { showToast('Lỗi mạng', 'err'); return false; }
   if (r.status === 401 || r.status === 403){
     document.querySelector('main').innerHTML = '<div class="rounded-[14px] border border-line bg-panel p-10 text-center max-w-xl mx-auto mt-20"><div class="text-[16px] font-medium text-ink mb-3">Cần đăng nhập với Discord (admin của server).</div><a href="/api/auth/discord/start" class="mono inline-flex items-center gap-2 h-10 px-5 rounded-[10px] uppercase tracking-label text-[11px] font-bold text-bg mt-3" style="background:#5865F2">đăng nhập với Discord</a><a href="servers.html" class="mono inline-flex items-center gap-2 h-10 px-5 rounded-[10px] uppercase tracking-label text-[11px] text-mute hover:text-ink mt-3 ml-2 border border-line">← danh sách server</a></div>';

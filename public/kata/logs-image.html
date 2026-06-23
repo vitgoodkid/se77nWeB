@@ -435,7 +435,7 @@ async function loadGuildBootstrap(){
   // Pull guild meta from /api/kata/server/:id (also serves as auth probe)
   let r;
   try {
-    r = await fetch(`/api/kata/server/${encodeURIComponent(guildId)}`, { credentials:'same-origin' });
+    r = await fetch(`/api/kata/server/${encodeURIComponent(guildId)}?lite=1`, { credentials:'same-origin' });
   } catch {
     showToast('Lỗi mạng', 'err'); return false;
   }
@@ -487,7 +487,7 @@ async function loadLogs({ append = false } = {}){
     CHAT_ITEMS = [];
     document.getElementById('empty-state').classList.add('hidden');
   }
-  const params = new URLSearchParams({ type: CURRENT_TAB, limit: '20' });
+  const params = new URLSearchParams({ type: CURRENT_TAB, limit: '20', count: '0' });
   // Chat: include bot replies too — the API hides them unless role=all.
   if (CURRENT_TAB === 'chat') params.set('role', 'all');
   if (CURRENT_CURSOR) params.set('cursor', CURRENT_CURSOR);
@@ -517,7 +517,8 @@ async function loadLogs({ append = false } = {}){
     if (data.total != null){
       document.getElementById('page-counts').textContent = `${data.total.toLocaleString('vi-VN')} entries`;
     } else {
-      document.getElementById('page-counts').textContent = '';
+      const loaded = Number(data.items?.length || 0);
+      document.getElementById('page-counts').textContent = loaded ? `${loaded.toLocaleString('vi-VN')}${data.nextCursor ? '+' : ''} entries` : '';
     }
   }
   if (data.items.length === 0 && !append){
