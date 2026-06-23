@@ -314,6 +314,31 @@
       R.push(L + '[style*="border-color:rgba(255,255,255,' + a + ')" i]{border-color:rgba(33,28,22,' + da + ') !important;}');
     });
 
+    // ── Surfaces defined in page CSS classes (the inline overlay can't reach
+    //    class rules). Flip card/panel/input surfaces to light + their text to
+    //    dark. Nav active/hover and the hover highlights deliberately STAY dark
+    //    (dark bg + light text) — that's the legible "selected/hover" treatment.
+    ['.card', '.row', '.set-card', '.resolved', '.dd-panel'].forEach(function (c) {
+      R.push(L + c + '{background-color:#ffffff !important;border-color:rgba(33,28,22,0.12) !important;}');
+    });
+    ['.field', '.inp', '.dd-trigger', '.btn-step', '.set-segnav', '.msg-bubble', '.rv-prompt', '.rv-rrow', '.rv-cnode'].forEach(function (c) {
+      R.push(L + c + '{background-color:#faf6ee !important;border-color:rgba(33,28,22,0.12) !important;}');
+    });
+    R.push(L + '.bar-track{background-color:rgba(33,28,22,0.08) !important;}');
+    R.push(L + '.tgl{background-color:rgba(33,28,22,0.10) !important;border-color:rgba(33,28,22,0.18) !important;}');
+    R.push(L + '.card:hover, ' + L + '.row:hover{border-color:rgba(33,28,22,0.24) !important;}');
+    // class-defined light text → dark (nav/hover excluded so they stay legible)
+    ['.fld-title', '.set-sec-h', '.rv-rv', '.rv-sv', '.rv-title', '.dd-item', '.dd-trigger', '.field', '.inp', '.chain-model', '.set-narr-t'].forEach(function (c) {
+      R.push(L + c + '{color:#211c16 !important;}');
+    });
+    // Nav active/hover deliberately STAYS a dark pill — keep its text LIGHT
+    // (these rows lean on .text-ink which the overlay above flipped to dark).
+    R.push(L + '.navrow.on, ' + L + '.navrow.on .flex-1, ' + L + '.navitem.on{color:#f5ede0 !important;}');
+    // Content-row hover → a subtle light highlight so the (now dark) text stays readable.
+    ['.dd-item:hover', '.act-row:hover'].forEach(function (c) {
+      R.push(L + c + '{background-color:rgba(33,28,22,0.05) !important;}');
+    });
+
     var s = document.createElement('style');
     s.id = 'kata-light-overlay';
     s.textContent = R.join('\n');
