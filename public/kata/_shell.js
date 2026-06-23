@@ -32,6 +32,27 @@
 
   var LS_LOCK = 'se77n.theme.lockIdx';   // shared with main app
   var LS_LANG = 'se77n.lang';            // local to dashboard for now
+  var LS_MODE = 'kata.theme';            // 'light' | 'dark' — shared with cost.html + main app
+
+  // Pre-paint: set data-theme on <html> the instant this (render-blocking,
+  // top-of-body) script runs, before the rest of the body is parsed — so
+  // light mode applies without a flash of dark content.
+  (function applyModeEarly() {
+    try {
+      var m = localStorage.getItem(LS_MODE);
+      if (m !== 'light' && m !== 'dark') {
+        var q = new URLSearchParams(location.search).get('theme');
+        m = (q === 'light' || q === 'dark') ? q : 'dark';
+      }
+      document.documentElement.setAttribute('data-theme', m);
+    } catch (_) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+    // Inject the light-mode overrides now (head already exists; this script is
+    // render-blocking and runs before the body content paints) so light pages
+    // never flash dark while waiting for boot()/DOMContentLoaded.
+    try { injectLightOverlay(); } catch (_) {}
+  })();
 
   // ── State ───────────────────────────────────────────────────────
   var state = {
@@ -39,7 +60,31 @@
     rotIdx: 0,                   // current rotation slot when AUTO
     rotTimer: null,
     lang: readLang(),            // 'vi' | 'en'
+    mode: readMode(),            // 'light' | 'dark'
   };
+
+  function readMode() {
+    try {
+      var v = localStorage.getItem(LS_MODE);
+      return v === 'light' ? 'light' : (v === 'dark' ? 'dark' : (document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark'));
+    } catch (_) { return 'dark'; }
+  }
+  function writeMode(m) {
+    try { localStorage.setItem(LS_MODE, m); } catch (_) {}
+  }
+  function applyMode() {
+    document.documentElement.setAttribute('data-theme', state.mode);
+  }
+  function setMode(m) {
+    m = (m === 'light') ? 'light' : 'dark';
+    if (m === state.mode) return;
+    state.mode = m;
+    writeMode(m);
+    applyMode();
+    rerenderHeader();
+    repaintAmbient();
+    document.dispatchEvent(new CustomEvent('kata:mode-change', { detail: { mode: m } }));
+  }
 
   function readLockIdx() {
     try {
@@ -179,7 +224,99 @@
       // the negative-z-index layers sit between the two and are visible.
       'html { background-color: #0d0a08; }',
       'body { background-color: transparent !important; }',
+      // cost.html ships its own light/dark button; the shell now provides a
+      // unified one in the header actions, so hide the page-local duplicate.
+      '#themeToggle { display: none !important; }',
     ].join('\n');
+    document.head.appendChild(s);
+  }
+
+  // ── Light-mode overlay ─────────────────────────────────────────
+  // Every kata page hardcodes a dark palette (tailwind config + inline
+  // styles). Rather than refactor 11 pages, we flip the whole site from one
+  // place: when <html data-theme="light">, remap the dark tokens to the
+  // light palette. Inline literals are matched by attribute-substring with a
+  // property prefix (`background:` / `color:` / `solid `) so we only ever
+  // touch the intended property and never a gradient stop or box-shadow.
+  function injectLightOverlay() {
+    if (document.getElementById('kata-light-overlay')) return;
+    var R = [];
+    var L = '[data-theme="light"] ';
+
+    // expose the design palette as variables for pages that opt in
+    R.push('[data-theme="light"]{--bg:#f3eee4;--fg-rgb:33,28,22;--panel:#ffffff;--panel2:#faf6ee;--chrome-rgb:248,244,237;}');
+    R.push('[data-theme="dark"]{--bg:#0d0a08;--fg-rgb:245,237,224;--panel:#15110d;--panel2:#1c1813;--chrome-rgb:13,10,8;}');
+
+    // base chrome
+    R.push('html[data-theme="light"]{background-color:#f3eee4 !important;}');
+    R.push(L + 'body{color:#211c16 !important;}');
+    R.push(L + '#kata-ambient-grain{background-image:radial-gradient(rgba(33,28,22,0.05) 1px,transparent 1px) !important;}');
+    // page-local grain (tavern / cost) uses white dots — flip to dark
+    R.push(L + '.grain{background-image:radial-gradient(rgba(33,28,22,0.05) 1px,transparent 1px) !important;}');
+    // tavern's WebGL backdrop canvas is opaque dark; fade it so the light bg shows
+    R.push(L + '#bg{opacity:0.12 !important;}');
+
+    // tailwind utility classes used across pages
+    R.push(L + '.bg-bg{background-color:#f3eee4 !important;}');
+    R.push(L + '.bg-panel{background-color:#ffffff !important;}');
+    R.push(L + '.bg-panel2{background-color:#faf6ee !important;}');
+    R.push(L + '.text-ink{color:#211c16 !important;}');
+    R.push(L + '.text-mute{color:rgba(33,28,22,0.55) !important;}');
+    R.push(L + '.text-mute2{color:rgba(33,28,22,0.40) !important;}');
+    R.push(L + '.border-line{border-color:rgba(33,28,22,0.12) !important;}');
+    R.push(L + '.border-line2{border-color:rgba(33,28,22,0.18) !important;}');
+    R.push(L + '.text-gold{color:#ad7f31 !important;}');
+    R.push(L + '.text-green{color:#3d8a4f !important;}');
+
+    // solid inline surface fills
+    var BG = {
+      '#0d0a08':'#f3eee4', '#0d0a09':'#f3eee4',
+      '#15110d':'#ffffff', '#131010':'#ffffff', '#13100f':'#ffffff', '#100d0c':'#ffffff',
+      '#1c1813':'#faf6ee', '#1c1614':'#faf6ee', '#1a1312':'#f3ece0', '#1a1513':'#f3ece0', '#16120f':'#faf6ee',
+      '#0e0b0a':'#ffffff', '#0b0908':'#ffffff', '#0a0807':'#f0ebe1',
+    };
+    Object.keys(BG).forEach(function (h) {
+      R.push(L + '[style*="background:' + h + '" i]{background-color:' + BG[h] + ' !important;}');
+      R.push(L + '[style*="background-color:' + h + '" i]{background-color:' + BG[h] + ' !important;}');
+    });
+    // translucent chrome rgba(13,10,8,A) → light chrome (keep alpha)
+    ['0.5','0.55','0.6','0.7','0.72','0.78','0.82','0.84','0.85','0.92','0.95','0.96'].forEach(function (a) {
+      R.push(L + '[style*="background:rgba(13,10,8,' + a + ')" i]{background-color:rgba(248,244,237,' + a + ') !important;}');
+    });
+    // translucent panels rgba(21,17,13,A) → white panel
+    ['0.4','0.45','0.5','0.55','0.62','0.7','0.85','0.88','0.92'].forEach(function (a) {
+      R.push(L + '[style*="background:rgba(21,17,13,' + a + ')" i]{background-color:rgba(255,255,255,' + a + ') !important;}');
+    });
+    // faint fg overlays used as active-button backgrounds
+    ['0.10','0.07','0.05','0.04'].forEach(function (a) {
+      R.push(L + '[style*="background:rgba(245,237,224,' + a + ')" i]{background-color:rgba(33,28,22,0.06) !important;}');
+    });
+
+    // inline ink text
+    var TX = { '#f5ede0':'#211c16', '#f3ede6':'#211c16', '#ece6df':'#26201a', '#ddd6cf':'#3a322a', '#cfc7bf':'#4a4036', '#b9b0a8':'#6b6258' };
+    Object.keys(TX).forEach(function (h) { R.push(L + '[style*="color:' + h + '" i]{color:' + TX[h] + ' !important;}'); });
+    R.push(L + '[style*="color:#D4A858" i]{color:#ad7f31 !important;}');
+    R.push(L + '[style*="color:#5BA868" i]{color:#3d8a4f !important;}');
+    // muted inline text rgba(245,237,224,A) → dark (same alpha)
+    ['0.3','0.32','0.35','0.4','0.45','0.5','0.55','0.6','0.65','0.7','0.75','0.85'].forEach(function (a) {
+      R.push(L + '[style*="color:rgba(245,237,224,' + a + ')" i]{color:rgba(33,28,22,' + a + ') !important;}');
+    });
+
+    // dark solid borders → light
+    ['#2c2522','#272120','#1d1817','#332a26','#1f1a18','#3a302c','#2a2422','#2c2421'].forEach(function (h) {
+      R.push(L + '[style*="solid ' + h + '" i]{border-color:rgba(33,28,22,0.14) !important;}');
+      R.push(L + '[style*="border-color:' + h + '" i]{border-color:rgba(33,28,22,0.14) !important;}');
+    });
+    // white borders → dark tint (scale alpha up a touch for visibility)
+    ['0.02','0.03','0.04','0.05','0.06','0.08','0.09','0.10','0.12','0.14','0.15','0.18','0.25','0.3'].forEach(function (a) {
+      var da = Math.min(0.3, parseFloat(a) * 1.5 + 0.02).toFixed(2);
+      R.push(L + '[style*="solid rgba(255,255,255,' + a + ')" i]{border-color:rgba(33,28,22,' + da + ') !important;}');
+      R.push(L + '[style*="border-color:rgba(255,255,255,' + a + ')" i]{border-color:rgba(33,28,22,' + da + ') !important;}');
+    });
+
+    var s = document.createElement('style');
+    s.id = 'kata-light-overlay';
+    s.textContent = R.join('\n');
     document.head.appendChild(s);
   }
 
@@ -237,6 +374,7 @@
     if (!slot) return;
     slot.innerHTML = '';
     slot.appendChild(buildLangButton());
+    slot.appendChild(buildModeButton());
     slot.appendChild(buildThemeButton());
     slot.appendChild(buildUserChip());
     slot.style.display = 'flex';
@@ -247,6 +385,28 @@
     var existing = document.getElementById('kata-theme-btn');
     if (!existing || !existing.parentElement) return;
     existing.parentElement.replaceChild(buildThemeButton(), existing);
+  }
+
+  // Light / dark toggle — pill with a swatch + LIGHT/DARK label.
+  function buildModeButton() {
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.id = 'kata-mode-btn';
+    btn.className = 'mono h-8 px-3 rounded-full border border-line text-[10px] font-bold flex items-center gap-2';
+    btn.style.letterSpacing = '0.14em';
+    btn.style.textTransform = 'uppercase';
+    btn.title = 'Light / dark';
+    var sw = document.createElement('span');
+    sw.style.cssText = 'width:12px;height:12px;border-radius:999px;flex:none;box-shadow:0 0 0 1px rgba(127,127,127,0.35)';
+    sw.style.background = state.mode === 'light' ? '#f3eee4' : '#0d0a08';
+    var lbl = document.createElement('span');
+    lbl.textContent = state.mode === 'light' ? 'light' : 'dark';
+    btn.appendChild(sw);
+    btn.appendChild(lbl);
+    btn.addEventListener('click', function () {
+      setMode(state.mode === 'light' ? 'dark' : 'light');
+    });
+    return btn;
   }
 
   function buildLangButton() {
@@ -587,6 +747,13 @@
         applyI18n();
         rerenderHeader();
       }
+    } else if (e.key === LS_MODE) {
+      var newMode = readMode();
+      if (newMode !== state.mode) {
+        state.mode = newMode;
+        applyMode();
+        rerenderHeader();
+      }
     }
   });
 
@@ -596,6 +763,8 @@
     applyI18n: applyI18n,
     getLang: function () { return state.lang; },
     setLang: setLang,
+    getMode: function () { return state.mode; },
+    setMode: setMode,
     getLockIdx: function () { return state.lockIdx; },
     setLockIdx: setLockIdx,
     getAccent: function () { return TRACKS[activeIdx()].palette[0]; },
@@ -1060,6 +1229,8 @@
   // ── Boot ────────────────────────────────────────────────────────
   function boot() {
     injectAccentOverlay();
+    injectLightOverlay();
+    applyMode();
     injectAmbientLayers();
     paint();
     if (state.lockIdx == null) startRotation();
