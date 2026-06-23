@@ -1046,7 +1046,34 @@ function Breadcrumbs({ route, nav, feature }) {
 // ─────────────────────────────────────────────────────────────
 // Home view
 // ─────────────────────────────────────────────────────────────
-const VERBS = ['ask', 'think', 'ship', 'archive'];
+// Short maker/builder one-liners rotated at random in the hero headline.
+const QUOTES = [
+  'Ask better questions.', 'Think in systems.', "Ship before you're ready.", 'Archive everything.',
+  'Done beats perfect.', 'Start small, ship often.', 'Make it work, then make it right.', 'Less, but better.',
+  'Simplicity scales.', 'Build in public.', 'Move with intent.', 'Curiosity compounds.',
+  'Read the source.', 'Write to think.', 'Measure, then cut.', 'Default to action.',
+  'Kill your darlings.', 'Iterate relentlessly.', 'Stay close to the work.', 'Trust the process.',
+  'Focus is a superpower.', 'Slow is smooth, smooth is fast.', 'Make the invisible visible.', 'Question every default.',
+  'Ship the smallest thing.', 'Notes are a second brain.', 'Edit ruthlessly.', 'Begin again.',
+  'Small steps, every day.', 'Done is a feature.', 'Constraints breed creativity.', 'Build what you wish existed.',
+  'Taste is a muscle.', 'Sweat the details.', 'Ship, then learn.', 'Optimize for momentum.',
+  'Keep it boring.', 'Reduce, reuse, refactor.', 'Make it obvious.', 'Code is a liability.',
+  'Delete more than you add.', 'Clarity over cleverness.', 'Think slow, act fast.', 'Protect your focus.',
+  'Compounding is quiet.', 'Be hard to distract.', 'Finish what you start.', 'Make tomorrow easier.',
+  'Leave it better.', 'Stay curious.', 'Do the obvious thing.', 'One thing at a time.',
+  'Patience is leverage.', "Show, don't tell.", 'Make it real.', 'Prototype the future.',
+  'Embrace the boring stack.', 'Automate the tedious.', 'Build for yourself first.', 'Listen more than you speak.',
+  'Strong opinions, loosely held.', 'Be a beginner often.', 'Practice in public.', 'Keep shipping.',
+  'Make space to think.', 'Tend your garden.', 'Small bets, often.', 'Direction over speed.',
+  'Choose your hard.', 'Quiet the noise.', 'Build the muscle.', 'Trust your taste.',
+  'Stay in motion.', 'Make it yours.', 'Think for yourself.', 'Read widely, build narrowly.',
+  'Cut scope, not quality.', 'Energy follows attention.', "Begin before you're ready.", 'Keep the loop tight.',
+  'Ship daily.', 'Less hype, more craft.', 'Make it durable.', 'Aim small, miss small.',
+  'Default to curiosity.', 'Earn your simplicity.', 'Build, measure, learn.', 'Stay humble, ship anyway.',
+  'Notes outlive memory.', 'Done is the engine.', 'Care is the differentiator.', 'Make the next step easy.',
+  'Slow down to speed up.', "Refine, don't restart.", 'Protect deep work.', 'Make it once, reuse forever.',
+  'Question the brief.', 'Polish the rough edges.', 'Keep the spark.', 'Build things that last.',
+];
 
 // Drifting module-color dots connected with thin lines, sitting behind the hero.
 function Constellation({ height = 360, dotCount = 18 }) {
@@ -1193,10 +1220,16 @@ function MarqueeTicker({ speed = 60, items, minRepeats = 6 }) {
 function HomeView({ nav, ambient, ambientOn }) {
   const { t } = useLang();
   const { user } = useAuth();
-  const [verb, setVerb] = useState(0);
+  const [quoteIdx, setQuoteIdx] = useState(() => Math.floor(Math.random() * QUOTES.length));
   const [markets, setMarkets] = useState({ btc: null, gold: null, twd: null, vnd: null });
   useEffect(() => {
-    const id = setInterval(() => setVerb((v) => (v + 1) % VERBS.length), 1800);
+    const id = setInterval(() => {
+      setQuoteIdx((cur) => {
+        let n = Math.floor(Math.random() * QUOTES.length);
+        if (QUOTES.length > 1 && n === cur) n = (n + 1) % QUOTES.length; // never repeat back-to-back
+        return n;
+      });
+    }, 4200);
     return () => clearInterval(id);
   }, []);
 
@@ -1244,32 +1277,21 @@ function HomeView({ nav, ambient, ambientOn }) {
 
         <div style={{ position: 'relative', zIndex: 1 }}>
           <Kicker style={{ marginBottom: 14, color: COLORS.red }}>● ONLINE · EXP {EXPERIMENT_NUMBER}</Kicker>
-          <h1 style={{
+          <h1 key={quoteIdx} style={{
             margin: 0,
             fontFamily: 'JetBrains Mono, monospace',
-            fontSize: 78, lineHeight: 1.02, fontWeight: 800, letterSpacing: '-0.03em',
+            fontSize: 50, lineHeight: 1.16, fontWeight: 800, letterSpacing: '-0.025em',
+            maxWidth: 1000, minHeight: 116,
+            animation: 'fadeUp 420ms ease-out',
           }}>
-            <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 26, flexWrap: 'wrap' }}>
-              {VERBS.map((v, i) => (
-                <span key={v} style={{
-                  opacity: verb === i ? 1 : 0.18,
-                  color: verb === i ? COLORS.text : COLORS.muted,
-                  transition: 'opacity 300ms, color 300ms',
-                  position: 'relative',
-                }}>
-                  {v}
-                  {verb === i && (
-                    <span style={{
-                      display: 'inline-block', width: 14, height: 56,
-                      marginLeft: 8, verticalAlign: '-4px',
-                      background: COLORS.red,
-                      boxShadow: `0 0 18px ${COLORS.red}66`,
-                      animation: 'blink 1s steps(1) infinite',
-                    }} />
-                  )}
-                </span>
-              ))}
-            </span>
+            <span style={{ color: COLORS.text }}>{QUOTES[quoteIdx]}</span>
+            <span style={{
+              display: 'inline-block', width: 13, height: 38,
+              marginLeft: 10, verticalAlign: '-3px',
+              background: COLORS.red,
+              boxShadow: `0 0 18px ${COLORS.red}66`,
+              animation: 'blink 1s steps(1) infinite',
+            }} />
           </h1>
           <p style={{
             margin: '20px 0 0', maxWidth: 720,
