@@ -746,6 +746,10 @@ function TypingDots({ kind }) {
 const PINK = '#f59cb4';
 
 const PUBLIC_TOOLS = [
+  // Full modules folded into Toolbox — clicking these navigates to their panel.
+  { id: 'tv4',  route: 'tv4',  name: 'Travel Plan',          desc: 'Trips · plans · expenses',   icon: '⊕', accent: COLORS.gold,  tag: 'TRAVEL' },
+  { id: 'tech', route: 'tech', name: 'Subscription Manager', desc: 'Monthly + yearly burn',      icon: '⌬', accent: COLORS.green, tag: 'FINANCE' },
+  { id: 'todo', route: 'todo', name: 'To Do',                desc: 'Priorities · localStorage',  icon: '✓', accent: COLORS.green, tag: 'TASKS' },
   { id: 'short',   nameKey: 'tools.short.name',   descKey: 'tools.short.desc',   icon: '/',  accent: COLORS.green, tag: 'WEB' },
   { id: 'pst',     nameKey: 'tools.pst.name',     descKey: 'tools.pst.desc',     icon: '¶',  accent: COLORS.green, tag: 'WEB' },
   { id: 'game',    nameKey: 'tools.game.name',    descKey: 'tools.game.desc',    icon: '◉',  accent: COLORS.gold,  tag: 'ARCHIVE' },
@@ -762,9 +766,14 @@ const PRIVATE_TOOLS = [
 
 const THAO_PIN = '2609';
 
-export function Toolbox() {
+export function Toolbox({ nav }) {
   const { t } = useLang();
   const [tab, setTab] = useState('public');
+  // Some "tools" are actually full modules (Travel / Subscriptions / To Do) —
+  // clicking those navigates to their panel instead of opening inline.
+  const toolName = (tool) => tool.name ?? t(tool.nameKey);
+  const toolDesc = (tool) => tool.desc ?? t(tool.descKey);
+  const openTool = (tool) => { if (tool.route && nav) nav(tool.route); else setActiveTool(tool); };
   const [unlocked, setUnlocked] = useState(false);
   const [pin, setPin] = useState('');
   const [err, setErr] = useState(false);
@@ -953,7 +962,7 @@ export function Toolbox() {
               return (
                 <button
                   key={tool.id}
-                  onClick={() => setActiveTool(tool)}
+                  onClick={() => openTool(tool)}
                   className="mtap"
                   style={{
                     position: 'relative', overflow: 'hidden', textAlign: 'left',
@@ -973,13 +982,13 @@ export function Toolbox() {
                       <span className="mono" style={{
                         fontSize: 13, fontWeight: 800, letterSpacing: '0.03em', textTransform: 'uppercase',
                         color: COLORS.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                      }}>{t(tool.nameKey)}</span>
+                      }}>{toolName(tool)}</span>
                       <span className="mono" style={{
                         fontSize: 7.5, letterSpacing: '0.16em', fontWeight: 800, color: a,
                         border: `1px solid ${a}55`, borderRadius: 999, padding: '3px 8px', flex: 'none',
                       }}>{tool.tag}</span>
                     </div>
-                    <div style={{ fontSize: 11, color: COLORS.muted, marginTop: 5, lineHeight: 1.5 }}>{t(tool.descKey)}</div>
+                    <div style={{ fontSize: 11, color: COLORS.muted, marginTop: 5, lineHeight: 1.5 }}>{toolDesc(tool)}</div>
                   </div>
                   <span className="mono" style={{ flex: 'none', fontSize: 16, color: a, fontWeight: 800 }}>›</span>
                 </button>
@@ -996,7 +1005,7 @@ export function Toolbox() {
               return (
                 <button
                   key={tool.id}
-                  onClick={() => setActiveTool(tool)}
+                  onClick={() => openTool(tool)}
                   className="tcard lit"
                   style={{
                     position: 'relative', overflow: 'hidden', textAlign: 'left',
@@ -1034,10 +1043,10 @@ export function Toolbox() {
                   </div>
                   <div>
                     <div className="mono" style={{ fontSize: 13, fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: COLORS.text }}>
-                      {t(tool.nameKey)}
+                      {toolName(tool)}
                     </div>
                     <div style={{ fontSize: 12, color: COLORS.muted, marginTop: 6, lineHeight: 1.5 }}>
-                      {t(tool.descKey)}
+                      {toolDesc(tool)}
                     </div>
                   </div>
                   <div className="mono" style={{

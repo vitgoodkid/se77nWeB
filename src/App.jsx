@@ -31,14 +31,21 @@ const FEATURES = [
   ), accent: COLORS.text,  short: '00' },
   { id: 'ai',     label: 'AI Playground',         icon: '✦',   accent: COLORS.red,   short: '01', desc: 'Chat · image · video' },
   { id: 'tools',  label: 'Toolbox',               icon: '⚒',   accent: COLORS.green, short: '02', desc: 'Public + private utilities' },
-  { id: 'tv4',    label: 'Travel Plan',           icon: (c) => <GlobeIcon color={c} size={20} />, accent: COLORS.gold,  short: '03', desc: 'Trips · plans · expenses' },
-  { id: 'game',   label: 'Game',                  icon: (c) => <ControllerIcon color={c} size={22} />, accent: COLORS.red,   short: '04', desc: 'Coming soon' },
-  { id: 'tech',   label: 'Subscription Manager',  icon: '⌬',   accent: COLORS.green, short: '05', desc: 'Monthly + yearly burn' },
-  { id: 'crypto', label: 'Currency',              icon: '$',   accent: COLORS.gold,  short: '06', desc: 'BTC · GOLD · TWD ⇄ VND' },
-  { id: 'todo',   label: 'To-Do List',            icon: '✓',   accent: COLORS.green, short: '07', desc: 'Priorities · localStorage' },
-  { id: 'feed',   label: 'History',               icon: '◧',   accent: COLORS.gold,  short: '08', desc: 'Private AI history', ownerOnly: true },
-  { id: 'kata',   label: 'KataS Dashboard',       icon: '⌨',   accent: COLORS.red,   short: '09', desc: 'Discord bot · ops · cost' },
+  { id: 'game',   label: 'Game',                  icon: (c) => <ControllerIcon color={c} size={22} />, accent: COLORS.red,   short: '03', desc: 'Coming soon' },
+  { id: 'crypto', label: 'Currency',              icon: '$',   accent: COLORS.gold,  short: '04', desc: 'BTC · GOLD · TWD ⇄ VND' },
+  { id: 'feed',   label: 'History',               icon: '◧',   accent: COLORS.gold,  short: '05', desc: 'Private AI history', ownerOnly: true },
+  { id: 'kata',   label: 'KataS Dashboard',       icon: '⌨',   accent: COLORS.red,   short: '06', desc: 'Discord bot · ops · cost' },
+  // Travel Plan, Subscription Manager and To Do now live inside Toolbox
+  // (their routes 'tv4' / 'tech' / 'todo' are still rendered below).
 ];
+
+// Routes folded into Toolbox — not in the rail, but they still need a
+// breadcrumb label/accent when their panel is open.
+const MERGED_ROUTE_META = {
+  tv4:  { label: 'Travel Plan',          accent: COLORS.gold,  short: 'TB' },
+  tech: { label: 'Subscription Manager', accent: COLORS.green, short: 'TB' },
+  todo: { label: 'To Do',                accent: COLORS.green, short: 'TB' },
+};
 
 const EXPERIMENT_NUMBER = '007';
 
@@ -141,7 +148,7 @@ function AppDesktop() {
     return () => window.removeEventListener('hashchange', onHash);
   }, [route]);
 
-  const activeFeature = FEATURES.find((f) => f.id === route);
+  const activeFeature = FEATURES.find((f) => f.id === route) || MERGED_ROUTE_META[route];
 
   return (
     <div style={{
@@ -174,7 +181,7 @@ function AppDesktop() {
             <Suspense fallback={<RouteFallback />}>
               {route === 'home'   && <HomeView nav={nav} ambient={ambient} ambientOn={ambientOn} />}
               {route === 'ai'     && <AIPlayground />}
-              {route === 'tools'  && <Toolbox />}
+              {route === 'tools'  && <Toolbox nav={nav} />}
               {route === 'tv4'    && <TravelV4 />}
               {route === 'game'   && <GamePanel />}
               {route === 'tech'   && <TechStackMonitor />}
@@ -1268,7 +1275,7 @@ function HomeView({ nav, ambient, ambientOn }) {
             margin: '20px 0 0', maxWidth: 720,
             fontSize: 16, color: COLORS.muted, lineHeight: 1.6,
           }}>
-            A personal control surface — nine modules wired to one prompt.
+            A personal control surface — your modules wired to one prompt.
             AI, finance, travel, subscriptions, tools, and the KataS bot ops, woven into a single command center.
           </p>
           <div style={{ marginTop: 26, display: 'flex', gap: 10 }}>
@@ -1289,7 +1296,7 @@ function HomeView({ nav, ambient, ambientOn }) {
           marginBottom: 18,
         }}>
           <div>
-            <Kicker>MODULES · 08</Kicker>
+            <Kicker>MODULES · {String(FEATURES.filter((f) => f.id !== 'home' && (!f.ownerOnly || user?.isHistoryOwner)).length).padStart(2, '0')}</Kicker>
             <div className="mono" style={{ fontSize: 20, fontWeight: 700, marginTop: 6, letterSpacing: '-0.01em' }}>
               The dashboard
             </div>
