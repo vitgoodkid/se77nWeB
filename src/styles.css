@@ -95,6 +95,12 @@ body {
   from { opacity: 0; transform: translateY(4px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+/* Glowing "special" first letter of the rotating hero quote. */
+@keyframes qGlow {
+  0%, 100% { text-shadow: 0 0 7px rgba(224,69,69,0.45); }
+  50%      { text-shadow: 0 0 15px rgba(224,69,69,0.9), 0 0 30px rgba(224,69,69,0.4); }
+}
+.qglow { animation: qGlow 2.6s ease-in-out infinite; }
 
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }

@@ -1223,28 +1223,32 @@ function HomeView({ nav, ambient, ambientOn }) {
   const [quoteIdx, setQuoteIdx] = useState(() => Math.floor(Math.random() * QUOTES.length));
   const [typed, setTyped] = useState('');
   const [markets, setMarkets] = useState({ btc: null, gold: null, twd: null, vnd: null });
-  // Typewriter reveal of the active quote (one char at a time).
+  // Typewriter for the active quote: type in → hold ~10s → backspace out →
+  // advance to a new random quote (which re-runs this effect).
   useEffect(() => {
     const full = QUOTES[quoteIdx];
-    setTyped('');
-    let i = 0;
-    const id = setInterval(() => {
+    const TYPE_MS = 48, ERASE_MS = 24, HOLD_MS = 8200;
+    let i = 0, cancelled = false, timer;
+    function type() {
+      if (cancelled) return;
       i += 1;
       setTyped(full.slice(0, i));
-      if (i >= full.length) clearInterval(id);
-    }, 45);
-    return () => clearInterval(id);
-  }, [quoteIdx]);
-  // Hold the quote for ~10s, then jump to a new random one (no back-to-back repeat).
-  useEffect(() => {
-    const id = setTimeout(() => {
+      timer = setTimeout(i < full.length ? type : erase, i < full.length ? TYPE_MS : HOLD_MS);
+    }
+    function erase() {
+      if (cancelled) return;
+      i -= 1;
+      setTyped(full.slice(0, Math.max(0, i)));
+      if (i > 0) { timer = setTimeout(erase, ERASE_MS); return; }
       setQuoteIdx((cur) => {
         let n = Math.floor(Math.random() * QUOTES.length);
         if (QUOTES.length > 1 && n === cur) n = (n + 1) % QUOTES.length;
         return n;
       });
-    }, 10000);
-    return () => clearTimeout(id);
+    }
+    setTyped('');
+    timer = setTimeout(type, 140);
+    return () => { cancelled = true; clearTimeout(timer); };
   }, [quoteIdx]);
 
   // Live BTC + gold + TWD↔VND for the ticker. /api/crypto polls CoinGecko + FX
@@ -1297,7 +1301,15 @@ function HomeView({ nav, ambient, ambientOn }) {
             fontSize: 50, lineHeight: 1.16, fontWeight: 800, letterSpacing: '-0.025em',
             maxWidth: 1000, minHeight: 116,
           }}>
-            <span style={{ color: COLORS.text }}>{typed}</span>
+            {typed.length > 0 && (
+              <>
+                <span className="qglow" style={{ color: COLORS.red }}>{typed.slice(0, 1)}</span>
+                {typed.length > 2 && <span style={{ color: COLORS.text }}>{typed.slice(1, -1)}</span>}
+                {typed.length > 1 && (
+                  <span key={typed.length} style={{ color: COLORS.text, animation: 'fadeIn 150ms ease-out' }}>{typed.slice(-1)}</span>
+                )}
+              </>
+            )}
             <span style={{
               display: 'inline-block', width: 13, height: 38,
               marginLeft: 10, verticalAlign: '-3px',
