@@ -303,6 +303,7 @@ function TopBar({ phase, now, geo, nav, ambient, ambientOn }) {
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <LangToggle lang={lang} toggle={toggle} title={t('topbar.toggleLang')} />
+        <LightToggle title="Light / dark" />
         <ThemeToggle ambient={ambient} title="Theme" />
         {!isMobile && <TimeChip phase={phase} city={geo.city} timeStr={tStr} />}
         <AuthChip />
@@ -340,6 +341,56 @@ function TimeChip({ phase, city, timeStr }) {
         }}>{city}</span>
       )}
     </div>
+  );
+}
+
+// Light / dark mode toggle. Persisted in `kata.theme` (shared with the kata
+// dashboard pages) and applied via [data-theme] on <html>; the actual palette
+// flip lives in styles.css.
+function readThemeMode() {
+  try {
+    const m = localStorage.getItem('kata.theme');
+    if (m === 'light' || m === 'dark') return m;
+  } catch { /* ignore */ }
+  return document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+}
+
+function LightToggle({ title }) {
+  const [mode, setMode] = useState(readThemeMode);
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', mode);
+    try { localStorage.setItem('kata.theme', mode); } catch { /* ignore */ }
+  }, [mode]);
+  useEffect(() => {
+    const onStorage = (e) => { if (e.key === 'kata.theme') setMode(readThemeMode()); };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
+  const light = mode === 'light';
+  return (
+    <button
+      onClick={() => setMode(light ? 'dark' : 'light')}
+      title={title}
+      aria-label={title}
+      className="mono"
+      style={{
+        display: 'flex', alignItems: 'center', gap: 7, height: 32,
+        padding: '0 12px 0 9px', borderRadius: 999,
+        border: '1px solid ' + COLORS.line, background: 'transparent',
+        color: COLORS.text, cursor: 'pointer',
+        fontSize: 10, letterSpacing: '0.14em', fontWeight: 700,
+        transition: 'border-color 120ms, background 120ms',
+      }}
+      onMouseEnter={(e) => { e.currentTarget.style.borderColor = COLORS.text + '55'; }}
+      onMouseLeave={(e) => { e.currentTarget.style.borderColor = COLORS.line; }}
+    >
+      <span style={{
+        width: 12, height: 12, borderRadius: 999, flex: 'none',
+        background: light ? '#f3eee4' : '#0d0a08',
+        boxShadow: '0 0 0 1px rgba(127,127,127,0.35)',
+      }} />
+      {light ? 'LIGHT' : 'DARK'}
+    </button>
   );
 }
 

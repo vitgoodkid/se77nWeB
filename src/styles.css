@@ -146,3 +146,44 @@ input, textarea { font-family: inherit; }
 .mtap   { transition: transform .14s ease, box-shadow .2s ease; }
 .mtap:active   { transform: scale(.975); }
 .tabtap:active { transform: scale(.94); }
+
+/* ── Light mode ─────────────────────────────────────────────────
+   Toggled via [data-theme="light"] on <html> (header LightToggle, persisted
+   in `kata.theme` — shared with the kata dashboard pages). The base palette
+   is already var-driven, so html/body + anything reading the vars flips here.
+   The components also hardcode COLORS hex inline; those are remapped below,
+   matched both as authored hex AND the browser's serialized rgb()/rgba()
+   (with spaces), and only on the intended property (background:/color:/solid )
+   so gradients and box-shadows are never touched. */
+[data-theme="light"] {
+  --bg: #f3eee4;
+  --panel: #ffffff;
+  --panel-2: #faf6ee;
+  --line: rgba(33, 28, 22, 0.12);
+  --text: #211c16;
+  --muted: rgba(33, 28, 22, 0.55);
+}
+[data-theme="light"] ::-webkit-scrollbar-thumb { background: rgba(33, 28, 22, 0.18); }
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: rgba(33, 28, 22, 0.30); }
+
+[data-theme="light"] [style*="background: rgb(13, 10, 8)"],
+[data-theme="light"] [style*="background-color: rgb(13, 10, 8)"],
+[data-theme="light"] [style*="background:#0d0a08"] { background-color: #f3eee4 !important; }
+
+[data-theme="light"] [style*="background: rgb(21, 17, 13)"],
+[data-theme="light"] [style*="background-color: rgb(21, 17, 13)"],
+[data-theme="light"] [style*="background:#15110d"] { background-color: #ffffff !important; }
+
+[data-theme="light"] [style*="background: rgb(28, 24, 19)"],
+[data-theme="light"] [style*="background-color: rgb(28, 24, 19)"],
+[data-theme="light"] [style*="background:#1c1813"] { background-color: #faf6ee !important; }
+
+[data-theme="light"] [style*="color: rgb(245, 237, 224)"],
+[data-theme="light"] [style*="color:#f5ede0"] { color: #211c16 !important; }
+
+[data-theme="light"] [style*="color: rgba(245, 237, 224, 0.5)"],
+[data-theme="light"] [style*="color:rgba(245,237,224,0.5)"] { color: rgba(33, 28, 22, 0.55) !important; }
+
+[data-theme="light"] [style*="solid rgba(255, 255, 255, 0.08)"],
+[data-theme="light"] [style*="solid rgba(255,255,255,0.08)"],
+[data-theme="light"] [style*="border-color: rgba(255, 255, 255, 0.08)"] { border-color: rgba(33, 28, 22, 0.12) !important; }

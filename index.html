@@ -4,6 +4,17 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="theme-color" content="#0d0a08" />
+    <script>
+      // Pre-paint light/dark (shared `kata.theme` key) before CSS/React → no flash.
+      try {
+        var m = localStorage.getItem('kata.theme');
+        if (m !== 'light' && m !== 'dark') {
+          var q = new URLSearchParams(location.search).get('theme');
+          m = (q === 'light' || q === 'dark') ? q : 'dark';
+        }
+        document.documentElement.setAttribute('data-theme', m);
+      } catch (e) { document.documentElement.setAttribute('data-theme', 'dark'); }
+    </script>
     <meta name="description" content="se77n — personal control surface. AI, finance, travel, vault, tools woven into a single command center." />
 
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
