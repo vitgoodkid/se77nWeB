@@ -1075,6 +1075,18 @@ const QUOTES = [
   'Question the brief.', 'Polish the rough edges.', 'Keep the spark.', 'Build things that last.',
 ];
 
+// Pick 2–3 random non-space character positions in a quote to glow.
+function pickGlowIndices(str) {
+  const idxs = [];
+  for (let k = 0; k < str.length; k++) if (str[k] !== ' ') idxs.push(k);
+  for (let k = idxs.length - 1; k > 0; k--) {
+    const j = Math.floor(Math.random() * (k + 1));
+    [idxs[k], idxs[j]] = [idxs[j], idxs[k]];
+  }
+  const count = Math.min(idxs.length, 2 + Math.floor(Math.random() * 2)); // 2 or 3
+  return new Set(idxs.slice(0, count));
+}
+
 // Drifting module-color dots connected with thin lines, sitting behind the hero.
 function Constellation({ height = 360, dotCount = 18 }) {
   const wrapRef = useRef(null);
@@ -1222,6 +1234,8 @@ function HomeView({ nav, ambient, ambientOn }) {
   const { user } = useAuth();
   const [quoteIdx, setQuoteIdx] = useState(() => Math.floor(Math.random() * QUOTES.length));
   const [typed, setTyped] = useState('');
+  // 2–3 random chars in THIS quote glow (re-rolled each quote).
+  const glowSet = useMemo(() => pickGlowIndices(QUOTES[quoteIdx]), [quoteIdx]);
   const [markets, setMarkets] = useState({ btc: null, gold: null, twd: null, vnd: null });
   // Typewriter for the active quote: type in → hold ~10s → backspace out →
   // advance to a new random quote (which re-runs this effect).
@@ -1301,15 +1315,16 @@ function HomeView({ nav, ambient, ambientOn }) {
             fontSize: 50, lineHeight: 1.16, fontWeight: 800, letterSpacing: '-0.025em',
             maxWidth: 1000, minHeight: 116,
           }}>
-            {typed.length > 0 && (
-              <>
-                <span className="qglow" style={{ color: COLORS.red }}>{typed.slice(0, 1)}</span>
-                {typed.length > 2 && <span style={{ color: COLORS.text }}>{typed.slice(1, -1)}</span>}
-                {typed.length > 1 && (
-                  <span key={typed.length} style={{ color: COLORS.text, animation: 'fadeIn 150ms ease-out' }}>{typed.slice(-1)}</span>
-                )}
-              </>
-            )}
+            {[...typed].map((ch, idx) => {
+              const glow = glowSet.has(idx);
+              return (
+                <span
+                  key={idx}
+                  className={glow ? 'qglow' : undefined}
+                  style={{ color: glow ? COLORS.red : COLORS.text, animation: 'fadeIn 150ms ease-out' }}
+                >{ch}</span>
+              );
+            })}
             <span style={{
               display: 'inline-block', width: 13, height: 38,
               marginLeft: 10, verticalAlign: '-3px',
