@@ -190,6 +190,10 @@ input, textarea { font-family: inherit; }
 [data-theme="light"] [style*="color: rgba(245, 237, 224, 0.5)"],
 [data-theme="light"] [style*="color:rgba(245,237,224,0.5)"] { color: rgba(33, 28, 22, 0.55) !important; }
 
+/* Faint hint text (mobile chat chrome, dividers) authored at 0.3 alpha. */
+[data-theme="light"] [style*="color: rgba(245, 237, 224, 0.3)"],
+[data-theme="light"] [style*="color:rgba(245,237,224,0.3)"] { color: rgba(33, 28, 22, 0.38) !important; }
+
 [data-theme="light"] [style*="solid rgba(255, 255, 255, 0.08)"],
 [data-theme="light"] [style*="solid rgba(255,255,255,0.08)"],
 [data-theme="light"] [style*="border-color: rgba(255, 255, 255, 0.08)"] { border-color: rgba(33, 28, 22, 0.12) !important; }

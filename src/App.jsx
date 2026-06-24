@@ -365,13 +365,23 @@ function readThemeMode() {
     const m = localStorage.getItem('kata.theme');
     if (m === 'light' || m === 'dark') return m;
   } catch { /* ignore */ }
-  return document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+  // Default is light: only an explicit dark attribute keeps dark.
+  return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+}
+
+// Keep the browser UI chrome (mobile address bar) in sync with the theme.
+function syncThemeColorMeta(mode) {
+  try {
+    document.querySelector('meta[name="theme-color"]')
+      ?.setAttribute('content', mode === 'light' ? '#f3eee4' : '#0d0a08');
+  } catch { /* ignore */ }
 }
 
 function LightToggle({ title }) {
   const [mode, setMode] = useState(readThemeMode);
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', mode);
+    syncThemeColorMeta(mode);
     try { localStorage.setItem('kata.theme', mode); } catch { /* ignore */ }
   }, [mode]);
   useEffect(() => {

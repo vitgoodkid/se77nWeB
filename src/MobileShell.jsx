@@ -303,6 +303,8 @@ function Drawer({ open, onClose, route, onNav }) {
                 </span>
               </button>
 
+              <ThemeToggleMini />
+
               <button onClick={toggle} className="mono"
                 title={t('topbar.toggleLang')} aria-label={t('topbar.toggleLang')}
                 style={{
@@ -418,6 +420,59 @@ function ProviderBtn({ provider, color, label, onClick }) {
       )}
       <span style={{ flex: 1, textAlign: 'left' }}>{label}</span>
       <span style={{ color: COLORS.muted, fontSize: 10 }}>↗</span>
+    </button>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Light / dark toggle (mobile) — mirrors the desktop LightToggle.
+// Persisted in `kata.theme` (shared with desktop + kata pages), applied via
+// [data-theme] on <html>; palette flip lives in styles.css. Default is light.
+// ─────────────────────────────────────────────────────────────
+function readThemeMode() {
+  try {
+    const m = localStorage.getItem('kata.theme');
+    if (m === 'light' || m === 'dark') return m;
+  } catch { /* ignore */ }
+  return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+}
+
+function ThemeToggleMini() {
+  const [mode, setMode] = useState(readThemeMode);
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', mode);
+    try {
+      localStorage.setItem('kata.theme', mode);
+      document.querySelector('meta[name="theme-color"]')
+        ?.setAttribute('content', mode === 'light' ? '#f3eee4' : '#0d0a08');
+    } catch { /* ignore */ }
+  }, [mode]);
+  useEffect(() => {
+    const onStorage = (e) => { if (e.key === 'kata.theme') setMode(readThemeMode()); };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
+  const light = mode === 'light';
+  return (
+    <button onClick={() => setMode(light ? 'dark' : 'light')}
+      title={light ? 'Switch to dark' : 'Switch to light'}
+      aria-label={light ? 'Switch to dark' : 'Switch to light'}
+      style={{
+        width: 28, height: 28, borderRadius: 999, flexShrink: 0,
+        background: 'transparent', border: '1px solid ' + COLORS.line,
+        color: COLORS.text, cursor: 'pointer',
+        display: 'grid', placeItems: 'center', padding: 0,
+      }}>
+      {light ? (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+          <circle cx="12" cy="12" r="4" />
+          <g><line x1="12" y1="3" x2="12" y2="5" /><line x1="12" y1="19" x2="12" y2="21" /><line x1="3" y1="12" x2="5" y2="12" /><line x1="19" y1="12" x2="21" y2="12" /><line x1="5.5" y1="5.5" x2="7" y2="7" /><line x1="17" y1="17" x2="18.5" y2="18.5" /><line x1="5.5" y1="18.5" x2="7" y2="17" /><line x1="17" y1="7" x2="18.5" y2="5.5" /></g>
+        </svg>
+      ) : (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+          <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />
+        </svg>
+      )}
     </button>
   );
 }
