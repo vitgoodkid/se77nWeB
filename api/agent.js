@@ -65,6 +65,7 @@ Output STRICT JSON on one line — no markdown:
 
 Rules:
 - Decide a sensible number of distinct outfits the wardrobe genuinely supports — usually 2 to 6. Quality over quantity: never pad with weak, forced, or near-duplicate combinations.
+- If the wearer's height is given, factor it into proportions and silhouettes (e.g. shorter heights suit higher-waisted / more fitted cuts).
 - Each outfit should combine items that work together for the occasion: ideally one top + one bottom (or a one-piece), optional outer, shoes, and at most one or two accessories. Use only ids that exist in the wardrobe.
 - name: a short evocative label for the look (max 4 words).
 - rationale: one short sentence on why it works for the occasion.
@@ -96,7 +97,7 @@ async function handleStylist(req, res, action) {
     }
 
     // action === 'mix' — the model decides how many outfits the wardrobe supports.
-    const { items, occasion = '' } = req.body || {};
+    const { items, occasion = '', height } = req.body || {};
     if (!Array.isArray(items) || !items.length) {
       return res.status(400).json({ error: 'items required' });
     }
@@ -113,7 +114,7 @@ async function handleStylist(req, res, action) {
 
     const text = await callChat({
       system: STYLIST_MIX_SYSTEM,
-      prompt: `occasion: ${String(occasion).slice(0, 200) || '(everyday)'}\n\nwardrobe:\n${JSON.stringify(valid)}`,
+      prompt: `occasion: ${String(occasion).slice(0, 200) || '(everyday)'}\nwearer height: ${Number(height) ? Number(height) + ' cm' : 'unspecified'}\n\nwardrobe:\n${JSON.stringify(valid)}`,
       max_tokens: 1200,
       temperature: 0.7,
       jsonMode: true,

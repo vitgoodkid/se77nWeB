@@ -28,9 +28,22 @@ function catalogPrompt(category) {
   return `Studio e-commerce product photo of this exact ${category}, isolated on a clean seamless light-grey background, centered, soft even lighting, no model, no extra props, sharp focus, catalog style. Keep the garment's real color, pattern and shape unchanged.`;
 }
 
-function lookbookPrompt(occasion) {
+// Turn an uploaded photo into a clean full-body character we can later dress.
+function characterPortraitPrompt() {
+  return `A clean, photorealistic full-body portrait of this exact person, standing in a neutral relaxed pose, facing the camera, plain light-grey studio background, soft even lighting. Keep their real face, hair, skin tone and body. Full body visible head to toe. No text.`;
+}
+
+// Lookbook now renders a PERSON wearing the outfit (random natural pose), not a
+// flat-lay. When a character exists its photo is the FIRST image (identity
+// reference) and the garments follow; otherwise a random model is generated.
+function lookbookPrompt(occasion, height, hasCharacter) {
   const occ = (occasion || '').trim();
-  return `A cohesive fashion lookbook flat-lay neatly arranging these clothing pieces together as one styled outfit${occ ? ', suited for ' + occ : ''}. Clean seamless background, soft daylight, magazine styling, top-down arrangement. Keep each piece's real color and shape.`;
+  const h = height ? ` The person is about ${height} cm tall — render realistic body proportions.` : '';
+  const styled = occ ? `, styled for ${occ}` : '';
+  if (hasCharacter) {
+    return `Generate a photorealistic full-body fashion photo of the exact person shown in the FIRST image, wearing a complete outfit assembled from the clothing pieces in the following images. Natural relaxed random pose, full body visible head to toe, clean studio background${styled}.${h} Keep the person's real face and identity; keep each garment's real color, pattern and shape.`;
+  }
+  return `Generate a photorealistic full-body fashion photo of a person in a natural random pose wearing a complete outfit assembled from the clothing pieces in these images. Full body visible head to toe, clean studio background${styled}.${h} Keep each garment's real color, pattern and shape.`;
 }
 
 // Read a fetch Response without throwing the cryptic JSON parse error.
@@ -179,6 +192,7 @@ export function Stylist() {
   );
   const items = wardrobe.items || [];
   const sets = wardrobe.sets || [];
+  const character = wardrobe.character || null;
 
   const [occasion, setOccasion] = useState('');
   const [mixing, setMixing] = useState(false);
@@ -186,6 +200,13 @@ export function Stylist() {
   const [lookbookBusy, setLookbookBusy] = useState({}); // setId|suggIdx → bool
   const [error, setError] = useState('');
   const fileRef = useRef(null);
+
+  // Character creation (staged before "Create")
+  const [charPhoto, setCharPhoto] = useState(null); // { dataUrl, name }
+  const [charName, setCharName] = useState('');
+  const [charHeight, setCharHeight] = useState('');
+  const [charBusy, setCharBusy] = useState(false);
+  const charFileRef = useRef(null);
 
   const patchItem = useCallback((id, patch) => {
     setWardrobe((w) => ({
@@ -231,6 +252,37 @@ export function Stylist() {
 
   usePasteImage(useCallback((img) => addGarment(img), [addGarment]), true);
 
+  // ── Character: upload a photo + height → generate a full-body character. ──
+  const onPickCharPhoto = useCallback((e) => {
+    const f = e.target.files?.[0];
+    e.target.value = '';
+    if (f) compressImage(f).then((img) => img && setCharPhoto(img)).catch(() => {});
+  }, []);
+
+  const createCharacter = useCallback(async () => {
+    if (!charPhoto?.dataUrl || !charHeight || charBusy) return;
+    setCharBusy(true);
+    setError('');
+    try {
+      const charUrl = await renderImage({ prompt: characterPortraitPrompt(), image: charPhoto.dataUrl, engine: 'nano' });
+      const id = genId();
+      setWardrobe((w) => ({
+        ...w,
+        character: { id, name: charName.trim(), height: Number(charHeight) || null, charUrl, createdAt: Date.now() },
+      }));
+      setCharPhoto(null); setCharName(''); setCharHeight('');
+    } catch (e) {
+      setError((e.message || 'character failed').slice(0, 120));
+    } finally {
+      setCharBusy(false);
+    }
+  }, [charPhoto, charHeight, charName, charBusy, setWardrobe]);
+
+  const removeCharacter = useCallback(() => {
+    if (character?.id) idbDel('char:' + character.id);
+    setWardrobe((w) => ({ ...w, character: null }));
+  }, [character, setWardrobe]);
+
   const deleteItem = useCallback((item) => {
     idbDel('item:' + item.id);
     setWardrobe((w) => ({
@@ -259,6 +311,7 @@ export function Stylist() {
         body: JSON.stringify({
           items: ready.map((it) => ({ id: it.id, name: it.name, category: it.category, color: it.color })),
           occasion,
+          height: character?.height || undefined,
         }),
       });
       const data = await safeJson(res, 'mix');
@@ -270,24 +323,31 @@ export function Stylist() {
     } finally {
       setMixing(false);
     }
-  }, [items, occasion, mixing, t]);
+  }, [items, occasion, mixing, character, t]);
 
   // Render a lookbook composite for a set (on-demand, one fal job).
   const renderLookbook = useCallback(async (set, { onDone } = {}) => {
-    const urls = set.itemIds
+    const garmentUrls = set.itemIds
       .map((id) => items.find((it) => it.id === id)?.itemUrl)
       .filter(Boolean);
-    if (urls.length < 1) return;
+    if (garmentUrls.length < 1) return;
+    const hasChar = !!character?.charUrl;
+    // Character photo first (identity reference), garments after.
+    const images = hasChar ? [character.charUrl, ...garmentUrls] : garmentUrls;
     setLookbookBusy((b) => ({ ...b, [set.id]: true }));
     try {
-      const url = await renderImage({ prompt: lookbookPrompt(set.occasion || occasion), images: urls, engine: 'nano' });
+      const url = await renderImage({
+        prompt: lookbookPrompt(set.occasion || occasion, character?.height, hasChar),
+        images,
+        engine: 'nano',
+      });
       if (onDone) onDone(url);
     } catch (e) {
       setError(e.message || 'lookbook failed');
     } finally {
       setLookbookBusy((b) => ({ ...b, [set.id]: false }));
     }
-  }, [items, occasion]);
+  }, [items, occasion, character]);
 
   const renderSuggestionLookbook = useCallback((set) => {
     renderLookbook(set, { onDone: (url) => {
@@ -346,6 +406,58 @@ export function Stylist() {
             gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? 130 : 150}px, 1fr))`,
           }}>
             {items.map((it) => <ItemCard key={it.id} item={it} onDelete={deleteItem} />)}
+          </div>
+        )}
+      </Panel>
+
+      {/* Character */}
+      <Panel padding={isMobile ? 14 : 18}>
+        <Kicker style={{ marginBottom: 12 }}>{t('stylist.character')}</Kicker>
+        {character ? (
+          <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+            <CachedImg cacheKey={'char:' + character.id} url={character.charUrl}
+              alt={character.name || 'character'}
+              style={{ width: 84, height: 112, borderRadius: 10, objectFit: 'cover', border: '1px solid ' + COLORS.line, flexShrink: 0 }} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: COLORS.text }}>
+                {character.name || t('stylist.charDefault')}
+              </div>
+              {character.height && (
+                <div style={{ marginTop: 6 }}><Pill color={ACCENT}>{character.height} cm</Pill></div>
+              )}
+              <div style={{ marginTop: 10 }}>
+                <Btn variant="ghost" onClick={removeCharacter}>{t('stylist.charRemove')}</Btn>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ fontSize: 13, color: COLORS.muted, lineHeight: 1.5, maxWidth: 480 }}>{t('stylist.charHint')}</div>
+            <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+              <input ref={charFileRef} type="file" accept="image/*" onChange={onPickCharPhoto} style={{ display: 'none' }} />
+              <button onClick={() => charFileRef.current?.click()} aria-label="upload photo"
+                style={{
+                  width: 96, height: 124, borderRadius: 12, flexShrink: 0, overflow: 'hidden',
+                  border: '1px ' + (charPhoto ? 'solid ' + ACCENT + '88' : 'dashed ' + COLORS.line),
+                  background: charPhoto ? 'transparent' : COLORS.panel2,
+                  cursor: 'pointer', color: COLORS.muted, fontSize: 24,
+                  display: 'grid', placeItems: 'center', padding: 0,
+                }}>
+                {charPhoto ? (
+                  <img src={charPhoto.dataUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : '＋'}
+              </button>
+              <div style={{ flex: 1, minWidth: 200, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <Field value={charName} onChange={setCharName} placeholder={t('stylist.charNamePh')} />
+                <Field value={charHeight}
+                  onChange={(v) => setCharHeight(v.replace(/\D/g, '').slice(0, 3))}
+                  placeholder={t('stylist.charHeightPh')} type="text" />
+                <Btn variant="solid" color={ACCENT} onClick={createCharacter}
+                  disabled={charBusy || !charPhoto || !charHeight}>
+                  {charBusy ? '◇ ' + t('stylist.charCreating') : '✦ ' + t('stylist.charCreate')}
+                </Btn>
+              </div>
+            </div>
           </div>
         )}
       </Panel>
