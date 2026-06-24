@@ -57,6 +57,15 @@ Rules:
 - category: exactly one of top, bottom, outer, shoes, accessory. Pick the closest. Hats/bags/belts/jewellery/glasses → accessory. Jackets/coats/blazers → outer.
 - color: the dominant color in one or two words.`;
 
+const STYLIST_DETECT_SYSTEM = `You are a fashion cataloguer. List EVERY distinct wearable clothing item or accessory visible in the image. Output STRICT JSON on one line — no markdown:
+
+{"garments":[{"name":"...","category":"top|bottom|outer|shoes|accessory","color":"..."}]}
+
+Rules:
+- One entry per distinct garment. A person wearing a shirt and trousers with shoes = three entries.
+- name: short label, max 4 words. category: exactly one of top, bottom, outer, shoes, accessory (hats/bags/belts/jewellery/glasses → accessory; jackets/coats/blazers → outer). color: one or two words.
+- If only one item is visible, return one entry. Maximum 8 entries.`;
+
 const STYLIST_MIX_SYSTEM = `You are a personal stylist. You are given a wardrobe (a list of items with id, name, category, color) and an occasion. Compose complete, tasteful outfits using ONLY the given item ids.
 
 Output STRICT JSON on one line — no markdown:
@@ -67,6 +76,9 @@ Rules:
 - Decide a sensible number of distinct outfits the wardrobe genuinely supports — usually 2 to 6. Quality over quantity: never pad with weak, forced, or near-duplicate combinations.
 - If the wearer's height is given, factor it into proportions and silhouettes (e.g. shorter heights suit higher-waisted / more fitted cuts).
 - Each outfit should combine items that work together for the occasion: ideally one top + one bottom (or a one-piece), optional outer, shoes, and at most one or two accessories. Use only ids that exist in the wardrobe.
+- Respect any constraints given (formality, season, weather, color preference).
+- If "must include" item ids are given, build the outfits around them.
+- Never reuse a combination listed under "do NOT repeat".
 - name: a short evocative label for the look (max 4 words).
 - rationale: one short sentence on why it works for the occasion.
 - Do not invent ids. Do not repeat the exact same set twice.`;
@@ -96,13 +108,38 @@ async function handleStylist(req, res, action) {
       return res.status(200).json({ name, category, color });
     }
 
+    if (action === 'detect') {
+      const { image } = req.body || {};
+      if (!image) return res.status(400).json({ error: 'image required' });
+      const text = await callChat({
+        system: STYLIST_DETECT_SYSTEM,
+        prompt: 'List every garment.',
+        image,
+        max_tokens: 500,
+        temperature: 0.1,
+        jsonMode: true,
+        model: process.env.YUNWU_ROUTER_MODEL || 'gemini-3.1-flash-lite',
+      });
+      const parsed = tryParseJson(text) || {};
+      let garments = (Array.isArray(parsed.garments) ? parsed.garments : [])
+        .map((g) => ({
+          name: (typeof g?.name === 'string' && g.name.trim() ? g.name.trim() : 'item').slice(0, 60),
+          category: STYLIST_CATEGORIES.includes(g?.category) ? g.category : 'top',
+          color: typeof g?.color === 'string' ? g.color.trim().slice(0, 30) : '',
+        }))
+        .slice(0, 8);
+      if (!garments.length) garments = [{ name: 'item', category: 'top', color: '' }];
+      return res.status(200).json({ garments });
+    }
+
     // action === 'mix' — the model decides how many outfits the wardrobe supports.
-    const { items, occasion = '', height } = req.body || {};
+    const { items, occasion = '', height, include, exclude, constraints, avoid, favorites } = req.body || {};
     if (!Array.isArray(items) || !items.length) {
       return res.status(400).json({ error: 'items required' });
     }
+    const excludeSet = new Set(Array.isArray(exclude) ? exclude : []);
     const valid = items
-      .filter((it) => it && typeof it.id === 'string')
+      .filter((it) => it && typeof it.id === 'string' && !excludeSet.has(it.id))
       .slice(0, 120)
       .map((it) => ({
         id: it.id,
@@ -111,12 +148,27 @@ async function handleStylist(req, res, action) {
         color: String(it.color || '').slice(0, 30),
       }));
     const ids = new Set(valid.map((it) => it.id));
+    const includeIds = (Array.isArray(include) ? include : []).filter((id) => ids.has(id));
+
+    const lines = [
+      `occasion: ${String(occasion).slice(0, 200) || '(everyday)'}`,
+      `wearer height: ${Number(height) ? Number(height) + ' cm' : 'unspecified'}`,
+    ];
+    const c = constraints || {};
+    if (c.formality) lines.push(`formality: ${String(c.formality).slice(0, 30)}`);
+    if (c.season)    lines.push(`season: ${String(c.season).slice(0, 30)}`);
+    if (c.weather)   lines.push(`weather: ${String(c.weather).slice(0, 60)}`);
+    if (c.colorMood) lines.push(`color preference: ${String(c.colorMood).slice(0, 60)}`);
+    if (includeIds.length) lines.push(`must include these item ids if at all possible: ${JSON.stringify(includeIds)}`);
+    if (Array.isArray(avoid) && avoid.length) lines.push(`do NOT repeat these previous combinations: ${JSON.stringify(avoid.slice(0, 8))}`);
+    if (Array.isArray(favorites) && favorites.length) lines.push(`the user tends to like these combinations: ${JSON.stringify(favorites.slice(0, 3))}`);
+    lines.push('', 'wardrobe:', JSON.stringify(valid));
 
     const text = await callChat({
       system: STYLIST_MIX_SYSTEM,
-      prompt: `occasion: ${String(occasion).slice(0, 200) || '(everyday)'}\nwearer height: ${Number(height) ? Number(height) + ' cm' : 'unspecified'}\n\nwardrobe:\n${JSON.stringify(valid)}`,
+      prompt: lines.join('\n'),
       max_tokens: 1200,
-      temperature: 0.7,
+      temperature: 0.8,
       jsonMode: true,
       model: process.env.YUNWU_CHAT_MODEL || 'gemini-3.1-flash-lite',
     });
@@ -168,7 +220,7 @@ export default async function handler(req, res) {
   // Stylist garment classify / outfit mix live here (not their own function)
   // to keep the deployment under the Hobby-plan 12-serverless-function cap.
   const stylistAction = req.query?.action;
-  if (stylistAction === 'classify' || stylistAction === 'mix') {
+  if (stylistAction === 'classify' || stylistAction === 'mix' || stylistAction === 'detect') {
     return handleStylist(req, res, stylistAction);
   }
 
