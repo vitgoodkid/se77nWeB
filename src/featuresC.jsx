@@ -10,7 +10,7 @@
 // re-render, character, lookbook) — no new serverless functions. Image bytes
 // cache on-device (IndexedDB); only small metadata syncs via useSyncedData.
 
-import { useState, useRef, useCallback, useMemo } from 'react';
+import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import {
   COLORS, Panel, Btn, Kicker, Pill, Field,
   useLang, useSyncedData, useMediaQuery, compressImage, usePasteImage,
@@ -172,14 +172,41 @@ function IconBtn({ onClick, title, children, active, danger }) {
     }}>{children}</button>
   );
 }
-function CachedImg({ cacheKey, url, alt, style }) {
+function CachedImg({ cacheKey, url, alt, style, onClick }) {
   const src = useCachedImage(cacheKey, url);
-  if (!src) return <div style={{ ...style, background: COLORS.panel2, display: 'grid', placeItems: 'center', color: COLORS.muted, fontSize: 10 }} className="mono">—</div>;
-  return <img src={src} alt={alt || ''} style={style} loading="lazy" />;
+  if (!src) return <div style={{ ...style, background: COLORS.panel2, display: 'grid', placeItems: 'center', color: COLORS.muted, fontSize: 10 }} className="mono" onClick={onClick}>—</div>;
+  return <img src={src} alt={alt || ''} style={style} loading="lazy" onClick={onClick} />;
+}
+
+// Full-screen image viewer — click an image (item / character / lookbook) to
+// open; click anywhere or press Esc to close.
+function Lightbox({ data, onClose }) {
+  useEffect(() => {
+    if (!data) return;
+    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [data, onClose]);
+  if (!data) return null;
+  return (
+    <div onClick={onClose} style={{
+      position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,0.88)',
+      display: 'grid', placeItems: 'center', padding: 20, cursor: 'zoom-out',
+      animation: 'fadeIn 160ms ease-out',
+    }}>
+      <CachedImg cacheKey={data.cacheKey} url={data.url} alt={data.alt}
+        style={{ maxWidth: '96vw', maxHeight: '92vh', objectFit: 'contain', borderRadius: 8, display: 'block' }} />
+      <button onClick={onClose} aria-label="close" className="mono" style={{
+        position: 'fixed', top: 16, right: 16, width: 40, height: 40, borderRadius: 999,
+        background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.25)',
+        color: '#fff', cursor: 'pointer', fontSize: 18,
+      }}>✕</button>
+    </div>
+  );
 }
 
 // ── Wardrobe item card ─────────────────────────────────────────
-function ItemCard({ item, pinned, excluded, onEdit, onDelete, onRetry, onTogglePin, onToggleExclude }) {
+function ItemCard({ item, pinned, excluded, onEdit, onDelete, onRetry, onTogglePin, onToggleExclude, onZoom }) {
   const { t } = useLang();
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(item.name);
@@ -207,7 +234,8 @@ function ItemCard({ item, pinned, excluded, onEdit, onDelete, onRetry, onToggleP
           </div>
         ) : (
           <CachedImg cacheKey={'item:' + item.id} url={item.itemUrl} alt={item.name}
-            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+            onClick={() => onZoom && onZoom('item:' + item.id, item.itemUrl, item.name)}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', cursor: 'zoom-in' }} />
         )}
         <div style={{ position: 'absolute', top: 6, right: 6, display: 'flex', gap: 4 }}>
           {error && <IconBtn onClick={() => onRetry(item)} title={t('stylist.retry')}>↻</IconBtn>}
@@ -250,7 +278,7 @@ function ItemCard({ item, pinned, excluded, onEdit, onDelete, onRetry, onToggleP
 }
 
 // ── Character panel ────────────────────────────────────────────
-function CharacterPanel({ character, busy, onCreate, onEdit, onRemove, isMobile }) {
+function CharacterPanel({ character, busy, onCreate, onEdit, onRemove, isMobile, onZoom }) {
   const { t } = useLang();
   const [open, setOpen] = useState(false); // edit form open
   const [photos, setPhotos] = useState([]); // 1..4 reference photos (face angles)
@@ -353,7 +381,8 @@ function CharacterPanel({ character, busy, onCreate, onEdit, onRemove, isMobile 
       {character && !open ? (
         <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
           <CachedImg cacheKey={'char:' + character.id} url={character.charUrl} alt={character.name || 'character'}
-            style={{ width: 84, height: 112, borderRadius: 10, objectFit: 'cover', border: '1px solid ' + COLORS.line, flexShrink: 0 }} />
+            onClick={() => onZoom && onZoom('char:' + character.id, character.charUrl, character.name || 'character')}
+            style={{ width: 84, height: 112, borderRadius: 10, objectFit: 'cover', border: '1px solid ' + COLORS.line, flexShrink: 0, cursor: 'zoom-in' }} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 15, fontWeight: 700, color: COLORS.text }}>{character.name || t('stylist.charDefault')}</div>
             <div style={{ marginTop: 7, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
@@ -375,7 +404,7 @@ function CharacterPanel({ character, busy, onCreate, onEdit, onRemove, isMobile 
 }
 
 // ── Outfit set card ────────────────────────────────────────────
-function SetCard({ set, items, isSaved, busyLookbook, onRenderLookbook, onSwap, onSave, onDelete, onDownload, onMoreLikeThis, onToggleFav }) {
+function SetCard({ set, items, isSaved, busyLookbook, onRenderLookbook, onSwap, onSave, onDelete, onDownload, onMoreLikeThis, onToggleFav, onZoom }) {
   const { t } = useLang();
   const [swapFor, setSwapFor] = useState(null);
   const setItems = set.itemIds.map((id) => items.find((it) => it.id === id)).filter(Boolean);
@@ -432,7 +461,8 @@ function SetCard({ set, items, isSaved, busyLookbook, onRenderLookbook, onSwap, 
 
       {set.lookbookUrl && (
         <CachedImg cacheKey={'look:' + set.id} url={set.lookbookUrl} alt="lookbook"
-          style={{ width: '100%', borderRadius: 10, border: '1px solid ' + COLORS.line, display: 'block' }} />
+          onClick={() => onZoom && onZoom('look:' + set.id, set.lookbookUrl, set.name)}
+          style={{ width: '100%', borderRadius: 10, border: '1px solid ' + COLORS.line, display: 'block', cursor: 'zoom-in' }} />
       )}
 
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -474,7 +504,10 @@ export function Stylist() {
   const [advOpen, setAdvOpen] = useState(false);
   const [styleOpen, setStyleOpen] = useState(false);
   const [constraints, setConstraints] = useState({ formality: null, season: null, weather: '', colorMood: '' });
+  const [zoom, setZoom] = useState(null); // { cacheKey, url, alt } for the lightbox
   const fileRef = useRef(null);
+
+  const openZoom = useCallback((cacheKey, url, alt) => setZoom({ cacheKey, url, alt }), []);
 
   const patchItem = useCallback((id, patch) => {
     setWardrobe((w) => ({ ...w, items: (w.items || []).map((it) => (it.id === id ? { ...it, ...patch } : it)) }));
@@ -679,7 +712,7 @@ export function Stylist() {
   return (
     <div style={{ height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 16, paddingRight: 4 }}>
       {/* Character */}
-      <CharacterPanel character={character} busy={charBusy} isMobile={isMobile}
+      <CharacterPanel character={character} busy={charBusy} isMobile={isMobile} onZoom={openZoom}
         onCreate={createCharacter} onEdit={editCharacter} onRemove={removeCharacter} />
 
       {/* Wardrobe */}
@@ -723,7 +756,7 @@ export function Stylist() {
 
             <div style={{ display: 'grid', gap: 12, gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? 130 : 150}px, 1fr))` }}>
               {shownItems.map((it) => (
-                <ItemCard key={it.id} item={it}
+                <ItemCard key={it.id} item={it} onZoom={openZoom}
                   pinned={pinned.has(it.id)} excluded={excluded.has(it.id)}
                   onEdit={editItem} onDelete={deleteItem} onRetry={retryItem}
                   onTogglePin={togglePin} onToggleExclude={toggleExclude} />
@@ -815,7 +848,7 @@ export function Stylist() {
           </div>
           <div style={{ display: 'grid', gap: 12, gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(300px, 1fr))' }}>
             {suggestions.map((s) => (
-              <SetCard key={s.id} set={s} items={items} busyLookbook={!!lookbookBusy[s.id]}
+              <SetCard key={s.id} set={s} items={items} busyLookbook={!!lookbookBusy[s.id]} onZoom={openZoom}
                 onRenderLookbook={renderSuggestionLookbook} onSwap={(o, n) => swapSuggestion(s, o, n)}
                 onSave={saveSet} onDownload={downloadSet} onMoreLikeThis={moreLikeThis} />
             ))}
@@ -829,13 +862,15 @@ export function Stylist() {
           <Kicker style={{ marginBottom: 10 }}>{t('stylist.saved')} · {String(sets.length).padStart(2, '0')}</Kicker>
           <div style={{ display: 'grid', gap: 12, gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(300px, 1fr))' }}>
             {sortedSets.map((s) => (
-              <SetCard key={s.id} set={s} items={items} isSaved busyLookbook={!!lookbookBusy[s.id]}
+              <SetCard key={s.id} set={s} items={items} isSaved busyLookbook={!!lookbookBusy[s.id]} onZoom={openZoom}
                 onRenderLookbook={renderSavedLookbook} onSwap={(o, n) => swapSaved(s, o, n)}
                 onDelete={deleteSet} onDownload={downloadSet} onToggleFav={toggleFav} onMoreLikeThis={moreLikeThis} />
             ))}
           </div>
         </div>
       )}
+
+      <Lightbox data={zoom} onClose={() => setZoom(null)} />
     </div>
   );
 }
