@@ -311,7 +311,7 @@ function CharacterPanel({ character, busy, onCreate, onEdit, onRemove, isMobile,
           <img src={p.dataUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           <button onClick={() => setPhotos((ps) => ps.filter((_, j) => j !== i))} aria-label="remove" style={{
             position: 'absolute', top: 3, right: 3, width: 20, height: 20, borderRadius: 6, border: 'none',
-            background: 'rgba(13,10,8,0.6)', color: '#fff', cursor: 'pointer', fontSize: 11, lineHeight: 1, padding: 0,
+            background: 'rgba(0,0,0,0.55)', color: '#fff', cursor: 'pointer', fontSize: 11, lineHeight: 1, padding: 0,
           }}>✕</button>
         </div>
       ))}
@@ -710,7 +710,9 @@ export function Stylist() {
   const sortedSets = useMemo(() => [...sets].sort((a, b) => (b.fav ? 1 : 0) - (a.fav ? 1 : 0)), [sets]);
 
   return (
-    <div style={{ height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 16, paddingRight: 4 }}>
+    <div style={isMobile
+      ? { display: 'flex', flexDirection: 'column', gap: 16 }
+      : { height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 16, paddingRight: 4 }}>
       {/* Character */}
       <CharacterPanel character={character} busy={charBusy} isMobile={isMobile} onZoom={openZoom}
         onCreate={createCharacter} onEdit={editCharacter} onRemove={removeCharacter} />
