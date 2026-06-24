@@ -23,10 +23,12 @@ const TechStackMonitor   = lazy(() => import('./featuresB.jsx').then((m) => ({ d
 const CryptoWatch        = lazy(() => import('./featuresB.jsx').then((m) => ({ default: m.CryptoWatch })));
 const TodoList           = lazy(() => import('./featuresB.jsx').then((m) => ({ default: m.TodoList })));
 const Feed               = lazy(() => import('./featuresB.jsx').then((m) => ({ default: m.Feed })));
+const Stylist            = lazy(() => import('./featuresC.jsx').then((m) => ({ default: m.Stylist })));
 
 const MODULES = [
   { id: 'ai',     short: '01', accent: COLORS.red,   icon: '✦', i18nLabel: 'nav.ai',     i18nDesc: 'feature.ai.desc' },
   { id: 'tools',  short: '02', accent: COLORS.green, icon: '⚒', i18nLabel: 'nav.tools',  i18nDesc: 'feature.tools.desc' },
+  { id: 'stylist',short: '07', accent: COLORS.gold,  icon: '👗', i18nLabel: 'nav.stylist', i18nDesc: 'feature.stylist.desc' },
   { id: 'tv4',    short: '03', accent: COLORS.gold,  icon: '✈', i18nLabel: 'nav.travel', i18nDesc: 'feature.travel.desc' },
   { id: 'game',   short: '04', accent: COLORS.red,   icon: '◐', i18nLabel: 'nav.game',   i18nDesc: 'feature.game.desc' },
   { id: 'tech',   short: '05', accent: COLORS.green, icon: '⌬', i18nLabel: 'nav.tech',   i18nDesc: 'feature.tech.desc' },
@@ -891,7 +893,7 @@ export default function MobileShell() {
 
   const [route, setRoute] = useState(() => {
     const h = (typeof window !== 'undefined' ? window.location.hash : '').replace(/^#\//, '').split('/')[0];
-    return ['ai', 'tools', 'tv4', 'game', 'tech', 'crypto', 'todo', 'feed'].includes(h) ? h : 'ai';
+    return ['ai', 'tools', 'stylist', 'tv4', 'game', 'tech', 'crypto', 'todo', 'feed'].includes(h) ? h : 'ai';
   });
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -919,7 +921,7 @@ export default function MobileShell() {
   useEffect(() => {
     const onHash = () => {
       const h = window.location.hash.replace(/^#\//, '').split('/')[0];
-      const next = ['ai', 'tools', 'tv4', 'game', 'tech', 'crypto', 'todo', 'feed'].includes(h) ? h : 'ai';
+      const next = ['ai', 'tools', 'stylist', 'tv4', 'game', 'tech', 'crypto', 'todo', 'feed'].includes(h) ? h : 'ai';
       if (next !== route) setRoute(next);
     };
     window.addEventListener('hashchange', onHash);
@@ -1124,6 +1126,7 @@ export default function MobileShell() {
         }}>
           <Suspense fallback={<RouteFallback />}>
             {route === 'tools'  && <Toolbox />}
+            {route === 'stylist'&& <Stylist />}
             {route === 'game'   && <GamePanel />}
             {route === 'tech'   && <TechStackMonitor />}
             {route === 'crypto' && <CryptoWatch />}

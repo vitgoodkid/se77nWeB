@@ -21,6 +21,7 @@ const ALLOWED_KEYS = new Set([
   'aiPreset',     // se77n.ai.preset
   'vault',        // future digital vault entries
   'lang',         // se77n.lang
+  'wardrobe',     // se77n.wardrobe.v1 — stylist items + outfit sets (metadata only)
 ]);
 
 const MAX_VALUE_BYTES = 512 * 1024; // 512 KB per key
