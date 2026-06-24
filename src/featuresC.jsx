@@ -208,7 +208,7 @@ export function Stylist() {
       // 1. classify (fast)
       let meta = { name: 'item', category: 'top', color: '' };
       try {
-        const c = await fetch('/api/stylist?action=classify', {
+        const c = await fetch('/api/agent?action=classify', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ image: img.dataUrl }),
         });
@@ -255,7 +255,7 @@ export function Stylist() {
     setError('');
     setSuggestions([]);
     try {
-      const res = await fetch('/api/stylist?action=mix', {
+      const res = await fetch('/api/agent?action=mix', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           items: ready.map((it) => ({ id: it.id, name: it.name, category: it.category, color: it.color })),

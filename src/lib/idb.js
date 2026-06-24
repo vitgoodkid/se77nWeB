@@ -89,7 +89,7 @@ export function useCachedImage(key, fallbackUrl) {
       setSrc(fallbackUrl || null);
       if (fallbackUrl && /^https?:\/\//i.test(fallbackUrl)) {
         try {
-          const res = await fetch('/api/img-proxy?url=' + encodeURIComponent(fallbackUrl));
+          const res = await fetch('/api/image?url=' + encodeURIComponent(fallbackUrl));
           if (!res.ok) return;
           const fetched = await res.blob();
           if (!alive) return;

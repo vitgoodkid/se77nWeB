@@ -30,7 +30,42 @@ function pickModel(engine, hasImage) {
     : (process.env.FAL_IMAGE_T2I_MODEL || 'fal-ai/openai/gpt-image-2');
 }
 
+// Host-allowlist for the image cache proxy (below). fal/cdn only — NOT a
+// general proxy (an open image proxy is an SSRF / abuse vector).
+const PROXY_ALLOWED_HOSTS = ['fal.ai', 'fal.media', 'fal.run'];
+function proxyHostAllowed(hostname) {
+  const h = String(hostname || '').toLowerCase();
+  return PROXY_ALLOWED_HOSTS.some((base) => h === base || h.endsWith('.' + base));
+}
+
+// GET /api/image?url=<fal image url> → streams the bytes so the browser can
+// cache them in IndexedDB (the stylist's on-device store) without CORS issues.
+async function proxyImage(req, res) {
+  const raw = req.query?.url;
+  if (!raw || typeof raw !== 'string') return res.status(400).json({ error: 'url required' });
+  let target;
+  try { target = new URL(raw); } catch { return res.status(400).json({ error: 'invalid url' }); }
+  if (target.protocol !== 'https:') return res.status(400).json({ error: 'https only' });
+  if (!proxyHostAllowed(target.hostname)) return res.status(403).json({ error: 'host not allowed' });
+  try {
+    const upstream = await fetch(target.toString());
+    if (!upstream.ok) return res.status(upstream.status).json({ error: 'upstream ' + upstream.status });
+    const contentType = upstream.headers.get('content-type') || 'application/octet-stream';
+    if (!contentType.startsWith('image/')) return res.status(415).json({ error: 'not an image' });
+    const buf = Buffer.from(await upstream.arrayBuffer());
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    return res.status(200).send(buf);
+  } catch (e) {
+    return res.status(502).json({ error: String(e.message || e) });
+  }
+}
+
 export default async function handler(req, res) {
+  // Image cache proxy (no fal key needed) — folded in to stay under the
+  // Hobby-plan 12-serverless-function cap.
+  if (req.method === 'GET' && req.query?.url) return await proxyImage(req, res);
+
   const apiKey = process.env.FAL_API_KEY;
   if (!apiKey) return res.status(500).json({ error: 'FAL_API_KEY not configured' });
 
