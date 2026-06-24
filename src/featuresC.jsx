@@ -181,7 +181,6 @@ export function Stylist() {
   const sets = wardrobe.sets || [];
 
   const [occasion, setOccasion] = useState('');
-  const [count, setCount] = useState(3);
   const [mixing, setMixing] = useState(false);
   const [suggestions, setSuggestions] = useState([]); // unsaved sets from last mix
   const [lookbookBusy, setLookbookBusy] = useState({}); // setId|suggIdx → bool
@@ -259,7 +258,7 @@ export function Stylist() {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           items: ready.map((it) => ({ id: it.id, name: it.name, category: it.category, color: it.color })),
-          occasion, count,
+          occasion,
         }),
       });
       const data = await safeJson(res, 'mix');
@@ -271,7 +270,7 @@ export function Stylist() {
     } finally {
       setMixing(false);
     }
-  }, [items, occasion, count, mixing, t]);
+  }, [items, occasion, mixing, t]);
 
   // Render a lookbook composite for a set (on-demand, one fal job).
   const renderLookbook = useCallback(async (set, { onDone } = {}) => {
@@ -359,17 +358,6 @@ export function Stylist() {
             <Field value={occasion} onChange={setOccasion}
               placeholder={t('stylist.occasionPh')}
               onKeyDown={(e) => { if (e.key === 'Enter') runMix(); }} />
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            {[2, 3, 4].map((n) => (
-              <button key={n} onClick={() => setCount(n)} className="mono"
-                style={{
-                  width: 34, height: 38, borderRadius: 8, cursor: 'pointer',
-                  border: '1px solid ' + (count === n ? ACCENT + '88' : COLORS.line),
-                  background: count === n ? ACCENT + '1a' : 'transparent',
-                  color: count === n ? ACCENT : COLORS.muted, fontSize: 12, fontWeight: 700,
-                }}>{n}</button>
-            ))}
           </div>
           <Btn variant="solid" color={ACCENT} onClick={runMix} disabled={mixing || readyCount < 2}>
             {mixing ? '◇ ' + t('stylist.mixing') : '✦ ' + t('stylist.mix')}

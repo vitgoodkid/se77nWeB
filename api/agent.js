@@ -64,7 +64,7 @@ Output STRICT JSON on one line — no markdown:
 {"sets":[{"name":"...","itemIds":["id1","id2"],"rationale":"..."}]}
 
 Rules:
-- Build as many distinct outfits as requested (the user gives a count), but never more than the wardrobe realistically supports.
+- Decide a sensible number of distinct outfits the wardrobe genuinely supports — usually 2 to 6. Quality over quantity: never pad with weak, forced, or near-duplicate combinations.
 - Each outfit should combine items that work together for the occasion: ideally one top + one bottom (or a one-piece), optional outer, shoes, and at most one or two accessories. Use only ids that exist in the wardrobe.
 - name: a short evocative label for the look (max 4 words).
 - rationale: one short sentence on why it works for the occasion.
@@ -95,8 +95,8 @@ async function handleStylist(req, res, action) {
       return res.status(200).json({ name, category, color });
     }
 
-    // action === 'mix'
-    const { items, occasion = '', count = 3 } = req.body || {};
+    // action === 'mix' — the model decides how many outfits the wardrobe supports.
+    const { items, occasion = '' } = req.body || {};
     if (!Array.isArray(items) || !items.length) {
       return res.status(400).json({ error: 'items required' });
     }
@@ -110,11 +110,10 @@ async function handleStylist(req, res, action) {
         color: String(it.color || '').slice(0, 30),
       }));
     const ids = new Set(valid.map((it) => it.id));
-    const n = Math.min(6, Math.max(1, Number(count) || 3));
 
     const text = await callChat({
       system: STYLIST_MIX_SYSTEM,
-      prompt: `occasion: ${String(occasion).slice(0, 200) || '(everyday)'}\noutfits wanted: ${n}\n\nwardrobe:\n${JSON.stringify(valid)}`,
+      prompt: `occasion: ${String(occasion).slice(0, 200) || '(everyday)'}\n\nwardrobe:\n${JSON.stringify(valid)}`,
       max_tokens: 1200,
       temperature: 0.7,
       jsonMode: true,
@@ -132,7 +131,7 @@ async function handleStylist(req, res, action) {
         };
       })
       .filter((s) => s.itemIds.length >= 2)
-      .slice(0, n);
+      .slice(0, 8); // safety cap only — the model picks the real count
 
     return res.status(200).json({ sets });
   } catch (e) {
