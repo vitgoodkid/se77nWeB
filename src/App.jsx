@@ -33,7 +33,7 @@ const FEATURES = [
   { id: 'ai',     label: 'AI Playground',         icon: '✦',   accent: COLORS.red,   short: '01', desc: 'Chat · image · video' },
   { id: 'tools',  label: 'Toolbox',               icon: '⚒',   accent: COLORS.green, short: '02', desc: 'Public + private utilities' },
   { id: 'stylist',label: 'Stylist',               icon: '👗',  accent: COLORS.gold,  short: '07', desc: 'AI wardrobe · outfit mixer' },
-  { id: 'game',   label: 'Game',                  icon: (c) => <ControllerIcon color={c} size={22} />, accent: COLORS.red,   short: '03', desc: 'Coming soon' },
+  { id: 'game',   label: 'Game',                  icon: (c) => <ControllerIcon color={c} size={22} />, accent: COLORS.red,   short: '03', desc: 'Tavern RP · Cờ Cá Ngựa' },
   { id: 'crypto', label: 'Currency',              icon: '$',   accent: COLORS.gold,  short: '04', desc: 'BTC · GOLD · TWD ⇄ VND' },
   { id: 'feed',   label: 'History',               icon: '◧',   accent: COLORS.gold,  short: '05', desc: 'Private AI history', ownerOnly: true },
   { id: 'kata',   label: 'KataS Dashboard',       icon: '⌨',   accent: COLORS.red,   short: '06', desc: 'Discord bot · ops · cost' },
