@@ -217,7 +217,7 @@ export function Stylist() {
       patchItem(id, { name: meta.name, category: meta.category, color: meta.color });
 
       // 2. catalog re-render (slow, may poll)
-      const itemUrl = await renderImage({ prompt: catalogPrompt(meta.category), image: img.dataUrl, engine: 'openai' });
+      const itemUrl = await renderImage({ prompt: catalogPrompt(meta.category), image: img.dataUrl, engine: 'nano' });
       patchItem(id, { itemUrl, status: 'ready' });
     } catch (e) {
       patchItem(id, { status: 'error', error: (e.message || 'failed').slice(0, 80) });
@@ -281,7 +281,7 @@ export function Stylist() {
     if (urls.length < 1) return;
     setLookbookBusy((b) => ({ ...b, [set.id]: true }));
     try {
-      const url = await renderImage({ prompt: lookbookPrompt(set.occasion || occasion), images: urls, engine: 'openai' });
+      const url = await renderImage({ prompt: lookbookPrompt(set.occasion || occasion), images: urls, engine: 'nano' });
       if (onDone) onDone(url);
     } catch (e) {
       setError(e.message || 'lookbook failed');
