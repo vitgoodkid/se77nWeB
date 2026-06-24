@@ -184,6 +184,13 @@ input, textarea { font-family: inherit; }
 [data-theme="light"] [style*="background-color: rgb(28, 24, 19)"],
 [data-theme="light"] [style*="background:#1c1813"] { background-color: #faf6ee !important; }
 
+/* Mobile card surface — authored as a literal #131010 (a touch above --bg).
+   The kata shell maps it the same way; mirror that here so mobile Toolbox /
+   cards flip to a light card surface instead of staying black. */
+[data-theme="light"] [style*="background: rgb(19, 16, 16)"],
+[data-theme="light"] [style*="background-color: rgb(19, 16, 16)"],
+[data-theme="light"] [style*="background:#131010"] { background-color: #ffffff !important; }
+
 [data-theme="light"] [style*="color: rgb(245, 237, 224)"],
 [data-theme="light"] [style*="color:#f5ede0"] { color: #211c16 !important; }
 
