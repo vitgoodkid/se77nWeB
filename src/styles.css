@@ -191,6 +191,21 @@ input, textarea { font-family: inherit; }
 [data-theme="light"] [style*="background-color: rgb(19, 16, 16)"],
 [data-theme="light"] [style*="background:#131010"] { background-color: #ffffff !important; }
 
+/* Game venue cards (.gcard) stay dark/neon in BOTH themes — their background is
+   a gradient the remap can't flip, so the global light-mode rules would turn
+   their inline light text/borders dark-on-dark. Re-pin those to the dark-theme
+   values; the extra .gcard ancestor outranks the generic remap. */
+[data-theme="light"] .gcard[style*="color: rgb(245, 237, 224)"],
+[data-theme="light"] .gcard[style*="color:#f5ede0"],
+[data-theme="light"] .gcard [style*="color: rgb(245, 237, 224)"],
+[data-theme="light"] .gcard [style*="color:#f5ede0"] { color: #f5ede0 !important; }
+[data-theme="light"] .gcard [style*="color: rgba(245, 237, 224, 0.5)"],
+[data-theme="light"] .gcard [style*="color:rgba(245,237,224,0.5)"] { color: rgba(245, 237, 224, 0.5) !important; }
+[data-theme="light"] .gcard[style*="solid rgba(255, 255, 255, 0.08)"],
+[data-theme="light"] .gcard[style*="solid rgba(255,255,255,0.08)"],
+[data-theme="light"] .gcard [style*="solid rgba(255, 255, 255, 0.08)"],
+[data-theme="light"] .gcard [style*="solid rgba(255,255,255,0.08)"] { border-color: rgba(255, 255, 255, 0.08) !important; }
+
 [data-theme="light"] [style*="color: rgb(245, 237, 224)"],
 [data-theme="light"] [style*="color:#f5ede0"] { color: #211c16 !important; }
 
