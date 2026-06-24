@@ -43,17 +43,22 @@ export default async function handler(req, res) {
 
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { prompt = '', image, engine = 'openai' } = req.body || {};
-  if (!prompt && !image) return res.status(400).json({ error: 'prompt or image required' });
+  const { prompt = '', image, images, engine = 'openai' } = req.body || {};
+  // Accept either a single `image` (string) or `images` (array) — the latter
+  // lets the stylist lookbook compose several garment shots in one edit.
+  const imageUrls = Array.isArray(images)
+    ? images.filter((u) => typeof u === 'string' && u)
+    : (image ? [image] : []);
+  if (!prompt && !imageUrls.length) return res.status(400).json({ error: 'prompt or image required' });
 
   // Rate limit per owner before submitting a (paid) fal job.
   const owner = await resolveOwner(req, res);
   if (!(await enforceLimits(res, owner?.ownerKey, [LIMITS.imageMin, LIMITS.imageDay]))) return;
 
-  const model = pickModel(engine, !!image);
+  const model = pickModel(engine, imageUrls.length > 0);
 
   const input = { prompt };
-  if (image) input.image_urls = [image];
+  if (imageUrls.length) input.image_urls = imageUrls;
 
   try {
     const submit = await fetch(`https://queue.fal.run/${model}`, {

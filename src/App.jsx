@@ -20,6 +20,7 @@ const TechStackMonitor   = lazy(() => import('./featuresB.jsx').then((m) => ({ d
 const CryptoWatch        = lazy(() => import('./featuresB.jsx').then((m) => ({ default: m.CryptoWatch })));
 const TodoList           = lazy(() => import('./featuresB.jsx').then((m) => ({ default: m.TodoList })));
 const Feed               = lazy(() => import('./featuresB.jsx').then((m) => ({ default: m.Feed })));
+const Stylist            = lazy(() => import('./featuresC.jsx').then((m) => ({ default: m.Stylist })));
 
 const FEATURES = [
   { id: 'home',   label: 'Home',                  icon: (c) => (
@@ -31,6 +32,7 @@ const FEATURES = [
   ), accent: COLORS.text,  short: '00' },
   { id: 'ai',     label: 'AI Playground',         icon: '✦',   accent: COLORS.red,   short: '01', desc: 'Chat · image · video' },
   { id: 'tools',  label: 'Toolbox',               icon: '⚒',   accent: COLORS.green, short: '02', desc: 'Public + private utilities' },
+  { id: 'stylist',label: 'Stylist',               icon: '👗',  accent: COLORS.gold,  short: '07', desc: 'AI wardrobe · outfit mixer' },
   { id: 'game',   label: 'Game',                  icon: (c) => <ControllerIcon color={c} size={22} />, accent: COLORS.red,   short: '03', desc: 'Coming soon' },
   { id: 'crypto', label: 'Currency',              icon: '$',   accent: COLORS.gold,  short: '04', desc: 'BTC · GOLD · TWD ⇄ VND' },
   { id: 'feed',   label: 'History',               icon: '◧',   accent: COLORS.gold,  short: '05', desc: 'Private AI history', ownerOnly: true },
@@ -182,6 +184,7 @@ function AppDesktop() {
               {route === 'home'   && <HomeView nav={nav} ambient={ambient} ambientOn={ambientOn} />}
               {route === 'ai'     && <AIPlayground />}
               {route === 'tools'  && <Toolbox nav={nav} />}
+              {route === 'stylist'&& <Stylist />}
               {route === 'tv4'    && <TravelV4 />}
               {route === 'game'   && <GamePanel />}
               {route === 'tech'   && <TechStackMonitor />}
