@@ -72,7 +72,7 @@ async function downloadImage(url, filename) {
 function catalogPrompt(g) {
   return `Studio e-commerce product photo showing ONLY the ${g.color ? g.color + ' ' : ''}${g.name} (${g.category}) from this image, isolated on a clean seamless light-grey background, centered, no model, no other items, soft even lighting, sharp focus, catalog style. Keep its real color, pattern and shape.`;
 }
-function characterPrompt(p, tweak) {
+function characterPrompt(p, tweak, multi) {
   const bits = [];
   if (p.gender) bits.push(p.gender);
   if (p.bodyType) bits.push(p.bodyType + ' build');
@@ -80,7 +80,17 @@ function characterPrompt(p, tweak) {
   if (p.height) bits.push('about ' + p.height + ' cm tall');
   const desc = bits.length ? ` The person is ${bits.join(', ')}.` : '';
   const tw = tweak && tweak.trim() ? ` ${tweak.trim()}.` : '';
-  return `A clean, photorealistic full-body portrait of this exact person, standing in a neutral relaxed pose, facing the camera, plain light-grey studio background, soft even lighting, full body visible head to toe.${desc}${tw} Keep their real face and identity. No text.`;
+  const ref = multi ? 'the same person shown across the provided reference photos (multiple angles)' : 'this exact person';
+  return `A clean, photorealistic full-body portrait of ${ref}, standing in a neutral relaxed pose, facing the camera, plain light-grey studio background, soft even lighting, full body visible head to toe.${desc}${tw} Keep their real face and identity. No text.`;
+}
+
+// Build a /api/image body from 1..N reference photos (multiple face angles
+// improve likeness). Falls back to an existing character URL when none given.
+function charRenderBody(params, tweak, photos, fallbackUrl) {
+  const urls = (photos || []).map((p) => p?.dataUrl).filter(Boolean);
+  if (urls.length > 1) return { prompt: characterPrompt(params, tweak, true), images: urls, engine: 'nano' };
+  if (urls.length === 1) return { prompt: characterPrompt(params, tweak, false), image: urls[0], engine: 'nano' };
+  return { prompt: characterPrompt(params, tweak, false), image: fallbackUrl, engine: 'nano' };
 }
 function lookbookPrompt(occasion, character, o) {
   const occ = (occasion || '').trim();
@@ -242,8 +252,8 @@ function ItemCard({ item, pinned, excluded, onEdit, onDelete, onRetry, onToggleP
 // ── Character panel ────────────────────────────────────────────
 function CharacterPanel({ character, busy, onCreate, onEdit, onRemove, isMobile }) {
   const { t } = useLang();
-  const [open, setOpen] = useState(false); // edit/create form open
-  const [photo, setPhoto] = useState(null);
+  const [open, setOpen] = useState(false); // edit form open
+  const [photos, setPhotos] = useState([]); // 1..4 reference photos (face angles)
   const [name, setName] = useState('');
   const [height, setHeight] = useState('');
   const [gender, setGender] = useState(null);
@@ -252,58 +262,78 @@ function CharacterPanel({ character, busy, onCreate, onEdit, onRemove, isMobile 
   const [tweak, setTweak] = useState('');
   const fileRef = useRef(null);
 
-  const pickPhoto = (e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) compressImage(f).then((img) => img && setPhoto(img)).catch(() => {}); };
+  const pickPhotos = (e) => {
+    const fs = Array.from(e.target.files || []);
+    e.target.value = '';
+    fs.forEach((f) => compressImage(f, { maxDim: 1280, maxBytes: 1_000_000 })
+      .then((img) => img && setPhotos((p) => [...p, img].slice(0, 4))).catch(() => {}));
+  };
+  const resetForm = () => { setPhotos([]); setName(''); setHeight(''); setGender(null); setBodyType(null); setSkinTone(null); setTweak(''); };
 
   const startEdit = () => {
     setName(character?.name || ''); setHeight(character?.height ? String(character.height) : '');
     setGender(character?.gender || null); setBodyType(character?.bodyType || null);
-    setSkinTone(character?.skinTone || null); setTweak(''); setPhoto(null); setOpen(true);
+    setSkinTone(character?.skinTone || null); setTweak(''); setPhotos([]); setOpen(true);
   };
 
+  const photoStrip = (
+    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      {photos.map((p, i) => (
+        <div key={i} style={{ position: 'relative', width: 80, height: 104, borderRadius: 10, overflow: 'hidden', border: '1px solid ' + ACCENT + '88' }}>
+          <img src={p.dataUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <button onClick={() => setPhotos((ps) => ps.filter((_, j) => j !== i))} aria-label="remove" style={{
+            position: 'absolute', top: 3, right: 3, width: 20, height: 20, borderRadius: 6, border: 'none',
+            background: 'rgba(13,10,8,0.6)', color: '#fff', cursor: 'pointer', fontSize: 11, lineHeight: 1, padding: 0,
+          }}>✕</button>
+        </div>
+      ))}
+      {photos.length < 4 && (
+        <button onClick={() => fileRef.current?.click()} aria-label="add photo" style={{
+          width: 80, height: 104, borderRadius: 10, overflow: 'hidden', cursor: 'pointer', padding: 0,
+          border: '1px dashed ' + COLORS.line, background: COLORS.panel2, color: COLORS.muted, fontSize: 22,
+          display: 'grid', placeItems: 'center',
+        }}>
+          {photos.length === 0 && character
+            ? <CachedImg cacheKey={'char:' + character.id} url={character.charUrl} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.45 }} />
+            : '＋'}
+        </button>
+      )}
+    </div>
+  );
+
   const form = (
-    <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-      <input ref={fileRef} type="file" accept="image/*" onChange={pickPhoto} style={{ display: 'none' }} />
-      <button onClick={() => fileRef.current?.click()} aria-label="photo" style={{
-        width: 96, height: 124, borderRadius: 12, flexShrink: 0, overflow: 'hidden',
-        border: '1px ' + (photo ? 'solid ' + ACCENT + '88' : 'dashed ' + COLORS.line),
-        background: photo ? 'transparent' : COLORS.panel2, cursor: 'pointer', color: COLORS.muted,
-        fontSize: 24, display: 'grid', placeItems: 'center', padding: 0,
-      }}>
-        {photo ? <img src={photo.dataUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          : character ? <CachedImg cacheKey={'char:' + character.id} url={character.charUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '＋'}
-      </button>
-      <div style={{ flex: 1, minWidth: 220, display: 'flex', flexDirection: 'column', gap: 9 }}>
-        <Field value={name} onChange={setName} placeholder={t('stylist.charNamePh')} />
-        <Field value={height} onChange={(v) => setHeight(v.replace(/\D/g, '').slice(0, 3))} placeholder={t('stylist.charHeightPh')} />
-        <div>
-          <div className="mono" style={{ fontSize: 9, color: COLORS.muted, letterSpacing: '0.16em', marginBottom: 5 }}>{t('stylist.gender')}</div>
-          <ChipRow options={GENDERS} value={gender} onChange={setGender} nullable />
-        </div>
-        <div>
-          <div className="mono" style={{ fontSize: 9, color: COLORS.muted, letterSpacing: '0.16em', marginBottom: 5 }}>{t('stylist.body')}</div>
-          <ChipRow options={BODY} value={bodyType} onChange={setBodyType} nullable />
-        </div>
-        <div>
-          <div className="mono" style={{ fontSize: 9, color: COLORS.muted, letterSpacing: '0.16em', marginBottom: 5 }}>{t('stylist.skin')}</div>
-          <ChipRow options={SKIN} value={skinTone} onChange={setSkinTone} nullable />
-        </div>
-        {character && (
-          <Field value={tweak} onChange={setTweak} placeholder={t('stylist.charTweakPh')} />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 520 }}>
+      <input ref={fileRef} type="file" accept="image/*" multiple onChange={pickPhotos} style={{ display: 'none' }} />
+      {photoStrip}
+      <div className="mono" style={{ fontSize: 10, color: COLORS.muted, lineHeight: 1.5 }}>{t('stylist.charPhotosHint')}</div>
+      <Field value={name} onChange={setName} placeholder={t('stylist.charNamePh')} />
+      <Field value={height} onChange={(v) => setHeight(v.replace(/\D/g, '').slice(0, 3))} placeholder={t('stylist.charHeightPh')} />
+      <div>
+        <div className="mono" style={{ fontSize: 9, color: COLORS.muted, letterSpacing: '0.16em', marginBottom: 5 }}>{t('stylist.gender')}</div>
+        <ChipRow options={GENDERS} value={gender} onChange={setGender} nullable />
+      </div>
+      <div>
+        <div className="mono" style={{ fontSize: 9, color: COLORS.muted, letterSpacing: '0.16em', marginBottom: 5 }}>{t('stylist.body')}</div>
+        <ChipRow options={BODY} value={bodyType} onChange={setBodyType} nullable />
+      </div>
+      <div>
+        <div className="mono" style={{ fontSize: 9, color: COLORS.muted, letterSpacing: '0.16em', marginBottom: 5 }}>{t('stylist.skin')}</div>
+        <ChipRow options={SKIN} value={skinTone} onChange={setSkinTone} nullable />
+      </div>
+      {character && <Field value={tweak} onChange={setTweak} placeholder={t('stylist.charTweakPh')} />}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        {character ? (
+          <Btn variant="solid" color={ACCENT} disabled={busy}
+            onClick={() => onEdit({ photos, name, height, gender, bodyType, skinTone, tweak })}>
+            {busy ? '◇ ' + t('stylist.charCreating') : '✦ ' + t('stylist.charRegen')}
+          </Btn>
+        ) : (
+          <Btn variant="solid" color={ACCENT} disabled={busy || !photos.length || !height}
+            onClick={() => onCreate({ photos, name, height, gender, bodyType, skinTone })}>
+            {busy ? '◇ ' + t('stylist.charCreating') : '✦ ' + t('stylist.charCreate')}
+          </Btn>
         )}
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {character ? (
-            <Btn variant="solid" color={ACCENT} disabled={busy}
-              onClick={() => onEdit({ photo, name, height, gender, bodyType, skinTone, tweak })}>
-              {busy ? '◇ ' + t('stylist.charCreating') : '✦ ' + t('stylist.charRegen')}
-            </Btn>
-          ) : (
-            <Btn variant="solid" color={ACCENT} disabled={busy || !photo || !height}
-              onClick={() => onCreate({ photo, name, height, gender, bodyType, skinTone })}>
-              {busy ? '◇ ' + t('stylist.charCreating') : '✦ ' + t('stylist.charCreate')}
-            </Btn>
-          )}
-          {character && <Btn variant="ghost" onClick={() => setOpen(false)}>{t('stylist.cancel')}</Btn>}
-        </div>
+        {character && <Btn variant="ghost" onClick={() => { setOpen(false); resetForm(); }}>{t('stylist.cancel')}</Btn>}
       </div>
     </div>
   );
@@ -523,11 +553,12 @@ export function Stylist() {
 
   // ── Character ──
   const createCharacter = useCallback(async (form) => {
-    if (!form.photo?.dataUrl || !form.height || charBusy) return;
+    const photos = (form.photos || []).filter((p) => p?.dataUrl);
+    if (!photos.length || !form.height || charBusy) return;
     setCharBusy(true); setError('');
     try {
       const params = { height: Number(form.height) || null, gender: form.gender, bodyType: form.bodyType, skinTone: form.skinTone };
-      const charUrl = await renderImage({ prompt: characterPrompt(params), image: form.photo.dataUrl, engine: 'nano' });
+      const charUrl = await renderImage(charRenderBody(params, '', photos, null));
       setWardrobe((w) => ({ ...w, character: { id: genId(), name: (form.name || '').trim(), ...params, charUrl, createdAt: Date.now() } }));
     } catch (e) { setError((e.message || 'character failed').slice(0, 120)); }
     finally { setCharBusy(false); }
@@ -541,8 +572,9 @@ export function Stylist() {
         height: Number(form.height) || character.height || null,
         gender: form.gender ?? character.gender, bodyType: form.bodyType ?? character.bodyType, skinTone: form.skinTone ?? character.skinTone,
       };
-      const base = form.photo?.dataUrl || character.charUrl;
-      const charUrl = await renderImage({ prompt: characterPrompt(params, form.tweak), image: base, engine: 'nano' });
+      // Attached photos (1..N face angles) win as the identity reference;
+      // otherwise edit the current character image with the tweak prompt.
+      const charUrl = await renderImage(charRenderBody(params, form.tweak, form.photos, character.charUrl));
       idbDel('char:' + character.id);
       setWardrobe((w) => ({ ...w, character: { ...character, ...params, name: (form.name ?? character.name) || '', charUrl } }));
     } catch (e) { setError((e.message || 'edit failed').slice(0, 120)); }
