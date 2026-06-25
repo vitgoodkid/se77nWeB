@@ -974,7 +974,7 @@ export function Stylist() {
           <Field value={occasion} onChange={setOccasion} placeholder={t('stylist.occasionPh')}
             onKeyDown={(e) => { if (e.key === 'Enter') runMix(); }} />
           <Btn variant="solid" color={ACCENT} onClick={() => runMix()} disabled={mixing || readyItems.length < 2}
-            style={{ width: '100%', padding: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            style={{ alignSelf: 'flex-start', padding: '11px 24px', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
             {mixing ? '◇ ' + t('stylist.mixing') : '✦ ' + t('stylist.mix')}
           </Btn>
         </div>
