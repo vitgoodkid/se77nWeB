@@ -866,14 +866,9 @@ export function Stylist() {
         </div>
       </section>
 
-      {/* ── Area tabs (sticky: stays pinned to the top of the scroll area so
-             it never rides up over the hero, and stays reachable after a mix) ── */}
-      <div style={{
-        position: 'sticky', top: 0, zIndex: 5,
-        display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center',
-        borderBottom: '1px solid ' + COLORS.line, padding: '10px 0 12px', margin: '-4px 0 0',
-        background: 'rgba(13,10,8,0.7)', backdropFilter: 'blur(10px)',
-      }}>
+      {/* ── Area tabs — normal flow so content below only grows downward
+             and never rides up to cover the hero ── */}
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', borderBottom: '1px solid ' + COLORS.line, paddingBottom: 12 }}>
         {[
           { id: 'character', icon: '🧍', label: tt('Character', 'Nhân vật'), short: '01', n: character ? 1 : 0 },
           { id: 'wardrobe', icon: '👕', label: tt('Wardrobe', 'Tủ đồ'), short: '02', n: items.length },
