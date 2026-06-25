@@ -2,50 +2,111 @@
 // Vercel ignores underscore-prefixed files in api/ as endpoints
 // but allows them as importable modules.
 
-// ── Provider routing (OpenRouter, OpenAI-compatible) ───────────
-// All se77n text features run on OpenRouter now (yunwu retired). Model ids may
-// be bare ("google/gemini-pro-latest") or carry an "openrouter:"/"fal:" prefix
-// — the prefix is stripped and the request goes to OpenRouter either way.
-export function resolveChat(model) {
-  const baseUrl = process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1';
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  const fallback = process.env.OPENROUTER_CHAT_MODEL || 'google/gemini-flash-latest';
-  let m = (typeof model === 'string' && model.trim()) ? model.trim() : fallback;
-  m = m.replace(/^(?:openrouter|fal):/, '');
-  return { baseUrl, apiKey, model: m };
+// ── Chat via fal's openrouter/router (uses FAL_API_KEY) ─────────
+// fal proxies OpenRouter LLMs behind one TEXT-ONLY endpoint: prompt +
+// system_prompt, no messages array / tools / image input. We flatten the
+// conversation into a single prompt. Model ids may carry an "openrouter:"/
+// "fal:" prefix (stripped). yunwu retired.
+const FAL_CHAT_URL = 'https://fal.run/openrouter/router';
+
+function resolveFalModel(model) {
+  const fallback = process.env.FAL_CHAT_MODEL || 'google/gemini-flash-latest';
+  const m = (typeof model === 'string' && model.trim()) ? model.trim() : fallback;
+  return m.replace(/^(?:openrouter|fal):/, '');
 }
 
-// ── Chat (OpenRouter, OpenAI-compatible) ───────────────────────
+function flattenForFal(system, history, prompt) {
+  const turns = [];
+  if (Array.isArray(history)) {
+    for (const m of history) {
+      if (!m || typeof m.content !== 'string' || !m.content.trim()) continue;
+      if (m.role === 'user') turns.push(`User: ${m.content}`);
+      else if (m.role === 'assistant') turns.push(`Assistant: ${m.content}`);
+    }
+  }
+  if (prompt) turns.push(`User: ${prompt}`);
+  return { prompt: turns.join('\n\n') || '(empty)', system_prompt: system || '' };
+}
+
+// Core text completion through fal openrouter/router. Returns { text, tokensIn, tokensOut }.
+export async function falChat({ system, history, prompt, model, temperature = 0.7, maxTokens = 1024, jsonMode = false }) {
+  const apiKey = process.env.FAL_API_KEY;
+  if (!apiKey) throw new Error('FAL_API_KEY not configured');
+  const sys = jsonMode
+    ? `${system || ''}\n\nReturn ONLY valid JSON — no prose, no markdown code fences.`.trim()
+    : system;
+  const flat = flattenForFal(sys, history, prompt);
+  const upstream = await fetch(FAL_CHAT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Key ${apiKey}` },
+    body: JSON.stringify({
+      model: resolveFalModel(model),
+      prompt: flat.prompt,
+      ...(flat.system_prompt ? { system_prompt: flat.system_prompt } : {}),
+      temperature,
+      max_tokens: maxTokens,
+    }),
+  });
+  const data = await upstream.json().catch(() => null);
+  if (!upstream.ok || !data) {
+    const msg = data?.detail || data?.error || data?.message || 'fal chat error';
+    const err = new Error(typeof msg === 'string' ? msg : JSON.stringify(msg));
+    err.upstream = data;
+    err.status = upstream.status;
+    throw err;
+  }
+  const out = data.output ?? data.data?.output ?? '';
+  const usage = data.usage ?? data.data?.usage ?? {};
+  return {
+    text: (out || '').trim(),
+    tokensIn: usage.prompt_tokens ?? 0,
+    tokensOut: usage.completion_tokens ?? 0,
+  };
+}
+
+// ── Chat: text → fal router; image → optional OpenRouter vision ─
+// fal openrouter/router is text-only. When an image is attached (stylist
+// classify/detect, vision chat), fall back to OpenRouter's OpenAI-compatible
+// endpoint — but only if OPENROUTER_API_KEY is set. Without it, image requests
+// surface a clear error rather than silently dropping the picture.
 export async function callChat({ system, prompt, image, history, max_tokens = 1024, temperature = 0.7, jsonMode = false, model }) {
-  const { baseUrl, apiKey, model: chatModel } = resolveChat(model);
-  if (!apiKey) throw new Error('OPENROUTER_API_KEY not configured');
+  if (!image) {
+    const { text } = await falChat({ system, history, prompt, model, temperature, maxTokens: max_tokens, jsonMode });
+    return text;
+  }
+  return callVisionChat({ system, prompt, image, history, max_tokens, temperature, jsonMode, model });
+}
 
-  const userContent = image
-    ? [
-        { type: 'text', text: prompt || 'Describe this image.' },
-        { type: 'image_url', image_url: { url: image } },
-      ]
-    : prompt;
-
+async function callVisionChat({ system, prompt, image, history, max_tokens, temperature, jsonMode, model }) {
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  if (!apiKey) {
+    const err = new Error('Phân tích ảnh cần OPENROUTER_API_KEY (fal openrouter/router không nhận ảnh).');
+    err.status = 501;
+    throw err;
+  }
+  const baseUrl = process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1';
+  const visionModel = (model || process.env.OPENROUTER_VISION_MODEL || 'google/gemini-flash-latest')
+    .replace(/^(?:openrouter|fal):/, '');
   const priorMsgs = Array.isArray(history)
     ? history
         .filter((m) => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string' && m.content.trim())
         .slice(-10)
         .map((m) => ({ role: m.role, content: m.content }))
     : [];
-
   const body = {
-    model: chatModel,
+    model: visionModel,
     messages: [
       ...(system ? [{ role: 'system', content: system }] : []),
       ...priorMsgs,
-      { role: 'user', content: userContent },
+      { role: 'user', content: [
+        { type: 'text', text: prompt || 'Describe this image.' },
+        { type: 'image_url', image_url: { url: image } },
+      ] },
     ],
     max_tokens,
     temperature,
   };
   if (jsonMode) body.response_format = { type: 'json_object' };
-
   const upstream = await fetch(`${baseUrl}/chat/completions`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
@@ -53,8 +114,7 @@ export async function callChat({ system, prompt, image, history, max_tokens = 10
   });
   const data = await upstream.json();
   if (!upstream.ok) {
-    const msg = data?.error?.message || data?.message || 'chat upstream error';
-    const err = new Error(msg);
+    const err = new Error(data?.error?.message || data?.message || 'vision chat error');
     err.upstream = data;
     err.status = upstream.status;
     throw err;

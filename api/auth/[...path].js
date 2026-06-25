@@ -16,7 +16,7 @@ import {
 } from '../_lib/session.js';
 import { getUsers, getKataDb } from '../_lib/mongo.js';
 import { cached } from '../_lib/redis.js';
-import { resolveChat } from '../_helpers.js';
+import { falChat } from '../_helpers.js';
 import {
   resolvePromptConfig as tavernResolvePromptConfig,
   buildSystemPrompt as tavernBuildSystemPrompt,
@@ -2507,31 +2507,15 @@ const RULES_FIX_SYS = `You polish a player's draft of world rules.
 Return only the improved rules prose.`;
 
 async function callYunwuChat(systemPrompt, userContent, maxTokens) {
-  const { baseUrl, apiKey, model } = resolveChat(
-    process.env.OPENROUTER_TAVERN_LORE_MODEL || 'google/gemini-flash-latest',
-  );
-  if (!apiKey) throw new Error('OPENROUTER_API_KEY not configured');
-  const r = await fetch(`${baseUrl}/chat/completions`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userContent },
-      ],
-      temperature: 0.85,
-      max_tokens: maxTokens,
-    }),
+  // Lore/rules generation — text-only, runs through fal openrouter/router.
+  const { text } = await falChat({
+    system: systemPrompt,
+    prompt: userContent,
+    model: process.env.FAL_TAVERN_LORE_MODEL || 'google/gemini-flash-latest',
+    temperature: 0.85,
+    maxTokens,
   });
-  const text = await r.text();
-  if (!r.ok) throw new Error(`yunwu ${r.status}: ${text.slice(0, 500)}`);
-  let data;
-  try { data = JSON.parse(text); } catch { throw new Error('yunwu returned non-JSON'); }
-  return (data?.choices?.[0]?.message?.content ?? '').trim();
+  return text;
 }
 
 async function tavernLoreGenerate(req, res) {
@@ -2666,35 +2650,15 @@ const TAVERN_TURN_TEMPERATURE = 0.85;
 const TAVERN_TURN_MAX_TOKENS = 1200;
 
 async function callTavernChat(systemContent, history, userText, model, temperature, maxTokens) {
-  const { baseUrl, apiKey, model: chatModel } = resolveChat(model);
-  if (!apiKey) throw new Error('OPENROUTER_API_KEY not configured');
-  const messages = [
-    { role: 'system', content: systemContent },
-    ...history,
-    { role: 'user', content: userText },
-  ];
-  const r = await fetch(`${baseUrl}/chat/completions`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: chatModel,
-      messages,
-      temperature: typeof temperature === 'number' ? temperature : 0.85,
-      max_tokens: typeof maxTokens === 'number' ? maxTokens : 1200,
-    }),
+  // Storyteller turn — text-only, runs through fal openrouter/router.
+  return await falChat({
+    system: systemContent,
+    history,
+    prompt: userText,
+    model,
+    temperature: typeof temperature === 'number' ? temperature : 0.85,
+    maxTokens: typeof maxTokens === 'number' ? maxTokens : 1200,
   });
-  const text = await r.text();
-  if (!r.ok) throw new Error(`yunwu ${r.status}: ${text.slice(0, 500)}`);
-  let data;
-  try { data = JSON.parse(text); } catch { throw new Error('yunwu returned non-JSON'); }
-  return {
-    text: (data?.choices?.[0]?.message?.content ?? '').trim(),
-    tokensIn: data?.usage?.prompt_tokens ?? 0,
-    tokensOut: data?.usage?.completion_tokens ?? 0,
-  };
 }
 
 async function tavernWorldTurn(req, res, id) {

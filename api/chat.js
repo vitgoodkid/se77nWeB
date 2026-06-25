@@ -8,7 +8,7 @@
 
 import { resolveOwner, loadThreadMessages, appendThreadTurns, deleteThread, sanitizeThreadId } from './_lib/threads.js';
 import { enforceLimits, LIMITS } from './_lib/ratelimit.js';
-import { resolveChat } from './_helpers.js';
+import { callChat } from './_helpers.js';
 
 export const config = { maxDuration: 60 };
 
@@ -38,17 +38,8 @@ export default async function handler(req, res) {
   if (!prompt && !image) {
     return res.status(400).json({ error: 'prompt or image required' });
   }
-  const defaultModel = process.env.OPENROUTER_CHAT_MODEL || 'google/gemini-flash-latest';
-  const picked = (typeof reqModel === 'string' && ALLOWED_MODELS.has(reqModel)) ? reqModel : defaultModel;
-  const { baseUrl, apiKey, model } = resolveChat(picked);
-  if (!apiKey) return res.status(500).json({ error: 'OPENROUTER_API_KEY not configured' });
-
-  const userContent = image
-    ? [
-        { type: 'text', text: prompt || 'Describe this image.' },
-        { type: 'image_url', image_url: { url: image } },
-      ]
-    : prompt;
+  const defaultModel = process.env.FAL_CHAT_MODEL || 'google/gemini-flash-latest';
+  const model = (typeof reqModel === 'string' && ALLOWED_MODELS.has(reqModel)) ? reqModel : defaultModel;
 
   // Server-side conversation memory (3-day sliding TTL). Prefer the stored
   // thread; fall back to client-sent history when there's no server identity
@@ -68,39 +59,17 @@ export default async function handler(req, res) {
   const priorMsgs = context.slice(-10);
 
   try {
-    const upstream = await fetch(`${baseUrl}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model,
-        messages: [
-          ...(system ? [{ role: 'system', content: system }] : []),
-          ...priorMsgs,
-          { role: 'user', content: userContent },
-        ],
-        max_tokens: 8000,
-        temperature: 0.7,
-      }),
+    // Text → fal openrouter/router (FAL key); image → OpenRouter vision (needs
+    // OPENROUTER_API_KEY). callChat picks the right path.
+    const text = await callChat({
+      system,
+      prompt,
+      image,
+      history: priorMsgs,
+      max_tokens: 8000,
+      temperature: 0.7,
+      model,
     });
-    const raw = await upstream.text();
-    let data = null;
-    if (raw) { try { data = JSON.parse(raw); } catch { /* not JSON */ } }
-    if (!upstream.ok) {
-      return res.status(upstream.status).json({
-        error: data?.error?.message || data?.message || (raw && raw.slice(0, 300)) || 'upstream error',
-        upstream: data,
-      });
-    }
-    if (!data) {
-      return res.status(502).json({ error: 'upstream returned non-JSON response' });
-    }
-    const text =
-      data?.choices?.[0]?.message?.content ||
-      data?.choices?.[0]?.text ||
-      '';
     if (owner && text && text.trim()) {
       await appendThreadTurns(owner.ownerKey, owner.ownerType, threadId, [
         { role: 'user', content: prompt || (image ? '(image)' : '') },
@@ -109,6 +78,6 @@ export default async function handler(req, res) {
     }
     return res.status(200).json({ text, model });
   } catch (e) {
-    return res.status(502).json({ error: String(e.message || e) });
+    return res.status(e.status || 502).json({ error: String(e.message || e) });
   }
 }
