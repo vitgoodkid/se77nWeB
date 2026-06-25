@@ -2,12 +2,23 @@
 // Vercel ignores underscore-prefixed files in api/ as endpoints
 // but allows them as importable modules.
 
-// ── Chat (yunwu OpenAI-compatible) ─────────────────────────────
+// ── Provider routing (OpenRouter, OpenAI-compatible) ───────────
+// All se77n text features run on OpenRouter now (yunwu retired). Model ids may
+// be bare ("google/gemini-pro-latest") or carry an "openrouter:"/"fal:" prefix
+// — the prefix is stripped and the request goes to OpenRouter either way.
+export function resolveChat(model) {
+  const baseUrl = process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1';
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  const fallback = process.env.OPENROUTER_CHAT_MODEL || 'google/gemini-flash-latest';
+  let m = (typeof model === 'string' && model.trim()) ? model.trim() : fallback;
+  m = m.replace(/^(?:openrouter|fal):/, '');
+  return { baseUrl, apiKey, model: m };
+}
+
+// ── Chat (OpenRouter, OpenAI-compatible) ───────────────────────
 export async function callChat({ system, prompt, image, history, max_tokens = 1024, temperature = 0.7, jsonMode = false, model }) {
-  const apiKey = process.env.YUNWU_API_KEY;
-  const baseUrl = process.env.YUNWU_BASE_URL || 'https://yunwu.ai/v1';
-  const chatModel = model || process.env.YUNWU_CHAT_MODEL || 'gemini-3.1-flash-lite';
-  if (!apiKey) throw new Error('YUNWU_API_KEY not configured');
+  const { baseUrl, apiKey, model: chatModel } = resolveChat(model);
+  if (!apiKey) throw new Error('OPENROUTER_API_KEY not configured');
 
   const userContent = image
     ? [

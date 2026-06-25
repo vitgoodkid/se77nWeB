@@ -8,18 +8,18 @@
 
 import { resolveOwner, loadThreadMessages, appendThreadTurns, deleteThread, sanitizeThreadId } from './_lib/threads.js';
 import { enforceLimits, LIMITS } from './_lib/ratelimit.js';
+import { resolveChat } from './_helpers.js';
 
 export const config = { maxDuration: 60 };
 
 // Public endpoint — restrict client-selectable models to a known-good set so a
-// caller can't bill arbitrary yunwu models. Anything else falls back to the
-// server default.
+// caller can't bill arbitrary models. Anything else falls back to the server
+// default. OpenRouter ids (yunwu retired).
 const ALLOWED_MODELS = new Set([
-  'gemini-3.1-pro-preview', 'gemini-3-pro-preview',
-  'gemini-3.1-flash-preview', 'gemini-3-flash-preview',
-  'gemini-3.1-flash-lite', 'gemini-2.5-pro', 'gemini-2.5-flash',
-  'claude-opus-4-7', 'claude-sonnet-4-6', 'claude-haiku-4-5',
-  'grok-4', 'grok-4.1', 'grok-4-fast',
+  'google/gemini-pro-latest', 'google/gemini-flash-latest',
+  'google/gemini-2.5-pro', 'google/gemini-2.5-flash',
+  'anthropic/claude-sonnet-4.6', 'anthropic/claude-haiku-latest',
+  'x-ai/grok-4-fast', 'x-ai/grok-4.3',
 ]);
 
 export default async function handler(req, res) {
@@ -38,11 +38,10 @@ export default async function handler(req, res) {
   if (!prompt && !image) {
     return res.status(400).json({ error: 'prompt or image required' });
   }
-  const apiKey = process.env.YUNWU_API_KEY;
-  const baseUrl = process.env.YUNWU_BASE_URL || 'https://yunwu.ai/v1';
-  const defaultModel = process.env.YUNWU_CHAT_MODEL || 'gemini-3.1-flash-lite';
-  const model = (typeof reqModel === 'string' && ALLOWED_MODELS.has(reqModel)) ? reqModel : defaultModel;
-  if (!apiKey) return res.status(500).json({ error: 'YUNWU_API_KEY not configured' });
+  const defaultModel = process.env.OPENROUTER_CHAT_MODEL || 'google/gemini-flash-latest';
+  const picked = (typeof reqModel === 'string' && ALLOWED_MODELS.has(reqModel)) ? reqModel : defaultModel;
+  const { baseUrl, apiKey, model } = resolveChat(picked);
+  if (!apiKey) return res.status(500).json({ error: 'OPENROUTER_API_KEY not configured' });
 
   const userContent = image
     ? [

@@ -87,11 +87,12 @@ const DEFAULT_OUTPUT_RULES = [
 const DEFAULT_IMAGE_PROMPT_TEMPLATE = '{character_base}, {keywords}, {style}';
 const DEFAULT_IMAGE_NEGATIVE_PROMPT = '';
 
-// Model + tuning defaults — must mirror packages/tavern-engine/src/promptDefaults.ts.
-const DEFAULT_CHAT_MODEL = 'gemini-3.1-pro-preview';
-const DEFAULT_LORE_MODEL = 'grok-4-fast';
-const DEFAULT_WORLDGEN_MODEL = 'grok-4-fast';
-const DEFAULT_SUBJECT_MODEL = 'grok-4-fast';
+// Model defaults — OpenRouter ids (yunwu retired). Storyteller uses the
+// strongest Gemini for better prose; cheaper helpers use flash.
+const DEFAULT_CHAT_MODEL = 'google/gemini-pro-latest';
+const DEFAULT_LORE_MODEL = 'google/gemini-flash-latest';
+const DEFAULT_WORLDGEN_MODEL = 'google/gemini-flash-latest';
+const DEFAULT_SUBJECT_MODEL = 'google/gemini-flash-latest';
 const DEFAULT_SCENE_IMAGE_MODELS = ['fal-ai/nano-banana-pro', 'fal-ai/flux/schnell'];
 const DEFAULT_COVER_IMAGE_MODELS = ['fal-ai/nano-banana-pro', 'fal-ai/flux/schnell'];
 const DEFAULT_TURN_TEMPERATURE = 0.85;

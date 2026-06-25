@@ -16,6 +16,7 @@ import {
 } from '../_lib/session.js';
 import { getUsers, getKataDb } from '../_lib/mongo.js';
 import { cached } from '../_lib/redis.js';
+import { resolveChat } from '../_helpers.js';
 import {
   resolvePromptConfig as tavernResolvePromptConfig,
   buildSystemPrompt as tavernBuildSystemPrompt,
@@ -2506,10 +2507,10 @@ const RULES_FIX_SYS = `You polish a player's draft of world rules.
 Return only the improved rules prose.`;
 
 async function callYunwuChat(systemPrompt, userContent, maxTokens) {
-  const apiKey = process.env.YUNWU_API_KEY;
-  const baseUrl = process.env.YUNWU_BASE_URL || 'https://yunwu.ai/v1';
-  const model = process.env.YUNWU_TAVERN_LORE_MODEL || 'grok-4-fast';
-  if (!apiKey) throw new Error('YUNWU_API_KEY not configured');
+  const { baseUrl, apiKey, model } = resolveChat(
+    process.env.OPENROUTER_TAVERN_LORE_MODEL || 'google/gemini-flash-latest',
+  );
+  if (!apiKey) throw new Error('OPENROUTER_API_KEY not configured');
   const r = await fetch(`${baseUrl}/chat/completions`, {
     method: 'POST',
     headers: {
@@ -2660,14 +2661,13 @@ async function tavernLoreImprove(req, res) {
 // Web turns DO NOT cross-post to Discord — the user picks one venue per
 // session. Documented in PLAN-tavern §9.3.
 
-const TAVERN_DEFAULT_MODEL = process.env.YUNWU_TAVERN_MODEL?.trim() || 'grok-4-fast';
+const TAVERN_DEFAULT_MODEL = process.env.OPENROUTER_TAVERN_MODEL?.trim() || 'google/gemini-pro-latest';
 const TAVERN_TURN_TEMPERATURE = 0.85;
 const TAVERN_TURN_MAX_TOKENS = 1200;
 
 async function callTavernChat(systemContent, history, userText, model, temperature, maxTokens) {
-  const apiKey = process.env.YUNWU_API_KEY;
-  const baseUrl = process.env.YUNWU_BASE_URL || 'https://yunwu.ai/v1';
-  if (!apiKey) throw new Error('YUNWU_API_KEY not configured');
+  const { baseUrl, apiKey, model: chatModel } = resolveChat(model);
+  if (!apiKey) throw new Error('OPENROUTER_API_KEY not configured');
   const messages = [
     { role: 'system', content: systemContent },
     ...history,
@@ -2680,7 +2680,7 @@ async function callTavernChat(systemContent, history, userText, model, temperatu
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model,
+      model: chatModel,
       messages,
       temperature: typeof temperature === 'number' ? temperature : 0.85,
       max_tokens: typeof maxTokens === 'number' ? maxTokens : 1200,
