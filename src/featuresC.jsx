@@ -478,9 +478,52 @@ function SetCard({ set, items, isSaved, busyLookbook, onRenderLookbook, onSwap, 
   );
 }
 
+// ── Token map (design-system reference tab) ────────────────────
+function TokenMap({ tt }) {
+  const cols = '1.1fr .7fr .7fr 1.5fr';
+  const tokens = [
+    { name: '--bg', light: '#f3eee4', dark: '#0d0a08', usage: tt('App background', 'Nền ứng dụng'), c: COLORS.text },
+    { name: '--panel', light: '#ffffff', dark: '#15110d', usage: tt('Cards, modals, surfaces', 'Card, modal, bề mặt'), c: COLORS.text },
+    { name: '--panel2', light: '#faf6ee', dark: '#1c1813', usage: tt('Inset fields, sub-surfaces', 'Ô input, bề mặt phụ'), c: COLORS.text },
+    { name: '--text', light: '#211c16', dark: '#f5ede0', usage: tt('Text & icon foreground', 'Chữ & icon'), c: COLORS.text },
+    { name: '--red', light: '#cf3a3a', dark: '#e04545', usage: tt('Primary action, brand accent', 'Hành động chính, nhấn'), c: COLORS.red },
+    { name: '--green', light: '#3d8a4f', dark: '#5ba868', usage: tt('Success, ready, download', 'Thành công, sẵn sàng'), c: COLORS.green },
+    { name: '--gold', light: '#ad7f31', dark: '#d4a858', usage: tt('Pins, favourites, async', 'Ghim, yêu thích, async'), c: COLORS.gold },
+    { name: '--line', light: 'rgba(33,28,22,.12)', dark: 'rgba(245,237,224,.12)', usage: tt('Borders, dividers', 'Viền, đường kẻ'), c: COLORS.text },
+  ];
+  const swatch = (v) => (v.length > 9 ? '.12 α' : v);
+  return (
+    <div style={{ background: COLORS.panel, border: '1px solid ' + COLORS.line, borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 2px rgba(0,0,0,0.18)' }}>
+      <div style={{ padding: '18px 22px', borderBottom: '1px solid ' + COLORS.line }}>
+        <Kicker>{tt('TOKEN MAP', 'BẢNG TOKEN')}</Kicker>
+        <div className="mono" style={{ fontSize: 17, fontWeight: 700, marginTop: 5, color: COLORS.text }}>COLORS.*</div>
+      </div>
+      <div className="mono" style={{ display: 'grid', gridTemplateColumns: cols, gap: 8, padding: '12px 22px', fontSize: 9, letterSpacing: '0.16em', color: COLORS.muted, borderBottom: '1px solid ' + COLORS.line }}>
+        <span>TOKEN</span><span>LIGHT</span><span>DARK</span><span>USAGE</span>
+      </div>
+      {tokens.map((tk) => (
+        <div key={tk.name} style={{ display: 'grid', gridTemplateColumns: cols, gap: 8, alignItems: 'center', padding: '13px 22px', borderBottom: '1px solid ' + COLORS.line }}>
+          <span className="mono" style={{ fontSize: 12, fontWeight: 700, color: tk.c }}>{tk.name}</span>
+          <span className="mono" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 10, color: COLORS.muted }}>
+            <span style={{ width: 20, height: 20, borderRadius: 6, background: tk.light, boxShadow: '0 0 0 1px rgba(128,128,128,.4)' }} />{swatch(tk.light)}
+          </span>
+          <span className="mono" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 10, color: COLORS.muted }}>
+            <span style={{ width: 20, height: 20, borderRadius: 6, background: tk.dark, boxShadow: '0 0 0 1px rgba(128,128,128,.4)' }} />{swatch(tk.dark)}
+          </span>
+          <span style={{ fontSize: 12, color: COLORS.muted, lineHeight: 1.4 }}>{tk.usage}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // ── Main module ────────────────────────────────────────────────
 export function Stylist() {
-  const { t } = useLang();
+  const { t, lang } = useLang();
+  // Design-only strings (hero / tabs / tokens / footer) live as inline
+  // bilingual literals so we don't have to grow the global i18n dict.
+  const tt = (en, vi) => (lang === 'vi' ? vi : en);
+  const [area, setArea] = useState('character'); // character|wardrobe|compose|lookbook|tokens
   const isMobile = useMediaQuery('(max-width: 768px)');
   const [wardrobe, setWardrobe] = useSyncedData(
     { localKey: 'se77n.wardrobe.v1', serverKey: 'wardrobe' },
@@ -713,11 +756,152 @@ export function Stylist() {
     <div style={isMobile
       ? { display: 'flex', flexDirection: 'column', gap: 16 }
       : { height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 16, paddingRight: 4 }}>
+
+      {/* ── Hero ── */}
+      <section style={{
+        position: 'relative', overflow: 'hidden', borderRadius: 22,
+        border: '1px solid ' + COLORS.line, background: COLORS.panel,
+        padding: isMobile ? '24px 20px' : '34px 36px 30px', boxShadow: '0 1px 2px rgba(0,0,0,0.18)',
+      }}>
+        <div aria-hidden style={{
+          position: 'absolute', inset: 0, pointerEvents: 'none',
+          background: 'radial-gradient(70% 90% at 88% 95%, ' + COLORS.red + '1a 0%, transparent 62%), radial-gradient(50% 70% at 10% 0%, ' + COLORS.gold + '14 0%, transparent 60%)',
+        }} />
+        <div aria-hidden className="mono" style={{
+          position: 'absolute', bottom: -56, right: -10, fontSize: 220, lineHeight: 1, fontWeight: 800,
+          color: 'rgba(245,237,224,0.04)', pointerEvents: 'none', userSelect: 'none',
+        }}>07</div>
+
+        <div style={{ position: 'relative', display: 'grid', gap: isMobile ? 22 : 34, gridTemplateColumns: isMobile ? '1fr' : '1.15fr .85fr', alignItems: 'center' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14, flexWrap: 'wrap' }}>
+              <span className="mono" style={{ fontSize: 10, letterSpacing: '0.22em', color: COLORS.red, display: 'flex', alignItems: 'center', gap: 7 }}>
+                <span style={{ width: 6, height: 6, borderRadius: 999, background: COLORS.red, animation: 'pulse 1.6s infinite' }} />07 · STYLIST
+              </span>
+              <span className="mono" style={{ fontSize: 8.5, letterSpacing: '0.2em', padding: '3px 8px', borderRadius: 999, border: '1px solid ' + COLORS.line, color: COLORS.muted }}>NANO · IMG ENGINE</span>
+            </div>
+            <h1 className="mono" style={{ margin: 0, fontSize: isMobile ? 38 : 52, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 0.98, color: COLORS.text }}>
+              {tt('AI Stylist', 'Stylist AI')}<span style={{ color: COLORS.red }}>.</span>
+            </h1>
+            <p style={{ margin: '13px 0 0', maxWidth: 470, fontSize: 14, color: COLORS.muted, lineHeight: 1.6 }}>
+              {tt('Build a model from your photos, digitize your wardrobe, then let AI mix & render full looks.',
+                'Tạo nhân vật từ ảnh của bạn, số hoá tủ đồ, rồi để AI phối & render trọn bộ look.')}
+            </p>
+
+            {/* pipeline — live counts, click to jump */}
+            <div style={{ display: 'flex', alignItems: 'stretch', flexWrap: 'wrap', margin: '24px 0 26px' }}>
+              {[
+                { id: 'character', n: '01', icon: '🧍', label: tt('Character', 'Nhân vật'), meta: character ? tt('1 model', '1 nhân vật') : tt('none', 'chưa có'), c: COLORS.red },
+                { id: 'wardrobe', n: '02', icon: '👕', label: tt('Wardrobe', 'Tủ đồ'), meta: items.length + ' ' + tt('items', 'món'), c: COLORS.gold },
+                { id: 'compose', n: '03', icon: '✦', label: tt('Compose', 'Phối đồ'), meta: readyItems.length >= 2 ? tt('Ready', 'Sẵn sàng') : tt('need 2+', 'cần 2+'), c: COLORS.green },
+                { id: 'lookbook', n: '04', icon: '🖼️', label: tt('Lookbook', 'Kết quả'), meta: sets.length + ' ' + tt('looks', 'look'), c: COLORS.red },
+              ].map((p, i, arr) => {
+                const a = p.id === area;
+                return (
+                  <div key={p.id} onClick={() => setArea(p.id)} className="st-press" style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 5, padding: '11px 15px', borderRadius: 12, minWidth: 92, background: a ? p.c + '14' : COLORS.panel2, border: '1px solid ' + (a ? p.c + '99' : COLORS.line) }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                        <span className="mono" style={{ fontSize: 9, fontWeight: 800, color: a ? p.c : COLORS.muted }}>{p.n}</span>
+                        <span style={{ fontSize: 13 }}>{p.icon}</span>
+                      </div>
+                      <div className="mono" style={{ fontSize: 11, fontWeight: 700, color: a ? p.c : COLORS.text }}>{p.label}</div>
+                      <div className="mono" style={{ fontSize: 9, color: COLORS.muted }}>{p.meta}</div>
+                    </div>
+                    {i < arr.length - 1 && <span className="mono" style={{ padding: '0 7px', color: COLORS.muted, opacity: 0.5 }}>→</span>}
+                  </div>
+                );
+              })}
+            </div>
+
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+              <button onClick={() => setArea('compose')} className="mono st-press" style={{
+                padding: '13px 24px', borderRadius: 12, cursor: 'pointer', fontSize: 12, fontWeight: 700, letterSpacing: '0.06em',
+                textTransform: 'uppercase', background: COLORS.red, border: '1px solid ' + COLORS.red, color: '#fff',
+                display: 'flex', alignItems: 'center', gap: 9, boxShadow: '0 10px 26px -10px ' + COLORS.red + '99',
+              }}>✦ {tt('Compose a look', 'Phối một bộ')}</button>
+              <button onClick={() => setArea('character')} className="mono st-press" style={{
+                padding: '13px 20px', borderRadius: 12, cursor: 'pointer', fontSize: 12, fontWeight: 700, letterSpacing: '0.06em',
+                textTransform: 'uppercase', background: 'transparent', border: '1px solid ' + COLORS.line, color: COLORS.text,
+                display: 'flex', alignItems: 'center', gap: 8,
+              }}>🧍 {tt('Build character', 'Tạo nhân vật')}</button>
+            </div>
+          </div>
+
+          {/* stage — real character image if present, else placeholder */}
+          {!isMobile && (
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 290 }}>
+              {character ? (
+                <CachedImg cacheKey={'char:' + character.id} url={character.charUrl} alt={character.name || 'character'}
+                  onClick={() => openZoom('char:' + character.id, character.charUrl, character.name || 'character')}
+                  style={{ width: 208, height: 282, borderRadius: 18, objectFit: 'cover', border: '1px solid ' + COLORS.line, cursor: 'zoom-in', boxShadow: '0 24px 50px -22px rgba(0,0,0,0.5)' }} />
+              ) : (
+                <div onClick={() => setArea('character')} style={{
+                  width: 208, height: 282, borderRadius: 18, border: '1px dashed ' + COLORS.line, background: COLORS.panel2,
+                  position: 'relative', overflow: 'hidden', cursor: 'pointer', display: 'grid', placeItems: 'center',
+                }}>
+                  <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(80% 70% at 50% 18%, ' + COLORS.gold + '29 0%, transparent 65%)' }} />
+                  <span style={{ fontSize: 92, opacity: 0.5 }}>🧍</span>
+                  <span className="mono" style={{ position: 'absolute', bottom: 12, left: 12, fontSize: 8, letterSpacing: '0.14em', color: COLORS.muted, background: 'rgba(13,10,8,0.5)', padding: '4px 8px', borderRadius: 7 }}>+ {tt('BUILD MODEL', 'TẠO NHÂN VẬT')}</span>
+                </div>
+              )}
+              {[
+                { glyph: '🧥', name: tt('Overcoat', 'Áo khoác'), tag: 'OUTER', tagColor: COLORS.gold, pos: { top: 4, left: -22 }, dur: '4.2s', delay: '0s', rot: '-4deg' },
+                { glyph: '👕', name: tt('Top', 'Áo'), tag: 'READY', tagColor: COLORS.green, pos: { bottom: 40, right: -26 }, dur: '5s', delay: '.6s', rot: '3deg' },
+                { glyph: '👟', name: tt('Shoes', 'Giày'), tag: 'READY', tagColor: COLORS.green, pos: { bottom: -6, left: 10 }, dur: '4.6s', delay: '1.1s', rot: '2deg' },
+              ].map((hc, i) => (
+                <div key={i} style={{
+                  position: 'absolute', ...hc.pos, display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 11,
+                  background: COLORS.panel, border: '1px solid ' + COLORS.line, boxShadow: '0 12px 26px -14px rgba(0,0,0,0.45)',
+                  animation: 'st-float ' + hc.dur + ' ease-in-out infinite', animationDelay: hc.delay, '--rot': hc.rot,
+                }}>
+                  <span style={{ fontSize: 18 }}>{hc.glyph}</span>
+                  <div>
+                    <div className="mono" style={{ fontSize: 10, fontWeight: 700, color: COLORS.text }}>{hc.name}</div>
+                    <div className="mono" style={{ fontSize: 8, letterSpacing: '0.1em', color: hc.tagColor }}>{hc.tag}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* ── Area tabs ── */}
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', borderBottom: '1px solid ' + COLORS.line, paddingBottom: 12 }}>
+        {[
+          { id: 'character', icon: '🧍', label: tt('Character', 'Nhân vật'), short: '01', n: character ? 1 : 0 },
+          { id: 'wardrobe', icon: '👕', label: tt('Wardrobe', 'Tủ đồ'), short: '02', n: items.length },
+          { id: 'compose', icon: '✦', label: tt('Compose', 'Phối đồ'), short: '03', n: suggestions.length || null },
+          { id: 'lookbook', icon: '🖼️', label: tt('Lookbook', 'Kết quả'), short: '04', n: sets.length },
+          { id: 'tokens', icon: '◧', label: tt('Tokens', 'Tokens'), short: '05', n: null },
+        ].map((tb) => {
+          const a = tb.id === area;
+          return (
+            <button key={tb.id} onClick={() => setArea(tb.id)} className="mono st-tab st-press" style={{
+              display: 'flex', alignItems: 'center', gap: 9, padding: '9px 15px', borderRadius: 11, cursor: 'pointer',
+              fontSize: 12, fontWeight: 700, letterSpacing: '0.02em',
+              background: a ? COLORS.red + '14' : COLORS.panel, border: '1px solid ' + (a ? COLORS.red + '8c' : COLORS.line), color: a ? COLORS.text : COLORS.muted,
+            }}>
+              <span style={{ fontSize: 14 }}>{tb.icon}</span>{tb.label}
+              <span style={{ fontSize: 9, padding: '2px 6px', borderRadius: 999, background: a ? COLORS.red + '22' : 'rgba(245,237,224,0.07)', color: a ? COLORS.red : COLORS.muted }}>
+                {tb.n != null ? String(tb.n).padStart(2, '0') : tb.short}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
       {/* Character */}
+      {area === 'character' && (
+      <div style={{ animation: 'fadeUp 200ms ease' }}>
       <CharacterPanel character={character} busy={charBusy} isMobile={isMobile} onZoom={openZoom}
         onCreate={createCharacter} onEdit={editCharacter} onRemove={removeCharacter} />
+      </div>
+      )}
 
       {/* Wardrobe */}
+      {area === 'wardrobe' && (
+      <div style={{ animation: 'fadeUp 200ms ease' }}>
       <Panel padding={isMobile ? 14 : 18}>
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
           <div>
@@ -767,8 +951,12 @@ export function Stylist() {
           </>
         )}
       </Panel>
+      </div>
+      )}
 
       {/* Compose */}
+      {area === 'compose' && (
+      <div style={{ animation: 'fadeUp 200ms ease', display: 'flex', flexDirection: 'column', gap: 16 }}>
       <Panel padding={isMobile ? 14 : 18}>
         <Kicker style={{ marginBottom: 12 }}>{t('stylist.compose')}</Kicker>
 
@@ -858,8 +1046,13 @@ export function Stylist() {
         </div>
       )}
 
-      {/* Saved */}
-      {sets.length > 0 && (
+      </div>
+      )}
+
+      {/* Lookbook (saved sets) */}
+      {area === 'lookbook' && (
+      <div style={{ animation: 'fadeUp 200ms ease' }}>
+        {sets.length > 0 ? (
         <div>
           <Kicker style={{ marginBottom: 10 }}>{t('stylist.saved')} · {String(sets.length).padStart(2, '0')}</Kicker>
           <div style={{ display: 'grid', gap: 12, gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(300px, 1fr))' }}>
@@ -870,7 +1063,31 @@ export function Stylist() {
             ))}
           </div>
         </div>
+        ) : (
+          <div style={{ border: '1px dashed ' + COLORS.line, borderRadius: 16, padding: '48px 24px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
+            <span style={{ fontSize: 44, opacity: 0.5 }}>🖼️</span>
+            <div className="mono" style={{ fontSize: 15, fontWeight: 700, color: COLORS.text }}>{tt('No looks yet', 'Chưa có look')}</div>
+            <p style={{ margin: 0, maxWidth: 380, fontSize: 12.5, color: COLORS.muted, lineHeight: 1.55 }}>
+              {tt('Compose an outfit and Mix, then save it — your looks land here.', 'Phối một bộ rồi lưu lại — các look sẽ hiện ở đây.')}
+            </p>
+            <Btn variant="solid" color={COLORS.red} onClick={() => setArea('compose')}>✦ {tt('Go to Compose', 'Tới Phối đồ')}</Btn>
+          </div>
+        )}
+      </div>
       )}
+
+      {/* Tokens (design reference) */}
+      {area === 'tokens' && (
+      <div style={{ animation: 'fadeUp 200ms ease' }}>
+        <TokenMap tt={tt} />
+      </div>
+      )}
+
+      {/* Footer */}
+      <footer className="mono" style={{ marginTop: 8, paddingTop: 16, borderTop: '1px solid ' + COLORS.line, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10, fontSize: 10, color: COLORS.muted, letterSpacing: '0.16em' }}>
+        <span>SE77N · STYLIST · EXP 007</span>
+        <span style={{ color: COLORS.gold }}>◐ {tt('ASYNC RENDER', 'RENDER BẤT ĐỒNG BỘ')}</span>
+      </footer>
 
       <Lightbox data={zoom} onClose={() => setZoom(null)} />
     </div>

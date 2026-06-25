@@ -233,3 +233,14 @@ input, textarea { font-family: inherit; }
 [data-theme="light"] [style*="background:rgba(13,10,8,0.78)"] { background-color: rgba(248, 244, 237, 0.88) !important; }
 [data-theme="light"] [style*="background: rgba(13, 10, 8, 0.92)"],
 [data-theme="light"] [style*="background:rgba(13,10,8,0.92)"] { background-color: rgba(255, 255, 255, 0.95) !important; }
+
+/* ── Stylist (route 07) — hero motion + card hover ──────────────── */
+@keyframes st-float {
+  0%, 100% { transform: translateY(0) rotate(var(--rot, 0deg)); }
+  50%      { transform: translateY(-8px) rotate(var(--rot, 0deg)); }
+}
+.st-lift { transition: transform .16s, box-shadow .16s, border-color .16s; }
+.st-lift:hover { transform: translateY(-3px); box-shadow: 0 16px 34px -18px rgba(0, 0, 0, 0.4); }
+.st-tab  { transition: background .12s, color .12s, border-color .12s; }
+.st-press { transition: transform .1s ease; }
+.st-press:active { transform: translateY(1px); }
