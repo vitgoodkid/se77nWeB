@@ -693,6 +693,7 @@ const CHAT_MODELS_BY_PROVIDER = {
     'grok-4','grok-4.1','grok-4-fast',
   ],
   '9ROUTER': ['9router:kr/claude-opus-4.7'],
+  FAL: ['fal:google/gemini-3.5-flash'],
 };
 const IMAGE_MODELS_BY_PROVIDER = {
   'FAL.AI': ['fal-ai/nano-banana-pro','fal-ai/gpt-image-2','xai/grok-imagine-image/quality/text-to-image'],
@@ -705,7 +706,7 @@ const VIDEO_MODELS_BY_PROVIDER = {
     'xai/grok-imagine-video/text-to-video','xai/grok-imagine-video/image-to-video',
   ],
 };
-const PROVIDER_ACCENT = { YUNWU: '#5BA868', '9ROUTER': '#D4A858', 'FAL.AI': '#D4A858', NANOGPT: '#8a7f78' };
+const PROVIDER_ACCENT = { YUNWU: '#5BA868', '9ROUTER': '#D4A858', FAL: '#a78bfa', 'FAL.AI': '#D4A858', NANOGPT: '#8a7f78' };
 
 const SETTINGS_FIELDS = [
   { key: 'systemPrompt', type: 'textarea', title: 'SYSTEM PROMPT', desc: 'Persona mặc định của bot trên mọi guild', rows: 7, placeholder: '(trống — bot không dùng prompt phụ)' },
