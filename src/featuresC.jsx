@@ -970,12 +970,11 @@ export function Stylist() {
           {PRESETS.map((p) => <Chip key={p.k} onClick={() => setOccasion(p.occ)}>{t('stylist.preset.' + p.k)}</Chip>)}
         </div>
 
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-          <div style={{ flex: 1, minWidth: 200 }}>
-            <Field value={occasion} onChange={setOccasion} placeholder={t('stylist.occasionPh')}
-              onKeyDown={(e) => { if (e.key === 'Enter') runMix(); }} />
-          </div>
-          <Btn variant="solid" color={ACCENT} onClick={() => runMix()} disabled={mixing || readyItems.length < 2}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <Field value={occasion} onChange={setOccasion} placeholder={t('stylist.occasionPh')}
+            onKeyDown={(e) => { if (e.key === 'Enter') runMix(); }} />
+          <Btn variant="solid" color={ACCENT} onClick={() => runMix()} disabled={mixing || readyItems.length < 2}
+            style={{ width: '100%', padding: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
             {mixing ? '◇ ' + t('stylist.mixing') : '✦ ' + t('stylist.mix')}
           </Btn>
         </div>
