@@ -478,45 +478,6 @@ function SetCard({ set, items, isSaved, busyLookbook, onRenderLookbook, onSwap, 
   );
 }
 
-// ── Token map (design-system reference tab) ────────────────────
-function TokenMap({ tt }) {
-  const cols = '1.1fr .7fr .7fr 1.5fr';
-  const tokens = [
-    { name: '--bg', light: '#f3eee4', dark: '#0d0a08', usage: tt('App background', 'Nền ứng dụng'), c: COLORS.text },
-    { name: '--panel', light: '#ffffff', dark: '#15110d', usage: tt('Cards, modals, surfaces', 'Card, modal, bề mặt'), c: COLORS.text },
-    { name: '--panel2', light: '#faf6ee', dark: '#1c1813', usage: tt('Inset fields, sub-surfaces', 'Ô input, bề mặt phụ'), c: COLORS.text },
-    { name: '--text', light: '#211c16', dark: '#f5ede0', usage: tt('Text & icon foreground', 'Chữ & icon'), c: COLORS.text },
-    { name: '--red', light: '#cf3a3a', dark: '#e04545', usage: tt('Primary action, brand accent', 'Hành động chính, nhấn'), c: COLORS.red },
-    { name: '--green', light: '#3d8a4f', dark: '#5ba868', usage: tt('Success, ready, download', 'Thành công, sẵn sàng'), c: COLORS.green },
-    { name: '--gold', light: '#ad7f31', dark: '#d4a858', usage: tt('Pins, favourites, async', 'Ghim, yêu thích, async'), c: COLORS.gold },
-    { name: '--line', light: 'rgba(33,28,22,.12)', dark: 'rgba(245,237,224,.12)', usage: tt('Borders, dividers', 'Viền, đường kẻ'), c: COLORS.text },
-  ];
-  const swatch = (v) => (v.length > 9 ? '.12 α' : v);
-  return (
-    <div style={{ background: COLORS.panel, border: '1px solid ' + COLORS.line, borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 2px rgba(0,0,0,0.18)' }}>
-      <div style={{ padding: '18px 22px', borderBottom: '1px solid ' + COLORS.line }}>
-        <Kicker>{tt('TOKEN MAP', 'BẢNG TOKEN')}</Kicker>
-        <div className="mono" style={{ fontSize: 17, fontWeight: 700, marginTop: 5, color: COLORS.text }}>COLORS.*</div>
-      </div>
-      <div className="mono" style={{ display: 'grid', gridTemplateColumns: cols, gap: 8, padding: '12px 22px', fontSize: 9, letterSpacing: '0.16em', color: COLORS.muted, borderBottom: '1px solid ' + COLORS.line }}>
-        <span>TOKEN</span><span>LIGHT</span><span>DARK</span><span>USAGE</span>
-      </div>
-      {tokens.map((tk) => (
-        <div key={tk.name} style={{ display: 'grid', gridTemplateColumns: cols, gap: 8, alignItems: 'center', padding: '13px 22px', borderBottom: '1px solid ' + COLORS.line }}>
-          <span className="mono" style={{ fontSize: 12, fontWeight: 700, color: tk.c }}>{tk.name}</span>
-          <span className="mono" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 10, color: COLORS.muted }}>
-            <span style={{ width: 20, height: 20, borderRadius: 6, background: tk.light, boxShadow: '0 0 0 1px rgba(128,128,128,.4)' }} />{swatch(tk.light)}
-          </span>
-          <span className="mono" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 10, color: COLORS.muted }}>
-            <span style={{ width: 20, height: 20, borderRadius: 6, background: tk.dark, boxShadow: '0 0 0 1px rgba(128,128,128,.4)' }} />{swatch(tk.dark)}
-          </span>
-          <span style={{ fontSize: 12, color: COLORS.muted, lineHeight: 1.4 }}>{tk.usage}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 // ── Main module ────────────────────────────────────────────────
 export function Stylist() {
   const { t, lang } = useLang();
@@ -874,7 +835,6 @@ export function Stylist() {
           { id: 'wardrobe', icon: '👕', label: tt('Wardrobe', 'Tủ đồ'), short: '02', n: items.length },
           { id: 'compose', icon: '✦', label: tt('Compose', 'Phối đồ'), short: '03', n: suggestions.length || null },
           { id: 'lookbook', icon: '🖼️', label: tt('Lookbook', 'Kết quả'), short: '04', n: sets.length },
-          { id: 'tokens', icon: '◧', label: tt('Tokens', 'Tokens'), short: '05', n: null },
         ].map((tb) => {
           const a = tb.id === area;
           return (
@@ -1073,13 +1033,6 @@ export function Stylist() {
             <Btn variant="solid" color={COLORS.red} onClick={() => setArea('compose')}>✦ {tt('Go to Compose', 'Tới Phối đồ')}</Btn>
           </div>
         )}
-      </div>
-      )}
-
-      {/* Tokens (design reference) */}
-      {area === 'tokens' && (
-      <div style={{ animation: 'fadeUp 200ms ease' }}>
-        <TokenMap tt={tt} />
       </div>
       )}
 
