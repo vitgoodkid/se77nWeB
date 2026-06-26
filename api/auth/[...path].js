@@ -2511,7 +2511,7 @@ async function callYunwuChat(systemPrompt, userContent, maxTokens) {
   const { text } = await falChat({
     system: systemPrompt,
     prompt: userContent,
-    model: process.env.FAL_TAVERN_LORE_MODEL || 'google/gemini-flash-latest',
+    model: process.env.FAL_TAVERN_LORE_MODEL || 'google/gemini-2.5-flash',
     temperature: 0.85,
     maxTokens,
   });
@@ -2645,7 +2645,7 @@ async function tavernLoreImprove(req, res) {
 // Web turns DO NOT cross-post to Discord — the user picks one venue per
 // session. Documented in PLAN-tavern §9.3.
 
-const TAVERN_DEFAULT_MODEL = process.env.OPENROUTER_TAVERN_MODEL?.trim() || 'google/gemini-pro-latest';
+const TAVERN_DEFAULT_MODEL = process.env.OPENROUTER_TAVERN_MODEL?.trim() || 'google/gemini-2.5-pro';
 const TAVERN_TURN_TEMPERATURE = 0.85;
 const TAVERN_TURN_MAX_TOKENS = 1200;
 

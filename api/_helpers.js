@@ -10,7 +10,8 @@
 const FAL_CHAT_URL = 'https://fal.run/openrouter/router';
 
 function resolveFalModel(model) {
-  const fallback = process.env.FAL_CHAT_MODEL || 'google/gemini-flash-latest';
+  // fal's router only accepts concrete OpenRouter ids — NOT "-latest" aliases.
+  const fallback = process.env.FAL_CHAT_MODEL || 'google/gemini-2.5-flash';
   const m = (typeof model === 'string' && model.trim()) ? model.trim() : fallback;
   return m.replace(/^(?:openrouter|fal):/, '');
 }
@@ -42,6 +43,9 @@ export async function falChat({ system, history, prompt, model, temperature = 0.
     body: JSON.stringify({
       model: resolveFalModel(model),
       prompt: flat.prompt,
+      // fal's router makes reasoning mandatory for Gemini 2.5-pro / 3.x (400
+      // otherwise) and 2.5-flash tolerates it without burning extra tokens.
+      reasoning: true,
       ...(flat.system_prompt ? { system_prompt: flat.system_prompt } : {}),
       temperature,
       max_tokens: maxTokens,
@@ -85,7 +89,7 @@ async function callVisionChat({ system, prompt, image, history, max_tokens, temp
     throw err;
   }
   const baseUrl = process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1';
-  const visionModel = (model || process.env.OPENROUTER_VISION_MODEL || 'google/gemini-flash-latest')
+  const visionModel = (model || process.env.OPENROUTER_VISION_MODEL || 'google/gemini-2.5-flash')
     .replace(/^(?:openrouter|fal):/, '');
   const priorMsgs = Array.isArray(history)
     ? history

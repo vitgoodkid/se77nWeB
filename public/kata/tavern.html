@@ -1054,21 +1054,21 @@ async function renderWorldDetail(id) {
               <div class="grid grid-cols-2 gap-3">
                 <div>
                   <div class="mono text-[10px] tracking-label uppercase text-mute mb-1">storyteller model</div>
-                  ${modelPickerHtml({ scope: 'ovmp', key: 'chatModel' }, ovs.chatModel, 'openrouter:google/gemini-pro-latest', TAVERN_CHAT_MODELS_BY_PROVIDER)}
+                  ${modelPickerHtml({ scope: 'ovmp', key: 'chatModel' }, ovs.chatModel, 'fal:google/gemini-2.5-pro', TAVERN_CHAT_MODELS_BY_PROVIDER)}
                 </div>
                 <div>
                   <div class="mono text-[10px] tracking-label uppercase text-mute mb-1">lore/rules AI model</div>
-                  ${modelPickerHtml({ scope: 'ovmp', key: 'loreModel' }, ovs.loreModel, 'openrouter:google/gemini-flash-latest', TAVERN_CHAT_MODELS_BY_PROVIDER)}
+                  ${modelPickerHtml({ scope: 'ovmp', key: 'loreModel' }, ovs.loreModel, 'fal:google/gemini-2.5-flash', TAVERN_CHAT_MODELS_BY_PROVIDER)}
                 </div>
               </div>
               <div class="grid grid-cols-2 gap-3 mt-3">
                 <div>
                   <div class="mono text-[10px] tracking-label uppercase text-mute mb-1">whole-world AI model</div>
-                  ${modelPickerHtml({ scope: 'ovmp', key: 'worldGenModel' }, ovs.worldGenModel, 'openrouter:google/gemini-flash-latest', TAVERN_CHAT_MODELS_BY_PROVIDER)}
+                  ${modelPickerHtml({ scope: 'ovmp', key: 'worldGenModel' }, ovs.worldGenModel, 'fal:google/gemini-2.5-flash', TAVERN_CHAT_MODELS_BY_PROVIDER)}
                 </div>
                 <div>
                   <div class="mono text-[10px] tracking-label uppercase text-mute mb-1">scene-subject extractor</div>
-                  ${modelPickerHtml({ scope: 'ovmp', key: 'subjectModel' }, ovs.subjectModel, 'openrouter:google/gemini-flash-latest', TAVERN_SUBJECT_MODELS_BY_PROVIDER)}
+                  ${modelPickerHtml({ scope: 'ovmp', key: 'subjectModel' }, ovs.subjectModel, 'fal:google/gemini-2.5-flash', TAVERN_SUBJECT_MODELS_BY_PROVIDER)}
                 </div>
               </div>
               <label class="block mt-3">
@@ -1372,10 +1372,10 @@ function openCharForm(existing) {
 
 // Engine-default placeholders (mirror api/_lib/tavern.js).
 const SET_DEFAULTS = {
-  chatModel: 'openrouter:google/gemini-pro-latest',
-  loreModel: 'openrouter:google/gemini-flash-latest',
-  worldGenModel: 'openrouter:google/gemini-flash-latest',
-  subjectModel: 'openrouter:google/gemini-flash-latest',
+  chatModel: 'fal:google/gemini-2.5-pro',
+  loreModel: 'fal:google/gemini-2.5-flash',
+  worldGenModel: 'fal:google/gemini-2.5-flash',
+  subjectModel: 'fal:google/gemini-2.5-flash',
   turnTemperature: '0.85',
   turnMaxTokens: '16000',
   memoryWindowSize: '50',
@@ -1664,24 +1664,18 @@ async function renderDefaults() {
 
 function flash(msg, kind) { window.KataShell?.toast(msg, kind ? { kind } : undefined); }
 
-// Tavern model lists per provider, mirrored from the bot's pricing list.
+// Tavern model lists — fal openrouter/router (FAL key). Only ids fal's router
+// actually serves; it rejects "-latest" aliases and some newer/deprecated ids.
 const TAVERN_CHAT_MODELS_BY_PROVIDER = {
-  openrouter: [
-    'openrouter:google/gemini-pro-latest',
-    'openrouter:google/gemini-flash-latest',
-    'openrouter:google/gemini-2.5-pro',
-    'openrouter:google/gemini-2.5-flash',
-    'openrouter:anthropic/claude-sonnet-4.6',
-    'openrouter:x-ai/grok-4.3',
-    'openrouter:x-ai/grok-4-fast',
+  fal: [
+    'fal:google/gemini-2.5-pro',
+    'fal:google/gemini-2.5-flash',
   ],
 };
 // Cheap visual-extractor pool — fast + light.
 const TAVERN_SUBJECT_MODELS_BY_PROVIDER = {
-  openrouter: [
-    'openrouter:google/gemini-flash-latest',
-    'openrouter:google/gemini-2.5-flash-lite',
-    'openrouter:x-ai/grok-4-fast',
+  fal: [
+    'fal:google/gemini-2.5-flash',
   ],
 };
 const TAVERN_FAL_IMAGE_MODELS_BY_PROVIDER = {

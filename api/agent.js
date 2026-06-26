@@ -98,7 +98,7 @@ async function handleStylist(req, res, action) {
         max_tokens: 200,
         temperature: 0.1,
         jsonMode: true,
-        model: process.env.OPENROUTER_ROUTER_MODEL || 'google/gemini-flash-latest',
+        model: process.env.OPENROUTER_ROUTER_MODEL || 'google/gemini-2.5-flash',
       });
       const parsed = tryParseJson(text) || {};
       const category = STYLIST_CATEGORIES.includes(parsed.category) ? parsed.category : 'top';
@@ -118,7 +118,7 @@ async function handleStylist(req, res, action) {
         max_tokens: 500,
         temperature: 0.1,
         jsonMode: true,
-        model: process.env.OPENROUTER_ROUTER_MODEL || 'google/gemini-flash-latest',
+        model: process.env.OPENROUTER_ROUTER_MODEL || 'google/gemini-2.5-flash',
       });
       const parsed = tryParseJson(text) || {};
       let garments = (Array.isArray(parsed.garments) ? parsed.garments : [])
@@ -170,7 +170,7 @@ async function handleStylist(req, res, action) {
       max_tokens: 1200,
       temperature: 0.8,
       jsonMode: true,
-      model: process.env.OPENROUTER_CHAT_MODEL || 'google/gemini-flash-latest',
+      model: process.env.OPENROUTER_CHAT_MODEL || 'google/gemini-2.5-flash',
     });
     const parsed = tryParseJson(text) || {};
     const rawSets = Array.isArray(parsed.sets) ? parsed.sets : [];
@@ -202,7 +202,7 @@ async function classify(prompt, hasImage) {
       jsonMode: true,
       // Routing is a cheap classification — keep it on a fast, non-reasoning
       // model so it stays quick/cheap even when chat uses a reasoning model.
-      model: process.env.OPENROUTER_ROUTER_MODEL || 'google/gemini-flash-latest',
+      model: process.env.OPENROUTER_ROUTER_MODEL || 'google/gemini-2.5-flash',
     });
     const parsed = tryParseJson(text) || {};
     if (!VALID_TOOLS.has(parsed.tool)) parsed.tool = 'chat';

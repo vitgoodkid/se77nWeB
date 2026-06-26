@@ -89,10 +89,10 @@ const DEFAULT_IMAGE_NEGATIVE_PROMPT = '';
 
 // Model defaults — OpenRouter ids (yunwu retired). Storyteller uses the
 // strongest Gemini for better prose; cheaper helpers use flash.
-const DEFAULT_CHAT_MODEL = 'google/gemini-pro-latest';
-const DEFAULT_LORE_MODEL = 'google/gemini-flash-latest';
-const DEFAULT_WORLDGEN_MODEL = 'google/gemini-flash-latest';
-const DEFAULT_SUBJECT_MODEL = 'google/gemini-flash-latest';
+const DEFAULT_CHAT_MODEL = 'google/gemini-2.5-pro';
+const DEFAULT_LORE_MODEL = 'google/gemini-2.5-flash';
+const DEFAULT_WORLDGEN_MODEL = 'google/gemini-2.5-flash';
+const DEFAULT_SUBJECT_MODEL = 'google/gemini-2.5-flash';
 const DEFAULT_SCENE_IMAGE_MODELS = ['fal-ai/nano-banana-pro', 'fal-ai/flux/schnell'];
 const DEFAULT_COVER_IMAGE_MODELS = ['fal-ai/nano-banana-pro', 'fal-ai/flux/schnell'];
 const DEFAULT_TURN_TEMPERATURE = 0.85;

@@ -16,10 +16,8 @@ export const config = { maxDuration: 60 };
 // caller can't bill arbitrary models. Anything else falls back to the server
 // default. OpenRouter ids (yunwu retired).
 const ALLOWED_MODELS = new Set([
-  'google/gemini-pro-latest', 'google/gemini-flash-latest',
-  'google/gemini-2.5-pro', 'google/gemini-2.5-flash',
-  'anthropic/claude-sonnet-4.6', 'anthropic/claude-haiku-latest',
-  'x-ai/grok-4-fast', 'x-ai/grok-4.3',
+  'google/gemini-2.5-pro',
+  'google/gemini-2.5-flash',
 ]);
 
 export default async function handler(req, res) {
@@ -38,7 +36,7 @@ export default async function handler(req, res) {
   if (!prompt && !image) {
     return res.status(400).json({ error: 'prompt or image required' });
   }
-  const defaultModel = process.env.FAL_CHAT_MODEL || 'google/gemini-flash-latest';
+  const defaultModel = process.env.FAL_CHAT_MODEL || 'google/gemini-2.5-flash';
   const model = (typeof reqModel === 'string' && ALLOWED_MODELS.has(reqModel)) ? reqModel : defaultModel;
 
   // Server-side conversation memory (3-day sliding TTL). Prefer the stored
