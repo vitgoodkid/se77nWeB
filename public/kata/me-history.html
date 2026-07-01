@@ -44,6 +44,9 @@
     header { padding-left: 14px !important; padding-right: 14px !important; }
     header > div:first-child { gap: 10px !important; }
     header > div:first-child > div { display: none !important; } /* breadcrumb */
+    #kata-header-actions { gap: 6px !important; }
+    #kata-header-actions > * { transform: scale(0.9); transform-origin: right center; }
+    #kata-user-name { display: none !important; }
 
     aside {
       top: 64px !important; left: 0 !important; right: 0 !important; bottom: auto !important;
@@ -77,7 +80,7 @@
 
 <header class="fixed top-0 inset-x-0 h-16 z-50 flex items-center justify-between px-6 backdrop-blur-md border-b border-line" style="background:rgba(13,10,8,0.7)">
   <div class="flex items-center gap-5">
-    <a href="index.html" class="flex flex-col items-start gap-1 leading-none">
+    <a href="index.html" class="hdr-logo flex flex-col items-start gap-1 leading-none">
       <div class="mono text-[24px] font-extrabold tracking-[-0.025em]">se<span class="text-red glow77">77</span>n<span class="text-mute font-normal"> / kata</span></div>
       <div class="mono text-[9px] uppercase tracking-kicker text-mute">Experiment <span class="text-red font-bold">007</span> · katas dashboard</div>
     </a>
