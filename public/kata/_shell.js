@@ -339,6 +339,17 @@
       R.push(L + c + '{background-color:rgba(33,28,22,0.05) !important;}');
     });
 
+    // JS-built header controls set their colour via el.style.color = '#f5ede0',
+    // which the browser serialises to rgb(245, 237, 224) — so the inline
+    // [style*="color:#f5ede0"] flips above never match them and the lang / mode
+    // / theme / user buttons stayed near-white on the light chrome (invisible).
+    // Override them by id (stylesheet !important beats the non-important inline).
+    R.push(L + '#kata-lang-btn, ' + L + '#kata-lang-btn span, ' + L + '#kata-mode-btn, ' +
+      L + '#kata-theme-btn button, ' + L + '#kata-user-chip{color:#211c16 !important;}');
+    // active language pill: its inline highlight is rgba(245,237,224,.10) (light
+    // on light) → flip to a dark tint so the selected language reads.
+    R.push(L + '#kata-lang-btn span[style*="background"]{background-color:rgba(33,28,22,0.10) !important;}');
+
     var s = document.createElement('style');
     s.id = 'kata-light-overlay';
     s.textContent = R.join('\n');

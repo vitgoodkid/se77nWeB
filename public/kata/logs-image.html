@@ -62,7 +62,10 @@
      main column's sidebar offset. */
   @media (max-width: 768px) {
     header { padding-left: 14px !important; padding-right: 14px !important; }
-    header > div:first-child { gap: 10px !important; }
+    header > div:first-child { gap: 10px !important; min-width: 0 !important; }
+    .hdr-logo { flex-shrink: 0 !important; }
+    .hdr-logo > div:first-child { font-size: 17px !important; white-space: nowrap !important; }
+    .hdr-logo > div:last-child { display: none !important; } /* hide "EXPERIMENT 007" subtitle */
     /* hide the breadcrumb (div) + "live · 4s" badge (span); keep the logo (a) */
     header > div:first-child > div,
     header > div:first-child > span { display: none !important; }
@@ -93,6 +96,14 @@
     main h1 { font-size: 26px !important; }
     .log-side { max-width: 100% !important; }
     #f-userId, #f-channelId, #f-command { width: 100% !important; flex: 1 1 100% !important; }
+
+    /* image/video log rows: stack the media ABOVE the text so the prompt gets
+       the full width (it was wrapping one word per line in a ~130px column) and
+       the thumbnails can be larger. */
+    #log-list > article > div { flex-direction: column !important; gap: 14px !important; padding: 16px !important; }
+    #log-list .log-io { width: 100% !important; justify-content: center !important; }
+    #log-list .log-io img { width: 150px !important; height: 150px !important; }
+    #log-list .log-io > div { width: 150px !important; height: 150px !important; } /* no-input / empty boxes */
     footer { grid-template-columns: 1fr !important; gap: 6px !important; }
     footer span { text-align: center !important; }
   }
@@ -355,7 +366,7 @@ function rowImage(e){
   const fallback = Array.isArray(e.fallbackChain) ? e.fallbackChain.find(f => f.status === 'fallback') : null;
   return `<article class="rounded-[14px] border border-line bg-panel">
     <div class="p-5 flex gap-5">
-      <div class="flex items-center gap-3 flex-shrink-0">
+      <div class="log-io flex items-center gap-3 flex-shrink-0">
         ${inputUrl
           ? `<a href="${escapeHtml(inputUrl)}" target="_blank" rel="noopener"><img src="${escapeHtml(inputUrl)}" loading="lazy" alt="input" class="w-[88px] h-[88px] rounded-[10px] object-cover border border-line" /></a>`
           : `<div class="w-[88px] h-[88px] rounded-[10px] grid place-items-center border border-line" style="background:#0a0807"><span class="mono text-[10px] text-mute2">no input</span></div>`
@@ -395,7 +406,7 @@ function rowVideo(e){
   const outputUrl = e.outputUrl;
   return `<article class="rounded-[14px] border border-line bg-panel">
     <div class="p-5 flex gap-5">
-      <div class="flex items-center flex-shrink-0">
+      <div class="log-io flex items-center flex-shrink-0">
         ${outputUrl
           ? `<a href="${escapeHtml(outputUrl)}" target="_blank" rel="noopener" class="block w-[140px] h-[88px] rounded-[10px] border border-line overflow-hidden grid place-items-center" style="background:#0a0807"><span class="mono text-[11px] text-red tracking-label uppercase">▸ open mp4</span></a>`
           : `<div class="w-[140px] h-[88px] rounded-[10px] border border-line grid place-items-center" style="background:#0a0807"><span class="mono text-[10px] text-mute2">no output</span></div>`

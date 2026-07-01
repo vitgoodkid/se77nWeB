@@ -118,7 +118,10 @@
      rail under the header, drop the offset, collapse multi-col grids. */
   @media (max-width: 768px) {
     header { padding-left: 14px !important; padding-right: 14px !important; }
-    header > div:first-child { gap: 10px !important; }
+    header > div:first-child { gap: 10px !important; min-width: 0 !important; }
+    .hdr-logo { flex-shrink: 0 !important; }
+    .hdr-logo > div:first-child { font-size: 17px !important; white-space: nowrap !important; }
+    .hdr-logo > div:last-child { display: none !important; } /* hide "EXPERIMENT 007" subtitle */
     header > div:first-child > div,
     header > div:first-child > span { display: none !important; }
     #kata-header-actions { gap: 6px !important; }
