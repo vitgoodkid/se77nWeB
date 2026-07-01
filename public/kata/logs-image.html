@@ -53,6 +53,48 @@
   .kata-tab.on { background:#E0454514; color:#E04545; border-color:#E0454573; }
   .kata-tab .tab-count { font-size:9px; color:#57504b; }
   .kata-tab.on .tab-count { color:#E04545; }
+
+  /* ===================== MOBILE (≤768px) =====================
+     Port of admin.html's phone layout to the server-detail pages.
+     The fixed 232px sidebar + `main pl-[244px]` had no @media, so on a
+     phone the sidebar covered the page and logs were unreadable. Turn the
+     sidebar into a horizontal chip rail under the header and drop the
+     main column's sidebar offset. */
+  @media (max-width: 768px) {
+    header { padding-left: 14px !important; padding-right: 14px !important; }
+    header > div:first-child { gap: 10px !important; }
+    /* hide the breadcrumb (div) + "live · 4s" badge (span); keep the logo (a) */
+    header > div:first-child > div,
+    header > div:first-child > span { display: none !important; }
+    #kata-header-actions { gap: 6px !important; }
+    #kata-header-actions > * { transform: scale(0.9); transform-origin: right center; }
+
+    aside {
+      top: 64px !important; left: 0 !important; right: 0 !important; bottom: auto !important;
+      width: auto !important; height: auto !important;
+      flex-direction: row !important;
+      border-right: none !important; border-bottom: 1px solid #1d1817 !important;
+      overflow-x: auto !important; overflow-y: hidden !important; -webkit-overflow-scrolling: touch;
+    }
+    aside::-webkit-scrollbar { height: 0; }
+    /* hide the guild profile card, the flex spacer, and the "← all servers" footer */
+    aside > div:first-child,
+    aside > .flex-1,
+    aside > div:last-child { display: none !important; }
+    aside nav { display: flex !important; flex-direction: row !important; padding: 11px 12px !important; gap: 8px !important; }
+    .navrow { flex: 0 0 auto; margin-bottom: 0 !important; white-space: nowrap;
+      border-left: none !important; border: 1px solid #2c2522 !important; border-radius: 999px !important;
+      padding: 9px 15px !important; }
+    .navrow:hover { transform: none !important; }
+    .navrow.on { background: #E0454514 !important; border-color: #E0454573 !important; color: #E04545 !important; }
+
+    main { padding-left: 14px !important; padding-right: 14px !important; padding-top: 126px !important; }
+    main h1 { font-size: 26px !important; }
+    .log-side { max-width: 100% !important; }
+    #f-userId, #f-channelId, #f-command { width: 100% !important; flex: 1 1 100% !important; }
+    footer { grid-template-columns: 1fr !important; gap: 6px !important; }
+    footer span { text-align: center !important; }
+  }
 </style>
 </head>
 <body class="bg-bg text-ink min-h-screen overflow-x-hidden">
