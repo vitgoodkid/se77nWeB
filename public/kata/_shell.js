@@ -227,6 +227,17 @@
       // cost.html ships its own light/dark button; the shell now provides a
       // unified one in the header actions, so hide the page-local duplicate.
       '#themeToggle { display: none !important; }',
+      // ── Mobile: light/dark + colour-theme buttons become icon-only so the
+      //    header action cluster stops overflowing onto the se77n/kata logo.
+      //    Injected here (always runs in boot) so it covers every page,
+      //    including the .hdr-logo pages that setupMobileChrome() skips.
+      '@media (max-width: 768px) {',
+      '  #kata-mode-btn > span:last-child { display: none !important; }',       // "LIGHT"/"DARK" text
+      '  #kata-mode-btn { width: 34px !important; padding-left: 0 !important; padding-right: 0 !important; justify-content: center !important; gap: 0 !important; }',
+      '  #kata-theme-btn button > span:nth-child(2) { display: none !important; }', // colour name / AUTO
+      '  #kata-theme-btn button { padding-left: 9px !important; padding-right: 9px !important; gap: 5px !important; }',
+      '  #kata-user-name { display: none !important; }',                        // keep avatar only
+      '}',
     ].join('\n');
     document.head.appendChild(s);
   }
