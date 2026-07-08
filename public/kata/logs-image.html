@@ -157,6 +157,9 @@
     <a id="nav-cost" href="#" class="navrow flex items-center gap-3 px-3.5 py-3 rounded-[10px] mb-1 text-[10.5px] tracking-label uppercase font-extrabold text-mute hover:text-ink" style="border-left:2px solid transparent">
       <span class="text-mute2">$</span><span class="flex-1">cost</span><span id="nav-cost-meta" class="text-[9px] text-mute2" style="letter-spacing:0">—</span>
     </a>
+    <a id="nav-memory" href="#" class="navrow flex items-center gap-3 px-3.5 py-3 rounded-[10px] mb-1 text-[10.5px] tracking-label uppercase font-extrabold text-mute hover:text-ink" style="border-left:2px solid transparent">
+      <span class="text-mute2">◈</span><span class="flex-1">memory</span>
+    </a>
   </nav>
   <div class="flex-1"></div>
   <div class="px-3 pb-5">
@@ -484,6 +487,7 @@ async function loadGuildBootstrap(){
   const gq = encodeURIComponent(guildId);
   document.getElementById('nav-overview').href = `overview.html?guild=${gq}`;
   document.getElementById('nav-cost').href = `cost.html?guild=${gq}`;
+  document.getElementById('nav-memory').href = `memory.html?guild=${gq}`;
   document.getElementById('bc-guild').href = `overview.html?guild=${gq}`;
 
   // Pull guild meta from /api/kata/server/:id (also serves as auth probe)

@@ -132,6 +132,9 @@
     <a id="kata-tab-cost" href="#" class="navrow flex items-center gap-3 px-3.5 py-3 rounded-[10px] mb-1 text-[10.5px] tracking-label uppercase font-extrabold text-mute hover:text-ink" style="border-left:2px solid transparent">
       <span class="text-mute2">$</span><span class="flex-1">cost</span><span id="ov-nav-cost" class="text-[9px] text-mute2" style="letter-spacing:0">—</span>
     </a>
+    <a id="kata-tab-memory" href="#" class="navrow flex items-center gap-3 px-3.5 py-3 rounded-[10px] mb-1 text-[10.5px] tracking-label uppercase font-extrabold text-mute hover:text-ink" style="border-left:2px solid transparent">
+      <span class="text-mute2">◈</span><span class="flex-1">memory</span>
+    </a>
   </nav>
 
   <div class="flex-1"></div>
@@ -524,6 +527,8 @@ if (_gid){
   if (costLink) costLink.href = 'cost.html?guild=' + encodeURIComponent(_gid);
   const logsLink = document.getElementById('kata-tab-logs');
   if (logsLink) logsLink.href = 'logs-image.html?guild=' + encodeURIComponent(_gid);
+  const memLink = document.getElementById('kata-tab-memory');
+  if (memLink) memLink.href = 'memory.html?guild=' + encodeURIComponent(_gid);
 }
 // Active nav row — already on overview, so just stop the # jump.
 document.getElementById('kata-tab-overview')?.addEventListener('click', (e) => e.preventDefault());

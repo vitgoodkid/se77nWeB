@@ -324,6 +324,20 @@ async function handleKata(req, res) {
     return handleKataTavern(req, res, kataPath.replace(/^tavern\/?/, ''));
   }
 
+  // /api/kata/server/:guildId/memory                 (GET)   → list user memory
+  // /api/kata/server/:guildId/memory/:userId         (PATCH) → set lockedName / ownerNotes
+  // /api/kata/server/:guildId/memory/:userId/facts    (DELETE)→ clear learned facts
+  // Matched before the generic serverMatch below (which only knows
+  // config/logs/cost) so these don't fall through to method_not_allowed.
+  const memoryMatch = kataPath.match(/^server\/(\d+)\/memory(?:\/(\d+)(\/facts)?)?$/);
+  if (memoryMatch) {
+    const [, mGuildId, mUserId, mFacts] = memoryMatch;
+    if (!mUserId && req.method === 'GET') return handleKataServerMemoryList(req, res, mGuildId);
+    if (mUserId && mFacts && req.method === 'DELETE') return handleKataServerMemoryFactsDelete(req, res, mGuildId, mUserId);
+    if (mUserId && !mFacts && req.method === 'PATCH') return handleKataServerMemoryPatch(req, res, mGuildId, mUserId);
+    return res.status(405).json({ error: 'method_not_allowed' });
+  }
+
   // /api/kata/server/:guildId  → GET overview + config
   // /api/kata/server/:guildId/config (PATCH) → write config + redis publish
   // /api/kata/server/:guildId/logs?type=… (GET) → paginated logs
@@ -968,6 +982,165 @@ async function handleKataServerConfigPatch(req, res, guildId) {
 
   const fresh = await kataDb.collection('serverconfigs').findOne({ guildId });
   return res.status(200).json({ ok: true, config: fresh });
+}
+
+// ── /api/kata/server/:guildId/memory ────────────────────────────
+//
+// User-memory admin surface. The bot maintains one `usermemories` doc per
+// (guildId, userId) with auto-learned `facts` plus two owner-authored fields:
+//   lockedName  — bot always calls the user this, overriding chat/nicknames
+//   ownerNotes  — trusted personality/context, never overwritten by learning
+// The dashboard may ONLY write those two. `facts`/`turnsSinceExtract` are the
+// bot's — never $set them here (clearing facts has its own DELETE route). The
+// bot re-reads usermemories fresh every message, so a write here needs no
+// publish/restart. Same permission gate as the rest of the per-server API.
+
+const MAX_LOCKED_NAME_LEN = 64;
+const MAX_OWNER_NOTES_LEN = 500;
+const MAX_FACTS_RETURNED = 50;
+
+function shapeMemory(doc, meta) {
+  return {
+    userId: doc.userId,
+    displayName: meta?.displayName ?? null,
+    username: meta?.username ?? null,
+    avatarUrl: meta?.avatarUrl ?? null,
+    lockedName: doc.lockedName ?? null,
+    ownerNotes: doc.ownerNotes ?? null,
+    facts: Array.isArray(doc.facts) ? doc.facts.slice(0, MAX_FACTS_RETURNED) : [],
+    updatedAt: doc.updatedAt ?? null,
+  };
+}
+
+async function handleKataServerMemoryList(req, res, guildId) {
+  const auth = await authorizeGuildAccess(req, guildId);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  const { kataDb } = auth;
+
+  const page = Math.max(1, parseInt(req.query?.page, 10) || 1);
+  const limit = Math.min(100, Math.max(1, parseInt(req.query?.limit, 10) || 50));
+  const q = typeof req.query?.q === 'string' ? req.query.q.trim().toLowerCase() : '';
+
+  const docs = await kataDb.collection('usermemories')
+    .find({ guildId }, { projection: { userId: 1, lockedName: 1, ownerNotes: 1, facts: 1, updatedAt: 1 } })
+    .toArray();
+
+  const meta = await hydrateUsernames(kataDb, docs.map((d) => d.userId));
+  let items = docs.map((d) => shapeMemory(d, meta[d.userId]));
+
+  // Optional name/id filter (client can also filter the short list locally).
+  if (q) {
+    items = items.filter((it) =>
+      (it.displayName || '').toLowerCase().includes(q)
+      || (it.username || '').toLowerCase().includes(q)
+      || it.userId.includes(q));
+  }
+
+  // Owner-tagged rows (locked name or notes) float to the top, then newest.
+  items.sort((a, b) => {
+    const aTag = (a.lockedName || a.ownerNotes) ? 1 : 0;
+    const bTag = (b.lockedName || b.ownerNotes) ? 1 : 0;
+    if (aTag !== bTag) return bTag - aTag;
+    return new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0);
+  });
+
+  const total = items.length;
+  const start = (page - 1) * limit;
+  return res.status(200).json({
+    items: items.slice(start, start + limit),
+    page,
+    limit,
+    total,
+    hasMore: start + limit < total,
+  });
+}
+
+async function handleKataServerMemoryPatch(req, res, guildId, userId) {
+  const auth = await authorizeGuildAccess(req, guildId);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+
+  let body = req.body;
+  if (typeof body === 'string') {
+    try { body = JSON.parse(body); } catch { return res.status(400).json({ error: 'invalid_json' }); }
+  }
+  if (!body || typeof body !== 'object') return res.status(400).json({ error: 'invalid_body' });
+
+  // Whitelist: lockedName + ownerNotes only. Everything else (notably `facts`)
+  // is silently ignored so a stray/malicious field can never touch bot state.
+  const set = {};
+  const errors = [];
+
+  if (body.lockedName !== undefined) {
+    if (body.lockedName === null) set.lockedName = null;
+    else if (typeof body.lockedName !== 'string') errors.push('lockedName must be string or null');
+    else {
+      const v = body.lockedName.trim();
+      if (v.length > MAX_LOCKED_NAME_LEN) errors.push(`lockedName > ${MAX_LOCKED_NAME_LEN} chars`);
+      else set.lockedName = v === '' ? null : v; // empty string clears the lock
+    }
+  }
+  if (body.ownerNotes !== undefined) {
+    if (body.ownerNotes === null) set.ownerNotes = null;
+    else if (typeof body.ownerNotes !== 'string') errors.push('ownerNotes must be string or null');
+    else {
+      const v = body.ownerNotes.trim();
+      if (v.length > MAX_OWNER_NOTES_LEN) errors.push(`ownerNotes > ${MAX_OWNER_NOTES_LEN} chars`);
+      else set.ownerNotes = v === '' ? null : v;
+    }
+  }
+
+  if (errors.length) return res.status(400).json({ error: 'validation_failed', details: errors });
+  if (Object.keys(set).length === 0) return res.status(400).json({ error: 'empty_update' });
+
+  const { kataDb } = auth;
+  set.updatedAt = new Date();
+  await kataDb.collection('usermemories').updateOne(
+    { guildId, userId },
+    { $set: { ...set, guildId, userId } },
+    { upsert: true },
+  );
+
+  try {
+    await kataDb.collection('auditlogs').insertOne({
+      actorUserId: auth.user.providerUserId,
+      guildId,
+      action: 'memory_update',
+      details: { userId, set: Object.keys(set).filter((k) => k !== 'updatedAt') },
+      createdAt: new Date(),
+    });
+  } catch { /* audit is best-effort */ }
+
+  const fresh = await kataDb.collection('usermemories').findOne({ guildId, userId });
+  const meta = await hydrateUsernames(kataDb, [userId]);
+  return res.status(200).json({ ok: true, item: shapeMemory(fresh, meta[userId]) });
+}
+
+async function handleKataServerMemoryFactsDelete(req, res, guildId, userId) {
+  const auth = await authorizeGuildAccess(req, guildId);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  const { kataDb } = auth;
+
+  const existing = await kataDb.collection('usermemories').findOne({ guildId, userId });
+  if (!existing) return res.status(404).json({ error: 'not_found' });
+
+  // Clear only the auto-learned facts; keep lockedName/ownerNotes intact.
+  await kataDb.collection('usermemories').updateOne(
+    { guildId, userId },
+    { $set: { facts: [], updatedAt: new Date() } },
+  );
+  try {
+    await kataDb.collection('auditlogs').insertOne({
+      actorUserId: auth.user.providerUserId,
+      guildId,
+      action: 'memory_facts_clear',
+      details: { userId },
+      createdAt: new Date(),
+    });
+  } catch { /* audit is best-effort */ }
+
+  const fresh = await kataDb.collection('usermemories').findOne({ guildId, userId });
+  const meta = await hydrateUsernames(kataDb, [userId]);
+  return res.status(200).json({ ok: true, item: shapeMemory(fresh, meta[userId]) });
 }
 
 // ── GET /api/kata/server/:guildId/logs ──────────────────────────

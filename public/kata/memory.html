@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<base href="/kata/" />
+<title>trí nhớ người dùng · katas</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = { theme: { extend: {
+    colors: { bg:'#0d0a08', panel:'#15110d', panel2:'#1c1813', line:'rgba(255,255,255,0.08)', line2:'rgba(255,255,255,0.14)', ink:'#f5ede0', mute:'rgba(245,237,224,0.5)', mute2:'rgba(245,237,224,0.3)', red:'#E04545', green:'#5BA868', gold:'#D4A858', info:'#7a9eb5', warn:'#c9a653', err:'#c46868' },
+    fontFamily: { sans:['Geist','system-ui','sans-serif'], mono:['"JetBrains Mono"','ui-monospace','monospace'] },
+    letterSpacing: { kicker:'0.22em', label:'0.18em', tag:'0.12em' },
+  }}};
+</script>
+<style>
+  html, body { background: #0d0a08; color: #f5ede0; font-family: Geist, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+  @keyframes pulse77 { 0%,100% { opacity:1; transform: scale(1); } 50% { opacity:.55; transform: scale(.82); } }
+  @keyframes fadeUp { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: translateY(0); } }
+  .dot-pulse { animation: pulse77 2s ease-in-out infinite; }
+  .glow77 { text-shadow: 0 0 6px #E04545cc, 0 0 18px #E0454566, 0 0 36px #E0454533; }
+  .grain { background-image: radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px); background-size: 3px 3px; }
+  .ambient { background-image:
+      radial-gradient(60% 50% at 18% 12%, #E0454520 0%, transparent 65%),
+      radial-gradient(50% 45% at 90% 88%, #5BA86820 0%, transparent 70%); }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
+  .navrow { transition: background .18s, transform .18s, color .18s; }
+  .navrow:hover { transform: translateX(3px); }
+  .navrow.on { background: #1a1312; }
+  .mem-card { transition: border-color 120ms; }
+  .mem-card:hover { border-color: rgba(255,255,255,0.18); }
+
+  /* ===================== MOBILE (≤768px) — mirror overview.html ========= */
+  @media (max-width: 768px) {
+    header { padding-left: 14px !important; padding-right: 14px !important; }
+    header > div:first-child { gap: 10px !important; min-width: 0 !important; }
+    .hdr-logo { flex-shrink: 0 !important; }
+    .hdr-logo > div:first-child { font-size: 17px !important; white-space: nowrap !important; }
+    .hdr-logo > div:last-child { display: none !important; }
+    header > div:first-child > div,
+    header > div:first-child > span { display: none !important; }
+    #kata-header-actions { gap: 6px !important; }
+    #kata-header-actions > * { transform: scale(0.9); transform-origin: right center; }
+    #kata-user-name { display: none !important; }
+
+    aside {
+      top: 64px !important; left: 0 !important; right: 0 !important; bottom: auto !important;
+      width: auto !important; height: auto !important;
+      flex-direction: row !important;
+      border-right: none !important; border-bottom: 1px solid #1d1817 !important;
+      overflow-x: auto !important; overflow-y: hidden !important; -webkit-overflow-scrolling: touch;
+    }
+    aside::-webkit-scrollbar { height: 0; }
+    aside > div:first-child,
+    aside > .flex-1,
+    aside > div:last-child { display: none !important; }
+    aside nav { display: flex !important; flex-direction: row !important; padding: 11px 12px !important; gap: 8px !important; }
+    .navrow { flex: 0 0 auto; margin-bottom: 0 !important; white-space: nowrap;
+      border-left: none !important; border: 1px solid #2c2522 !important; border-radius: 999px !important;
+      padding: 9px 15px !important; }
+    .navrow:hover { transform: none !important; }
+    .navrow.on { background: #E0454514 !important; border-color: #E0454573 !important; color: #E04545 !important; }
+
+    main { padding-left: 14px !important; padding-right: 14px !important; padding-top: 126px !important; }
+    main h1 { font-size: 26px !important; }
+    footer { grid-template-columns: 1fr !important; gap: 6px !important; }
+    footer span { text-align: center !important; }
+  }
+</style>
+</head>
+<body class="bg-bg text-ink min-h-screen overflow-x-hidden">
+<script src="_strings.js"></script>
+<script src="_shell.js"></script>
+
+<div aria-hidden class="fixed inset-0 z-0 pointer-events-none ambient"></div>
+<div aria-hidden class="fixed inset-0 z-0 pointer-events-none grain opacity-40"></div>
+
+<!-- top bar -->
+<header class="fixed top-0 inset-x-0 h-16 z-50 flex items-center justify-between px-6 backdrop-blur-md border-b border-line" style="background:rgba(13,10,8,0.7)">
+  <div class="flex items-center gap-5">
+    <a href="/" class="hdr-logo flex flex-col items-start gap-1 leading-none" title="Về se77n.com">
+      <div class="mono text-[24px] font-extrabold tracking-[-0.025em]">se<span class="text-red glow77">77</span>n<span class="text-mute font-normal"> / kata</span></div>
+      <div class="mono text-[9px] uppercase tracking-kicker text-mute">Experiment <span class="text-red font-bold">007</span> · katas dashboard</div>
+    </a>
+    <div class="flex items-center gap-2 ml-3 mono text-[10px] tracking-label uppercase">
+      <a href="index.html" class="text-mute hover:text-ink">se77n</a><span class="text-mute2">/</span>
+      <a href="index.html" class="text-mute hover:text-ink">kata</a><span class="text-mute2">/</span>
+      <a href="servers.html" class="text-mute hover:text-ink" data-i18n="bc.servers">servers</a><span class="text-mute2">/</span>
+      <a id="bc-guild" href="#" class="text-mute hover:text-ink">—</a><span class="text-mute2">/</span>
+      <span class="text-ink">memory</span>
+    </div>
+  </div>
+
+  <div id="kata-header-actions" class="flex items-center gap-2.5"></div>
+</header>
+
+<!-- side nav (server context) -->
+<aside class="fixed top-16 left-0 bottom-0 w-[232px] z-40 border-r border-line backdrop-blur-md overflow-y-auto flex flex-col" style="background:rgba(13,10,8,0.6)">
+  <div class="flex flex-col items-center text-center px-4 pt-7 pb-5">
+    <div id="kata-guild-icon" class="grid place-items-center mono font-extrabold" style="width:74px;height:74px;border-radius:20px;background:linear-gradient(135deg,#5a4030,#3a2920);color:#e7c89a;font-size:22px;box-shadow:0 12px 30px rgba(0,0,0,.5);border:1px solid #4a3a2a">--</div>
+    <div id="kata-guild-name" class="text-[16px] font-bold tracking-tight text-ink mt-3.5 px-1">Đang tải…</div>
+    <div id="kata-guild-meta" class="mono text-[9.5px] text-mute mt-1.5">—</div>
+    <div class="flex items-center gap-1.5 mt-2.5">
+      <span class="dot-pulse w-1.5 h-1.5 rounded-full" style="background:#5BA868;box-shadow:0 0 7px rgba(91,168,104,.7)"></span>
+      <span class="mono text-[9px] tracking-label uppercase" style="color:#5BA868;font-weight:800">online</span>
+    </div>
+  </div>
+
+  <nav class="px-3 mono">
+    <a id="nav-overview" href="#" class="navrow flex items-center gap-3 px-3.5 py-3 rounded-[10px] mb-1 text-[10.5px] tracking-label uppercase font-extrabold text-mute hover:text-ink" style="border-left:2px solid transparent">
+      <span class="text-mute2">◰</span><span class="flex-1">overview</span>
+    </a>
+    <a id="nav-logs" href="#" class="navrow flex items-center gap-3 px-3.5 py-3 rounded-[10px] mb-1 text-[10.5px] tracking-label uppercase font-extrabold text-mute hover:text-ink" style="border-left:2px solid transparent">
+      <span class="text-mute2">✉</span><span class="flex-1">logs</span>
+    </a>
+    <a id="nav-cost" href="#" class="navrow flex items-center gap-3 px-3.5 py-3 rounded-[10px] mb-1 text-[10.5px] tracking-label uppercase font-extrabold text-mute hover:text-ink" style="border-left:2px solid transparent">
+      <span class="text-mute2">$</span><span class="flex-1">cost</span>
+    </a>
+    <a id="nav-memory" href="#" class="navrow on flex items-center gap-3 px-3.5 py-3 rounded-[10px] mb-1 text-[10.5px] tracking-label uppercase font-extrabold text-ink" style="border-left:2px solid #D4A858">
+      <span style="color:#D4A858">◈</span><span class="flex-1">memory</span><span id="nav-memory-meta" class="text-[9px] text-mute2" style="letter-spacing:0">—</span>
+    </a>
+  </nav>
+
+  <div class="flex-1"></div>
+  <div class="px-3 pb-5">
+    <a href="servers.html" class="mono flex items-center gap-2 px-3.5 py-3 rounded-[10px] text-[10.5px] tracking-label uppercase text-mute hover:text-ink" data-i18n="btn.back-servers" style="font-weight:700">← all servers</a>
+  </div>
+</aside>
+
+<!-- main content -->
+<main class="relative z-10 pt-20 pb-16 pl-[244px] pr-8">
+  <div style="max-width:1100px;margin:0 auto">
+
+    <!-- page header -->
+    <div class="flex items-end justify-between gap-6 mb-5">
+      <div>
+        <div class="mono text-[10px] uppercase tracking-kicker mb-2 flex items-center gap-3" style="color:#D4A858">
+          <span class="dot-pulse w-1.5 h-1.5 rounded-full" style="background:#5BA868"></span>
+          <span>server · user memory</span>
+        </div>
+        <h1 class="mono text-[36px] leading-none font-extrabold tracking-[-0.035em] lowercase">trí nhớ<span class="glow77" style="color:#D4A858">.</span></h1>
+        <p class="mono text-[12px] text-mute mt-2">Đặt tên khoá &amp; ghi chú tính cách cho bot · bot đọc mới mỗi tin nhắn</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <div class="relative">
+          <input id="mem-search" placeholder="tìm người dùng…" class="mono bg-bg border border-line rounded-[10px] h-9 pl-9 pr-3 w-[240px] text-[12px] text-ink placeholder:text-mute2 focus:outline-none focus:border-gold/60" />
+          <svg class="absolute left-3 top-2.5 text-mute2" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        </div>
+        <button id="mem-refresh" class="mono h-9 px-4 rounded-[10px] border border-line text-mute hover:text-ink text-[10px] tracking-label uppercase flex items-center gap-2">↻ refresh</button>
+      </div>
+    </div>
+
+    <!-- explainer -->
+    <div class="rounded-[14px] border border-line mb-5" style="background:#131010;padding:16px 20px">
+      <div class="mono text-[9.5px] tracking-label uppercase text-mute mb-2.5" style="font-weight:800">cách hoạt động</div>
+      <div class="text-[12.5px] text-mute leading-relaxed" style="max-width:760px">
+        <b class="text-ink">Tên khoá</b> — bot sẽ <b>luôn</b> gọi người này bằng đúng tên đó, đè lên tên Discord &amp; mọi biệt danh trong chat. Để trống = bỏ khoá, bot lại dùng tên Discord + tự học.
+        <br>
+        <b class="text-ink">Ghi chú tính cách</b> — bot coi đây là nguồn đáng tin nhất khi trả lời. Phần bot <b>tự học</b> từ chat (facts) vẫn tiếp tục cập nhật riêng.
+      </div>
+    </div>
+
+    <!-- count line -->
+    <div id="mem-count" class="mono text-[11px] text-mute mb-3">Đang tải…</div>
+
+    <!-- list -->
+    <div id="mem-list" class="grid grid-cols-1 gap-3"></div>
+
+    <!-- footer -->
+    <footer class="grid grid-cols-3 items-center mono text-[10px] tracking-kicker text-mute mt-14 pt-5 border-t border-line">
+      <span class="text-left">KATAS · USER MEMORY</span>
+      <span class="text-center flex items-center gap-2 justify-center"><span class="w-1.5 h-1.5 rounded-full bg-green dot-pulse"></span>STATUS · OK</span>
+      <span class="text-right">© SE77N</span>
+    </footer>
+
+  </div>
+</main>
+
+<!-- toast -->
+<div id="toast" class="fixed top-20 right-6 z-[110] pointer-events-none"></div>
+
+<script>
+const ACCENTS = ['#E04545','#D4A858','#5BA868','#7a9eb5','#9bb4ff','#c46868','#c9a653'];
+function escapeHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function getGuildId(){ return new URL(window.location.href).searchParams.get('guild'); }
+function avatarSeed(id){ const s=[...String(id||'')].reduce((a,c)=>a+c.charCodeAt(0),0); return ACCENTS[s%ACCENTS.length]; }
+function initialsOf(name){ return String(name||'').replace(/[^A-Za-z0-9À-ỹ]/g,'').slice(0,2).toUpperCase() || '??'; }
+
+function showToast(msg, kind='ok'){
+  const wrap = document.getElementById('toast');
+  const colors = { ok:'#5BA868', err:'#c46868', info:'#7a9eb5' };
+  const c = colors[kind] || colors.ok;
+  const el = document.createElement('div');
+  el.className = 'mono text-[12px] px-4 py-2.5 rounded-[10px] mb-2 pointer-events-auto';
+  el.style.cssText = `background:${c}18;border:1px solid ${c}55;color:${c};box-shadow:0 16px 40px -16px ${c}99;animation:fadeUp 200ms ease-out`;
+  el.textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(()=>{ el.style.opacity='0'; el.style.transition='opacity 200ms'; setTimeout(()=>el.remove(), 220); }, 3000);
+}
+
+let MEM_ITEMS = [];
+let EDITING = null;   // userId currently in edit mode
+let SEARCH = '';
+
+// Wire sidebar nav hrefs to carry the guild param.
+(function wireNav(){
+  const gid = getGuildId();
+  if (!gid){ window.location.href = 'servers.html'; return; }
+  const map = [['nav-overview','overview.html'],['nav-logs','logs-image.html'],['nav-cost','cost.html']];
+  for (const [id, sub] of map){
+    const el = document.getElementById(id);
+    if (el) el.href = sub + '?guild=' + encodeURIComponent(gid);
+  }
+  const bc = document.getElementById('bc-guild');
+  if (bc) bc.href = 'overview.html?guild=' + encodeURIComponent(gid);
+  document.getElementById('nav-memory')?.addEventListener('click', (e)=>e.preventDefault());
+})();
+
+// ── Guild header (name/icon) via the lite server endpoint ──────────
+async function loadGuildHeader(){
+  const gid = getGuildId();
+  // Auth chip
+  fetch('/api/auth/me', { credentials:'same-origin' }).then(r=>r.json()).then(({user})=>{
+    if (!user) return;
+    const chip = document.getElementById('kata-user-chip');
+    if (!chip) return;
+    const initial = (user.displayName || user.username || '?').slice(0,1).toUpperCase();
+    chip.innerHTML = (user.avatarUrl
+      ? `<img src="${user.avatarUrl}" alt="" style="width:26px;height:26px;border-radius:9999px;object-fit:cover;border:1px solid rgba(255,255,255,0.08)" />`
+      : `<span class="w-[26px] h-[26px] rounded-full grid place-items-center text-[11px] font-extrabold" style="background:#E0454522;color:#E04545">${initial}</span>`)
+      + `<span class="max-w-[96px] truncate">${escapeHtml(user.displayName || user.username || '—')}</span>`
+      + `<span class="text-mute text-[9px]">▾</span>`;
+  }).catch(()=>{});
+
+  let r;
+  try { r = await fetch(`/api/kata/server/${encodeURIComponent(gid)}?lite=1`, { credentials:'same-origin' }); }
+  catch { return false; }
+  if (r.status === 401 || r.status === 403 || r.status === 404) return r.status;
+  if (!r.ok) return r.status;
+  const data = await r.json();
+  const g = data.guild;
+  document.getElementById('kata-guild-name').textContent = g.name;
+  document.title = g.name + ' · trí nhớ · katas';
+  const icon = document.getElementById('kata-guild-icon');
+  if (g.iconUrl){
+    icon.innerHTML = `<img src="${g.iconUrl}" alt="" style="width:74px;height:74px;border-radius:20px;object-fit:cover" />`;
+    icon.style.background = 'transparent'; icon.style.border = 'none';
+  } else {
+    icon.textContent = initialsOf(g.name);
+    const a = avatarSeed(g.id);
+    icon.style.background = `linear-gradient(135deg,${a},${a}55)`;
+  }
+  document.getElementById('kata-guild-meta').textContent = `id · ${g.id}`;
+  const bc = document.getElementById('bc-guild');
+  if (bc) bc.textContent = g.name;
+  return true;
+}
+
+// ── Memory list ────────────────────────────────────────────────────
+async function loadMemory(){
+  const gid = getGuildId();
+  const list = document.getElementById('mem-list');
+  const count = document.getElementById('mem-count');
+  count.textContent = 'Đang tải…';
+  list.innerHTML = '';
+
+  let r;
+  try { r = await fetch(`/api/kata/server/${encodeURIComponent(gid)}/memory`, { credentials:'same-origin' }); }
+  catch { count.innerHTML = '<span class="text-err">Lỗi mạng — thử refresh.</span>'; return; }
+
+  if (r.status === 401 || r.status === 403){
+    const d = await r.json().catch(()=>({}));
+    const reason = {
+      unauthenticated:'Cần đăng nhập với Discord để xem.',
+      reauth_required:'Phiên Discord cần làm mới — đăng nhập lại.',
+      discord_required:'Chỉ tài khoản Discord mới quản lý được.',
+      forbidden:'Bạn không có quyền MANAGE_GUILD trên server này.',
+    }[d.error] || 'Không có quyền truy cập.';
+    document.querySelector('main > div').innerHTML =
+      `<div class="rounded-[14px] border border-line bg-panel p-10 text-center max-w-xl mx-auto mt-16">
+        <div class="text-[16px] font-medium text-ink mb-3">${escapeHtml(reason)}</div>
+        <a href="/api/auth/discord/start" class="mono inline-flex items-center gap-2 h-10 px-5 rounded-[10px] uppercase tracking-label text-[11px] font-bold text-bg mt-3" style="background:#5865F2">đăng nhập với Discord</a>
+        <a href="servers.html" class="mono inline-flex items-center gap-2 h-10 px-5 rounded-[10px] uppercase tracking-label text-[11px] text-mute hover:text-ink mt-3 ml-2 border border-line">← danh sách server</a>
+      </div>`;
+    return;
+  }
+  if (r.status === 404){ count.innerHTML = '<span class="text-err">Bot không có trong server này.</span>'; return; }
+  if (!r.ok){ count.innerHTML = `<span class="text-err">Lỗi tải (HTTP ${r.status}).</span>`; return; }
+
+  const data = await r.json();
+  MEM_ITEMS = data.items || [];
+  const locked = MEM_ITEMS.filter(m => m.lockedName).length;
+  const noted = MEM_ITEMS.filter(m => m.ownerNotes).length;
+  count.innerHTML = `<span class="text-ink">${data.total}</span> người dùng · <span class="text-gold">${locked}</span> đã khoá tên · <span class="text-info">${noted}</span> có ghi chú`;
+  const navMeta = document.getElementById('nav-memory-meta');
+  if (navMeta) navMeta.textContent = String(data.total);
+  renderList();
+}
+
+function factsPreview(facts, max){
+  if (!facts || !facts.length) return '<span class="text-mute2">chưa học được gì</span>';
+  const shown = facts.slice(0, max).map(f => `<span class="inline-block mono text-[10px] px-2 py-1 rounded-[6px] mr-1.5 mb-1.5" style="background:rgba(245,237,224,0.05);border:1px solid rgba(245,237,224,0.10);color:rgba(245,237,224,0.7)">${escapeHtml(f)}</span>`).join('');
+  const more = facts.length > max ? `<span class="mono text-[10px] text-mute2">+${facts.length - max} nữa</span>` : '';
+  return shown + more;
+}
+
+function cardHtml(m){
+  const accent = avatarSeed(m.userId);
+  const name = m.displayName || m.username || ('?' + m.userId.slice(-4));
+  const av = m.avatarUrl
+    ? `<img src="${m.avatarUrl}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='grid'" style="width:44px;height:44px;border-radius:12px;object-fit:cover;flex:none;border:1px solid rgba(255,255,255,0.08)" /><div style="display:none;width:44px;height:44px;border-radius:12px;background:${accent}33;place-items:center;font-size:14px;font-weight:800;color:${accent};flex:none" class="mono">${initialsOf(name)}</div>`
+    : `<div style="display:grid;width:44px;height:44px;border-radius:12px;background:${accent}33;place-items:center;font-size:14px;font-weight:800;color:${accent};flex:none" class="mono">${initialsOf(name)}</div>`;
+  const lockBadge = m.lockedName
+    ? `<span class="mono text-[9px] tracking-label uppercase px-2 py-0.5 rounded-full" style="background:#D4A85818;border:1px solid #D4A85840;color:#D4A858">🔒 ${escapeHtml(m.lockedName)}</span>` : '';
+  const noteBadge = m.ownerNotes
+    ? `<span class="mono text-[9px] tracking-label uppercase px-2 py-0.5 rounded-full" style="background:#7a9eb518;border:1px solid #7a9eb540;color:#7a9eb5">◈ ghi chú</span>` : '';
+  const editing = EDITING === m.userId;
+
+  const view = `
+    <div class="flex items-start gap-4">
+      ${av}
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2.5 flex-wrap">
+          <span class="text-[15px] font-semibold text-ink truncate">${escapeHtml(name)}</span>
+          ${m.username ? `<span class="mono text-[10.5px] text-mute">@${escapeHtml(m.username)}</span>` : ''}
+          <span class="mono text-[9px] tracking-label uppercase text-mute2">${escapeHtml(m.userId)}</span>
+          ${lockBadge}${noteBadge}
+        </div>
+        ${m.ownerNotes ? `<div class="text-[12.5px] text-mute mt-2 leading-relaxed" style="max-width:640px"><span class="mono text-[9px] tracking-label uppercase text-info mr-1.5">notes</span>${escapeHtml(m.ownerNotes)}</div>` : ''}
+        <div class="mt-2.5">
+          <div class="mono text-[9px] tracking-label uppercase text-mute2 mb-1.5">bot tự học (facts · ${m.facts.length})</div>
+          <div>${factsPreview(m.facts, 6)}</div>
+        </div>
+      </div>
+      <button data-edit="${m.userId}" class="mono text-[10px] tracking-label uppercase px-3 py-2 rounded-[9px] border border-line text-mute hover:text-ink flex-none">✎ sửa</button>
+    </div>`;
+
+  const edit = `
+    <div class="flex items-start gap-4">
+      ${av}
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2.5 flex-wrap mb-4">
+          <span class="text-[15px] font-semibold text-ink truncate">${escapeHtml(name)}</span>
+          ${m.username ? `<span class="mono text-[10.5px] text-mute">@${escapeHtml(m.username)}</span>` : ''}
+        </div>
+
+        <div class="mb-4">
+          <div class="mono text-[10px] tracking-label uppercase text-mute mb-1.5" style="font-weight:800">tên khoá</div>
+          <input data-in-name="${m.userId}" value="${escapeHtml(m.lockedName || '')}" maxlength="64" placeholder="${escapeHtml(name)}" class="w-full rounded-[10px] h-10 px-3 text-[13px] text-ink mono focus:outline-none placeholder:text-mute2" style="background:#0e0b0a;border:1px solid #2c2522" />
+          <div class="mono text-[10px] text-mute2 mt-1.5">Bot LUÔN gọi đúng tên này. Để trống = bỏ khoá, dùng tên Discord + tự học.</div>
+        </div>
+
+        <div class="mb-4">
+          <div class="mono text-[10px] tracking-label uppercase text-mute mb-1.5" style="font-weight:800">ghi chú tính cách</div>
+          <textarea data-in-notes="${m.userId}" rows="4" maxlength="500" placeholder="Mô tả tính cách / bối cảnh người này…" class="w-full rounded-[10px] p-3 text-[12.5px] text-ink mono leading-relaxed resize-y focus:outline-none placeholder:text-mute2" style="background:#0e0b0a;border:1px solid #2c2522">${escapeHtml(m.ownerNotes || '')}</textarea>
+          <div class="mono text-[10px] text-mute2 mt-1.5"><span data-notes-count="${m.userId}">${(m.ownerNotes||'').length}</span> / 500 ký tự · Bot coi đây là nguồn đáng tin nhất.</div>
+        </div>
+
+        <div class="mb-4">
+          <div class="flex items-center gap-2.5 mb-1.5">
+            <span class="mono text-[10px] tracking-label uppercase text-mute" style="font-weight:800">bot tự học (facts · ${m.facts.length})</span>
+            ${m.facts.length ? `<button data-clear-facts="${m.userId}" class="mono text-[9px] tracking-label uppercase text-err hover:text-red">✕ xoá hết facts</button>` : ''}
+          </div>
+          <div>${factsPreview(m.facts, 50)}</div>
+          <div class="mono text-[10px] text-mute2 mt-1.5">Facts do bot tự học từ chat. Dashboard không sửa tay được — chỉ xoá.</div>
+        </div>
+
+        <div class="flex items-center gap-2.5">
+          <button data-save="${m.userId}" class="mono" style="background:#D4A858;color:#0d0a08;padding:10px 22px;border-radius:10px;font-size:10px;letter-spacing:.16em;font-weight:800;text-transform:uppercase;cursor:pointer;border:none">▸ lưu</button>
+          <button data-cancel="${m.userId}" class="mono text-[10px] tracking-label uppercase px-4 py-2.5 rounded-[10px] border border-line text-mute hover:text-ink">huỷ</button>
+          <span data-status="${m.userId}" class="mono text-[11px] text-mute2"></span>
+        </div>
+      </div>
+    </div>`;
+
+  return `<div class="mem-card rounded-[14px] border ${editing ? 'border-gold/40' : 'border-line'} p-5" style="background:#131010" data-card="${m.userId}" data-name="${escapeHtml(name.toLowerCase())} ${escapeHtml((m.username||'').toLowerCase())} ${m.userId}">${editing ? edit : view}</div>`;
+}
+
+function renderList(){
+  const list = document.getElementById('mem-list');
+  const items = SEARCH
+    ? MEM_ITEMS.filter(m => {
+        const n = (m.displayName||'').toLowerCase(), u = (m.username||'').toLowerCase();
+        return n.includes(SEARCH) || u.includes(SEARCH) || m.userId.includes(SEARCH);
+      })
+    : MEM_ITEMS;
+  if (!items.length){
+    list.innerHTML = `<div class="rounded-[14px] border border-line p-8 text-center" style="background:#131010">
+      <div class="mono text-[11px] text-mute">${MEM_ITEMS.length ? 'Không có ai khớp tìm kiếm.' : 'Chưa có dữ liệu trí nhớ nào cho server này.'}</div>
+      ${MEM_ITEMS.length ? '' : '<div class="mono text-[10px] text-mute2 mt-2">Bot tạo bản ghi khi người dùng nhắn với bot.</div>'}
+    </div>`;
+    return;
+  }
+  list.innerHTML = items.map(cardHtml).join('');
+}
+
+// ── Event delegation for the (re-rendered) list ────────────────────
+document.getElementById('mem-list').addEventListener('click', async (e) => {
+  const editBtn = e.target.closest('[data-edit]');
+  if (editBtn){ EDITING = editBtn.getAttribute('data-edit'); renderList(); return; }
+
+  const cancelBtn = e.target.closest('[data-cancel]');
+  if (cancelBtn){ EDITING = null; renderList(); return; }
+
+  const clearBtn = e.target.closest('[data-clear-facts]');
+  if (clearBtn){
+    const uid = clearBtn.getAttribute('data-clear-facts');
+    if (!confirm('Xoá toàn bộ facts bot tự học của người này? (giữ nguyên tên khoá & ghi chú)')) return;
+    await clearFacts(uid);
+    return;
+  }
+
+  const saveBtn = e.target.closest('[data-save]');
+  if (saveBtn){ await saveMemory(saveBtn.getAttribute('data-save')); return; }
+});
+
+// Live char counter for the notes textarea.
+document.getElementById('mem-list').addEventListener('input', (e) => {
+  const ta = e.target.closest('[data-in-notes]');
+  if (!ta) return;
+  const uid = ta.getAttribute('data-in-notes');
+  const c = document.querySelector(`[data-notes-count="${uid}"]`);
+  if (c) c.textContent = ta.value.length;
+});
+
+async function saveMemory(uid){
+  const nameEl = document.querySelector(`[data-in-name="${uid}"]`);
+  const notesEl = document.querySelector(`[data-in-notes="${uid}"]`);
+  const status = document.querySelector(`[data-status="${uid}"]`);
+  if (!nameEl || !notesEl) return;
+  const payload = { lockedName: nameEl.value.trim(), ownerNotes: notesEl.value.trim() };
+  if (status){ status.textContent = 'Đang lưu…'; status.className = 'mono text-[11px] text-mute2'; }
+  try {
+    const r = await fetch(`/api/kata/server/${encodeURIComponent(getGuildId())}/memory/${encodeURIComponent(uid)}`, {
+      method:'PATCH', credentials:'same-origin', headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok){
+      const detail = Array.isArray(d.details) ? d.details.join('; ') : (d.error || `HTTP ${r.status}`);
+      if (status){ status.textContent = '⚠ ' + detail; status.className = 'mono text-[11px] text-err'; }
+      showToast('Lưu thất bại — ' + detail, 'err');
+      return;
+    }
+    // Patch the in-memory item and exit edit mode.
+    const idx = MEM_ITEMS.findIndex(m => m.userId === uid);
+    if (idx >= 0 && d.item) MEM_ITEMS[idx] = d.item;
+    EDITING = null;
+    renderList();
+    // Refresh the count line.
+    const locked = MEM_ITEMS.filter(m => m.lockedName).length;
+    const noted = MEM_ITEMS.filter(m => m.ownerNotes).length;
+    document.getElementById('mem-count').innerHTML = `<span class="text-ink">${MEM_ITEMS.length}</span> người dùng · <span class="text-gold">${locked}</span> đã khoá tên · <span class="text-info">${noted}</span> có ghi chú`;
+    showToast('Đã lưu — bot dùng ngay ở tin nhắn kế tiếp', 'ok');
+  } catch (err){
+    if (status){ status.textContent = '⚠ ' + (err.message || 'lỗi mạng'); status.className = 'mono text-[11px] text-err'; }
+    showToast('Lỗi mạng', 'err');
+  }
+}
+
+async function clearFacts(uid){
+  try {
+    const r = await fetch(`/api/kata/server/${encodeURIComponent(getGuildId())}/memory/${encodeURIComponent(uid)}/facts`, {
+      method:'DELETE', credentials:'same-origin',
+    });
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok){ showToast('Xoá facts thất bại — ' + (d.error || `HTTP ${r.status}`), 'err'); return; }
+    const idx = MEM_ITEMS.findIndex(m => m.userId === uid);
+    if (idx >= 0 && d.item) MEM_ITEMS[idx] = d.item;
+    renderList();
+    showToast('Đã xoá facts tự học', 'ok');
+  } catch { showToast('Lỗi mạng', 'err'); }
+}
+
+document.getElementById('mem-search').addEventListener('input', (e) => {
+  SEARCH = e.target.value.trim().toLowerCase();
+  renderList();
+});
+document.getElementById('mem-refresh').addEventListener('click', () => { EDITING = null; loadMemory(); showToast('↻ Đã tải lại', 'ok'); });
+
+(async function init(){
+  const gid = getGuildId();
+  if (!gid){ window.location.href = 'servers.html'; return; }
+  const hdr = await loadGuildHeader();
+  // If the header call already surfaced an auth/404 problem, loadMemory will
+  // render the matching message; otherwise it just fills the list.
+  await loadMemory();
+})();
+</script>
+
+</body>
+</html>
