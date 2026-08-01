@@ -784,52 +784,55 @@
 
 @media (min-width: 1600px) {
   .ks-header {
-    height: 92px;
-    padding-inline: 5vw;
+    height: 86px;
+    padding-inline: 4.5vw;
   }
 
-  .ks-brand__seal { width: 46px; height: 46px; }
-  .ks-brand strong { font-size: 20px; }
-  .ks-brand small { font-size: 9px; }
+  .ks-brand__seal { width: 42px; height: 42px; }
+  .ks-brand strong { font-size: 18px; }
+  .ks-brand small { font-size: 8px; }
   .ks-nav button,
-  .ks-nav a { padding: 11px 19px; font-size: 13px; }
-  .ks-cart-button { padding: 8px 9px 8px 20px; font-size: 13px; }
-  .ks-cart-button strong { width: 34px; height: 34px; }
+  .ks-nav a { padding: 10px 17px; font-size: 12px; }
+  .ks-cart-button { padding: 7px 8px 7px 18px; font-size: 12px; }
+  .ks-cart-button strong { width: 32px; height: 32px; }
 
   .ks-home .ks-catalog--first {
-    padding-top: clamp(74px, 5vw, 112px);
-    scroll-margin-top: 102px;
+    padding-top: clamp(66px, 4.5vw, 96px);
+    scroll-margin-top: 96px;
   }
 
   .ks-catalog {
-    padding-inline: clamp(72px, 7vw, 180px);
-    padding-bottom: 170px;
+    width: min(92vw, 1800px);
+    max-width: 1800px;
+    padding-inline: clamp(60px, 5vw, 120px);
+    padding-bottom: 154px;
   }
 
-  .ks-section-head { margin-bottom: 68px; }
+  .ks-section-head { margin-bottom: 58px; }
   .ks-section-head h2,
-  .ks-admin-panel h2 { font-size: clamp(62px, 4.2vw, 88px); }
-  .ks-kicker { font-size: 12px; }
-  .ks-filters button { padding: 14px 21px; font-size: 12px; }
-  .ks-product-grid { gap: clamp(38px, 3.4vw, 74px); }
-  .ks-product-card__body { padding-top: 30px; }
-  .ks-product-card__body > div:first-child { min-height: 78px; }
-  .ks-product-card__body p { font-size: 11px; }
-  .ks-product-card__body h3 { font-size: clamp(29px, 2.1vw, 42px); }
-  .ks-product-card__price strong { font-size: 16px; }
-  .ks-product-card__price del { font-size: 12px; }
-  .ks-product-card__foot { margin-top: 24px; padding-top: 18px; }
-  .ks-product-card__foot button { font-size: 12px; }
-  .ks-swatches span { width: 17px; height: 17px; }
+  .ks-admin-panel h2 { font-size: clamp(56px, 3.7vw, 76px); }
+  .ks-kicker { font-size: 11px; }
+  .ks-filters button { padding: 12px 18px; font-size: 11px; }
+  .ks-product-grid { gap: clamp(32px, 2.8vw, 58px); }
+  .ks-product-card__body { padding-top: 27px; }
+  .ks-product-card__body > div:first-child { min-height: 70px; }
+  .ks-product-card__body p { font-size: 10px; }
+  .ks-product-card__body h3 { font-size: clamp(26px, 1.85vw, 36px); }
+  .ks-product-card__price strong { font-size: 15px; }
+  .ks-product-card__price del { font-size: 11px; }
+  .ks-product-card__foot { margin-top: 21px; padding-top: 16px; }
+  .ks-product-card__foot button { font-size: 11px; }
+  .ks-swatches span { width: 15px; height: 15px; }
   .ks-sale-tag,
-  .ks-ship-tag { top: 18px; padding: 9px 11px; font-size: 11px; }
-  .ks-sale-tag { left: 18px; }
-  .ks-ship-tag { right: 18px; }
+  .ks-ship-tag { top: 16px; padding: 8px 10px; font-size: 10px; }
+  .ks-sale-tag { left: 16px; }
+  .ks-ship-tag { right: 16px; }
 
-  .ks-promise > * { min-height: 178px; }
-  .ks-promise strong { font-size: 35px; }
-  .ks-promise span { font-size: 14px; }
+  .ks-promise > * { min-height: 164px; }
+  .ks-promise strong { font-size: 32px; }
+  .ks-promise span { font-size: 13px; }
 }
+
 @media (max-width: 1050px) {
   .ks-header { grid-template-columns: 1fr auto; }
   .ks-nav { display: none; }
