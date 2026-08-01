@@ -238,8 +238,8 @@ function Catalog({ products, navigate, config }) {
   const shown = products.filter((product) => filter === 'all' || product.genders.includes(filter) || product.genders.includes('unisex'));
   const featured = products.find((product) => product.featured) || products[0];
   return (
-    <main>
-      <section className="ks-hero">
+    <main className="ks-home">
+      <section className="ks-hero ks-hero--closing">
         <div className="ks-hero__copy">
           <p className="ks-kicker">KATASHOP / DROP 01</p>
           <h1>Đồ mặc mỗi ngày.<br /><em>Một chút khác thường.</em></h1>
@@ -264,7 +264,7 @@ function Catalog({ products, navigate, config }) {
         )}
       </section>
 
-      <section className="ks-catalog" id="catalog">
+      <section className="ks-catalog ks-catalog--first" id="catalog">
         <div className="ks-section-head">
           <div><p className="ks-kicker">THE CURRENT EDIT</p><h2>Chọn món hợp gu</h2></div>
           <div className="ks-filters" role="group" aria-label="Lọc sản phẩm">

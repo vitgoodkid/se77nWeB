@@ -174,6 +174,24 @@
   text-transform: uppercase;
 }
 
+.ks-home {
+  display: flex;
+  flex-direction: column;
+}
+
+.ks-home .ks-catalog--first {
+  order: 1;
+  padding-top: clamp(48px, 6vw, 82px);
+  scroll-margin-top: 88px;
+}
+
+.ks-home .ks-promise {
+  order: 2;
+}
+
+.ks-home .ks-hero--closing {
+  order: 3;
+}
 .ks-hero {
   position: relative;
   min-height: min(720px, calc(100vh - 78px));
