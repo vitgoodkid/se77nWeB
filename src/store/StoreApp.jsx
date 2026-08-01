@@ -620,9 +620,9 @@ function AdminDenied({ user }) {
 function emptyProduct() {
   return {
     id: '', title: '', subtitle: '', description: '', price: 0, discountPercent: 0,
-    imageUrl: '/og.svg', genders: ['unisex'], sizes: ['One size'], sizeAdjustments: {},
+    imageUrl: '/og.svg', genders: ['unisex'], sizes: [], sizeAdjustments: {},
     freeship: false, featured: false, active: true,
-    variants: [{ id: 'default', name: 'Default', colorHex: '#d36a79', imageUrl: '/og.svg', priceOverride: null, stockBySize: { 'One size': 0 } }],
+    variants: [{ id: 'default', name: 'Default', colorHex: '#d36a79', imageUrl: '/og.svg', priceOverride: null, stockBySize: {} }],
   };
 }
 
@@ -696,14 +696,17 @@ function Orders({ orders, onStatus, onDelete }) {
 
 function ProductEditor({ product, onClose, onSaved }) {
   const [draft, setDraft] = useState(() => ({ ...product, variants: product.variants.map((variant) => ({ ...variant, stockBySize: { ...variant.stockBySize } })) }));
-  const [sizesText, setSizesText] = useState(product.sizes.join(', '));
+  const [sizeInputs, setSizeInputs] = useState(() => product.sizes.length ? [...product.sizes] : ['']);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const sizes = useMemo(() => [...new Set(sizesText.split(',').map((entry) => entry.trim()).filter(Boolean))], [sizesText]);
+  const sizes = useMemo(() => [...new Set(sizeInputs.map((entry) => entry.trim()).filter(Boolean))], [sizeInputs]);
 
   function patch(key, value) { setDraft((current) => ({ ...current, [key]: value })); }
   function patchVariant(index, key, value) { setDraft((current) => ({ ...current, variants: current.variants.map((variant, variantIndex) => variantIndex === index ? { ...variant, [key]: value } : variant) })); }
   function patchStock(index, size, value) { setDraft((current) => ({ ...current, variants: current.variants.map((variant, variantIndex) => variantIndex === index ? { ...variant, stockBySize: { ...variant.stockBySize, [size]: Math.max(0, Number(value) || 0) } } : variant) })); }
+  function patchSize(index, value) { setSizeInputs((current) => current.map((size, sizeIndex) => sizeIndex === index ? value : size)); }
+  function addSize() { setSizeInputs((current) => [...current, '']); }
+  function removeSize(index) { setSizeInputs((current) => current.length === 1 ? [''] : current.filter((_, sizeIndex) => sizeIndex !== index)); }
   async function pickImage(file, variantIndex = null) {
     if (!file) return;
     if (file.size > 2 * 1024 * 1024) return setError('Ảnh sản phẩm phải nhỏ hơn 2 MB.');
@@ -752,7 +755,7 @@ function ProductEditor({ product, onClose, onSaved }) {
         <label><span>Dòng mô tả ngắn</span><input value={draft.subtitle || ''} onChange={(event) => patch('subtitle', event.target.value)} /></label>
         <label><span>Mô tả</span><textarea rows="5" value={draft.description || ''} onChange={(event) => patch('description', event.target.value)} /></label>
         <div className="ks-editor__row"><label><span>Giá (TWD)</span><input type="number" min="0" value={draft.price} onChange={(event) => patch('price', event.target.value)} /></label><label><span>Giảm giá (%)</span><input type="number" min="0" max="95" value={draft.discountPercent} onChange={(event) => patch('discountPercent', event.target.value)} /></label></div>
-        <label><span>Size, ngăn cách bằng dấu phẩy</span><input value={sizesText} onChange={(event) => setSizesText(event.target.value)} placeholder="S, M, L, XL" /></label>
+        <div className="ks-size-editor"><div className="ks-size-editor__head"><span>Size sản phẩm</span><button type="button" onClick={addSize}>+ Thêm size</button></div><div className="ks-size-editor__entries">{sizeInputs.map((size, index) => <div className="ks-size-editor__entry" key={`${index}-${size}`}><input value={size} onChange={(event) => patchSize(index, event.target.value)} placeholder={index === 0 ? 'VD: Free size, 38, 2XL' : 'Nhập size'} /><button type="button" onClick={() => removeSize(index)} aria-label={`Xoá size ${index + 1}`}>×</button></div>)}</div><small>Tự gõ từng lựa chọn size. Có thể thêm bao nhiêu size tùy sản phẩm.</small></div>
         <label><span>URL ảnh chính</span><input value={draft.imageUrl || ''} onChange={(event) => patch('imageUrl', event.target.value)} /></label>
         <label className="ks-file ks-file--small"><input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => pickImage(event.target.files?.[0])} /><strong>Tải ảnh chính lên</strong></label>
         <div className="ks-editor__checks"><label><input type="checkbox" checked={draft.genders?.includes('men')} onChange={(event) => patch('genders', event.target.checked ? [...new Set([...(draft.genders || []), 'men'])] : draft.genders.filter((entry) => entry !== 'men'))} /> Nam</label><label><input type="checkbox" checked={draft.genders?.includes('women')} onChange={(event) => patch('genders', event.target.checked ? [...new Set([...(draft.genders || []), 'women'])] : draft.genders.filter((entry) => entry !== 'women'))} /> Nữ</label><label><input type="checkbox" checked={draft.freeship} onChange={(event) => patch('freeship', event.target.checked)} /> Free ship</label><label><input type="checkbox" checked={draft.featured} onChange={(event) => patch('featured', event.target.checked)} /> Featured</label><label><input type="checkbox" checked={draft.active} onChange={(event) => patch('active', event.target.checked)} /> Đang bán</label></div>
@@ -766,7 +769,7 @@ function ProductEditor({ product, onClose, onSaved }) {
 }
 
 function StoreFooter({ config, navigate }) {
-  return <footer className="ks-footer"><div><span className="ks-brand__seal">K</span><strong>KataShop</strong><p>Một nhánh nhỏ của se77n.</p></div><nav><button type="button" onClick={() => navigate('/store')}>Cửa hàng</button><button type="button" onClick={() => navigate('/store/admin')}>Admin</button>{config?.support?.url && <a href={config.support.url} target="_blank" rel="noreferrer">Hỗ trợ ↗</a>}</nav><small>© {new Date().getFullYear()} KATASHOP · TAIWAN</small></footer>;
+  return <footer className="ks-footer"><div><span className="ks-brand__seal">K</span><strong>KataShop</strong><p>Một nhánh nhỏ của se77n.</p></div><nav><button type="button" onClick={() => navigate('/store')}>Cửa hàng</button>{config?.admin?.allowed && <button type="button" onClick={() => navigate('/store/admin')}>Admin</button>}{config?.support?.url && <a href={config.support.url} target="_blank" rel="noreferrer">Hỗ trợ ↗</a>}</nav><small>© {new Date().getFullYear()} KATASHOP · TAIWAN</small></footer>;
 }
 
 function StoreLoading({ compact = false }) {

@@ -690,6 +690,14 @@
 .ks-checkout input, .ks-editor input, .ks-order select { height: 46px; padding: 0 13px; }
 .ks-checkout textarea, .ks-editor textarea { padding: 13px; resize: vertical; }
 .ks-checkout input:focus, .ks-checkout textarea:focus, .ks-editor input:focus, .ks-editor textarea:focus { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.ks-size-editor { display: grid; gap: 9px; }
+.ks-size-editor__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: var(--muted); font: 700 9px/1 'JetBrains Mono', monospace; letter-spacing: .1em; text-transform: uppercase; }
+.ks-size-editor__head button, .ks-size-editor__entry button { border: 1px solid var(--line); background: transparent; color: var(--ink); font: 700 9px/1 'JetBrains Mono', monospace; cursor: pointer; }
+.ks-size-editor__head button { padding: 8px 10px; }
+.ks-size-editor__entries { display: grid; gap: 7px; }
+.ks-size-editor__entry { display: grid; grid-template-columns: minmax(0, 1fr) 38px; gap: 7px; }
+.ks-size-editor__entry button { font-size: 18px; }
+.ks-size-editor small { color: var(--muted); font-size: 10px; line-height: 1.4; }
 .ks-file { position: relative; min-height: 82px; align-content: center; padding: 15px; border: 1px dashed var(--muted); background: var(--paper-2); cursor: pointer; }
 .ks-file input { position: absolute; width: 1px; height: 1px; opacity: 0; }
 .ks-file strong { font-size: 12px; font-weight: 600; }
