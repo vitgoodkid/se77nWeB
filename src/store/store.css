@@ -377,9 +377,10 @@
 .ks-featured-ticket strong { font-size: 18px; }
 
 .ks-catalog {
-  max-width: 1880px;
+  width: 100%;
+  max-width: none;
   margin: 0 auto;
-  padding: 128px clamp(28px, 6vw, 112px) 148px;
+  padding: 128px clamp(28px, 7vw, 160px) 148px;
 }
 
 .ks-section-head {
@@ -781,6 +782,54 @@
 @keyframes ks-spin { to { transform: rotate(360deg); } }
 @keyframes ks-toast-in { from { opacity: 0; transform: translate(-50%, 10px); } }
 
+@media (min-width: 1600px) {
+  .ks-header {
+    height: 92px;
+    padding-inline: 5vw;
+  }
+
+  .ks-brand__seal { width: 46px; height: 46px; }
+  .ks-brand strong { font-size: 20px; }
+  .ks-brand small { font-size: 9px; }
+  .ks-nav button,
+  .ks-nav a { padding: 11px 19px; font-size: 13px; }
+  .ks-cart-button { padding: 8px 9px 8px 20px; font-size: 13px; }
+  .ks-cart-button strong { width: 34px; height: 34px; }
+
+  .ks-home .ks-catalog--first {
+    padding-top: clamp(74px, 5vw, 112px);
+    scroll-margin-top: 102px;
+  }
+
+  .ks-catalog {
+    padding-inline: clamp(72px, 7vw, 180px);
+    padding-bottom: 170px;
+  }
+
+  .ks-section-head { margin-bottom: 68px; }
+  .ks-section-head h2,
+  .ks-admin-panel h2 { font-size: clamp(62px, 4.2vw, 88px); }
+  .ks-kicker { font-size: 12px; }
+  .ks-filters button { padding: 14px 21px; font-size: 12px; }
+  .ks-product-grid { gap: clamp(38px, 3.4vw, 74px); }
+  .ks-product-card__body { padding-top: 30px; }
+  .ks-product-card__body > div:first-child { min-height: 78px; }
+  .ks-product-card__body p { font-size: 11px; }
+  .ks-product-card__body h3 { font-size: clamp(29px, 2.1vw, 42px); }
+  .ks-product-card__price strong { font-size: 16px; }
+  .ks-product-card__price del { font-size: 12px; }
+  .ks-product-card__foot { margin-top: 24px; padding-top: 18px; }
+  .ks-product-card__foot button { font-size: 12px; }
+  .ks-swatches span { width: 17px; height: 17px; }
+  .ks-sale-tag,
+  .ks-ship-tag { top: 18px; padding: 9px 11px; font-size: 11px; }
+  .ks-sale-tag { left: 18px; }
+  .ks-ship-tag { right: 18px; }
+
+  .ks-promise > * { min-height: 178px; }
+  .ks-promise strong { font-size: 35px; }
+  .ks-promise span { font-size: 14px; }
+}
 @media (max-width: 1050px) {
   .ks-header { grid-template-columns: 1fr auto; }
   .ks-nav { display: none; }
