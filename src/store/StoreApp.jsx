@@ -77,6 +77,7 @@ export default function StoreApp() {
   const [cartOpen, setCartOpen] = useState(false);
   const [checkout, setCheckout] = useState(null);
   const [toast, setToast] = useState('');
+  const [authBusy, setAuthBusy] = useState(false);
 
   const refreshProducts = useCallback(async () => {
     const payload = await storeApi.products();
@@ -95,6 +96,14 @@ export default function StoreApp() {
       .catch((cause) => { if (live) setError(cause.message || 'Không thể tải Store.'); })
       .finally(() => { if (live) setLoading(false); });
     return () => { live = false; };
+  }, []);
+
+  useEffect(() => {
+    const refreshAuth = () => {
+      storeApi.config().then(setConfig).catch(() => {});
+    };
+    window.addEventListener('focus', refreshAuth);
+    return () => window.removeEventListener('focus', refreshAuth);
   }, []);
 
   useEffect(() => {
@@ -160,6 +169,52 @@ export default function StoreApp() {
     setCheckout({ items, source });
   }
 
+  function login(provider = 'discord') {
+    if (authBusy) return;
+    setAuthBusy(true);
+    const popup = window.open(`/api/auth/${provider}/start`, 'katashop-login', 'popup=yes,width=520,height=720');
+    if (!popup) {
+      setAuthBusy(false);
+      setToast('Trình duyệt đã chặn cửa sổ đăng nhập.');
+      return;
+    }
+    const started = Date.now();
+    const timer = window.setInterval(async () => {
+      if (popup.closed || Date.now() - started > 120000) {
+        window.clearInterval(timer);
+        setAuthBusy(false);
+        return;
+      }
+      try {
+        const next = await storeApi.config();
+        if (next.admin?.signedIn) {
+          popup.close();
+          window.clearInterval(timer);
+          setConfig(next);
+          setAuthBusy(false);
+          setToast('Đã đăng nhập');
+        }
+      } catch { /* OAuth is still in progress */ }
+    }, 1200);
+  }
+
+  async function logout() {
+    if (authBusy) return;
+    setAuthBusy(true);
+    try {
+      const response = await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+      if (!response.ok) throw new Error('Logout failed');
+      const next = await storeApi.config();
+      setConfig(next);
+      if (route.view === 'admin') navigate('/store');
+      setToast('Đã đăng xuất');
+    } catch {
+      setToast('Không thể đăng xuất. Vui lòng thử lại.');
+    } finally {
+      setAuthBusy(false);
+    }
+  }
+
   const selectedProduct = route.view === 'product'
     ? products.find((product) => product.id === route.id)
     : null;
@@ -171,6 +226,10 @@ export default function StoreApp() {
         navigate={navigate}
         cartCount={cart.reduce((sum, item) => sum + item.quantity, 0)}
         onCart={() => setCartOpen(true)}
+        config={config}
+        authBusy={authBusy}
+        onLogin={() => login('discord')}
+        onLogout={logout}
       />
 
       {loading && <StoreLoading />}
@@ -212,7 +271,8 @@ export default function StoreApp() {
   );
 }
 
-function StoreHeader({ route, navigate, cartCount, onCart }) {
+function StoreHeader({ route, navigate, cartCount, onCart, config, authBusy, onLogin, onLogout }) {
+  const auth = config?.admin;
   return (
     <header className="ks-header">
       <button className="ks-brand" type="button" onClick={() => navigate('/store')} aria-label="KataShop home">
@@ -222,13 +282,26 @@ function StoreHeader({ route, navigate, cartCount, onCart }) {
       <nav className="ks-nav" aria-label="Điều hướng cửa hàng">
         <button className={route.view === 'catalog' ? 'is-active' : ''} type="button" onClick={() => navigate('/store')}>Cửa hàng</button>
         <a href="/">se77n</a>
-        <button className={route.view === 'admin' ? 'is-active' : ''} type="button" onClick={() => navigate('/store/admin')}>Admin</button>
+        {auth?.allowed && (
+          <button className={route.view === 'admin' ? 'is-active' : ''} type="button" onClick={() => navigate('/store/admin')}>Admin</button>
+        )}
       </nav>
-      {route.view !== 'admin' ? (
-        <button className="ks-cart-button" type="button" onClick={onCart}>
-          <span>Giỏ hàng</span><strong>{cartCount}</strong>
-        </button>
-      ) : <span className="ks-admin-badge">CONTROL ROOM</span>}
+      <div className="ks-header__actions">
+        {auth && (auth.signedIn ? (
+          <button className="ks-auth-button" type="button" disabled={authBusy} onClick={onLogout}>
+            {authBusy ? 'Đang xử lý…' : 'Logout'}
+          </button>
+        ) : (
+          <button className="ks-auth-button" type="button" disabled={authBusy} onClick={onLogin}>
+            {authBusy ? 'Đang đăng nhập…' : 'Login'}
+          </button>
+        ))}
+        {route.view !== 'admin' ? (
+          <button className="ks-cart-button" type="button" onClick={onCart}>
+            <span>Giỏ hàng</span><strong>{cartCount}</strong>
+          </button>
+        ) : <span className="ks-admin-badge">CONTROL ROOM</span>}
+      </div>
     </header>
   );
 }
