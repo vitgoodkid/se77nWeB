@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import { ObjectId } from 'mongodb';
 import { getDb } from './mongo.js';
 import { readSession } from './session.js';
+import { uploadStoreImage } from './store-media.js';
 
 const PRODUCT_COLLECTION = 'storeproducts';
 const ORDER_COLLECTION = 'storeorders';
@@ -391,6 +392,14 @@ async function handleProducts(req, res) {
   return res.status(405).json({ error: 'METHOD_NOT_ALLOWED' });
 }
 
+async function handleUploads(req, res) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'METHOD_NOT_ALLOWED' });
+  await requireOwner(req);
+  const body = requestBody(req);
+  const uploaded = await uploadStoreImage({ dataUrl: body.dataUrl, fileName: body.fileName });
+  return res.status(201).json({ ok: true, ...uploaded });
+}
+
 function parseMapImage(value) {
   if (!value || typeof value !== 'object') return null;
   const dataUrl = text(value.dataUrl);
@@ -577,6 +586,7 @@ export async function handleStore(req, res) {
   try {
     if (resource === 'config') return await handleConfig(req, res);
     if (resource === 'products') return await handleProducts(req, res);
+    if (resource === 'uploads') return await handleUploads(req, res);
     if (resource === 'orders') return await handleOrders(req, res);
     return res.status(400).json({ error: 'UNKNOWN_STORE_RESOURCE' });
   } catch (error) {

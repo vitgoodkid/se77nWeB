@@ -642,8 +642,26 @@ function ProductEditor({ product, onClose, onSaved }) {
     if (!draft.title.trim()) return setError('Vui lòng nhập tên sản phẩm.');
     if (!sizes.length) return setError('Cần ít nhất một size.');
     setBusy(true); setError('');
-    const body = { ...draft, sizes, price: Number(draft.price), discountPercent: Number(draft.discountPercent), variants: draft.variants.map((variant) => ({ ...variant, priceOverride: variant.priceOverride === '' ? null : variant.priceOverride })) };
     try {
+      const uploaded = new Map();
+      async function durableImage(value, fileName) {
+        if (!/^data:image\/(png|jpe?g|webp);base64,/i.test(value || '')) return value;
+        if (uploaded.has(value)) return uploaded.get(value);
+        const result = await storeApi.uploadImage({ dataUrl: value, fileName });
+        uploaded.set(value, result.url);
+        return result.url;
+      }
+      const imageUrl = await durableImage(draft.imageUrl, `${draft.title || 'product'}-main`);
+      const variants = [];
+      for (let index = 0; index < draft.variants.length; index += 1) {
+        const variant = draft.variants[index];
+        variants.push({
+          ...variant,
+          imageUrl: await durableImage(variant.imageUrl, `${draft.title || 'product'}-${variant.name || index + 1}`),
+          priceOverride: variant.priceOverride === '' ? null : variant.priceOverride,
+        });
+      }
+      const body = { ...draft, imageUrl, sizes, price: Number(draft.price), discountPercent: Number(draft.discountPercent), variants };
       if (product.id) await storeApi.updateProduct(product.id, body); else await storeApi.createProduct(body);
       await onSaved();
     } catch (cause) { setError(cause.message || 'Không lưu được sản phẩm.'); }
