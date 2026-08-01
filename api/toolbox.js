@@ -27,7 +27,8 @@ export default async function handler(req, res) {
       case 'tech':  return await handleTech(req, res);
       case 'history': return await handleHistory(req, res);
       case 'ludo':  return await (await import('./_lib/ludo-rooms.js')).handleLudo(req, res);
-      default: return res.status(400).json({ error: 'unknown kind', hint: 'expected ?kind=short|paste|games|tech|history|ludo' });
+      case 'store': return await (await import('./_lib/store.js')).handleStore(req, res);
+      default: return res.status(400).json({ error: 'unknown kind', hint: 'expected ?kind=short|paste|games|tech|history|ludo|store' });
     }
   } catch (err) {
     console.error('[/api/toolbox]', kind, err);

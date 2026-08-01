@@ -9,6 +9,8 @@
     }
   },
   "rewrites": [
+    { "source": "/store", "destination": "/index.html" },
+    { "source": "/store/:path*", "destination": "/index.html" },
     { "source": "/api/auth/google/start", "destination": "/api/auth/google-start" },
     { "source": "/api/auth/google/callback", "destination": "/api/auth/google-callback" },
     { "source": "/api/auth/discord/start", "destination": "/api/auth/discord-start" },

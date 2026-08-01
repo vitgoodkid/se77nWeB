@@ -36,6 +36,7 @@ const MODULES = [
   { id: 'todo',   short: '07', accent: COLORS.green, icon: '✓', i18nLabel: 'nav.todo',   i18nDesc: 'feature.todo.desc' },
   { id: 'feed',   short: '08', accent: COLORS.gold,  icon: '◧', i18nLabel: 'nav.feed',   i18nDesc: 'feature.feed.desc', ownerOnly: true },
   { id: 'kata',   short: '09', accent: COLORS.red,   icon: '⌨', i18nLabel: 'nav.kata',   i18nDesc: 'feature.kata.desc' },
+  { id: 'store',  short: '10', accent: '#d36a79', icon: 'K', i18nLabel: 'nav.store', i18nDesc: 'feature.store.desc' },
 ];
 
 // Slash commands → either prefix the prompt for the chat agent (so the
@@ -221,6 +222,7 @@ function Drawer({ open, onClose, route, onNav }) {
             const active = m.id === route;
             const handleClick = () => {
               if (m.id === 'kata') { window.location.assign('/kata'); return; }
+              if (m.id === 'store') { window.location.assign('/store'); return; }
               onNav(m.id);
               onClose();
             };

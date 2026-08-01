@@ -21,6 +21,7 @@ const CryptoWatch        = lazy(() => import('./featuresB.jsx').then((m) => ({ d
 const TodoList           = lazy(() => import('./featuresB.jsx').then((m) => ({ default: m.TodoList })));
 const Feed               = lazy(() => import('./featuresB.jsx').then((m) => ({ default: m.Feed })));
 const Stylist            = lazy(() => import('./featuresC.jsx').then((m) => ({ default: m.Stylist })));
+const StoreApp           = lazy(() => import('./store/StoreApp.jsx'));
 
 const FEATURES = [
   { id: 'home',   label: 'Home',                  icon: (c) => (
@@ -37,6 +38,7 @@ const FEATURES = [
   { id: 'crypto', label: 'Currency',              icon: '$',   accent: COLORS.gold,  short: '04', desc: 'BTC · GOLD · TWD ⇄ VND' },
   { id: 'feed',   label: 'History',               icon: '◧',   accent: COLORS.gold,  short: '05', desc: 'Private AI history', ownerOnly: true },
   { id: 'kata',   label: 'KataS Dashboard',       icon: '⌨',   accent: COLORS.red,   short: '06', desc: 'Discord bot · ops · cost' },
+  { id: 'store',  label: 'KataShop', icon: 'K', accent: '#d36a79', short: '08', desc: 'Independent shop \u00b7 orders' },
   // Travel Plan, Subscription Manager and To Do now live inside Toolbox
   // (their routes 'tv4' / 'tech' / 'todo' are still rendered below).
 ];
@@ -58,6 +60,16 @@ const EXPERIMENT_NUMBER = '007';
 
 export default function App() {
   const isMobile = useMediaQuery('(max-width: 768px)');
+
+  // KataShop is part of this React build, but owns an independent path,
+  // responsive layout and visual system.
+  if (typeof window !== 'undefined' && /^\/store(?:\/|$)/.test(window.location.pathname)) {
+    return (
+      <Suspense fallback={<div style={{ padding: 40, color: COLORS.muted }} className="mono">Loading KataShop...</div>}>
+        <StoreApp />
+      </Suspense>
+    );
+  }
 
   // Public read-only share path bypasses auth + nav. Detected via ?share=<hash>.
   const shareToken = typeof window !== 'undefined'
@@ -89,6 +101,7 @@ function AppDesktop() {
     // belong to the feature module and are parsed there.
     const h = window.location.hash.replace(/^#\//, '').split('/')[0];
     if (h === 'kata') { window.location.assign('/kata'); }
+    else if (h === 'store') { window.location.assign('/store'); }
     else if (FEATURES.find((f) => f.id === h)) return h;
     // On mobile, default landing → AI chat instead of the desktop landing page.
     const mobileNow = typeof window !== 'undefined' && window.matchMedia
@@ -113,6 +126,7 @@ function AppDesktop() {
 
   function nav(to) {
     if (to === 'kata') { window.location.assign('/kata'); return; }
+    if (to === 'store') { window.location.assign('/store'); return; }
     if (to === route) return;
     setTransitioning(true);
     setTimeout(() => {
@@ -144,6 +158,7 @@ function AppDesktop() {
     const onHash = () => {
       const id = window.location.hash.replace(/^#\//, '').split('/')[0] || 'home';
       if (id === 'kata') { window.location.assign('/kata'); return; }
+      if (id === 'store') { window.location.assign('/store'); return; }
       if (FEATURES.find((f) => f.id === id) && id !== route) setRoute(id);
     };
     window.addEventListener('hashchange', onHash);

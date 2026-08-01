@@ -171,3 +171,14 @@ se77n/
 ├── vercel.json           # function config + cache headers
 └── package.json
 ```
+
+## KataShop
+
+KataShop is integrated as an independent React surface at `/store`, with
+product detail routes under `/store/product/:id` and an owner-only admin at
+`/store/admin`. It shares the se77n MongoDB connection and OAuth session.
+
+Store requests are dispatched through
+`/api/toolbox?kind=store&resource=config|products|orders` so the project stays
+within the existing Vercel function count. Configure notifications and owner
+access with the `STORE_*` variables listed in `.env.example`.

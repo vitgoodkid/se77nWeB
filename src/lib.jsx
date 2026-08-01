@@ -22,6 +22,7 @@ const I18N = {
     'nav.todo':   'To-Do List',
     'nav.feed':   'History',
     'nav.kata':   'KataS Dashboard',
+    'nav.store':  'KataShop',
 
     'feature.ai.desc':     'Chat · image · video',
     'feature.tools.desc':  'Public + private utilities',
@@ -32,6 +33,7 @@ const I18N = {
     'feature.todo.desc':   'Priorities · localStorage',
     'feature.feed.desc':   'Private AI history',
     'feature.kata.desc':   'Discord bot · ops · cost',
+    'feature.store.desc':  'Independent shop \u00b7 products \u00b7 orders',
 
     'breadcrumb.home':    'HOME',
     'breadcrumb.escHome': '← ESC · HOME',
@@ -216,6 +218,7 @@ const I18N = {
     'nav.todo':   'Việc cần làm',
     'nav.feed':   'Lịch sử',
     'nav.kata':   'KataS Dashboard',
+    'nav.store':  'KataShop',
 
     'feature.ai.desc':     'Chat · ảnh · video',
     'feature.tools.desc':  'Tiện ích công khai + riêng tư',
@@ -226,6 +229,7 @@ const I18N = {
     'feature.todo.desc':   'Ưu tiên · localStorage',
     'feature.feed.desc':   'Bảng tin AI riêng tư',
     'feature.kata.desc':   'Bot Discord · vận hành · chi phí',
+    'feature.store.desc':  'C\u1eeda h\u00e0ng \u00b7 s\u1ea3n ph\u1ea9m \u00b7 \u0111\u01a1n h\u00e0ng',
 
     'breadcrumb.home':    'TRANG CHỦ',
     'breadcrumb.escHome': '← ESC · TRANG CHỦ',
