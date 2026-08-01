@@ -238,6 +238,7 @@
       <button id="btn-refresh" class="mono h-9 px-3.5 rounded-[10px] border border-line text-mute hover:text-ink text-[10px] tracking-label uppercase" data-i18n="btn.refresh">↻ refresh</button>
     </div>
   </div>
+  <div class="mono text-[10px] text-mute2 mb-5" style="letter-spacing:.06em">retention · CostEntry / ImageGen / VideoGen / CommandHistory / AuditLog TTL 90 ngày — không có all-time</div>
 
   <!-- total + by service -->
   <section class="grid gap-[18px] mb-[18px]" style="grid-template-columns:1fr 1.4fr">
@@ -260,6 +261,15 @@
   <section class="rounded-[16px] border border-line p-6 mb-8" style="background:rgb(var(--c-panel))">
     <div class="mono text-[9.5px] tracking-label uppercase text-mute mb-3.5" style="font-weight:800">commands</div>
     <div id="bycommand-grid" class="grid" style="grid-template-columns:1fr 1fr;gap:4px 34px"></div>
+  </section>
+
+  <!-- models (CostEntry.model — includes fal chat + elevenlabs-tts-multilingual-v2) -->
+  <section class="rounded-[16px] border border-line p-6 mb-8" style="background:rgb(var(--c-panel))">
+    <div class="flex items-baseline justify-between mb-3.5">
+      <div class="mono text-[9.5px] tracking-label uppercase text-mute" style="font-weight:800">by model</div>
+      <div id="bymodel-total" class="mono text-[10px] tracking-label uppercase text-mute2">—</div>
+    </div>
+    <div id="bymodel-grid" class="grid" style="grid-template-columns:1fr 1fr;gap:4px 34px"></div>
   </section>
 </main>
 
@@ -352,7 +362,10 @@ async function loadGuildBootstrap(){
 }
 
 // Per Server Detail design: TOTAL card + BY SERVICE + COMMANDS grid.
-const SERVICE_COLORS = { fal: '#D4A858', yunwu: '#5BA868', nanogpt: '#8a7f78', '9router': '#E04545' };
+// CostEntry.service keys from the bot. Model strings (e.g. fal /
+// elevenlabs-tts-multilingual-v2, google/gemini-3.1-pro-preview) arrive via
+// byModel aggregation — no whitelist; costUSD is already logged by the bot.
+const SERVICE_COLORS = { fal: '#D4A858', yunwu: '#5BA868', nanogpt: '#8a7f78', '9router': '#E04545', openrouter: '#7a9eb5', tavily: '#8a7f78', google: '#5BA868' };
 
 function renderCostV2(data){
   // ── total ──
@@ -402,6 +415,24 @@ function renderCostV2(data){
           + '<span class="mono text-[11.5px] text-gold" style="font-weight:800">' + fmtUsd(r.cost) + '</span>'
           + '<span class="mono text-[10px] text-mute2" style="width:40px;text-align:right">· ' + r.count.toLocaleString('vi-VN') + '</span></div>'
           + '<div style="height:3px;border-radius:99px;background:rgb(var(--c-panel2));margin-top:6px;overflow:hidden"><div style="height:100%;border-radius:99px;width:' + pct + '%;background:color-mix(in srgb, #D4A858 75%, transparent)"></div></div></div>';
+      }).join('');
+
+  // ── by model (service · model) ──
+  const models = (data.byModel || []).slice().sort((a,b)=>b.cost-a.cost);
+  const maxModel = Math.max(0.0001, ...models.map(m=>m.cost));
+  document.getElementById('bymodel-total').textContent = models.length + ' models';
+  document.getElementById('bymodel-grid').innerHTML = models.length === 0
+    ? '<div class="mono text-[11px] text-mute2 py-2">Chưa có chi phí theo model</div>'
+    : models.map((m)=>{
+        const pct = Math.max(1, Math.round((m.cost / maxModel) * 100));
+        const color = SERVICE_COLORS[m.service] || '#8a7f78';
+        return '<div style="padding:8px 0"><div class="flex items-baseline" style="gap:10px">'
+          + '<span class="mono text-[10px] text-mute2" style="width:72px;flex:none">' + escapeHtml(m.service || '—') + '</span>'
+          + '<span class="mono text-[12px] text-ink" style="font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escapeHtml(m.model || '—') + '</span>'
+          + '<span class="flex-1"></span>'
+          + '<span class="mono text-[11.5px] text-gold" style="font-weight:800">' + fmtUsd(m.cost) + '</span>'
+          + '<span class="mono text-[10px] text-mute2" style="width:40px;text-align:right">· ' + m.count.toLocaleString('vi-VN') + '</span></div>'
+          + '<div style="height:3px;border-radius:99px;background:rgb(var(--c-panel2));margin-top:6px;overflow:hidden"><div style="height:100%;border-radius:99px;width:' + pct + '%;background:' + color + '"></div></div></div>';
       }).join('');
 }
 

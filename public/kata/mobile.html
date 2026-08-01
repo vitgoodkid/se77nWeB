@@ -690,7 +690,7 @@
         <span class="input" id="typed-prompt">a vietnamese pho cart at midnight, neon...</span>
       </div>
       <div class="m-chips">
-        <a href="#commands" class="m-chip">/chat</a>
+        <a href="#commands" class="m-chip">/avatar</a>
         <a href="#commands" class="m-chip">/edit</a>
         <a href="#commands" class="m-chip">/t2v</a>
         <a href="#commands" class="m-chip">/upscale</a>
@@ -912,13 +912,13 @@
     { n: '/edit',    d: 'Inpaint, sửa ảnh',           m: 'IMG' },
     { n: '/upscale', d: 'Upscale 4x',                 m: 'IMG' },
     { n: '/remix',   d: 'Variations từ seed',         m: 'IMG' },
-    { n: '/chat',    d: 'Conversation có memory',     m: 'TXT' },
+    { n: '/avatar',  d: 'Xem avatar @user',           m: 'UTIL' },
     { n: '/ask',     d: 'Q&A nhanh',                  m: 'TXT' },
     { n: '/sum',     d: 'Tóm tắt link, file',         m: 'TXT' },
     { n: '/code',    d: 'Code: explain, fix, write',  m: 'TXT' },
     { n: '/t2v',     d: 'Text-to-video 10s',          m: 'VID' },
     { n: '/i2v',     d: 'Animate ảnh tĩnh',           m: 'VID' },
-    { n: '/voice',   d: 'TTS, clone giọng',           m: 'AUD' },
+    { n: 'text_to_speech', d: 'Tool TTS ElevenLabs (VI ok)', m: 'AUD' },
     { n: '/persona', d: 'Manage characters',          m: 'SYS' },
   ];
   const host = document.getElementById('cmd-list');

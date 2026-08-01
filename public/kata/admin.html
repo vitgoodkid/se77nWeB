@@ -574,7 +574,9 @@ function logBotReply(type, r) {
 }
 
 /* ==================== GLOBAL COST ==================== */
-const SERVICE_COLORS = { fal: '#D4A858', yunwu: '#5BA868', nanogpt: '#8a7f78', '9router': '#E04545' };
+// CostEntry.service keys from the bot (CostService). Model ids are free-form
+// (e.g. fal / elevenlabs-tts-multilingual-v2) — UI aggregates whatever Mongo returns.
+const SERVICE_COLORS = { fal: '#D4A858', yunwu: '#5BA868', nanogpt: '#8a7f78', '9router': '#E04545', openrouter: '#7a9eb5', tavily: '#8a7f78', google: '#5BA868' };
 
 async function renderCost() {
   const range = params.get('range') || '30d';
@@ -582,7 +584,10 @@ async function renderCost() {
     `<button data-range="${r}" class="chip mono${r===range?' on':''}">${r.toUpperCase()}</button>`
   ).join('');
   elContent.innerHTML = `<div class="page-in">
-    <div class="flex justify-end" style="gap:6px;margin-bottom:18px">${chips}</div>
+    <div class="flex items-center justify-between" style="gap:12px;margin-bottom:18px;flex-wrap:wrap">
+      <div class="mono" style="font-size:10px;color:#57504b;letter-spacing:.08em">chi tiết cost · image · video · history chỉ giữ ≤ 90 ngày</div>
+      <div class="flex" style="gap:6px">${chips}</div>
+    </div>
     <div id="cost-body" class="mono" style="font-size:11px;color:#57504b">loading…</div>
   </div>`;
   elContent.querySelectorAll('[data-range]').forEach(b => b.addEventListener('click', () => {
@@ -693,7 +698,13 @@ const CHAT_MODELS_BY_PROVIDER = {
     'grok-4','grok-4.1','grok-4-fast',
   ],
   '9ROUTER': ['9router:kr/claude-opus-4.7'],
-  FAL: ['fal:google/gemini-3.5-flash'],
+  OPENROUTER: ['openrouter:google/gemini-2.5-flash'],
+  // Bot default chat model. fal is one-shot (no tool-call); bot may briefly
+  // fall back to openrouter:google/gemini-2.5-flash when tools are needed.
+  FAL: [
+    'fal:google/gemini-3.1-pro-preview',
+    'fal:google/gemini-3.5-flash',
+  ],
 };
 const IMAGE_MODELS_BY_PROVIDER = {
   'FAL.AI': ['fal-ai/nano-banana-pro','fal-ai/gpt-image-2','xai/grok-imagine-image/quality/text-to-image'],
@@ -706,7 +717,7 @@ const VIDEO_MODELS_BY_PROVIDER = {
     'xai/grok-imagine-video/text-to-video','xai/grok-imagine-video/image-to-video',
   ],
 };
-const PROVIDER_ACCENT = { YUNWU: '#5BA868', '9ROUTER': '#D4A858', FAL: '#a78bfa', 'FAL.AI': '#D4A858', NANOGPT: '#8a7f78' };
+const PROVIDER_ACCENT = { YUNWU: '#5BA868', '9ROUTER': '#D4A858', OPENROUTER: '#7a9eb5', FAL: '#a78bfa', 'FAL.AI': '#D4A858', NANOGPT: '#8a7f78' };
 
 const SETTINGS_FIELDS = [
   { key: 'systemPrompt', type: 'textarea', title: 'SYSTEM PROMPT', desc: 'Persona mặc định của bot trên mọi guild', rows: 7, placeholder: '(trống — bot không dùng prompt phụ)' },
@@ -844,7 +855,7 @@ async function renderSettings() {
   const data = await fetchJson('/api/kata/admin/global-config');
   if (!data) return;
   clearAuthWarn();
-  elCounts.textContent = 'Default cho mọi guild — guild muốn khác thì override trong guild drawer.';
+  elCounts.textContent = 'Global default cho mọi guild · guild drawer chỉ override persona, rate limit và channel.';
 
   ST.cfg = data.config || {};
   ST.codeDef = data.codeDefaults || {};

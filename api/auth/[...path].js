@@ -658,7 +658,7 @@ async function hydrateUsernames(kataDb, userIds) {
 
 const KATA_SERVER_CONFIG_DEFAULTS = {
   systemPrompt: '',
-  chatModel: 'grok-4-fast',
+  chatModel: 'fal:google/gemini-3.1-pro-preview',
   imageModel: 'fal-ai/nano-banana-pro',
   videoModel: 'bytedance/seedance-2.0/image-to-video',
   rateLimitPerUser: 30,
@@ -1868,7 +1868,7 @@ async function adminGlobalConfigGet(req, res, kataDb) {
     // Mirror of the bot's DEFAULT_CONFIG (apps/bot/src/services/guildConfig.ts).
     codeDefaults: {
       systemPrompt: '',
-      chatModel: 'grok-4-fast',
+      chatModel: 'fal:google/gemini-3.1-pro-preview',
       imageModel: 'fal-ai/nano-banana-pro',
       videoModel: 'bytedance/seedance-2.0/image-to-video',
       rateLimitPerUser: 30,

@@ -834,8 +834,8 @@
      * `opts.hiddenInput` and updates `opts.labelEl` text.
      *
      *   KataShell.modelPicker(buttonEl, {
-     *     byProvider: { yunwu: ['grok-4-fast', 'gemini-3.1-pro-preview'], ... },
-     *     placeholder: 'grok-4-fast',
+     *     byProvider: { yunwu: ['grok-4-fast'], fal: ['fal:google/gemini-3.1-pro-preview'], ... },
+     *     placeholder: 'fal:google/gemini-3.1-pro-preview',
      *     hiddenInput: <HTMLInputElement>,
      *     labelEl: <HTMLElement>,
      *     onApply: (value) => {},  // optional

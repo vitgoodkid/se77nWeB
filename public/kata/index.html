@@ -719,7 +719,7 @@
           <span class="enter">ENTER <kbd>↵</kbd></span>
         </div>
         <div class="chips">
-          <span class="chip">/chat</span>
+          <span class="chip">/avatar</span>
           <span class="chip">/edit</span>
           <span class="chip">/t2v</span>
           <span class="chip">/upscale</span>
@@ -907,14 +907,14 @@
     { n: '/edit',    d: 'Inpaint, outpaint, sửa ảnh có sẵn bằng mask.',     m: 'IMAGE' },
     { n: '/upscale', d: 'Upscale 4x, refine details, sharpen.',             m: 'IMAGE' },
     { n: '/remix',   d: 'Variations từ một ảnh seed.',                      m: 'IMAGE' },
-    { n: '/chat',    d: 'Conversation với memory, persona tuỳ chọn.',       m: 'TEXT'  },
+    { n: '/avatar',  d: 'Xem avatar Discord của bạn hoặc @user.',           m: 'UTIL'  },
     { n: '/ask',     d: 'Q&A nhanh, không lưu context.',                    m: 'TEXT'  },
     { n: '/sum',     d: 'Tóm tắt link, tin nhắn, file đính kèm.',           m: 'TEXT'  },
     { n: '/code',    d: 'Code assist: explain, fix, write.',                m: 'TEXT'  },
     { n: '/t2v',     d: 'Text-to-video, max 10s, 720p.',                    m: 'VIDEO' },
     { n: '/i2v',     d: 'Animate ảnh tĩnh thành clip.',                     m: 'VIDEO' },
-    { n: '/voice',   d: 'TTS, clone giọng, sub tự động.',                   m: 'AUDIO' },
-    { n: '/persona', d: 'Tạo & quản lý character cho /chat.',               m: 'SYSTEM'},
+    { n: 'text_to_speech', d: 'Tool TTS ElevenLabs multilingual, hỗ trợ tiếng Việt.', m: 'AUDIO' },
+    { n: '/persona', d: 'Tạo & quản lý character / persona cho chat.',      m: 'SYSTEM'},
   ];
   const host = document.getElementById('cmd-grid');
   if (!host) return;
