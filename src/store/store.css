@@ -377,9 +377,9 @@
 .ks-featured-ticket strong { font-size: 18px; }
 
 .ks-catalog {
-  max-width: 1600px;
+  max-width: 1880px;
   margin: 0 auto;
-  padding: 104px clamp(20px, 5vw, 80px) 124px;
+  padding: 128px clamp(28px, 6vw, 112px) 148px;
 }
 
 .ks-section-head {
@@ -387,7 +387,7 @@
   align-items: end;
   justify-content: space-between;
   gap: 28px;
-  margin-bottom: 42px;
+  margin-bottom: 54px;
 }
 
 .ks-section-head h2,
@@ -422,7 +422,7 @@
 .ks-product-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: clamp(18px, 2.4vw, 38px);
+  gap: clamp(26px, 3vw, 54px);
 }
 
 .ks-product-card {
@@ -496,7 +496,7 @@
 .ks-sale-tag { left: 14px; background: var(--rose); color: white; }
 .ks-ship-tag { right: 14px; background: var(--ink); color: var(--paper); }
 
-.ks-product-card__body { padding: 20px 2px 0; }
+.ks-product-card__body { padding: 26px 2px 0; }
 
 .ks-product-card__body > div:first-child {
   min-height: 61px;
@@ -512,7 +512,7 @@
 
 .ks-product-card__body h3 {
   margin: 0;
-  font-size: clamp(20px, 2vw, 27px);
+  font-size: clamp(23px, 2.2vw, 32px);
   font-weight: 600;
   letter-spacing: -0.04em;
 }
