@@ -672,11 +672,35 @@ function AdminWorkspace({ user, refreshPublicProducts }) {
       {loading ? <StoreLoading compact /> : tab === 'products' ? (
         <section className="ks-admin-panel">
           <div className="ks-admin-panel__head"><div><p className="ks-kicker">CATALOG</p><h2>Bộ sưu tập hiện tại</h2></div><button className="ks-button ks-button--dark" type="button" onClick={() => setEditor(emptyProduct())}>+ Thêm sản phẩm</button></div>
-          <div className="ks-admin-products">{products.map((product) => <div className="ks-admin-product" key={product.id}><ProductArt src={product.imageUrl} alt={product.title} /><div><span className={product.active ? 'is-live' : 'is-hidden'}>{product.active ? 'Đang bán' : 'Đang ẩn'}</span><h3>{product.title}</h3><p>{product.variants.length} mẫu · {product.totalStock} sản phẩm · {money(product.minPrice)}</p></div><div><button type="button" onClick={() => setEditor(product)}>Sửa</button><button className="is-danger" type="button" onClick={() => removeProduct(product)}>Xoá</button></div></div>)}</div>
+          <div className="ks-admin-products">{products.map((product) => <AdminProductRow key={product.id} product={product} onEdit={() => setEditor(product)} onDelete={() => removeProduct(product)} />)}</div>
         </section>
       ) : <Orders orders={orders} onStatus={updateStatus} onDelete={removeOrder} />}
       {editor && <ProductEditor product={editor} onClose={() => setEditor(null)} onSaved={async () => { setEditor(null); await load(); await refreshPublicProducts(); }} />}
     </main>
+  );
+}
+
+function AdminProductRow({ product, onEdit, onDelete }) {
+  const previews = product.variants?.length
+    ? product.variants
+    : [{ id: 'product-main', name: 'Ảnh chính', imageUrl: product.imageUrl }];
+  return (
+    <article className="ks-admin-product">
+      <div className="ks-admin-product__previews">
+        {previews.map((variant, index) => (
+          <div className="ks-admin-product__preview" key={variant.id || `${variant.name}-${index}`}>
+            <ProductArt src={variant.imageUrl || product.imageUrl} alt={`${product.title} — ${variant.name || `Mẫu ${index + 1}`}`} />
+            <small>{variant.name || `Mẫu ${index + 1}`}</small>
+          </div>
+        ))}
+      </div>
+      <div className="ks-admin-product__info">
+        <span className={product.active ? 'is-live' : 'is-hidden'}>{product.active ? 'Đang bán' : 'Đang ẩn'}</span>
+        <h3>{product.title}</h3>
+        <p>{previews.length} mẫu · {product.totalStock} sản phẩm · {money(product.minPrice)}</p>
+      </div>
+      <div className="ks-admin-product__actions"><button type="button" onClick={onEdit}>Sửa</button><button className="is-danger" type="button" onClick={onDelete}>Xoá</button></div>
+    </article>
   );
 }
 
