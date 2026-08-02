@@ -618,7 +618,17 @@
 }
 
 .ks-detail__media { position: sticky; top: 118px; }
-.ks-detail__media > .ks-art { min-height: 650px; aspect-ratio: 4 / 5; border: 1px solid var(--line); }
+.ks-product-gallery { display: grid; gap: 12px; }
+.ks-product-gallery__stage { position: relative; overflow: hidden; touch-action: pan-y; }
+.ks-product-gallery__stage .ks-art { min-height: 650px; aspect-ratio: 4 / 5; border: 1px solid var(--line); }
+.ks-gallery-nav { position: absolute; z-index: 5; top: 50%; width: 46px; height: 46px; border: 1px solid rgba(246,240,230,.72); border-radius: 50%; background: rgba(32,27,25,.72); color: var(--paper); font-size: 22px; cursor: pointer; transform: translateY(-50%); }
+.ks-gallery-nav--prev { left: 16px; }
+.ks-gallery-nav--next { right: 16px; }
+.ks-gallery-count { position: absolute; z-index: 5; right: 14px; bottom: 14px; padding: 8px 10px; background: rgba(32,27,25,.72); color: var(--paper); font: 700 9px/1 'JetBrains Mono', monospace; }
+.ks-gallery-thumbs { display: flex; gap: 9px; overflow-x: auto; padding-bottom: 3px; scrollbar-width: thin; }
+.ks-gallery-thumbs button { flex: 0 0 76px; height: 92px; padding: 0; overflow: hidden; border: 1px solid var(--line); background: transparent; cursor: pointer; opacity: .62; }
+.ks-gallery-thumbs button.is-active { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); opacity: 1; }
+.ks-gallery-thumbs img { width: 100%; height: 100%; object-fit: cover; }
 .ks-detail__stamp { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--line); font: 700 9px/1 'JetBrains Mono', monospace; letter-spacing: .14em; }
 
 .ks-detail__info { padding-top: 26px; }
@@ -789,6 +799,15 @@
 .ks-image-field__preview .ks-art__mark { font-size: 62px; }
 .ks-image-field__controls { display: grid; align-content: start; gap: 10px; }
 .ks-image-field__controls a { width: max-content; color: var(--ink); font: 700 9px/1 'JetBrains Mono', monospace; text-decoration: underline; text-underline-offset: 3px; }
+.ks-gallery-editor { display: grid; gap: 13px; padding: 15px; border: 1px solid var(--line); background: var(--paper-2); }
+.ks-gallery-editor__head { display: flex; align-items: end; justify-content: space-between; gap: 14px; }
+.ks-gallery-editor__head > div { display: grid; gap: 5px; }
+.ks-gallery-editor__head span { color: var(--muted); font: 700 9px/1 'JetBrains Mono', monospace; letter-spacing: .1em; text-transform: uppercase; }
+.ks-gallery-editor__head small, .ks-gallery-editor__empty { margin: 0; color: var(--muted); font-size: 10px; line-height: 1.4; }
+.ks-gallery-editor__head button, .ks-gallery-editor__remove { padding: 8px 10px; border: 1px solid var(--line); background: transparent; font: 700 9px/1 'JetBrains Mono', monospace; cursor: pointer; }
+.ks-gallery-editor__items { display: grid; gap: 12px; }
+.ks-gallery-editor__item { position: relative; }
+.ks-gallery-editor__remove { position: absolute; z-index: 3; top: 8px; right: 8px; border-color: rgba(168,66,83,.55); background: var(--paper); color: #a84253; }
 .ks-file--small { min-height: 44px; padding: 10px 13px; }
 .ks-editor__variants { display: block !important; }
 .ks-editor__variants-head { display: flex; justify-content: space-between; align-items: end; margin-bottom: 14px; }
@@ -886,7 +905,7 @@
   .ks-promise { grid-template-columns: repeat(3, 1fr); }
   .ks-promise .ks-kicker { grid-column: 1 / -1; min-height: auto; }
   .ks-detail__grid { grid-template-columns: minmax(0, 1fr) minmax(360px, .9fr); gap: 45px; }
-  .ks-detail__media > .ks-art { min-height: 520px; }
+  .ks-product-gallery__stage .ks-art { min-height: 520px; }
   .ks-admin__hero { display: grid; }
   .ks-admin__stats { justify-self: stretch; }
   .ks-orders { grid-template-columns: 1fr; }
@@ -921,7 +940,9 @@
   .ks-detail { padding: 30px 16px 70px; }
   .ks-detail__grid { display: block; }
   .ks-detail__media { position: static; }
-  .ks-detail__media > .ks-art { min-height: 0; aspect-ratio: 4 / 5; }
+  .ks-product-gallery__stage .ks-art { min-height: 0; aspect-ratio: 4 / 5; }
+  .ks-gallery-nav { width: 40px; height: 40px; }
+  .ks-gallery-thumbs button { flex-basis: 62px; height: 76px; }
   .ks-detail__info { padding-top: 45px; }
   .ks-detail__info h1 { font-size: 52px; }
   .ks-color-options { grid-template-columns: 1fr; }

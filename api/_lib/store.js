@@ -167,6 +167,7 @@ function normalizeProduct(raw = {}, existing = {}) {
   const sizes = list(source.sizes, 16, 32);
   if (!sizes.length) sizes.push('One size');
   const productImage = imageUrl(source.imageUrl, existing.imageUrl || DEFAULT_PRODUCT_IMAGE);
+  const galleryImages = list(source.galleryImages, 12, MAX_PRODUCT_IMAGE_BYTES * 2).map((entry) => imageUrl(entry, '')).filter(Boolean);
   const inputVariants = Array.isArray(source.variants) && source.variants.length
     ? source.variants
     : legacyVariants(source, sizes, productImage);
@@ -182,6 +183,7 @@ function normalizeProduct(raw = {}, existing = {}) {
     price: money(source.price),
     discountPercent: percent(source.discountPercent),
     imageUrl: productImage,
+    galleryImages,
     genders: list(source.genders, 4, 20).filter((entry) => ['men', 'women', 'unisex'].includes(entry)),
     sizes,
     sizeAdjustments,

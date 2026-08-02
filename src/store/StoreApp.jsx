@@ -389,6 +389,36 @@ function ProductCard({ product, index, navigate }) {
   );
 }
 
+function ProductGallery({ product, variant }) {
+  const images = useMemo(() => [...new Set([
+    variant?.imageUrl,
+    product.imageUrl,
+    ...(product.galleryImages || []),
+  ].filter(Boolean))], [product.galleryImages, product.imageUrl, variant?.imageUrl]);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const swipeStart = useRef(null);
+
+  useEffect(() => setActiveIndex(0), [variant?.id, product.id]);
+  const move = (direction) => setActiveIndex((current) => (current + direction + images.length) % images.length);
+  const onTouchStart = (event) => { swipeStart.current = event.touches[0]?.clientX ?? null; };
+  const onTouchEnd = (event) => {
+    const start = swipeStart.current;
+    const end = event.changedTouches[0]?.clientX;
+    swipeStart.current = null;
+    if (start === null || end === undefined || Math.abs(end - start) < 42) return;
+    move(end < start ? 1 : -1);
+  };
+
+  return (
+    <div className="ks-product-gallery">
+      <div className="ks-product-gallery__stage" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+        <ProductArt src={images[activeIndex]} alt={`${product.title} — ảnh ${activeIndex + 1}`} />
+        {images.length > 1 && <><button className="ks-gallery-nav ks-gallery-nav--prev" type="button" onClick={() => move(-1)} aria-label="Ảnh trước">←</button><button className="ks-gallery-nav ks-gallery-nav--next" type="button" onClick={() => move(1)} aria-label="Ảnh sau">→</button><span className="ks-gallery-count">{activeIndex + 1} / {images.length}</span></>}
+      </div>
+      {images.length > 1 && <div className="ks-gallery-thumbs" aria-label="Chọn ảnh sản phẩm">{images.map((src, index) => <button className={index === activeIndex ? 'is-active' : ''} type="button" onClick={() => setActiveIndex(index)} key={src}><img src={src} alt={`Ảnh ${index + 1}`} /></button>)}</div>}
+    </div>
+  );
+}
 function ProductDetail({ product, navigate, addToCart, beginCheckout }) {
   const firstVariant = product.variants.find((variant) => variant.hasStock) || product.variants[0];
   const [variantId, setVariantId] = useState(firstVariant?.id || '');
@@ -425,7 +455,7 @@ function ProductDetail({ product, navigate, addToCart, beginCheckout }) {
       <button className="ks-back" type="button" onClick={() => navigate('/store')}>← Trở lại bộ sưu tập</button>
       <div className="ks-detail__grid">
         <div className="ks-detail__media">
-          <ProductArt src={variant?.imageUrl || product.imageUrl} alt={`${product.title} — ${variant?.name}`} />
+          <ProductGallery product={product} variant={variant} />
           <div className="ks-detail__stamp"><span>KATA</span><strong>{product.id.slice(0, 12).toUpperCase()}</strong></div>
         </div>
         <section className="ks-detail__info">
@@ -620,7 +650,7 @@ function AdminDenied({ user }) {
 function emptyProduct() {
   return {
     id: '', title: '', subtitle: '', description: '', price: 0, discountPercent: 0,
-    imageUrl: '/og.svg', genders: ['unisex'], sizes: [], sizeAdjustments: {},
+    imageUrl: '/og.svg', galleryImages: [], genders: ['unisex'], sizes: [], sizeAdjustments: {},
     freeship: false, featured: false, active: true,
     variants: [{ id: 'default', name: 'Default', colorHex: '#d36a79', imageUrl: '/og.svg', priceOverride: null, stockBySize: {} }],
   };
@@ -734,6 +764,7 @@ function ImageField({ label, value, onChange, onPick, uploadLabel }) {
 function ProductEditor({ product, onClose, onSaved }) {
   const [draft, setDraft] = useState(() => ({ ...product, variants: product.variants.map((variant) => ({ ...variant, stockBySize: { ...variant.stockBySize } })) }));
   const [sizeInputs, setSizeInputs] = useState(() => product.sizes.length ? [...product.sizes] : ['']);
+  const [galleryImages, setGalleryImages] = useState(() => [...(product.galleryImages || [])]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const sizes = useMemo(() => [...new Set(sizeInputs.map((entry) => entry.trim()).filter(Boolean))], [sizeInputs]);
@@ -744,11 +775,19 @@ function ProductEditor({ product, onClose, onSaved }) {
   function patchSize(index, value) { setSizeInputs((current) => current.map((size, sizeIndex) => sizeIndex === index ? value : size)); }
   function addSize() { setSizeInputs((current) => [...current, '']); }
   function removeSize(index) { setSizeInputs((current) => current.length === 1 ? [''] : current.filter((_, sizeIndex) => sizeIndex !== index)); }
+  function patchGalleryImage(index, value) { setGalleryImages((current) => current.map((image, imageIndex) => imageIndex === index ? value : image)); }
+  function addGalleryImage() { setGalleryImages((current) => [...current, '']); }
+  function removeGalleryImage(index) { setGalleryImages((current) => current.filter((_, imageIndex) => imageIndex !== index)); }
   async function pickImage(file, variantIndex = null) {
     if (!file) return;
     if (file.size > 2 * 1024 * 1024) return setError('Ảnh sản phẩm phải nhỏ hơn 2 MB.');
     const url = await fileToDataUrl(file);
     if (variantIndex === null) patch('imageUrl', url); else patchVariant(variantIndex, 'imageUrl', url);
+  }
+  async function pickGalleryImage(file, index) {
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) return setError('Ảnh sản phẩm phải nhỏ hơn 2 MB.');
+    patchGalleryImage(index, await fileToDataUrl(file));
   }
   async function save(event) {
     event.preventDefault();
@@ -765,6 +804,11 @@ function ProductEditor({ product, onClose, onSaved }) {
         return result.url;
       }
       const imageUrl = await durableImage(draft.imageUrl, `${draft.title || 'product'}-main`);
+      const durableGalleryImages = [];
+      for (let index = 0; index < galleryImages.length; index += 1) {
+        const image = galleryImages[index];
+        if (image) durableGalleryImages.push(await durableImage(image, `${draft.title || 'product'}-gallery-${index + 1}`));
+      }
       const variants = [];
       for (let index = 0; index < draft.variants.length; index += 1) {
         const variant = draft.variants[index];
@@ -774,7 +818,7 @@ function ProductEditor({ product, onClose, onSaved }) {
           priceOverride: variant.priceOverride === '' ? null : variant.priceOverride,
         });
       }
-      const body = { ...draft, imageUrl, sizes, price: Number(draft.price), discountPercent: Number(draft.discountPercent), variants };
+      const body = { ...draft, imageUrl, galleryImages: durableGalleryImages, sizes, price: Number(draft.price), discountPercent: Number(draft.discountPercent), variants };
       if (product.id) await storeApi.updateProduct(product.id, body); else await storeApi.createProduct(body);
       await onSaved();
     } catch (cause) { setError(cause.message || 'Không lưu được sản phẩm.'); }
@@ -792,8 +836,9 @@ function ProductEditor({ product, onClose, onSaved }) {
         <label><span>Dòng mô tả ngắn</span><input value={draft.subtitle || ''} onChange={(event) => patch('subtitle', event.target.value)} /></label>
         <label><span>Mô tả</span><textarea rows="5" value={draft.description || ''} onChange={(event) => patch('description', event.target.value)} /></label>
         <div className="ks-editor__row"><label><span>Giá (TWD)</span><input type="number" min="0" value={draft.price} onChange={(event) => patch('price', event.target.value)} /></label><label><span>Giảm giá (%)</span><input type="number" min="0" max="95" value={draft.discountPercent} onChange={(event) => patch('discountPercent', event.target.value)} /></label></div>
-        <div className="ks-size-editor"><div className="ks-size-editor__head"><span>Size sản phẩm</span><button type="button" onClick={addSize}>+ Thêm size</button></div><div className="ks-size-editor__entries">{sizeInputs.map((size, index) => <div className="ks-size-editor__entry" key={`${index}-${size}`}><input value={size} onChange={(event) => patchSize(index, event.target.value)} placeholder={index === 0 ? 'VD: Free size, 38, 2XL' : 'Nhập size'} /><button type="button" onClick={() => removeSize(index)} aria-label={`Xoá size ${index + 1}`}>×</button></div>)}</div><small>Tự gõ từng lựa chọn size. Có thể thêm bao nhiêu size tùy sản phẩm.</small></div>
+        <div className="ks-size-editor"><div className="ks-size-editor__head"><span>Size sản phẩm</span><button type="button" onClick={addSize}>+ Thêm size</button></div><div className="ks-size-editor__entries">{sizeInputs.map((size, index) => <div className="ks-size-editor__entry" key={index}><input value={size} onChange={(event) => patchSize(index, event.target.value)} placeholder={index === 0 ? 'VD: Free size, 38, 2XL' : 'Nhập size'} /><button type="button" onClick={() => removeSize(index)} aria-label={`Xoá size ${index + 1}`}>×</button></div>)}</div><small>Tự gõ từng lựa chọn size. Có thể thêm bao nhiêu size tùy sản phẩm.</small></div>
         <ImageField label="Ảnh chính" value={draft.imageUrl} onChange={(value) => patch('imageUrl', value)} onPick={(file) => pickImage(file)} uploadLabel="Tải ảnh chính lên" />
+        <div className="ks-gallery-editor"><div className="ks-gallery-editor__head"><div><span>Ảnh bổ sung</span><small>Khách có thể vuốt hoặc bấm để xem.</small></div><button type="button" onClick={addGalleryImage}>+ Thêm ảnh</button></div>{galleryImages.length ? <div className="ks-gallery-editor__items">{galleryImages.map((image, index) => <div className="ks-gallery-editor__item" key={index}><ImageField label={`Ảnh bổ sung ${index + 1}`} value={image} onChange={(value) => patchGalleryImage(index, value)} onPick={(file) => pickGalleryImage(file, index)} uploadLabel="Tải ảnh lên" /><button className="ks-gallery-editor__remove" type="button" onClick={() => removeGalleryImage(index)}>Xoá ảnh</button></div>)}</div> : <p className="ks-gallery-editor__empty">Chưa có ảnh bổ sung.</p>}</div>
         <div className="ks-editor__checks"><label><input type="checkbox" checked={draft.genders?.includes('men')} onChange={(event) => patch('genders', event.target.checked ? [...new Set([...(draft.genders || []), 'men'])] : draft.genders.filter((entry) => entry !== 'men'))} /> Nam</label><label><input type="checkbox" checked={draft.genders?.includes('women')} onChange={(event) => patch('genders', event.target.checked ? [...new Set([...(draft.genders || []), 'women'])] : draft.genders.filter((entry) => entry !== 'women'))} /> Nữ</label><label><input type="checkbox" checked={draft.freeship} onChange={(event) => patch('freeship', event.target.checked)} /> Free ship</label><label><input type="checkbox" checked={draft.featured} onChange={(event) => patch('featured', event.target.checked)} /> Featured</label><label><input type="checkbox" checked={draft.active} onChange={(event) => patch('active', event.target.checked)} /> Đang bán</label></div>
       </section><section className="ks-editor__variants"><div className="ks-editor__variants-head"><div><p className="ks-kicker">VARIANTS</p><h3>Phân loại và tồn kho</h3></div><button type="button" onClick={addVariant}>+ Thêm mẫu</button></div>
         {draft.variants.map((variant, index) => <div className="ks-variant-editor" key={`${variant.id}-${index}`}><div className="ks-variant-editor__head"><span style={{ background: variant.colorHex }} /><strong>Mẫu {index + 1}</strong>{draft.variants.length > 1 && <button type="button" onClick={() => setDraft((current) => ({ ...current, variants: current.variants.filter((_, variantIndex) => variantIndex !== index) }))}>Xoá</button>}</div><div className="ks-editor__row"><label><span>Tên mẫu</span><input value={variant.name} onChange={(event) => patchVariant(index, 'name', event.target.value)} /></label><label><span>Màu</span><input type="color" value={variant.colorHex} onChange={(event) => patchVariant(index, 'colorHex', event.target.value)} /></label></div><ImageField label={`Ảnh mẫu ${index + 1}`} value={variant.imageUrl} onChange={(value) => patchVariant(index, 'imageUrl', value)} onPick={(file) => pickImage(file, index)} uploadLabel="Tải ảnh mẫu lên" /><div className="ks-stock-grid">{sizes.map((size) => <label key={size}><span>{size}</span><input type="number" min="0" value={variant.stockBySize?.[size] || 0} onChange={(event) => patchStock(index, size, event.target.value)} /></label>)}</div></div>)}
