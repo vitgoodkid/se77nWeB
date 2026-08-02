@@ -1858,6 +1858,8 @@ function ImageConverterTool({ accent }) {
   const [busy, setBusy] = useState(false);
   const [stage, setStage] = useState('');
   const [err, setErr] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
+  const [urlBusy, setUrlBusy] = useState(false);
 
   // Crop state — null = no crop applied. cropRect is normalized 0..1.
   const [cropOpen, setCropOpen] = useState(false);
@@ -1877,38 +1879,60 @@ function ImageConverterTool({ accent }) {
     return 'png';
   }
 
-  function onFile(e) {
-    const f = e.target.files?.[0];
+  function loadFile(f) {
     if (!f) return;
     const fmt = detectFmt(f.name, f.type);
     const reader = new FileReader();
     reader.onload = (ev) => {
-      const url = ev.target.result;
+      const dataUrl = ev.target.result;
       const img = new Image();
-      img.onload = () => {
-        setSrc({ name: f.name, size: f.size, file: f, dataUrl: url, w: img.width, h: img.height });
-      };
-      // Browsers render the first frame of animated GIF / WebP into <img>,
-      // which is enough for the cropper preview.
-      img.src = url;
+      img.onload = () => setSrc({ name: f.name, size: f.size, file: f, dataUrl, w: img.width, h: img.height });
+      img.onerror = () => setErr('This link does not point to a usable image.');
+      img.src = dataUrl;
     };
     reader.readAsDataURL(f);
+    if (fmt === 'gif') setTarget('webp');
+    else if (fmt === 'webp') setTarget('gif');
+    else setTarget('webp');
     setSrcFmt(fmt);
-    // Pick a sensible default target: GIF→WebP, WebP→GIF, otherwise WebP
-    // (or PNG if source is already WebP).
-    if (fmt === 'gif')        setTarget('webp');
-    else if (fmt === 'webp')  setTarget('gif');
-    else                      setTarget('webp');
     setCropRect(null);
     setCropOpen(false);
     setErr(''); setStage('');
   }
 
-  // Click swap → exchange source ↔ target. We can't change the *source
-  // file* the user uploaded, so swap means: keep the file, but make the
-  // *converted output* match what was previously the source format
-  // (effectively the inverse direction). Visually the SRC → TGT chip
-  // flips — useful when you want to undo a target choice quickly.
+  function onFile(e) {
+    loadFile(e.target.files?.[0]);
+  }
+
+  async function loadImageUrl() {
+    const raw = imageUrl.trim();
+    if (!raw) return;
+    let parsed;
+    try {
+      parsed = new URL(raw);
+      if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error('invalid protocol');
+    } catch {
+      setErr('Paste a direct http(s) image link.');
+      return;
+    }
+    setUrlBusy(true); setErr(''); setStage('Loading image link...');
+    try {
+      const response = await fetch(parsed.toString());
+      if (!response.ok) throw new Error(`The image host returned ${response.status}.`);
+      const blob = await response.blob();
+      const mime = (blob.type || response.headers.get('content-type') || '').split(';')[0].toLowerCase();
+      if (!mime.startsWith('image/')) throw new Error('That link does not point to an image.');
+      const ext = mime === 'image/jpeg' ? 'jpg' : (mime.split('/')[1] || 'png');
+      const fromPath = decodeURIComponent(parsed.pathname.split('/').pop() || 'image').replace(/[^a-z0-9._-]/gi, '-');
+      const name = /\.[a-z0-9]+$/i.test(fromPath) ? fromPath : `${fromPath || 'image'}.${ext}`;
+      loadFile(new File([blob], name, { type: mime }));
+      setImageUrl('');
+    } catch (error) {
+      setErr(error?.message || 'Could not load this image link. Make sure it is a direct image URL that allows access.');
+    } finally {
+      setUrlBusy(false); setStage('');
+    }
+  }
   function swap() {
     setSrcFmt(target);
     setTarget(srcFmt);
@@ -2036,10 +2060,24 @@ function ImageConverterTool({ accent }) {
 
   return (
     <div style={{ display: 'grid', gap: 16 }}>
-      <Kicker>UPLOAD IMAGE</Kicker>
+      <Kicker>IMAGE SOURCE</Kicker>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', gap: 9 }}>
+        <Field
+          value={imageUrl}
+          onChange={setImageUrl}
+          onKeyDown={(event) => { if (event.key === 'Enter') loadImageUrl(); }}
+          placeholder="Paste a direct image link (https://...)"
+        />
+        <Btn variant="solid" color={accent} onClick={loadImageUrl} disabled={!imageUrl.trim() || urlBusy}>
+          {urlBusy ? 'Loading...' : 'Use link'}
+        </Btn>
+      </div>
+      <div className="mono" style={{ fontSize: 10, color: COLORS.muted, letterSpacing: '0.06em', marginTop: -7 }}>
+        Paste an image URL to convert it. Browsing from this device is optional.
+      </div>
       <label style={{
-        padding: 32, textAlign: 'center', borderRadius: 12,
-        border: `2px dashed ${COLORS.line}`, cursor: 'pointer', background: COLORS.bg,
+        padding: 24, textAlign: 'center', borderRadius: 12,
+        border: `1px dashed ${COLORS.line}`, cursor: 'pointer', background: COLORS.bg,
       }}>
         <input type="file" accept="image/*,.gif,.webp" onChange={onFile} style={{ display: 'none' }} />
         {src ? (
@@ -2048,15 +2086,14 @@ function ImageConverterTool({ accent }) {
             <div style={{ textAlign: 'left' }}>
               <div className="mono" style={{ fontSize: 12, fontWeight: 700 }}>{src.name}</div>
               <div className="mono" style={{ fontSize: 10, color: COLORS.muted, marginTop: 4 }}>
-                {(src.size / 1024).toFixed(1)} KB · {src.w}×{src.h}{cropRect ? ` → ${Math.round(cropRect.w * src.w)}×${Math.round(cropRect.h * src.h)}` : ''}
+                {(src.size / 1024).toFixed(1)} KB - {src.w}x{src.h}{cropRect ? ` -> ${Math.round(cropRect.w * src.w)}x${Math.round(cropRect.h * src.h)}` : ''}
               </div>
             </div>
           </div>
         ) : (
           <div>
-            <div style={{ fontSize: 28, color: COLORS.muted, marginBottom: 8 }}>◐</div>
-            <div className="mono" style={{ fontSize: 12, color: COLORS.muted, letterSpacing: '0.1em' }}>
-              CLICK TO BROWSE
+            <div className="mono" style={{ fontSize: 11, color: COLORS.muted, letterSpacing: '0.1em' }}>
+              OR BROWSE DEVICE
             </div>
           </div>
         )}
