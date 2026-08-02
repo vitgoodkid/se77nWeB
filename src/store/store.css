@@ -577,7 +577,7 @@
 .ks-product-card__quick-actions { display: grid; grid-template-columns: minmax(100px, .8fr) minmax(0, 1.65fr); gap: 9px; margin-top: 14px; }
 .ks-product-card__quick-actions button { min-height: 48px; border-radius: 999px; font: 800 11px/1 'JetBrains Mono', monospace; cursor: pointer; }
 .ks-quick-cart,
-.ks-quick-buy { border: 1px solid var(--ink); background: var(--ink); color: white; }
+.ks-quick-buy { border: 1px solid var(--ink); background: var(--ink); color: #fff !important; }
 .ks-swatches { display: flex; gap: 6px; }
 .ks-swatches span { width: 14px; height: 14px; border: 1px solid rgba(32,27,25,.25); border-radius: 50%; }
 
@@ -892,7 +892,7 @@
   .ks-section-head h2,
   .ks-admin-panel h2 { font-size: clamp(56px, 3.7vw, 76px); }
   .ks-kicker { font-size: 11px; }
-  .ks-filters button { padding: 17px 27px; font-size: 15px; }
+  .ks-filters button { padding: 19px 31px; font-size: 17px; }
   .ks-product-grid { gap: clamp(32px, 2.8vw, 58px); }
   .ks-product-card__body { padding-top: 27px; }
   .ks-product-card__body > div:first-child { min-height: 70px; }
