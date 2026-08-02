@@ -15,6 +15,12 @@ function money(value) {
   return `${Math.round(Number(value) || 0).toLocaleString('zh-TW')} TWD`;
 }
 
+function moneyRange(minValue, maxValue = minValue) {
+  const min = Math.round(Number(minValue) || 0);
+  const max = Math.round(Number(maxValue) || 0);
+  if (min === max) return money(min);
+  return `${min.toLocaleString('zh-TW')} ~ ${max.toLocaleString('zh-TW')} TWD`;
+}
 function readCart() {
   try {
     const parsed = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
@@ -332,7 +338,7 @@ function Catalog({ products, navigate, config }) {
           <button className="ks-featured-ticket" type="button" onClick={() => navigate(`/store/product/${encodeURIComponent(featured.id)}`)}>
             <span>FEATURED</span>
             <strong>{featured.title}</strong>
-            <small>{money(featured.minPrice)}</small>
+            <small>{moneyRange(featured.minPrice, featured.maxPrice)}</small>
           </button>
         )}
       </section>
@@ -375,8 +381,8 @@ function ProductCard({ product, index, navigate }) {
       <div className="ks-product-card__body">
         <div><p>{product.subtitle || 'KataShop edition'}</p><h3>{product.title}</h3></div>
         <div className="ks-product-card__price">
-          <strong>{money(product.minPrice)}</strong>
-          {product.discountPercent > 0 && <del>{money(product.price)}</del>}
+          <strong>{moneyRange(product.minPrice, product.maxPrice)}</strong>
+          {product.discountPercent > 0 && product.minPrice === product.maxPrice && <del>{money(product.price)}</del>}
         </div>
         <div className="ks-product-card__foot">
           <div className="ks-swatches" aria-label="Màu sắc">
@@ -727,7 +733,7 @@ function AdminProductRow({ product, onEdit, onDelete }) {
       <div className="ks-admin-product__info">
         <span className={product.active ? 'is-live' : 'is-hidden'}>{product.active ? 'Đang bán' : 'Đang ẩn'}</span>
         <h3>{product.title}</h3>
-        <p>{previews.length} mẫu · {product.totalStock} sản phẩm · {money(product.minPrice)}</p>
+        <p>{previews.length} mẫu · {product.totalStock} sản phẩm · {moneyRange(product.minPrice, product.maxPrice)}</p>
       </div>
       <div className="ks-admin-product__actions"><button type="button" onClick={onEdit}>Sửa</button><button className="is-danger" type="button" onClick={onDelete}>Xoá</button></div>
     </article>
@@ -835,13 +841,13 @@ function ProductEditor({ product, onClose, onSaved }) {
         <label><span>Tên sản phẩm *</span><input value={draft.title} onChange={(event) => patch('title', event.target.value)} /></label>
         <label><span>Dòng mô tả ngắn</span><input value={draft.subtitle || ''} onChange={(event) => patch('subtitle', event.target.value)} /></label>
         <label><span>Mô tả</span><textarea rows="5" value={draft.description || ''} onChange={(event) => patch('description', event.target.value)} /></label>
-        <div className="ks-editor__row"><label><span>Giá (TWD)</span><input type="number" min="0" value={draft.price} onChange={(event) => patch('price', event.target.value)} /></label><label><span>Giảm giá (%)</span><input type="number" min="0" max="95" value={draft.discountPercent} onChange={(event) => patch('discountPercent', event.target.value)} /></label></div>
+        <div className="ks-editor__row"><label><span>Giá mặc định (TWD)</span><input type="number" min="0" value={draft.price} onChange={(event) => patch('price', event.target.value)} /></label><label><span>Giảm giá (%)</span><input type="number" min="0" max="95" value={draft.discountPercent} onChange={(event) => patch('discountPercent', event.target.value)} /></label></div>
         <div className="ks-size-editor"><div className="ks-size-editor__head"><span>Size sản phẩm</span><button type="button" onClick={addSize}>+ Thêm size</button></div><div className="ks-size-editor__entries">{sizeInputs.map((size, index) => <div className="ks-size-editor__entry" key={index}><input value={size} onChange={(event) => patchSize(index, event.target.value)} placeholder={index === 0 ? 'VD: Free size, 38, 2XL' : 'Nhập size'} /><button type="button" onClick={() => removeSize(index)} aria-label={`Xoá size ${index + 1}`}>×</button></div>)}</div><small>Tự gõ từng lựa chọn size. Có thể thêm bao nhiêu size tùy sản phẩm.</small></div>
         <ImageField label="Ảnh chính" value={draft.imageUrl} onChange={(value) => patch('imageUrl', value)} onPick={(file) => pickImage(file)} uploadLabel="Tải ảnh chính lên" />
         <div className="ks-gallery-editor"><div className="ks-gallery-editor__head"><div><span>Ảnh bổ sung</span><small>Khách có thể vuốt hoặc bấm để xem.</small></div><button type="button" onClick={addGalleryImage}>+ Thêm ảnh</button></div>{galleryImages.length ? <div className="ks-gallery-editor__items">{galleryImages.map((image, index) => <div className="ks-gallery-editor__item" key={index}><ImageField label={`Ảnh bổ sung ${index + 1}`} value={image} onChange={(value) => patchGalleryImage(index, value)} onPick={(file) => pickGalleryImage(file, index)} uploadLabel="Tải ảnh lên" /><button className="ks-gallery-editor__remove" type="button" onClick={() => removeGalleryImage(index)}>Xoá ảnh</button></div>)}</div> : <p className="ks-gallery-editor__empty">Chưa có ảnh bổ sung.</p>}</div>
         <div className="ks-editor__checks"><label><input type="checkbox" checked={draft.genders?.includes('men')} onChange={(event) => patch('genders', event.target.checked ? [...new Set([...(draft.genders || []), 'men'])] : draft.genders.filter((entry) => entry !== 'men'))} /> Nam</label><label><input type="checkbox" checked={draft.genders?.includes('women')} onChange={(event) => patch('genders', event.target.checked ? [...new Set([...(draft.genders || []), 'women'])] : draft.genders.filter((entry) => entry !== 'women'))} /> Nữ</label><label><input type="checkbox" checked={draft.freeship} onChange={(event) => patch('freeship', event.target.checked)} /> Free ship</label><label><input type="checkbox" checked={draft.featured} onChange={(event) => patch('featured', event.target.checked)} /> Featured</label><label><input type="checkbox" checked={draft.active} onChange={(event) => patch('active', event.target.checked)} /> Đang bán</label></div>
       </section><section className="ks-editor__variants"><div className="ks-editor__variants-head"><div><p className="ks-kicker">VARIANTS</p><h3>Phân loại và tồn kho</h3></div><button type="button" onClick={addVariant}>+ Thêm mẫu</button></div>
-        {draft.variants.map((variant, index) => <div className="ks-variant-editor" key={`${variant.id}-${index}`}><div className="ks-variant-editor__head"><span style={{ background: variant.colorHex }} /><strong>Mẫu {index + 1}</strong>{draft.variants.length > 1 && <button type="button" onClick={() => setDraft((current) => ({ ...current, variants: current.variants.filter((_, variantIndex) => variantIndex !== index) }))}>Xoá</button>}</div><div className="ks-editor__row"><label><span>Tên mẫu</span><input value={variant.name} onChange={(event) => patchVariant(index, 'name', event.target.value)} /></label><label><span>Màu</span><input type="color" value={variant.colorHex} onChange={(event) => patchVariant(index, 'colorHex', event.target.value)} /></label></div><ImageField label={`Ảnh mẫu ${index + 1}`} value={variant.imageUrl} onChange={(value) => patchVariant(index, 'imageUrl', value)} onPick={(file) => pickImage(file, index)} uploadLabel="Tải ảnh mẫu lên" /><div className="ks-stock-grid">{sizes.map((size) => <label key={size}><span>{size}</span><input type="number" min="0" value={variant.stockBySize?.[size] || 0} onChange={(event) => patchStock(index, size, event.target.value)} /></label>)}</div></div>)}
+        {draft.variants.map((variant, index) => <div className="ks-variant-editor" key={`${variant.id}-${index}`}><div className="ks-variant-editor__head"><span style={{ background: variant.colorHex }} /><strong>Mẫu {index + 1}</strong>{draft.variants.length > 1 && <button type="button" onClick={() => setDraft((current) => ({ ...current, variants: current.variants.filter((_, variantIndex) => variantIndex !== index) }))}>Xoá</button>}</div><div className="ks-editor__row ks-editor__row--variant"><label><span>Tên mẫu</span><input value={variant.name} onChange={(event) => patchVariant(index, 'name', event.target.value)} /></label><label><span>Màu</span><input type="color" value={variant.colorHex} onChange={(event) => patchVariant(index, 'colorHex', event.target.value)} /></label><label><span>Giá mẫu (TWD)</span><input type="number" min="0" value={variant.priceOverride ?? ''} placeholder={`Mặc định: ${draft.price}`} onChange={(event) => patchVariant(index, 'priceOverride', event.target.value)} /></label></div><ImageField label={`Ảnh mẫu ${index + 1}`} value={variant.imageUrl} onChange={(value) => patchVariant(index, 'imageUrl', value)} onPick={(file) => pickImage(file, index)} uploadLabel="Tải ảnh mẫu lên" /><div className="ks-stock-grid">{sizes.map((size) => <label key={size}><span>{size}</span><input type="number" min="0" value={variant.stockBySize?.[size] || 0} onChange={(event) => patchStock(index, size, event.target.value)} /></label>)}</div></div>)}
       </section></div>
       {error && <p className="ks-form-error">{error}</p>}
       <div className="ks-editor__actions"><button className="ks-button ks-button--light" type="button" onClick={onClose}>Huỷ</button><button className="ks-button ks-button--dark" disabled={busy} type="submit">{busy ? 'Đang lưu…' : 'Lưu sản phẩm'}</button></div>
