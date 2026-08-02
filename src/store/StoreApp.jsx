@@ -84,6 +84,7 @@ export default function StoreApp() {
   const [checkout, setCheckout] = useState(null);
   const [toast, setToast] = useState('');
   const [authBusy, setAuthBusy] = useState(false);
+  const [quickPicker, setQuickPicker] = useState(null);
 
   const refreshProducts = useCallback(async () => {
     const payload = await storeApi.products();
@@ -162,6 +163,20 @@ export default function StoreApp() {
     if (open) setCartOpen(true);
   }
 
+  function quickCheckout(product, variant, size, quantity) {
+    beginCheckout([{
+      key: `${product.id}:${variant.id}:${size}`,
+      productId: product.id,
+      title: product.title,
+      imageUrl: variant.imageUrl || product.imageUrl,
+      variantId: variant.id,
+      variantName: variant.name,
+      size,
+      quantity,
+      unitPrice: productUnitPrice(product, variant, size),
+      freeship: product.freeship,
+    }], 'buy');
+  }
   function changeQuantity(key, value) {
     const quantity = Math.max(0, Math.min(99, Number(value) || 0));
     setCart((current) => quantity === 0
@@ -241,7 +256,7 @@ export default function StoreApp() {
       {loading && <StoreLoading />}
       {!loading && error && <StoreError message={error} onRetry={() => window.location.reload()} />}
       {!loading && !error && route.view === 'catalog' && (
-        <Catalog products={products} navigate={navigate} config={config} />
+        <Catalog products={products} navigate={navigate} config={config} onQuickAction={(product, action) => setQuickPicker({ product, action })} />
       )}
       {!loading && !error && route.view === 'product' && (
         selectedProduct
@@ -272,7 +287,12 @@ export default function StoreApp() {
           onSuccess={() => { if (checkout.source === 'cart') setCart([]); }}
         />
       )}
-      {toast && <div className="ks-toast" role="status">{toast}</div>}
+      {quickPicker && <QuickProductPicker key={`${quickPicker.product.id}-${quickPicker.action}`} product={quickPicker.product} action={quickPicker.action} onClose={() => setQuickPicker(null)} onConfirm={(variant, size, quantity) => {
+        const { product, action } = quickPicker;
+        setQuickPicker(null);
+        if (action === 'cart') addToCart(product, variant, size, quantity);
+        else quickCheckout(product, variant, size, quantity);
+      }} />}      {toast && <div className="ks-toast" role="status">{toast}</div>}
     </div>
   );
 }
@@ -312,7 +332,7 @@ function StoreHeader({ route, navigate, cartCount, onCart, config, authBusy, onL
   );
 }
 
-function Catalog({ products, navigate, config }) {
+function Catalog({ products, navigate, config, onQuickAction }) {
   const [filter, setFilter] = useState('all');
   const shown = products.filter((product) => filter === 'all' || product.genders.includes(filter) || product.genders.includes('unisex'));
   const featured = products.find((product) => product.featured) || products[0];
@@ -354,7 +374,7 @@ function Catalog({ products, navigate, config }) {
         </div>
         {shown.length ? (
           <div className="ks-product-grid">
-            {shown.map((product, index) => <ProductCard key={product.id} product={product} index={index} navigate={navigate} />)}
+            {shown.map((product, index) => <ProductCard key={product.id} product={product} index={index} navigate={navigate} onQuickAction={onQuickAction} />)}
           </div>
         ) : <div className="ks-empty">Chưa có sản phẩm trong nhóm này.</div>}
       </section>
@@ -369,7 +389,7 @@ function Catalog({ products, navigate, config }) {
   );
 }
 
-function ProductCard({ product, index, navigate }) {
+function ProductCard({ product, index, navigate, onQuickAction }) {
   const variant = product.variants.find((entry) => entry.hasStock) || product.variants[0];
   return (
     <article className={`ks-product-card ks-product-card--${index % 3}`}>
@@ -388,13 +408,47 @@ function ProductCard({ product, index, navigate }) {
           <div className="ks-swatches" aria-label="Màu sắc">
             {product.variants.slice(0, 5).map((entry) => <span key={entry.id} title={entry.name} style={{ background: entry.colorHex }} />)}
           </div>
-          <button type="button" onClick={() => navigate(`/store/product/${encodeURIComponent(product.id)}`)}>Chọn mẫu →</button>
+          <button type="button" onClick={() => navigate(`/store/product/${encodeURIComponent(product.id)}`)}>Xem chi tiết →</button>
+        </div>
+        <div className="ks-product-card__quick-actions">
+          <button className="ks-quick-cart" type="button" onClick={() => onQuickAction(product, 'cart')}>Giỏ hàng</button>
+          <button className="ks-quick-buy" type="button" onClick={() => onQuickAction(product, 'buy')}>Mua ngay</button>
         </div>
       </div>
     </article>
   );
 }
 
+function QuickProductPicker({ product, action, onClose, onConfirm }) {
+  const firstVariant = product.variants.find((variant) => variant.hasStock) || product.variants[0];
+  const [variantId, setVariantId] = useState(firstVariant?.id || '');
+  const variant = product.variants.find((entry) => entry.id === variantId) || firstVariant;
+  const firstSize = product.sizes.find((size) => Number(variant?.stockBySize?.[size] || 0) > 0) || product.sizes[0];
+  const [size, setSize] = useState(firstSize);
+  const [quantity, setQuantity] = useState(1);
+  const available = Number(variant?.stockBySize?.[size] || 0);
+  const price = productUnitPrice(product, variant, size);
+
+  function pickVariant(id) {
+    setVariantId(id);
+    const next = product.variants.find((entry) => entry.id === id);
+    setSize(product.sizes.find((entry) => Number(next?.stockBySize?.[entry] || 0) > 0) || product.sizes[0]);
+    setQuantity(1);
+  }
+
+  return (
+    <div className="ks-modal" role="dialog" aria-modal="true" aria-label="Chọn mẫu và kích thước">
+      <button className="ks-modal__backdrop" type="button" onClick={onClose} aria-label="Đóng" />
+      <section className="ks-quick-picker">
+        <header><div><p className="ks-kicker">QUICK ORDER</p><h2>Chọn mẫu trước khi mua</h2></div><button type="button" onClick={onClose} aria-label="Đóng">×</button></header>
+        <div className="ks-quick-picker__product"><ProductArt src={variant?.imageUrl || product.imageUrl} alt={product.title} /><div><h3>{product.title}</h3><strong>{money(price)}</strong><p>{variant?.name}</p></div></div>
+        <fieldset className="ks-option"><legend>Mẫu <span>{variant?.name}</span></legend><div className="ks-color-options">{product.variants.map((entry) => <button key={entry.id} type="button" className={entry.id === variant?.id ? 'is-active' : ''} onClick={() => pickVariant(entry.id)}><span style={{ background: entry.colorHex }} /><small>{entry.name}</small></button>)}</div></fieldset>
+        <fieldset className="ks-option"><legend>Kích thước <span>{size}</span></legend><div className="ks-size-options">{product.sizes.map((entry) => { const count = Number(variant?.stockBySize?.[entry] || 0); return <button key={entry} type="button" disabled={!count} className={entry === size ? 'is-active' : ''} onClick={() => { setSize(entry); setQuantity(1); }}>{entry}<small>{count ? `${count} còn` : 'hết'}</small></button>; })}</div></fieldset>
+        <div className="ks-quick-picker__footer"><div className="ks-stepper"><button type="button" onClick={() => setQuantity((value) => Math.max(1, value - 1))}>−</button><strong>{quantity}</strong><button type="button" onClick={() => setQuantity((value) => Math.min(available, value + 1))}>+</button></div><button className={`ks-button ${action === 'buy' ? 'ks-button--rose' : 'ks-button--dark'} ks-quick-picker__confirm`} type="button" disabled={!available} onClick={() => onConfirm(variant, size, quantity)}>{action === 'buy' ? `Mua ngay · ${money(price * quantity)}` : 'Thêm vào giỏ'}</button></div>
+      </section>
+    </div>
+  );
+}
 function ProductGallery({ product, variant }) {
   const images = useMemo(() => [...new Set([
     variant?.imageUrl,
