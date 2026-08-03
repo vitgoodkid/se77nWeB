@@ -1860,6 +1860,9 @@ function ImageConverterTool({ accent }) {
   const [err, setErr] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [urlBusy, setUrlBusy] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const urlTimerRef = useRef(null);
+  const urlRequestRef = useRef('');
 
   // Crop state — null = no crop applied. cropRect is normalized 0..1.
   const [cropOpen, setCropOpen] = useState(false);
@@ -1904,8 +1907,37 @@ function ImageConverterTool({ accent }) {
     loadFile(e.target.files?.[0]);
   }
 
-  async function loadImageUrl() {
-    const raw = imageUrl.trim();
+  function handleImageUrlChange(value) {
+    setImageUrl(value);
+    if (urlTimerRef.current) window.clearTimeout(urlTimerRef.current);
+    const candidate = value.trim();
+    if (!/^https?:\/\/\S+$/i.test(candidate)) return;
+    urlTimerRef.current = window.setTimeout(() => loadImageUrl(candidate), 120);
+  }
+
+  function droppedImageUrl(dataTransfer) {
+    const uriList = dataTransfer.getData('text/uri-list')
+      .split(/\r?\n/).map((entry) => entry.trim()).find((entry) => entry && !entry.startsWith('#'));
+    if (uriList) return uriList;
+    const html = dataTransfer.getData('text/html');
+    const imageMatch = html.match(/<img[^>]+src=["']([^"']+)["']/i);
+    if (imageMatch?.[1]) return imageMatch[1];
+    const plain = dataTransfer.getData('text/plain').trim();
+    return /^https?:\/\/\S+$/i.test(plain) ? plain : '';
+  }
+
+  function handleDrop(event) {
+    event.preventDefault();
+    setIsDragging(false);
+    const imageFile = Array.from(event.dataTransfer.files || []).find((file) => file.type.startsWith('image/'));
+    if (imageFile) { loadFile(imageFile); return; }
+    const droppedUrl = droppedImageUrl(event.dataTransfer);
+    if (droppedUrl) { setImageUrl(droppedUrl); loadImageUrl(droppedUrl); return; }
+    setErr('Drop an image file or a direct image link.');
+  }
+
+  async function loadImageUrl(rawInput = imageUrl) {
+    const raw = String(rawInput || '').trim();
     if (!raw) return;
     let parsed;
     try {
@@ -1915,9 +1947,12 @@ function ImageConverterTool({ accent }) {
       setErr('Paste a direct http(s) image link.');
       return;
     }
+    const requestKey = parsed.toString();
+    if (urlRequestRef.current === requestKey) return;
+    urlRequestRef.current = requestKey;
     setUrlBusy(true); setErr(''); setStage('Loading image link...');
     try {
-      const response = await fetch(parsed.toString());
+      const response = await fetch(requestKey);
       if (!response.ok) throw new Error(`The image host returned ${response.status}.`);
       const blob = await response.blob();
       const mime = (blob.type || response.headers.get('content-type') || '').split(';')[0].toLowerCase();
@@ -1926,10 +1961,10 @@ function ImageConverterTool({ accent }) {
       const fromPath = decodeURIComponent(parsed.pathname.split('/').pop() || 'image').replace(/[^a-z0-9._-]/gi, '-');
       const name = /\.[a-z0-9]+$/i.test(fromPath) ? fromPath : `${fromPath || 'image'}.${ext}`;
       loadFile(new File([blob], name, { type: mime }));
-      setImageUrl('');
     } catch (error) {
       setErr(error?.message || 'Could not load this image link. Make sure it is a direct image URL that allows access.');
     } finally {
+      if (urlRequestRef.current === requestKey) urlRequestRef.current = '';
       setUrlBusy(false); setStage('');
     }
   }
@@ -2060,82 +2095,93 @@ function ImageConverterTool({ accent }) {
 
   return (
     <div style={{ display: 'grid', gap: 16 }}>
-      <Kicker>IMAGE SOURCE</Kicker>
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', gap: 9 }}>
+      <div style={{ display: 'grid', gap: 10 }}>
+        <Kicker>1. ADD IMAGE</Kicker>
         <Field
           value={imageUrl}
-          onChange={setImageUrl}
-          onKeyDown={(event) => { if (event.key === 'Enter') loadImageUrl(); }}
-          placeholder="Paste a direct image link (https://...)"
+          onChange={handleImageUrlChange}
+          placeholder="Paste a direct image link - it loads automatically"
+          style={{ padding: '15px 17px', fontSize: 14 }}
         />
-        <Btn variant="solid" color={accent} onClick={loadImageUrl} disabled={!imageUrl.trim() || urlBusy}>
-          {urlBusy ? 'Loading...' : 'Use link'}
-        </Btn>
-      </div>
-      <div className="mono" style={{ fontSize: 10, color: COLORS.muted, letterSpacing: '0.06em', marginTop: -7 }}>
-        Paste an image URL to convert it. Browsing from this device is optional.
-      </div>
-      <label style={{
-        padding: 24, textAlign: 'center', borderRadius: 12,
-        border: `1px dashed ${COLORS.line}`, cursor: 'pointer', background: COLORS.bg,
-      }}>
-        <input type="file" accept="image/*,.gif,.webp" onChange={onFile} style={{ display: 'none' }} />
-        {src ? (
-          <div style={{ display: 'flex', gap: 16, alignItems: 'center', justifyContent: 'center' }}>
-            <img src={src.dataUrl} style={{ height: 80, borderRadius: 8 }} alt="" />
-            <div style={{ textAlign: 'left' }}>
-              <div className="mono" style={{ fontSize: 12, fontWeight: 700 }}>{src.name}</div>
-              <div className="mono" style={{ fontSize: 10, color: COLORS.muted, marginTop: 4 }}>
-                {(src.size / 1024).toFixed(1)} KB - {src.w}x{src.h}{cropRect ? ` -> ${Math.round(cropRect.w * src.w)}x${Math.round(cropRect.h * src.h)}` : ''}
+        <div className="mono" style={{ fontSize: 11, color: urlBusy ? accent : COLORS.muted, letterSpacing: '0.05em' }}>
+          {urlBusy ? 'LOADING IMAGE LINK...' : 'PASTE A LINK, OR USE THE DROP ZONE BELOW'}
+        </div>
+        <label
+          onDragEnter={(event) => { event.preventDefault(); setIsDragging(true); }}
+          onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = 'copy'; setIsDragging(true); }}
+          onDragLeave={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setIsDragging(false); }}
+          onDrop={handleDrop}
+          style={{
+            minHeight: 164, padding: 24, textAlign: 'center', borderRadius: 12, cursor: 'pointer',
+            border: `2px dashed ${isDragging ? accent : COLORS.line}`,
+            background: isDragging ? accent + '12' : COLORS.bg,
+            transition: 'border-color 150ms, background 150ms',
+            display: 'grid', placeItems: 'center',
+          }}
+        >
+          <input type="file" accept="image/*,.gif,.webp" onChange={onFile} style={{ display: 'none' }} />
+          {src ? (
+            <div style={{ display: 'flex', gap: 18, alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <img src={src.dataUrl} style={{ height: 100, maxWidth: 130, objectFit: 'cover', borderRadius: 8, border: `1px solid ${COLORS.line}` }} alt="" />
+              <div style={{ textAlign: 'left' }}>
+                <div className="mono" style={{ fontSize: 13, fontWeight: 700, color: COLORS.text }}>{src.name}</div>
+                <div className="mono" style={{ fontSize: 11, color: COLORS.muted, marginTop: 6 }}>
+                  {(src.size / 1024).toFixed(1)} KB - {src.w}x{src.h}{cropRect ? ` -> ${Math.round(cropRect.w * src.w)}x${Math.round(cropRect.h * src.h)}` : ''}
+                </div>
+                <div className="mono" style={{ fontSize: 10, color: accent, marginTop: 12, letterSpacing: '0.08em' }}>DROP ANOTHER IMAGE TO REPLACE</div>
               </div>
             </div>
-          </div>
-        ) : (
-          <div>
-            <div className="mono" style={{ fontSize: 11, color: COLORS.muted, letterSpacing: '0.1em' }}>
-              OR BROWSE DEVICE
+          ) : (
+            <div>
+              <div style={{ fontSize: 32, color: accent, marginBottom: 11 }}>+</div>
+              <div className="mono" style={{ fontSize: 14, color: COLORS.text, fontWeight: 700, letterSpacing: '0.09em' }}>DROP IMAGE HERE</div>
+              <div className="mono" style={{ fontSize: 11, color: COLORS.muted, marginTop: 8, letterSpacing: '0.04em' }}>
+                Drag a file from your device or an image/link from another website. Click to browse.
+              </div>
             </div>
-          </div>
-        )}
-      </label>
+          )}
+        </label>
+      </div>
 
-      {/* Source → Target swap row */}
-      <div>
-        <Kicker style={{ marginBottom: 8 }}>FORMAT</Kicker>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-          <FmtPills value={srcFmt} options={FORMATS} accent={accent} onChange={setSrcFmt} dim />
+      {/* Source -> target format */}
+      <div style={{ padding: 18, border: `1px solid ${COLORS.line}`, borderRadius: 12, background: COLORS.bg }}>
+        <Kicker style={{ marginBottom: 14 }}>2. CHOOSE FORMAT</Kicker>
+        <div style={{ display: 'flex', alignItems: 'end', gap: 18, flexWrap: 'wrap' }}>
+          <div style={{ display: 'grid', gap: 8 }}>
+            <div className="mono" style={{ fontSize: 10, color: COLORS.muted, letterSpacing: '0.12em' }}>SOURCE</div>
+            <FmtPills value={srcFmt} options={FORMATS} accent={accent} onChange={setSrcFmt} dim />
+          </div>
           <button
             type="button"
             onClick={swap}
-            title="Đảo chiều SRC ↔ TGT"
+            title="Swap source and target formats"
             aria-label="Swap formats"
             style={{
-              border: `1px solid ${COLORS.line}`,
-              background: 'transparent',
-              color: accent,
-              width: 36, height: 36, borderRadius: 999,
-              cursor: 'pointer', fontSize: 16, lineHeight: 1,
-              display: 'grid', placeItems: 'center',
-              transition: 'all 160ms ease',
+              border: `1px solid ${accent}77`, background: accent + '12', color: accent,
+              width: 50, height: 50, borderRadius: 12, cursor: 'pointer', fontSize: 21, lineHeight: 1,
+              display: 'grid', placeItems: 'center', transition: 'all 160ms ease',
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.borderColor = accent; e.currentTarget.style.background = accent + '14'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.borderColor = COLORS.line; e.currentTarget.style.background = 'transparent'; }}
+            onMouseEnter={(event) => { event.currentTarget.style.background = accent + '24'; }}
+            onMouseLeave={(event) => { event.currentTarget.style.background = accent + '12'; }}
           >⇄</button>
-          <FmtPills value={target} options={FORMATS} accent={accent} onChange={setTarget} />
+          <div style={{ display: 'grid', gap: 8 }}>
+            <div className="mono" style={{ fontSize: 10, color: accent, letterSpacing: '0.12em' }}>CONVERT TO</div>
+            <FmtPills value={target} options={FORMATS} accent={accent} onChange={setTarget} />
+          </div>
         </div>
         {(srcFmt === 'gif' || target === 'gif') && (
-          <div className="mono" style={{ fontSize: 10, color: COLORS.muted, marginTop: 8, letterSpacing: '0.08em' }}>
-            ◇ GIF ↔ WebP giữ animation. Lần đầu chạy sẽ tải FFmpeg ~25MB (cache trình duyệt).
+          <div className="mono" style={{ fontSize: 10, color: COLORS.muted, marginTop: 14, letterSpacing: '0.05em' }}>
+            GIF and WebP keep animation. First use loads FFmpeg once in your browser.
           </div>
         )}
       </div>
 
       <div>
-        <Kicker style={{ marginBottom: 8 }}>QUALITY · {quality}</Kicker>
+        <Kicker style={{ marginBottom: 10 }}>3. QUALITY - {quality}</Kicker>
         <input
           type="range" min="20" max="100" value={quality}
-          onChange={(e) => setQuality(+e.target.value)}
-          style={{ width: '100%', accentColor: accent }}
+          onChange={(event) => setQuality(+event.target.value)}
+          style={{ width: '100%', accentColor: accent, height: 22, cursor: 'pointer' }}
         />
       </div>
 
@@ -2186,7 +2232,7 @@ function FmtPills({ value, options, onChange, accent, dim }) {
   return (
     <div style={{ display: 'flex', gap: 6, opacity: dim ? 0.85 : 1 }}>
       {options.map((f) => (
-        <Btn key={f} variant={value === f ? 'tinted' : 'ghost'} color={accent} onClick={() => onChange(f)}>
+        <Btn key={f} variant={value === f ? 'tinted' : 'ghost'} color={accent} onClick={() => onChange(f)} style={{ minWidth: 66, minHeight: 50, padding: '13px 17px', fontSize: 13 }}>
           {f.toUpperCase()}
         </Btn>
       ))}
