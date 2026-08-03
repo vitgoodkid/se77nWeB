@@ -394,7 +394,7 @@ function ProductCard({ product, index, navigate, onQuickAction }) {
   return (
     <article className={`ks-product-card ks-product-card--${index % 3}`}>
       <button className="ks-product-card__media" type="button" onClick={() => navigate(`/store/product/${encodeURIComponent(product.id)}`)} aria-label={`Xem ${product.title}`}>
-        <ProductArt src={variant?.imageUrl || product.imageUrl} alt={product.title} />
+        <ProductArt src={product.imageUrl} alt={product.title} />
         {product.discountPercent > 0 && <span className="ks-sale-tag">−{product.discountPercent}%</span>}
         {product.freeship && <span className="ks-ship-tag">FREE SHIP</span>}
       </button>
