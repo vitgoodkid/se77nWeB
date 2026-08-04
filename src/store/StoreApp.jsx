@@ -270,6 +270,9 @@ export default function StoreApp() {
       {route.view !== 'admin' && (
         <StoreFooter config={config} navigate={navigate} />
       )}
+      {route.view !== 'admin' && (
+        <StoreFloatingActions cartCount={cart.reduce((sum, item) => sum + item.quantity, 0)} onCart={() => setCartOpen(true)} />
+      )}
 
       <CartDrawer
         open={cartOpen}
@@ -943,6 +946,14 @@ function StoreFooter({ config, navigate }) {
   return <footer className="ks-footer"><div><span className="ks-brand__seal">K</span><strong>KataShop</strong><p>Một nhánh nhỏ của se77n.</p></div><nav><button type="button" onClick={() => navigate('/store')}>Cửa hàng</button>{config?.admin?.allowed && <button type="button" onClick={() => navigate('/store/admin')}>Admin</button>}{config?.support?.url && <a href={config.support.url} target="_blank" rel="noreferrer">Hỗ trợ ↗</a>}</nav><small>© {new Date().getFullYear()} KATASHOP · TAIWAN</small></footer>;
 }
 
+function StoreFloatingActions({ cartCount, onCart }) {
+  return (
+    <div className="ks-floating-actions" aria-label="Thao tác nhanh">
+      <button className="ks-floating-cart" type="button" onClick={onCart}><span aria-hidden="true">🛒</span><b>Giỏ hàng</b><strong>{cartCount}</strong></button>
+      <a className="ks-floating-support" href="https://www.tiktok.com/@hoa197915" target="_blank" rel="noreferrer"><span aria-hidden="true">↗</span> Hỗ trợ</a>
+    </div>
+  );
+}
 function StoreLoading({ compact = false }) {
   return <main className={`ks-loading ${compact ? 'is-compact' : ''}`}><span /><p>Đang mở KataShop…</p></main>;
 }
