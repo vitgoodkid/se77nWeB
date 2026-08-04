@@ -1004,3 +1004,93 @@
 @media (prefers-reduced-motion: reduce) {
   .ks-shell *, .ks-shell *::before, .ks-shell *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
+
+/* Admin product editor: roomy and touch-friendly. */
+.ks-editor {
+  width: min(1500px, 96vw);
+  padding: clamp(32px, 4vw, 72px);
+}
+.ks-editor__head {
+  align-items: center;
+  margin-bottom: 40px;
+  padding-bottom: 28px;
+}
+.ks-editor__head h2 { font-size: clamp(46px, 4vw, 74px); }
+.ks-editor__head > button { width: 52px; height: 52px; font-size: 32px; flex: 0 0 auto; }
+.ks-editor__grid { grid-template-columns: minmax(420px, .88fr) minmax(560px, 1.12fr); gap: clamp(34px, 3.5vw, 70px); }
+.ks-editor__grid > section {
+  gap: 22px;
+  padding: clamp(22px, 2vw, 34px);
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,.18);
+}
+.ks-editor label { gap: 10px; }
+.ks-editor label > span { font-size: 11px; }
+.ks-editor input { height: 58px; padding: 0 17px; font-size: 16px; }
+.ks-editor textarea { min-height: 178px; padding: 17px; font-size: 15px; line-height: 1.55; }
+.ks-editor__row { gap: 18px; }
+.ks-editor__row--variant { grid-template-columns: minmax(0, 1.15fr) minmax(120px, .65fr) minmax(160px, .9fr); }
+.ks-size-editor { gap: 12px; padding: 18px; border: 1px solid var(--line); background: var(--paper-2); }
+.ks-size-editor__head { font-size: 11px; }
+.ks-size-editor__head button,
+.ks-gallery-editor__head button,
+.ks-editor__variants-head > button { min-height: 42px; padding: 0 15px; font-size: 10px; }
+.ks-size-editor__entries { gap: 10px; }
+.ks-size-editor__entry { grid-template-columns: minmax(0, 1fr) 52px; gap: 10px; }
+.ks-size-editor__entry button { font-size: 24px; }
+.ks-size-editor small { font-size: 12px; }
+.ks-image-field { grid-template-columns: minmax(180px, 230px) minmax(0, 1fr); gap: 20px; padding: 20px; }
+.ks-image-field__preview .ks-art { min-height: 252px; }
+.ks-image-field__controls { gap: 14px; }
+.ks-image-field__controls input { min-width: 0; }
+.ks-image-field__controls a { font-size: 11px; }
+.ks-file { min-height: 70px; padding: 16px; }
+.ks-file strong { font-size: 14px; }
+.ks-gallery-editor { gap: 18px; padding: 20px; }
+.ks-gallery-editor__head { align-items: center; }
+.ks-gallery-editor__head span { font-size: 11px; }
+.ks-gallery-editor__head small,
+.ks-gallery-editor__empty { font-size: 12px; }
+.ks-gallery-editor__items { gap: 18px; }
+.ks-gallery-editor__item { display: grid; gap: 10px; }
+.ks-gallery-editor__remove { position: static; justify-self: end; min-height: 40px; padding: 0 14px; font-size: 10px; }
+.ks-editor__checks { gap: 14px 22px; padding: 20px; }
+.ks-editor__checks label { min-height: 32px; gap: 9px; font-size: 13px; }
+.ks-editor__checks input { width: 19px; height: 19px; }
+.ks-editor__variants { display: grid !important; }
+.ks-editor__variants-head { align-items: center; margin-bottom: 18px; }
+.ks-editor__variants-head h3 { font-size: 31px; }
+.ks-variant-editor { gap: 18px; margin-bottom: 18px; padding: 24px; }
+.ks-variant-editor__head { min-height: 34px; gap: 12px; }
+.ks-variant-editor__head > span { width: 24px; height: 24px; }
+.ks-variant-editor__head strong { font-size: 16px; }
+.ks-variant-editor__head button { min-height: 38px; padding: 0 13px; font-size: 10px; }
+.ks-stock-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.ks-stock-grid input { height: 48px; }
+.ks-editor__actions {
+  gap: 12px;
+  margin: 40px 0 0;
+  padding: 22px 0 4px;
+  background: linear-gradient(transparent, var(--paper) 26%);
+}
+.ks-editor__actions .ks-button { min-height: 58px; padding-inline: 28px; font-size: 12px; }
+
+@media (max-width: 1200px) {
+  .ks-editor { width: min(1120px, 100%); }
+  .ks-editor__grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 760px) {
+  .ks-editor { width: 100%; padding: 24px 16px; }
+  .ks-editor__head { margin-bottom: 24px; padding-bottom: 18px; }
+  .ks-editor__head h2 { font-size: 40px; }
+  .ks-editor__grid > section { padding: 18px; }
+  .ks-editor__row,
+  .ks-editor__row--variant { grid-template-columns: 1fr; }
+  .ks-image-field { grid-template-columns: 1fr; padding: 16px; }
+  .ks-image-field__preview { max-width: 260px; }
+  .ks-image-field__preview .ks-art { min-height: 220px; }
+  .ks-stock-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ks-editor__actions { justify-content: stretch; }
+  .ks-editor__actions .ks-button { flex: 1; padding-inline: 14px; }
+}
