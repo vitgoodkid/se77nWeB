@@ -1258,26 +1258,26 @@
 
 .ks-floating-cart,
 .ks-floating-support {
-  min-height: 64px;
+  min-height: 50px;
   display: inline-flex;
   align-items: center;
-  gap: 11px;
-  padding: 0 24px;
+  gap: 8px;
+  padding: 0 17px;
   border: 1px solid rgba(32, 27, 25, 0.09);
   border-radius: 999px;
   box-shadow: 0 12px 30px rgba(32, 27, 25, 0.16);
-  font: 800 14px/1 'JetBrains Mono', monospace;
+  font: 800 11px/1 'JetBrains Mono', monospace;
   letter-spacing: 0.06em;
   text-decoration: none;
   pointer-events: auto;
 }
 
 .ks-floating-cart, .ks-floating-support { background: #201b19; color: #fff; }
-.ks-floating-cart strong { width: 28px; height: 28px; display: inline-grid; place-items: center; border-radius: 50%; background: #fff; color: #201b19; font-size: 11px; }
-.ks-floating-support svg { width: 20px; height: 20px; }
+.ks-floating-cart strong { width: 22px; height: 22px; display: inline-grid; place-items: center; border-radius: 50%; background: #fff; color: #201b19; font-size: 9px; }
+.ks-floating-support svg { width: 16px; height: 16px; }
 .ks-floating-support:hover { transform: translateY(-2px); }
 
 @media (max-width: 760px) {
   .ks-floating-actions { right: 12px; bottom: 12px; left: 12px; }
-  .ks-floating-cart, .ks-floating-support { min-height: 52px; padding: 0 17px; font-size: 11px; }
+  .ks-floating-cart, .ks-floating-support { min-height: 44px; padding: 0 13px; font-size: 9px; }
 }
