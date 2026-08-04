@@ -950,7 +950,7 @@ function StoreFloatingActions({ cartCount, onCart }) {
   return (
     <div className="ks-floating-actions" aria-label="Thao tác nhanh">
       <button className="ks-floating-cart" type="button" onClick={onCart}><span aria-hidden="true">🛒</span><b>Giỏ hàng</b><strong>{cartCount}</strong></button>
-      <a className="ks-floating-support" href="https://www.tiktok.com/@hoa197915" target="_blank" rel="noreferrer"><span aria-hidden="true">↗</span> Hỗ trợ</a>
+      <a className="ks-floating-support" href="https://www.tiktok.com/@hoa197915" target="_blank" rel="noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.53 15.22V22l4.34-2.39A10 10 0 1 0 12 2Zm1.03 13.14-2.55-2.72-4.98 2.72 5.48-5.82 2.6 2.72 4.9-2.72-5.45 5.82Z" fill="currentColor" /></svg> Hỗ trợ</a>
     </div>
   );
 }
