@@ -1122,3 +1122,41 @@
   .ks-featured-ticket { width: min(280px, calc(100vw - 32px)); padding: 16px 18px; }
   .ks-featured-ticket strong { font-size: 17px; }
 }
+/* Prominent store product badges. */
+.ks-sale-tag,
+.ks-ship-tag {
+  top: 18px;
+  padding: 14px 18px;
+  background: var(--green);
+  color: #fff;
+  font: 800 14px/1 'JetBrains Mono', monospace;
+  letter-spacing: 0.09em;
+  box-shadow: 3px 3px 0 rgba(32, 27, 25, 0.18);
+}
+
+.ks-sale-tag { left: 16px; }
+.ks-ship-tag { right: 16px; }
+
+@media (min-width: 1600px) {
+  .ks-sale-tag,
+  .ks-ship-tag {
+    top: 24px;
+    padding: 16px 21px;
+    font-size: 16px;
+  }
+
+  .ks-sale-tag { left: 20px; }
+  .ks-ship-tag { right: 20px; }
+}
+
+@media (max-width: 760px) {
+  .ks-sale-tag,
+  .ks-ship-tag {
+    top: 14px;
+    padding: 12px 14px;
+    font-size: 12px;
+  }
+
+  .ks-sale-tag { left: 14px; }
+  .ks-ship-tag { right: 14px; }
+}
