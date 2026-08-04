@@ -1172,3 +1172,18 @@
 }
 
 .ks-hero__visual .ks-hero__orbit { z-index: 2; }
+/* Persist header while the store page scrolls. */
+.ks-shell { padding-top: 92px; }
+.ks-header {
+  position: fixed;
+  inset: 0 0 auto;
+  width: 100%;
+}
+
+@media (min-width: 1600px) {
+  .ks-shell { padding-top: 106px; }
+}
+
+@media (max-width: 760px) {
+  .ks-shell { padding-top: 68px; }
+}
