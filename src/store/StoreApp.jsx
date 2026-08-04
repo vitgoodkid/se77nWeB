@@ -335,7 +335,15 @@ function StoreHeader({ route, navigate, cartCount, onCart, config, authBusy, onL
 function Catalog({ products, navigate, config, onQuickAction }) {
   const [filter, setFilter] = useState('all');
   const shown = products.filter((product) => filter === 'all' || product.genders.includes(filter) || product.genders.includes('unisex'));
-  const featured = products.find((product) => product.featured) || products[0];
+  const featuredProducts = useMemo(() => products.filter((product) => product.featured && product.hasStock), [products]);
+  const [featuredIndex, setFeaturedIndex] = useState(0);
+  useEffect(() => {
+    setFeaturedIndex(0);
+    if (featuredProducts.length < 2) return undefined;
+    const timer = window.setInterval(() => setFeaturedIndex((current) => (current + 1) % featuredProducts.length), 2000);
+    return () => window.clearInterval(timer);
+  }, [featuredProducts.length]);
+  const featured = featuredProducts[featuredIndex] || null;
   return (
     <main className="ks-home">
       <section className="ks-hero ks-hero--closing">
@@ -355,10 +363,13 @@ function Catalog({ products, navigate, config, onQuickAction }) {
           <p>MADE FOR<br />THE IN-BETWEEN</p>
         </div>
         {featured && (
-          <button className="ks-featured-ticket" type="button" onClick={() => navigate(`/store/product/${encodeURIComponent(featured.id)}`)}>
-            <span>FEATURED</span>
-            <strong>{featured.title}</strong>
-            <small>{moneyRange(featured.minPrice, featured.maxPrice)}</small>
+          <button className="ks-featured-ticket" type="button" onClick={() => navigate(`/store/product/${encodeURIComponent(featured.id)}`)} aria-label={`Xem sản phẩm featured: ${featured.title}`}>
+            <div className="ks-featured-ticket__content" key={`${featured.id}-${featuredIndex}`}>
+              <div className="ks-featured-ticket__top"><span>FEATURED · ĐANG BÁN</span><small>{String(featuredIndex + 1).padStart(2, '0')} / {String(featuredProducts.length).padStart(2, '0')}</small></div>
+              <strong>{featured.title}</strong>
+              <em>{moneyRange(featured.minPrice, featured.maxPrice)}</em>
+            </div>
+            {featuredProducts.length > 1 && <div className="ks-featured-ticket__dots" aria-hidden="true">{featuredProducts.map((product, index) => <i className={index === featuredIndex ? 'is-active' : ''} key={product.id} />)}</div>}
           </button>
         )}
       </section>

@@ -1106,3 +1106,19 @@
 @media (max-width: 760px) {
   .ks-map-upload__list { grid-template-columns: 1fr; }
 }
+/* Rotating featured products in the hero. */
+.ks-featured-ticket { width: min(330px, calc(100vw - 48px)); gap: 12px; padding: 20px 22px; }
+.ks-featured-ticket__content { display: grid; gap: 9px; animation: ks-featured-in 300ms ease both; }
+.ks-featured-ticket__top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.ks-featured-ticket__top > small { color: rgba(32,27,25,.64); white-space: nowrap; }
+.ks-featured-ticket strong { display: -webkit-box; overflow: hidden; font-size: 20px; line-height: 1.16; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.ks-featured-ticket em { color: var(--ink); font: 800 13px/1 'JetBrains Mono', monospace; font-style: normal; }
+.ks-featured-ticket__dots { display: flex; gap: 6px; padding-top: 4px; }
+.ks-featured-ticket__dots i { width: 18px; height: 2px; background: rgba(32,27,25,.24); transition: width 220ms ease, background 220ms ease; }
+.ks-featured-ticket__dots i.is-active { width: 34px; background: var(--ink); }
+@keyframes ks-featured-in { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: translateY(0); } }
+
+@media (max-width: 760px) {
+  .ks-featured-ticket { width: min(280px, calc(100vw - 32px)); padding: 16px 18px; }
+  .ks-featured-ticket strong { font-size: 17px; }
+}
