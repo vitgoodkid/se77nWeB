@@ -337,7 +337,15 @@ function StoreHeader({ route, navigate, cartCount, onCart, config, authBusy, onL
 
 function Catalog({ products, navigate, config, onQuickAction }) {
   const [filter, setFilter] = useState('all');
-  const shown = products.filter((product) => {
+  const catalogProducts = useMemo(() => {
+    const shuffled = [...products];
+    for (let index = shuffled.length - 1; index > 0; index -= 1) {
+      const swapIndex = Math.floor(Math.random() * (index + 1));
+      [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+    }
+    return shuffled;
+  }, [products]);
+  const shown = catalogProducts.filter((product) => {
     if (filter === 'all') return true;
     const genders = Array.isArray(product.genders) ? product.genders : [];
     const hasExplicitGender = genders.some((gender) => gender === 'men' || gender === 'women');
