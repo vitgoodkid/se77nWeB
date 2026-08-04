@@ -1187,3 +1187,32 @@
 @media (max-width: 760px) {
   .ks-shell { padding-top: 68px; }
 }
+/* Compact catalog rows in the admin workspace. */
+.ks-admin-product {
+  grid-template-columns: minmax(170px, 220px) minmax(0, 1fr) auto;
+  gap: 20px;
+  padding: 14px 0;
+}
+
+.ks-admin-product__previews {
+  display: flex;
+  grid-template-columns: none;
+  gap: 8px;
+  max-width: 220px;
+  overflow: hidden;
+}
+
+.ks-admin-product__preview { flex: 0 0 56px; gap: 0; }
+.ks-admin-product__preview:nth-child(n + 4) { display: none; }
+.ks-admin-product__preview .ks-art { width: 56px; min-height: 70px; }
+.ks-admin-product__preview small { display: none; }
+.ks-admin-product h3 { margin: 7px 0 5px; font-size: clamp(19px, 1.3vw, 24px); }
+.ks-admin-product p { font-size: 10px; }
+.ks-admin-product__info > span { padding: 5px 7px; }
+.ks-admin-product__actions { gap: 7px; }
+.ks-admin-product button { padding: 9px 11px; font-size: 10px; }
+
+@media (max-width: 760px) {
+  .ks-admin-product { grid-template-columns: 1fr; gap: 14px; padding: 18px 0; }
+  .ks-admin-product__previews { max-width: none; }
+}
