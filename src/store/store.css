@@ -1125,38 +1125,38 @@
 /* Prominent store product badges. */
 .ks-sale-tag,
 .ks-ship-tag {
-  top: 18px;
+  top: 10px;
   padding: 14px 18px;
-  background: var(--green);
+  background: #72f27d;
   color: #fff;
   font: 800 14px/1 'JetBrains Mono', monospace;
   letter-spacing: 0.09em;
   box-shadow: 3px 3px 0 rgba(32, 27, 25, 0.18);
 }
 
-.ks-sale-tag { left: 16px; }
-.ks-ship-tag { right: 16px; }
+.ks-sale-tag { left: 10px; }
+.ks-ship-tag { right: 10px; }
 
 @media (min-width: 1600px) {
   .ks-sale-tag,
   .ks-ship-tag {
-    top: 24px;
+    top: 14px;
     padding: 16px 21px;
     font-size: 16px;
   }
 
-  .ks-sale-tag { left: 20px; }
-  .ks-ship-tag { right: 20px; }
+  .ks-sale-tag { left: 14px; }
+  .ks-ship-tag { right: 14px; }
 }
 
 @media (max-width: 760px) {
   .ks-sale-tag,
   .ks-ship-tag {
-    top: 14px;
+    top: 10px;
     padding: 12px 14px;
     font-size: 12px;
   }
 
-  .ks-sale-tag { left: 14px; }
-  .ks-ship-tag { right: 14px; }
+  .ks-sale-tag { left: 10px; }
+  .ks-ship-tag { right: 10px; }
 }
