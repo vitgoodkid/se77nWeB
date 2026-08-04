@@ -1094,3 +1094,15 @@
   .ks-editor__actions { justify-content: stretch; }
   .ks-editor__actions .ks-button { flex: 1; padding-inline: 14px; }
 }
+/* Checkout map-image attachments. */
+.ks-map-upload { display: grid; gap: 10px; }
+.ks-map-upload .ks-file { min-height: 76px; }
+.ks-map-upload__list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.ks-map-upload__item { position: relative; display: grid; grid-template-columns: 56px minmax(0, 1fr) 32px; align-items: center; gap: 9px; min-width: 0; padding: 8px; border: 1px solid var(--line); background: var(--paper-2); }
+.ks-map-upload__item img { width: 56px; height: 56px; object-fit: cover; border: 1px solid var(--line); }
+.ks-map-upload__item span { overflow: hidden; color: var(--muted); font: 600 9px/1.35 'JetBrains Mono', monospace; text-overflow: ellipsis; }
+.ks-map-upload__item button { width: 32px; height: 32px; padding: 0; border: 1px solid rgba(168,66,83,.5); background: var(--paper); color: #a84253; font-size: 19px; cursor: pointer; }
+
+@media (max-width: 760px) {
+  .ks-map-upload__list { grid-template-columns: 1fr; }
+}

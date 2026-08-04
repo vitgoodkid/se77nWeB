@@ -7,7 +7,8 @@ import { uploadStoreImage } from './store-media.js';
 const PRODUCT_COLLECTION = 'storeproducts';
 const ORDER_COLLECTION = 'storeorders';
 const MAX_CART_ITEMS = 25;
-const MAX_MAP_IMAGE_BYTES = 2 * 1024 * 1024;
+const MAX_MAP_IMAGE_BYTES = 1 * 1024 * 1024;
+const MAX_MAP_IMAGES = 3;
 const MAX_PRODUCT_IMAGE_BYTES = 2 * 1024 * 1024;
 const DEFAULT_SHIPPING_FEE = 38;
 const FREESHIP_THRESHOLD = 700;
@@ -241,6 +242,7 @@ function orderView(doc = {}) {
     total: money(doc.total),
     status: ORDER_STATUSES.has(doc.status) ? doc.status : 'new',
     mapImage: doc.mapImage || null,
+    mapImages: Array.isArray(doc.mapImages) ? doc.mapImages : (doc.mapImage ? [doc.mapImage] : []),
     createdAt: doc.createdAt || null,
     updatedAt: doc.updatedAt || null,
   };
@@ -425,11 +427,13 @@ function customerFrom(body) {
   const fullName = text(customer.fullName, 100);
   const phone = text(customer.phone, 40);
   const address = text(customer.address, 700);
-  const mapImage = parseMapImage(body.mapImage);
+  const note = text(customer.note, 1000);
+  const rawImages = Array.isArray(body.mapImages) ? body.mapImages.slice(0, MAX_MAP_IMAGES) : (body.mapImage ? [body.mapImage] : []);
+  const mapImages = rawImages.map(parseMapImage).filter(Boolean);
   if (!fullName) throw httpError(400, 'Vui lòng nhập tên người nhận.', 'CUSTOMER_NAME_REQUIRED');
   if (!phone) throw httpError(400, 'Vui lòng nhập số điện thoại.', 'CUSTOMER_PHONE_REQUIRED');
-  if (!address && !mapImage) throw httpError(400, 'Vui lòng nhập địa chỉ hoặc gửi ảnh bản đồ.', 'CUSTOMER_ADDRESS_REQUIRED');
-  return { customer: { fullName, phone, address }, mapImage };
+  if (!address && !mapImages.length) throw httpError(400, 'Vui lòng nhập địa chỉ hoặc gửi ảnh bản đồ.', 'CUSTOMER_ADDRESS_REQUIRED');
+  return { customer: { fullName, phone, address, note }, mapImages };
 }
 
 async function buildOrderItems(rawItems, products) {
@@ -494,29 +498,43 @@ function formatTwd(value) {
   return `${money(value).toLocaleString('zh-TW')} TWD`;
 }
 
-async function sendWebhook(order, mapImage) {
+function productUrl(productId) {
+  const base = text(process.env.STORE_PUBLIC_URL || process.env.AUTH_BASE_URL || 'https://se77n.com', 300).replace(/\/+$/, '');
+  return `${base}/store/product/${encodeURIComponent(productId)}`;
+}
+
+async function sendWebhook(order, mapImages = []) {
   const webhookUrl = text(process.env.STORE_DISCORD_WEBHOOK_URL || process.env.DISCORD_STORE_WEBHOOK_URL);
   if (!webhookUrl) return;
-  const fields = order.items.map((item) => `• ${item.title} ×${item.quantity} · ${item.variantName} / ${item.size} · ${formatTwd(item.lineTotal)}`).join('\n').slice(0, 1000);
+  const products = order.items.map((item) => `• [${item.title}](${productUrl(item.productId)})`).join('\n').slice(0, 1024);
+  const variants = order.items.map((item) => `• ${item.variantName} ×${item.quantity}`).join('\n').slice(0, 1024);
+  const sizes = order.items.map((item) => `• ${item.size} ×${item.quantity}`).join('\n').slice(0, 1024);
+  const prices = order.items.map((item) => `• ${formatTwd(item.unitPrice)} ×${item.quantity} = ${formatTwd(item.lineTotal)}`).join('\n');
+  const totals = `${prices}\nTạm tính: ${formatTwd(order.subtotal)}\nGiao hàng: ${order.shippingFee ? formatTwd(order.shippingFee) : 'Miễn phí'}\n**Tổng cộng: ${formatTwd(order.total)}**`.slice(0, 1024);
   const payload = {
     username: 'KataShop',
     content: 'Đơn hàng KataShop mới',
+    allowed_mentions: { parse: [] },
     embeds: [{
       title: `Đơn ${order._id}`,
       color: 0xd36a79,
       fields: [
-        { name: 'Khách hàng', value: `${order.customer.fullName}\n${order.customer.phone}\n${order.customer.address || 'Có ảnh bản đồ đính kèm'}`.slice(0, 1000) },
-        { name: 'Sản phẩm', value: fields || '—' },
-        { name: 'Tổng cộng', value: `${formatTwd(order.subtotal)} + ship ${formatTwd(order.shippingFee)} = **${formatTwd(order.total)}**` },
+        { name: 'Khách hàng', value: `${order.customer.fullName}\n${order.customer.phone}\n${order.customer.address || 'Đã gửi ảnh vị trí'}`.slice(0, 1024) },
+        { name: 'Sản phẩm', value: products || '—' },
+        { name: 'Mẫu', value: variants || '—', inline: true },
+        { name: 'Size', value: sizes || '—', inline: true },
+        { name: 'Giá / Tổng cộng', value: totals },
+        { name: 'Ảnh đính kèm', value: mapImages.length ? `Có ${mapImages.length} ảnh vị trí đính kèm.` : 'Không có ảnh đính kèm.' },
+        { name: 'Ghi chú', value: order.customer.note || 'Không có ghi chú.' },
       ],
       timestamp: new Date(order.createdAt).toISOString(),
     }],
   };
   let options;
-  if (mapImage?.buffer?.length) {
+  if (mapImages.length) {
     const form = new FormData();
     form.append('payload_json', JSON.stringify(payload));
-    form.append('files[0]', new Blob([mapImage.buffer], { type: mapImage.mimeType }), mapImage.fileName);
+    mapImages.forEach((mapImage, index) => form.append(`files[${index}]`, new Blob([mapImage.buffer], { type: mapImage.mimeType }), mapImage.fileName));
     options = { method: 'POST', body: form };
   } else {
     options = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) };
@@ -531,7 +549,7 @@ async function handleOrders(req, res) {
   if (req.method === 'POST') {
     const body = requestBody(req);
     const items = await buildOrderItems(body.items, products);
-    const { customer, mapImage } = customerFrom(body);
+    const { customer, mapImages } = customerFrom(body);
     const totals = pricing(items);
     const now = new Date();
     const order = {
@@ -540,14 +558,15 @@ async function handleOrders(req, res) {
       items,
       ...totals,
       status: 'new',
-      mapImage: mapImage ? { fileName: mapImage.fileName, mimeType: mapImage.mimeType, size: mapImage.size } : null,
+      mapImage: mapImages[0] ? { fileName: mapImages[0].fileName, mimeType: mapImages[0].mimeType, size: mapImages[0].size } : null,
+      mapImages: mapImages.map((image) => ({ fileName: image.fileName, mimeType: image.mimeType, size: image.size })),
       createdAt: now,
       updatedAt: now,
     };
     await orders.insertOne(order);
     await decrementStock(products, items);
     let notificationSent = true;
-    try { await sendWebhook(order, mapImage); } catch (error) {
+    try { await sendWebhook(order, mapImages); } catch (error) {
       notificationSent = false;
       console.error('[store] webhook failed', error?.message);
       await orders.updateOne({ _id: order._id }, { $set: { notificationError: text(error?.message, 200) } });

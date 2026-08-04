@@ -586,19 +586,28 @@ function CartDrawer({ open, items, config, onClose, onQuantity, onCheckout }) {
 }
 
 function Checkout({ checkout, config, onClose, onSuccess }) {
-  const [form, setForm] = useState({ fullName: '', phone: '', address: '' });
-  const [mapImage, setMapImage] = useState(null);
+  const [form, setForm] = useState({ fullName: '', phone: '', address: '', note: '' });
+  const [mapImages, setMapImages] = useState([]);
+  const mapImageLimit = 3;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(null);
   const summary = totals(checkout.items, config);
 
-  async function pickMap(file) {
-    if (!file) return setMapImage(null);
-    if (file.size > 2 * 1024 * 1024) return setError('Ảnh bản đồ phải nhỏ hơn 2 MB.');
-    const dataUrl = await fileToDataUrl(file);
-    setMapImage({ fileName: file.name, dataUrl });
-    setError('');
+  async function pickMaps(files) {
+    const selected = Array.from(files || []);
+    if (!selected.length) return;
+    const remaining = Math.max(0, mapImageLimit - mapImages.length);
+    if (!remaining) { setError(`Chỉ có thể gửi tối đa ${mapImageLimit} ảnh vị trí.`); return; }
+    const accepted = selected.slice(0, remaining).filter((file) => file.type.match(/^image\/(png|jpeg|webp)$/i) && file.size <= 1024 * 1024);
+    if (!accepted.length) { setError('Mỗi ảnh vị trí phải là PNG, JPG hoặc WebP và nhỏ hơn 1 MB.'); return; }
+    const images = await Promise.all(accepted.map(async (file) => ({ fileName: file.name, dataUrl: await fileToDataUrl(file) })));
+    setMapImages((current) => [...current, ...images]);
+    setError(accepted.length < selected.length ? `Đã thêm ${accepted.length} ảnh. Mỗi ảnh phải nhỏ hơn 1 MB, tối đa ${mapImageLimit} ảnh.` : '');
+  }
+
+  function removeMapImage(index) {
+    setMapImages((current) => current.filter((_, imageIndex) => imageIndex !== index));
   }
 
   async function submit(event) {
@@ -607,7 +616,7 @@ function Checkout({ checkout, config, onClose, onSuccess }) {
     try {
       const payload = await storeApi.createOrder({
         customer: form,
-        mapImage,
+        mapImages,
         items: checkout.items.map(({ productId, variantId, size, quantity }) => ({ productId, variantId, size, quantity })),
       });
       setSuccess(payload.order);
@@ -634,7 +643,11 @@ function Checkout({ checkout, config, onClose, onSuccess }) {
                 <label><span>Họ và tên *</span><input required autoComplete="name" value={form.fullName} onChange={(event) => setForm({ ...form, fullName: event.target.value })} /></label>
                 <label><span>Số điện thoại *</span><input required autoComplete="tel" inputMode="tel" value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} /></label>
                 <label><span>Địa chỉ nhận hàng</span><textarea rows="4" value={form.address} onChange={(event) => setForm({ ...form, address: event.target.value })} placeholder="Số nhà, đường, khu vực…" /></label>
-                <label className="ks-file"><span>Ảnh map / vị trí</span><input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => pickMap(event.target.files?.[0])} /><strong>{mapImage ? mapImage.fileName : 'Chọn ảnh (không bắt buộc nếu đã nhập địa chỉ)'}</strong></label>
+                <label><span>Ghi chú cho cửa hàng</span><textarea rows="3" value={form.note} onChange={(event) => setForm({ ...form, note: event.target.value })} placeholder="Ví dụ: gọi trước khi giao, giờ nhận hàng…" /></label>
+                <div className="ks-map-upload">
+                  <label className="ks-file"><span>Ảnh map / vị trí (tối đa 3 ảnh)</span><input type="file" accept="image/png,image/jpeg,image/webp" multiple onChange={(event) => { pickMaps(event.target.files); event.target.value = ''; }} /><strong>{mapImages.length ? '+ Thêm ảnh vị trí' : 'Chọn ảnh (không bắt buộc nếu đã nhập địa chỉ)'}</strong></label>
+                  {!!mapImages.length && <div className="ks-map-upload__list">{mapImages.map((image, index) => <div className="ks-map-upload__item" key={`${image.fileName}-${index}`}><img src={image.dataUrl} alt={`Ảnh vị trí ${index + 1}`} /><span>{image.fileName}</span><button type="button" onClick={() => removeMapImage(index)} aria-label={`Xoá ảnh ${index + 1}`}>×</button></div>)}</div>}
+                </div>
               </div>
               <div className="ks-order-preview">
                 <p className="ks-kicker">YOUR ORDER</p>
@@ -800,7 +813,7 @@ function Orders({ orders, onStatus, onDelete }) {
       {!orders.length ? <div className="ks-empty">Chưa có đơn hàng.</div> : <div className="ks-orders">{orders.map((order) => (
         <article className="ks-order" key={order.id}>
           <header><div><span className={`ks-status ks-status--${order.status}`}>{ORDER_STATUS.find(([value]) => value === order.status)?.[1] || order.status}</span><h3>{order.id}</h3><p>{new Date(order.createdAt).toLocaleString('vi-VN')}</p></div><strong>{money(order.total)}</strong></header>
-          <div className="ks-order__body"><div><p className="ks-kicker">CUSTOMER</p><strong>{order.customer.fullName}</strong><span>{order.customer.phone}</span><span>{order.customer.address || 'Có ảnh map đính kèm'}</span></div><div><p className="ks-kicker">ITEMS</p>{order.items.map((item, index) => <span key={`${item.productId}-${index}`}>{item.title} ×{item.quantity}<small>{item.variantName} · {item.size}</small></span>)}</div></div>
+          <div className="ks-order__body"><div><p className="ks-kicker">CUSTOMER</p><strong>{order.customer.fullName}</strong><span>{order.customer.phone}</span><span>{order.customer.address || 'Có ảnh map đính kèm'}</span>{order.mapImages?.length ? <small>{order.mapImages.length} ảnh vị trí đính kèm</small> : null}{order.customer.note ? <small>Ghi chú: {order.customer.note}</small> : null}</div><div><p className="ks-kicker">ITEMS</p>{order.items.map((item, index) => <span key={`${item.productId}-${index}`}>{item.title} ×{item.quantity}<small>{item.variantName} · {item.size}</small></span>)}</div></div>
           <footer><select value={order.status} onChange={(event) => onStatus(order.id, event.target.value)}>{ORDER_STATUS.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select><button className="is-danger" type="button" onClick={() => onDelete(order)}>Xoá đơn</button></footer>
         </article>
       ))}</div>}
