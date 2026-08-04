@@ -791,7 +791,7 @@ function AdminWorkspace({ user, refreshPublicProducts }) {
       {loading ? <StoreLoading compact /> : tab === 'products' ? (
         <section className="ks-admin-panel">
           <div className="ks-admin-panel__head"><div><p className="ks-kicker">CATALOG</p><h2>Bộ sưu tập hiện tại</h2></div><button className="ks-button ks-button--dark" type="button" onClick={() => setEditor(emptyProduct())}>+ Thêm sản phẩm</button></div>
-          <div className="ks-admin-products">{products.map((product) => <AdminProductRow key={product.id} product={product} onEdit={() => setEditor(product)} onDelete={() => removeProduct(product)} />)}</div>
+          <div className="ks-admin-products">{products.map((product, index) => <AdminProductRow key={product.id} product={product} index={index} onEdit={() => setEditor(product)} onDelete={() => removeProduct(product)} />)}</div>
         </section>
       ) : <Orders orders={orders} onStatus={updateStatus} onDelete={removeOrder} />}
       {editor && <ProductEditor product={editor} onClose={() => setEditor(null)} onSaved={async () => { setEditor(null); await load(); await refreshPublicProducts(); }} />}
@@ -799,26 +799,27 @@ function AdminWorkspace({ user, refreshPublicProducts }) {
   );
 }
 
-function AdminProductRow({ product, onEdit, onDelete }) {
-  const previews = product.variants?.length
-    ? product.variants
-    : [{ id: 'product-main', name: 'Ảnh chính', imageUrl: product.imageUrl }];
+function AdminProductRow({ product, index, onEdit, onDelete }) {
+  const variants = product.variants?.length ? product.variants : [];
   return (
-    <article className="ks-admin-product">
-      <div className="ks-admin-product__previews">
-        {previews.map((variant, index) => (
-          <div className="ks-admin-product__preview" key={variant.id || `${variant.name}-${index}`}>
-            <ProductArt src={variant.imageUrl || product.imageUrl} alt={`${product.title} — ${variant.name || `Mẫu ${index + 1}`}`} />
-            <small>{variant.name || `Mẫu ${index + 1}`}</small>
-          </div>
-        ))}
+    <article className={`ks-product-card ks-admin-product-card ks-product-card--${index % 3}`}>
+      <div className="ks-product-card__media">
+        <ProductArt src={product.imageUrl} alt={product.title} />
+        {product.discountPercent > 0 && <span className="ks-sale-tag">−{product.discountPercent}%</span>}
+        {product.freeship && <span className="ks-ship-tag">FREE SHIP</span>}
       </div>
-      <div className="ks-admin-product__info">
-        <span className={product.active ? 'is-live' : 'is-hidden'}>{product.active ? 'Đang bán' : 'Đang ẩn'}</span>
-        <h3>{product.title}</h3>
-        <p>{previews.length} mẫu · {product.totalStock} sản phẩm · {moneyRange(product.minPrice, product.maxPrice)}</p>
+      <div className="ks-product-card__body">
+        <div><p>{product.subtitle || 'KataShop edition'}</p><h3>{product.title}</h3></div>
+        <div className="ks-product-card__price"><strong>{moneyRange(product.minPrice, product.maxPrice)}</strong>{product.discountPercent > 0 && product.minPrice === product.maxPrice && <del>{money(product.price)}</del>}</div>
+        <div className="ks-product-card__foot">
+          <div className="ks-swatches" aria-label="Màu sắc">{variants.slice(0, 5).map((variant) => <span key={variant.id} title={variant.name} style={{ background: variant.colorHex }} />)}</div>
+          <span className={product.active ? 'is-live' : 'is-hidden'}>{product.active ? `${variants.length} mẫu · ${product.totalStock} còn` : 'Đang ẩn'}</span>
+        </div>
+        <div className="ks-product-card__quick-actions">
+          <button className="ks-quick-cart ks-admin-product-card__delete" type="button" onClick={onDelete}>Xóa</button>
+          <button className="ks-quick-buy" type="button" onClick={onEdit}>Chỉnh sửa</button>
+        </div>
       </div>
-      <div className="ks-admin-product__actions"><button type="button" onClick={onEdit}>Sửa</button><button className="is-danger" type="button" onClick={onDelete}>Xoá</button></div>
     </article>
   );
 }

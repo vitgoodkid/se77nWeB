@@ -1216,3 +1216,30 @@
   .ks-admin-product { grid-template-columns: 1fr; gap: 14px; padding: 18px 0; }
   .ks-admin-product__previews { max-width: none; }
 }
+/* Full-size store-style products in the admin catalog. */
+.ks-admin-products {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(26px, 3vw, 54px);
+  border: 0;
+}
+
+.ks-admin-product-card .ks-product-card__media {
+  margin-top: 0 !important;
+  cursor: default;
+}
+
+.ks-admin-product-card .ks-product-card__foot > span {
+  color: var(--muted);
+  font: 700 9px/1 'JetBrains Mono', monospace;
+}
+
+.ks-admin-product-card .ks-product-card__foot > span.is-hidden { color: #a84253; }
+
+@media (max-width: 1050px) {
+  .ks-admin-products { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 760px) {
+  .ks-admin-products { grid-template-columns: 1fr; gap: 42px; }
+}
