@@ -357,9 +357,9 @@ function Catalog({ products, navigate, config, onQuickAction }) {
           </div>
         </div>
         <div className="ks-hero__visual" aria-hidden="true">
+          {featured?.imageUrl && <img className="ks-hero__product-image" key={featured.id} src={featured.imageUrl} alt="" />}
           <div className="ks-hero__orbit ks-hero__orbit--one" />
           <div className="ks-hero__orbit ks-hero__orbit--two" />
-          <span className="ks-hero__letter">K</span>
           <p>MADE FOR<br />THE IN-BETWEEN</p>
         </div>
         {featured && (

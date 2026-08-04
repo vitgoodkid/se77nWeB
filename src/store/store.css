@@ -1160,3 +1160,15 @@
   .ks-sale-tag { left: 10px; }
   .ks-ship-tag { right: 10px; }
 }
+/* Featured product cover in hero. */
+.ks-hero__product-image {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: ks-featured-in 300ms ease both;
+}
+
+.ks-hero__visual .ks-hero__orbit { z-index: 2; }
