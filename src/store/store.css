@@ -687,19 +687,21 @@
 .ks-cart-item__qty { display: grid; grid-template-columns: 28px 25px 28px; align-items: center; border: 1px solid var(--line); }
 .ks-cart-item__qty button { height: 30px; border: 0; background: transparent; cursor: pointer; }
 .ks-cart-item__qty span { text-align: center; font: 700 9px/1 'JetBrains Mono', monospace; }
-.ks-cart-item__remove {
+/* Need .ks-shell button… specificity to beat `.ks-shell button { font: inherit }`. */
+.ks-shell button.ks-cart-item__remove {
   min-height: 30px;
   padding: 0 8px;
   border: 1px solid rgba(168, 66, 83, 0.4);
   background: transparent;
   color: #a84253;
   font: 700 9px/1 'JetBrains Mono', monospace;
+  font-size: 9px;
   letter-spacing: 0;
   text-transform: uppercase;
   cursor: pointer;
   transition: background 140ms ease, border-color 140ms ease;
 }
-.ks-cart-item__remove:hover {
+.ks-shell button.ks-cart-item__remove:hover {
   border-color: #a84253;
   background: rgba(168, 66, 83, 0.08);
 }
@@ -1063,7 +1065,7 @@
     margin-top: 4px;
   }
   .ks-cart-item__qty { width: max-content; }
-  .ks-cart-item__remove { min-height: 30px; padding: 0 8px; font-size: 9px; }
+  .ks-shell button.ks-cart-item__remove { min-height: 30px; padding: 0 8px; font-size: 9px; }
   .ks-modal { padding: 0; align-items: end; }
   .ks-quick-picker { width: 100%; max-height: 94vh; padding: 25px 18px; }
   .ks-quick-picker__product { grid-template-columns: 96px 1fr; }
