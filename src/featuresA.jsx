@@ -1808,7 +1808,7 @@ function ConverterTool({ accent }) {
   const [mode, setMode] = useState('image'); // 'image' | 'video'
   const TABS = [
     { id: 'image', label: 'IMAGE', sub: 'PNG · JPG · WEBP · GIF' },
-    { id: 'video', label: 'VIDEO', sub: 'MP4 → GIF / MP3' },
+    { id: 'video', label: 'VIDEO', sub: 'FILE / LINK → GIF / MP3' },
   ];
   return (
     <div style={{ display: 'grid', gap: 18 }}>
@@ -2442,7 +2442,7 @@ async function getFFmpeg() {
 function VideoToTool({ accent }) {
   const [src, setSrc] = useState(null);
   const [duration, setDuration] = useState(0);
-  const [mode, setMode] = useState('gif');
+  const [mode, setMode] = useState('mp3');
   const [fps, setFps] = useState(10);
   const [width, setWidth] = useState(480);
   const [bitrate, setBitrate] = useState('192k');
@@ -2453,14 +2453,29 @@ function VideoToTool({ accent }) {
   const [progress, setProgress] = useState(0);
   const [err, setErr] = useState('');
   const [output, setOutput] = useState(null);
+  const [videoUrl, setVideoUrl] = useState('');
+  const [urlBusy, setUrlBusy] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const videoRef = useRef(null);
+  const urlRequestRef = useRef('');
+
+  function clearOutput() {
+    if (output) { URL.revokeObjectURL(output.url); setOutput(null); }
+  }
+
+  function loadVideoFile(f, displayName) {
+    if (!f) return;
+    clearOutput();
+    setSrc((prev) => {
+      if (prev?.url) URL.revokeObjectURL(prev.url);
+      const name = displayName || f.name || 'video.mp4';
+      return { name, size: f.size, url: URL.createObjectURL(f), file: f };
+    });
+    setErr(''); setProgress(0); setStage(''); setStartTime(0); setDuration(0);
+  }
 
   function onFile(e) {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    if (output) { URL.revokeObjectURL(output.url); setOutput(null); }
-    setSrc({ name: f.name, size: f.size, url: URL.createObjectURL(f), file: f });
-    setErr(''); setProgress(0); setStage(''); setStartTime(0);
+    loadVideoFile(e.target.files?.[0]);
   }
 
   function onMetadata() {
@@ -2468,13 +2483,134 @@ function VideoToTool({ accent }) {
     const d = videoRef.current.duration;
     if (Number.isFinite(d)) {
       setDuration(d);
-      setClipLen(Math.min(8, Math.floor(d)));
+      setClipLen(Math.min(8, Math.max(1, Math.floor(d))));
+    }
+  }
+
+  function droppedVideoUrl(dataTransfer) {
+    const uriList = dataTransfer.getData('text/uri-list')
+      .split(/\r?\n/).map((entry) => entry.trim()).find((entry) => entry && !entry.startsWith('#'));
+    if (uriList) return uriList;
+    const plain = dataTransfer.getData('text/plain').trim();
+    return /^https?:\/\/\S+$/i.test(plain) ? plain : '';
+  }
+
+  function handleDrop(event) {
+    event.preventDefault();
+    setIsDragging(false);
+    const videoFile = Array.from(event.dataTransfer.files || []).find((file) =>
+      file.type.startsWith('video/') || file.type.startsWith('audio/'));
+    if (videoFile) { loadVideoFile(videoFile); return; }
+    const droppedUrl = droppedVideoUrl(event.dataTransfer);
+    if (droppedUrl) { setVideoUrl(droppedUrl); loadVideoUrl(droppedUrl); return; }
+    setErr('Drop a video/audio file or a media link.');
+  }
+
+  async function adoptBlobAsOutput(blob, filename, outMode = 'mp3') {
+    clearOutput();
+    const ext = outMode === 'mp3' ? 'mp3' : (filename.match(/\.([a-z0-9]+)$/i)?.[1] || 'bin');
+    const mime = outMode === 'mp3' ? 'audio/mpeg' : (blob.type || 'application/octet-stream');
+    const named = /\.[a-z0-9]+$/i.test(filename) ? filename : `${filename}.${ext}`;
+    const url = URL.createObjectURL(blob);
+    setMode(outMode);
+    setOutput({ url, name: named, size: blob.size, mode: outMode });
+    setSrc(null);
+    setStage('Done');
+    setProgress(1);
+  }
+
+  async function fetchBlob(url, label = 'Downloading…') {
+    setStage(label);
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`Download failed (${response.status}).`);
+    return response.blob();
+  }
+
+  async function loadVideoUrl(rawInput = videoUrl) {
+    const raw = String(rawInput || '').trim();
+    if (!raw) return;
+    let parsed;
+    try {
+      parsed = new URL(raw);
+      if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error('invalid protocol');
+    } catch {
+      setErr('Paste an http(s) video link or direct media URL.');
+      return;
+    }
+    const requestKey = parsed.toString();
+    if (urlRequestRef.current === requestKey) return;
+    urlRequestRef.current = requestKey;
+    setUrlBusy(true); setErr(''); setProgress(0); setStage('Resolving link…');
+
+    try {
+      const prefer = mode === 'gif' ? 'video' : 'audio';
+      const r = await fetch('/api/toolbox?kind=media', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: requestKey, prefer, bitrate }),
+      });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        throw new Error(data.error || `Could not resolve link (${r.status})`
+          + (data.hint ? ` — ${data.hint}` : ''));
+      }
+
+      if (data.mode === 'download' && data.downloadUrl) {
+        const blob = await fetchBlob(data.downloadUrl, 'Fetching media from link…');
+        const mime = (blob.type || '').split(';')[0].toLowerCase();
+        const filename = data.filename || 'media';
+        const isAudio = data.kind === 'audio' || mime.startsWith('audio/');
+        if (isAudio) {
+          const outBlob = mime.startsWith('audio/')
+            ? blob
+            : new Blob([blob], { type: 'audio/mpeg' });
+          const base = filename.replace(/\.[^.]+$/, '') || 'audio';
+          await adoptBlobAsOutput(outBlob, `${base}.mp3`, 'mp3');
+          return;
+        }
+        // Video from platform — load into converter for GIF / MP3 trim.
+        const name = /\.[a-z0-9]+$/i.test(filename) ? filename : `${filename}.mp4`;
+        loadVideoFile(new File([blob], name, { type: mime || 'video/mp4' }), name);
+        setStage('');
+        return;
+      }
+
+      // Direct URL — fetch in the browser (same idea as image converter).
+      const blob = await fetchBlob(data.url || requestKey, 'Loading media link…');
+      const mime = (blob.type || '').split(';')[0].toLowerCase();
+      const fromPath = decodeURIComponent(parsed.pathname.split('/').pop() || 'media').replace(/[^a-z0-9._-]/gi, '-');
+      if (mime.startsWith('audio/') || data.kind === 'audio') {
+        const ext = mime === 'audio/mpeg' ? 'mp3' : (mime.split('/')[1] || 'mp3');
+        const name = /\.[a-z0-9]+$/i.test(fromPath) ? fromPath : `${fromPath || 'audio'}.${ext}`;
+        await adoptBlobAsOutput(new Blob([blob], { type: mime || 'audio/mpeg' }), name, 'mp3');
+        return;
+      }
+      if (!mime.startsWith('video/') && !mime.startsWith('application/octet-stream') && mime !== '') {
+        // Some hosts omit/wrong content-type; still try as video if URL looks like media.
+        if (!/\.(mp4|webm|mov|mkv|m4v|avi)(?:$|[?#])/i.test(requestKey)) {
+          throw new Error('That link does not point to a video or audio file.');
+        }
+      }
+      const ext = mime.includes('webm') ? 'webm' : mime.includes('quicktime') ? 'mov' : 'mp4';
+      const name = /\.[a-z0-9]+$/i.test(fromPath) ? fromPath : `${fromPath || 'video'}.${ext}`;
+      loadVideoFile(new File([blob], name, { type: mime || `video/${ext}` }), name);
+      setStage('');
+    } catch (error) {
+      const msg = error?.message || 'Could not load this link.';
+      const corsHint = /Failed to fetch|NetworkError|CORS/i.test(msg)
+        ? ' The host may block browser downloads (CORS) — try uploading the file, or use a Cobalt instance for YouTube/TikTok.'
+        : '';
+      setErr(msg + corsHint);
+      setStage('');
+    } finally {
+      if (urlRequestRef.current === requestKey) urlRequestRef.current = '';
+      setUrlBusy(false);
     }
   }
 
   async function convert() {
     if (!src || busy) return;
-    setBusy(true); setErr(''); setOutput(null); setProgress(0); setStage('Loading FFmpeg…');
+    setBusy(true); setErr(''); clearOutput(); setProgress(0); setStage('Loading FFmpeg…');
 
     const logs = [];
     const onLog = ({ message }) => { logs.push(message); };
@@ -2512,7 +2648,7 @@ function VideoToTool({ accent }) {
 
       let data;
       try { data = await ff.readFile(outName); }
-      catch (readErr) {
+      catch {
         const tail = logs.slice(-8).join(' | ');
         throw new Error(`Output file not produced. Last log: ${tail || '(empty)'}`);
       }
@@ -2539,12 +2675,42 @@ function VideoToTool({ accent }) {
 
   return (
     <div style={{ display: 'grid', gap: 16 }}>
-      <Kicker>UPLOAD VIDEO</Kicker>
-      <label style={{
-        padding: 32, textAlign: 'center', borderRadius: 12,
-        border: `2px dashed ${COLORS.line}`, cursor: 'pointer', background: COLORS.bg,
-      }}>
-        <input type="file" accept="video/*" onChange={onFile} style={{ display: 'none' }} />
+      <div style={{ display: 'grid', gap: 8 }}>
+        <Kicker>LINK → AUDIO / VIDEO</Kicker>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 8 }}>
+          <Field
+            value={videoUrl}
+            onChange={setVideoUrl}
+            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); loadVideoUrl(); } }}
+            placeholder="Paste YouTube / TikTok / direct .mp4 · .webm · audio URL"
+            style={{ padding: '15px 17px', fontSize: 14 }}
+          />
+          <Btn variant="tinted" color={accent} disabled={urlBusy || !videoUrl.trim()}
+            onClick={() => loadVideoUrl()}>
+            {urlBusy ? 'Loading…' : 'Load'}
+          </Btn>
+        </div>
+        <div className="mono" style={{ fontSize: 11, color: urlBusy ? accent : COLORS.muted, letterSpacing: '0.05em', lineHeight: 1.5 }}>
+          {urlBusy
+            ? (stage || 'RESOLVING LINK…')
+            : 'Direct media links load in-browser. YouTube / TikTok need COBALT_API_URL (optional env).'}
+        </div>
+      </div>
+
+      <Kicker>OR UPLOAD VIDEO</Kicker>
+      <label
+        onDragEnter={(event) => { event.preventDefault(); setIsDragging(true); }}
+        onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = 'copy'; setIsDragging(true); }}
+        onDragLeave={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setIsDragging(false); }}
+        onDrop={handleDrop}
+        style={{
+          padding: 32, textAlign: 'center', borderRadius: 12, cursor: 'pointer',
+          border: `2px dashed ${isDragging ? accent : COLORS.line}`,
+          background: isDragging ? accent + '12' : COLORS.bg,
+          transition: 'border-color 150ms, background 150ms',
+        }}
+      >
+        <input type="file" accept="video/*,audio/*" onChange={onFile} style={{ display: 'none' }} />
         {src ? (
           <div>
             <video ref={videoRef} src={src.url} controls onLoadedMetadata={onMetadata}
@@ -2558,7 +2724,7 @@ function VideoToTool({ accent }) {
           <div>
             <div style={{ fontSize: 28, color: COLORS.muted, marginBottom: 8 }}>▶</div>
             <div className="mono" style={{ fontSize: 12, color: COLORS.muted, letterSpacing: '0.1em' }}>
-              CLICK TO BROWSE
+              DROP FILE / LINK · OR CLICK TO BROWSE
             </div>
           </div>
         )}
@@ -2586,7 +2752,7 @@ function VideoToTool({ accent }) {
             </div>
             <div>
               <Kicker style={{ marginBottom: 8 }}>DURATION · {clipLen}s</Kicker>
-              <input type="range" min="1" max={Math.max(1, Math.floor(duration - startTime))} step="1"
+              <input type="range" min="1" max={Math.max(1, Math.floor(duration - startTime) || 1)} step="1"
                 value={clipLen} onChange={(e) => setClipLen(+e.target.value)}
                 style={{ width: '100%', accentColor: accent }} />
             </div>
@@ -2625,10 +2791,10 @@ function VideoToTool({ accent }) {
         padding: '10px 14px', borderRadius: 10, background: COLORS.bg,
         border: '1px solid ' + COLORS.line, fontSize: 11, color: COLORS.muted, lineHeight: 1.5,
       }}>
-        ◇ Conversion runs 100% in your browser via ffmpeg.wasm. First convert downloads ~25 MB lib (one-time, cached). Nothing leaves your device.
+        ◇ File / direct-link conversion runs in your browser via ffmpeg.wasm (~25 MB lib, cached). Platform-link audio uses Cobalt when configured — nothing is stored on our servers.
       </div>
 
-      {(busy || progress > 0) && (
+      {(busy || urlBusy || progress > 0) && (
         <div>
           <div className="mono" style={{ fontSize: 11, color: COLORS.muted, marginBottom: 6, display: 'flex', justifyContent: 'space-between' }}>
             <span>{stage}</span>
@@ -2672,7 +2838,7 @@ function VideoToTool({ accent }) {
         </div>
       )}
 
-      <Btn variant="solid" color={accent} disabled={!src || busy} onClick={convert}>
+      <Btn variant="solid" color={accent} disabled={!src || busy || urlBusy} onClick={convert}>
         {busy ? 'Converting…' : 'Convert'}
       </Btn>
     </div>

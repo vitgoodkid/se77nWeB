@@ -26,9 +26,10 @@ export default async function handler(req, res) {
       case 'games': return await handleGames(req, res);
       case 'tech':  return await handleTech(req, res);
       case 'history': return await handleHistory(req, res);
+      case 'media': return await handleMedia(req, res);
       case 'ludo':  return await (await import('./_lib/ludo-rooms.js')).handleLudo(req, res);
       case 'store': return await (await import('./_lib/store.js')).handleStore(req, res);
-      default: return res.status(400).json({ error: 'unknown kind', hint: 'expected ?kind=short|paste|games|tech|history|ludo|store' });
+      default: return res.status(400).json({ error: 'unknown kind', hint: 'expected ?kind=short|paste|games|tech|history|media|ludo|store' });
     }
   } catch (err) {
     console.error('[/api/toolbox]', kind, err);
@@ -586,6 +587,187 @@ async function handleTech(req, res) {
   }
 
   return res.status(405).json({ error: 'method not allowed' });
+}
+
+// ═════════════════════════════════════════════════════════════
+// MEDIA — resolve a video/page link for the Converter (link → audio/video).
+//
+// Direct media URLs are returned as { mode: 'direct' } so the browser can
+// fetch + run ffmpeg.wasm (same path as file upload). Hosted platforms
+// (YouTube, TikTok, …) need a Cobalt instance — set COBALT_API_URL (+ optional
+// COBALT_API_KEY) to enable that path.
+// ═════════════════════════════════════════════════════════════
+const MEDIA_MAX_URL = 2048;
+const PLATFORM_HOSTS = new Set([
+  'youtube.com', 'youtu.be', 'tiktok.com', 'instagram.com', 'twitter.com', 'x.com',
+  'facebook.com', 'fb.watch', 'vimeo.com', 'soundcloud.com', 'reddit.com', 'twitch.tv',
+  'bilibili.com', 'dailymotion.com', 'streamable.com', 'ok.ru', 'rutube.ru', 'vk.com', 'loom.com',
+]);
+const DIRECT_MEDIA_EXT_RE = /\.(mp4|webm|mov|mkv|m4v|avi|m4a|mp3|aac|ogg|opus|wav|flac)(?:$|[?#])/i;
+
+function hostnameOf(url) {
+  try { return new URL(url).hostname.replace(/^www\./i, '').toLowerCase(); } catch { return ''; }
+}
+
+function isPlatformMediaUrl(url) {
+  const host = hostnameOf(url);
+  if (!host) return false;
+  for (const p of PLATFORM_HOSTS) {
+    if (host === p || host.endsWith('.' + p)) return true;
+  }
+  return false;
+}
+
+function looksLikeDirectMedia(url) {
+  try {
+    const u = new URL(url);
+    return DIRECT_MEDIA_EXT_RE.test(u.pathname) || DIRECT_MEDIA_EXT_RE.test(u.href);
+  } catch { return false; }
+}
+
+function filenameFromUrl(url, fallback = 'media') {
+  try {
+    const base = decodeURIComponent(new URL(url).pathname.split('/').pop() || '');
+    const clean = base.replace(/[^a-z0-9._-]/gi, '-');
+    if (clean && clean !== '-' && clean !== '.') return clean.slice(0, 120);
+  } catch { /* fall through */ }
+  return fallback;
+}
+
+function cobaltAudioBitrate(bitrate) {
+  // Cobalt accepts 320 / 256 / 128 / 96 / 64 / 8 — map UI 128k/192k/320k.
+  const n = Number(String(bitrate || '192').replace(/k$/i, ''));
+  if (n >= 256) return '320';
+  if (n >= 160) return '256';
+  return '128';
+}
+
+async function resolveViaCobalt(sourceUrl, { prefer, bitrate }) {
+  const base = (process.env.COBALT_API_URL || '').trim().replace(/\/+$/, '');
+  if (!base) return null;
+
+  const body = {
+    url: sourceUrl,
+    filenameStyle: 'basic',
+    disableMetadata: false,
+  };
+  if (prefer === 'audio') {
+    body.downloadMode = 'audio';
+    body.audioFormat = 'mp3';
+    body.audioBitrate = cobaltAudioBitrate(bitrate);
+  } else {
+    body.downloadMode = 'auto';
+    body.videoQuality = '720';
+  }
+
+  const headers = {
+    Accept: 'application/json',
+    'Content-Type': 'application/json',
+  };
+  const key = (process.env.COBALT_API_KEY || '').trim();
+  if (key) headers.Authorization = `Api-Key ${key}`;
+
+  const r = await fetch(base + '/', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(body),
+  });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) {
+    const msg = data?.error?.message || data?.text || data?.error || `Cobalt returned ${r.status}`;
+    const err = new Error(typeof msg === 'string' ? msg : 'Cobalt request failed');
+    err.status = r.status >= 400 && r.status < 600 ? r.status : 502;
+    throw err;
+  }
+
+  if (data.status === 'error') {
+    const msg = data?.error?.message || data?.text || 'Cobalt could not process this link';
+    const err = new Error(typeof msg === 'string' ? msg : 'Cobalt error');
+    err.status = 422;
+    throw err;
+  }
+
+  // picker → first item; tunnel/redirect → top-level url
+  let downloadUrl = data.url || null;
+  let filename = data.filename || null;
+  if (data.status === 'picker' && Array.isArray(data.picker) && data.picker.length) {
+    const item = data.picker.find((p) => p?.url) || data.picker[0];
+    downloadUrl = item?.url || downloadUrl;
+    filename = item?.filename || filename;
+  }
+  if (!downloadUrl) {
+    const err = new Error('Cobalt did not return a download URL (picker/local-processing not supported here)');
+    err.status = 502;
+    throw err;
+  }
+
+  const lower = (filename || downloadUrl).toLowerCase();
+  const isAudio = prefer === 'audio'
+    || /\.(mp3|m4a|aac|ogg|opus|wav|flac)(?:$|[?#])/i.test(lower)
+    || /audio\//i.test(data.mimeType || '');
+
+  return {
+    mode: 'download',
+    downloadUrl,
+    filename: filename || filenameFromUrl(sourceUrl, isAudio ? 'audio.mp3' : 'video.mp4'),
+    kind: isAudio ? 'audio' : 'video',
+    source: 'cobalt',
+  };
+}
+
+async function handleMedia(req, res) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  const body = req.body || {};
+  const raw = (body.url || '').toString().trim();
+  const prefer = String(body.prefer || 'audio').toLowerCase() === 'video' ? 'video' : 'audio';
+  const bitrate = (body.bitrate || '192k').toString();
+
+  if (!raw) return res.status(400).json({ error: 'url required' });
+  if (raw.length > MEDIA_MAX_URL) return res.status(400).json({ error: 'url too long' });
+
+  let parsed;
+  try {
+    parsed = new URL(raw);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return res.status(400).json({ error: 'url must start with http:// or https://' });
+    }
+  } catch {
+    return res.status(400).json({ error: 'invalid url' });
+  }
+  const sourceUrl = parsed.toString();
+
+  // Platform page → Cobalt (optional)
+  if (isPlatformMediaUrl(sourceUrl) && !looksLikeDirectMedia(sourceUrl)) {
+    try {
+      const resolved = await resolveViaCobalt(sourceUrl, { prefer, bitrate });
+      if (!resolved) {
+        return res.status(503).json({
+          error: 'Platform links need a Cobalt instance',
+          hint: 'Set COBALT_API_URL (and optional COBALT_API_KEY) in env, or paste a direct .mp4 / .webm / audio file URL instead.',
+          needsCobalt: true,
+        });
+      }
+      return res.status(200).json(resolved);
+    } catch (e) {
+      console.error('[/api/toolbox media] cobalt', e);
+      return res.status(e.status || 502).json({
+        error: e.message || 'Failed to resolve platform link',
+        needsCobalt: true,
+      });
+    }
+  }
+
+  // Direct media (or unknown host) — client fetches in-browser.
+  return res.status(200).json({
+    mode: 'direct',
+    url: sourceUrl,
+    filename: filenameFromUrl(sourceUrl, prefer === 'audio' ? 'audio' : 'video'),
+    kind: looksLikeDirectMedia(sourceUrl) && /\.(m4a|mp3|aac|ogg|opus|wav|flac)(?:$|[?#])/i.test(sourceUrl)
+      ? 'audio'
+      : 'video',
+    source: 'direct',
+  });
 }
 
 // ═════════════════════════════════════════════════════════════
