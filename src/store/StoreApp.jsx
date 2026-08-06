@@ -596,8 +596,26 @@ function CartDrawer({ open, items, config, onClose, onQuantity, onCheckout }) {
           {items.map((item) => (
             <div className="ks-cart-item" key={item.key}>
               <ProductArt src={item.imageUrl} alt={item.title} />
-              <div><h3>{item.title}</h3><p>{item.variantName} · {item.size}</p><strong>{money(item.unitPrice)}</strong></div>
-              <div className="ks-cart-item__qty"><button type="button" onClick={() => onQuantity(item.key, item.quantity - 1)}>−</button><span>{item.quantity}</span><button type="button" onClick={() => onQuantity(item.key, item.quantity + 1)}>+</button></div>
+              <div className="ks-cart-item__info">
+                <h3>{item.title}</h3>
+                <p>{item.variantName} · {item.size}</p>
+                <strong>{money(item.unitPrice)}</strong>
+              </div>
+              <div className="ks-cart-item__controls">
+                <div className="ks-cart-item__qty">
+                  <button type="button" onClick={() => onQuantity(item.key, item.quantity - 1)} aria-label="Giảm số lượng">−</button>
+                  <span>{item.quantity}</span>
+                  <button type="button" onClick={() => onQuantity(item.key, item.quantity + 1)} aria-label="Tăng số lượng">+</button>
+                </div>
+                <button
+                  className="ks-cart-item__remove"
+                  type="button"
+                  onClick={() => onQuantity(item.key, 0)}
+                  aria-label={`Xoá ${item.title} khỏi giỏ`}
+                >
+                  Xoá
+                </button>
+              </div>
             </div>
           ))}
         </div>
