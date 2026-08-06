@@ -946,11 +946,79 @@
   .ks-hero__visual { min-height: 420px; border: 0; border-top: 1px solid var(--line); }
   .ks-hero__letter { font-size: 240px; }
   .ks-featured-ticket { right: 16px; bottom: 18px; width: 210px; }
-  .ks-catalog { padding: 72px 16px 80px; }
-  .ks-section-head { align-items: start; flex-direction: column; }
-  .ks-product-grid { grid-template-columns: 1fr; gap: 55px; }
-  .ks-product-card--1 .ks-product-card__media { margin-top: 0; }
-  .ks-product-card__media .ks-art { aspect-ratio: 4 / 4.7; }
+  .ks-catalog { padding: 20px 12px 72px; }
+  .ks-home .ks-catalog--first { padding-top: 18px; scroll-margin-top: 72px; }
+  .ks-section-head {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+  .ks-section-head h2,
+  .ks-admin-panel h2 { font-size: clamp(28px, 8vw, 36px); }
+  .ks-section-head .ks-kicker { margin-bottom: 8px; font-size: 9px; }
+  .ks-filters { width: 100%; overflow-x: auto; }
+  .ks-filters button { flex: 1; padding: 11px 12px; font-size: 11px; }
+  /* Mobile 2×2: ~4 products visible in one viewport. */
+  .ks-product-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 8px;
+  }
+  .ks-product-card--1 .ks-product-card__media,
+  .ks-product-card--2 .ks-product-card__media { margin-top: 0; }
+  .ks-product-card__media .ks-art { aspect-ratio: 1 / 1; }
+  .ks-product-card__body { padding: 10px 1px 0; }
+  .ks-product-card__body > div:first-child { min-height: 0; }
+  .ks-product-card__body p {
+    margin: 0 0 3px;
+    font-size: 8px;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .ks-product-card__body h3 {
+    font-size: 14px;
+    line-height: 1.2;
+    letter-spacing: -0.03em;
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+  .ks-product-card__price { margin-top: 7px; gap: 6px; }
+  .ks-product-card__price strong { font-size: 13px; letter-spacing: -0.04em; }
+  .ks-product-card__price del { font-size: 9px; }
+  .ks-product-card__foot {
+    margin-top: 8px;
+    padding-top: 8px;
+    gap: 6px;
+  }
+  .ks-product-card__foot button { display: none; }
+  .ks-product-card__foot > span { font-size: 8px !important; }
+  .ks-swatches { gap: 4px; }
+  .ks-swatches span { width: 10px; height: 10px; }
+  .ks-product-card__quick-actions {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .ks-product-card__quick-actions button {
+    min-height: 34px;
+    padding: 0 6px;
+    font-size: 9px;
+    letter-spacing: 0.02em;
+  }
+  .ks-sale-tag,
+  .ks-ship-tag {
+    top: 6px;
+    padding: 6px 7px;
+    font-size: 8px;
+    letter-spacing: 0.05em;
+    box-shadow: 2px 2px 0 rgba(32, 27, 25, 0.14);
+  }
+  .ks-sale-tag { left: 6px; }
+  .ks-ship-tag { right: 6px; }
   .ks-promise { grid-template-columns: 1fr; }
   .ks-promise .ks-kicker { grid-column: auto; }
   .ks-promise > * { min-height: auto; padding: 26px 20px; border-right: 0; border-bottom: 1px solid rgba(255,255,255,.14); }
@@ -979,18 +1047,9 @@
   .ks-order-preview { order: -1; }
   .ks-admin-gate { min-height: calc(100vh - 68px); }
   .ks-admin-gate__card { padding: 35px 24px; }
-  .ks-admin { padding: 28px 14px 70px; }
-  .ks-admin__hero { padding-top: 25px; }
-  .ks-admin__stats { grid-template-columns: 1fr; }
-  .ks-admin__stats span { min-width: 0; border-right: 0; border-bottom: 1px solid var(--line); }
   .ks-admin__tabs { overflow-x: auto; }
   .ks-admin__tabs button { white-space: nowrap; }
-  .ks-admin-panel { padding: 20px 14px; }
   .ks-admin-panel__head { align-items: stretch; flex-direction: column; }
-  .ks-admin-product { grid-template-columns: 1fr; gap: 18px; padding: 22px 0; }
-  .ks-admin-product__previews { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 290px; }
-  .ks-admin-product__preview .ks-art { min-height: 150px; }
-  .ks-admin-product__actions { grid-column: auto; }
   .ks-order__body { grid-template-columns: 1fr; }
   .ks-image-field { grid-template-columns: 1fr; }
   .ks-image-field__preview { max-width: 220px; }
@@ -1150,15 +1209,16 @@
 }
 
 @media (max-width: 760px) {
+  /* Keep badges compact so 2×2 cards stay readable. */
   .ks-sale-tag,
   .ks-ship-tag {
-    top: 10px;
-    padding: 12px 14px;
-    font-size: 12px;
+    top: 6px;
+    padding: 6px 7px;
+    font-size: 8px;
   }
 
-  .ks-sale-tag { left: 10px; }
-  .ks-ship-tag { right: 10px; }
+  .ks-sale-tag { left: 6px; }
+  .ks-ship-tag { right: 6px; }
 }
 /* Featured product cover in hero. */
 .ks-hero__product-image {
@@ -1212,10 +1272,6 @@
 .ks-admin-product__actions { gap: 7px; }
 .ks-admin-product button { padding: 9px 11px; font-size: 10px; }
 
-@media (max-width: 760px) {
-  .ks-admin-product { grid-template-columns: 1fr; gap: 14px; padding: 18px 0; }
-  .ks-admin-product__previews { max-width: none; }
-}
 /* Full-size store-style products in the admin catalog. */
 .ks-admin-products {
   display: grid;
@@ -1241,7 +1297,44 @@
 }
 
 @media (max-width: 760px) {
-  .ks-admin-products { grid-template-columns: 1fr; gap: 42px; }
+  /* Admin catalog mirrors store: dense 2×2 product cards. */
+  .ks-admin { padding: 12px 12px 70px; }
+  .ks-admin__hero {
+    display: grid;
+    gap: 12px;
+    padding: 10px 0 14px;
+  }
+  .ks-admin__hero .ks-kicker { margin-bottom: 6px; font-size: 9px; }
+  .ks-admin__hero h1 { font-size: clamp(26px, 7vw, 34px); }
+  .ks-admin__hero > div:first-child > p:last-child { display: none; }
+  .ks-admin__stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    justify-self: stretch;
+  }
+  .ks-admin__stats span {
+    min-width: 0;
+    gap: 4px;
+    padding: 10px 6px;
+    border-right: 1px solid var(--line);
+    border-bottom: 0;
+    font-size: 9px;
+  }
+  .ks-admin__stats span:last-child { border-right: 0; }
+  .ks-admin__stats strong { display: block; font-size: 13px; }
+  .ks-admin__tabs { margin-bottom: 12px; }
+  .ks-admin__tabs button { padding: 12px 14px; font-size: 11px; }
+  .ks-admin-panel { padding: 12px 8px; }
+  .ks-admin-panel__head { gap: 10px; margin-bottom: 12px; }
+  .ks-admin-panel__head .ks-kicker { margin-bottom: 6px; font-size: 9px; }
+  .ks-admin-panel__head .ks-button { width: 100%; min-height: 40px; font-size: 11px; }
+  .ks-admin-products {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 8px;
+  }
+  .ks-admin-product-card .ks-product-card__quick-actions {
+    grid-template-columns: 1fr 1fr;
+  }
+  .ks-product-card .ks-art__mark { font-size: 64px; }
 }
 /* Persistent customer actions. */
 .ks-floating-actions {
