@@ -688,13 +688,13 @@
 .ks-cart-item__qty button { height: 30px; border: 0; background: transparent; cursor: pointer; }
 .ks-cart-item__qty span { text-align: center; font: 700 9px/1 'JetBrains Mono', monospace; }
 .ks-cart-item__remove {
-  min-height: 30px;
-  padding: 0 10px;
+  min-height: 28px;
+  padding: 0 8px;
   border: 1px solid rgba(168, 66, 83, 0.4);
   background: transparent;
   color: #a84253;
-  font: 700 9px/1 'JetBrains Mono', monospace;
-  letter-spacing: 0.06em;
+  font: 700 7px/1 'JetBrains Mono', monospace;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   cursor: pointer;
   transition: background 140ms ease, border-color 140ms ease;
@@ -1063,7 +1063,7 @@
     margin-top: 4px;
   }
   .ks-cart-item__qty { width: max-content; }
-  .ks-cart-item__remove { min-height: 32px; padding: 0 12px; font-size: 10px; }
+  .ks-cart-item__remove { min-height: 28px; padding: 0 8px; font-size: 7px; }
   .ks-modal { padding: 0; align-items: end; }
   .ks-quick-picker { width: 100%; max-height: 94vh; padding: 25px 18px; }
   .ks-quick-picker__product { grid-template-columns: 96px 1fr; }
