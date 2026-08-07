@@ -787,19 +787,35 @@ function productFromAiFill(fill, orderedImages = []) {
   const sizes = Array.isArray(fill?.sizes) && fill.sizes.length ? fill.sizes : ['Free size'];
   const stockTemplate = Object.fromEntries(sizes.map((size) => [size, 0]));
   const variants = (Array.isArray(fill?.variants) && fill.variants.length ? fill.variants : [{ name: 'Mặc định', colorHex: '#d36a79', imageIndex: mainIndex }])
-    .map((variant, index) => ({
-      id: `variant-${index + 1}`,
-      name: variant.name || `Mẫu ${index + 1}`,
-      colorHex: variant.colorHex || '#d36a79',
-      imageUrl: images[variant.imageIndex] || imageUrl,
-      priceOverride: null,
-      stockBySize: { ...stockTemplate },
-    }));
+    .map((variant, index) => {
+      const stockBySize = { ...stockTemplate };
+      const fromAi = variant.stockBySize && typeof variant.stockBySize === 'object' ? variant.stockBySize : {};
+      for (const size of sizes) {
+        stockBySize[size] = Math.max(0, Math.round(Number(fromAi[size]) || 0));
+      }
+      let priceOverride = null;
+      if (variant.priceOverride != null && variant.priceOverride !== '') {
+        const n = Math.round(Number(variant.priceOverride));
+        if (Number.isFinite(n) && n >= 0) priceOverride = n;
+      }
+      return {
+        id: `variant-${index + 1}`,
+        name: variant.name || `Mẫu ${index + 1}`,
+        colorHex: variant.colorHex || '#d36a79',
+        imageUrl: images[variant.imageIndex] || imageUrl,
+        priceOverride,
+        stockBySize,
+      };
+    });
+  const price = Math.max(0, Math.round(Number(fill?.price) || 0));
+  const discountPercent = Math.max(0, Math.min(95, Math.round(Number(fill?.discountPercent) || 0)));
   return {
     ...emptyProduct(),
     title: fill?.title || '',
     subtitle: fill?.subtitle || '',
     description: fill?.description || '',
+    price,
+    discountPercent,
     genders: Array.isArray(fill?.genders) && fill.genders.length ? fill.genders : ['unisex'],
     sizes,
     imageUrl,
@@ -1059,7 +1075,7 @@ function AiAddProductComposer({ onClose, onReady }) {
             rows="7"
             value={note}
             onChange={(event) => setNote(event.target.value)}
-            placeholder={'VD:\n- 2 màu: Đen, Be\n- Size: Free size\n- Nữ, nhấn “chống tụt / đệm dày”\n- Giá khoảng 180 TWD'}
+            placeholder={'VD:\n- 2 màu: Đen, Be\n- Size: Free size\n- Nữ, nhấn “chống tụt / đệm dày”\n- Giá: 180 TWD\n- Tồn kho: mỗi mẫu 10 cái'}
           />
         </section>
 
@@ -1168,26 +1184,24 @@ function ProductEditor({ product, onClose, onSaved }) {
         ...galleryImages,
         ...draft.variants.map((variant) => variant.imageUrl),
       ].filter(Boolean));
-      // Keep price/flags from current draft; merge AI listing fields.
+      // Prefer AI price/stock from NOTE; keep admin flags (freeship/featured/active).
       setDraft((current) => ({
         ...current,
         title: next.title || current.title,
         subtitle: next.subtitle ?? current.subtitle,
         description: next.description ?? current.description,
+        price: next.price || current.price,
+        discountPercent: next.discountPercent || current.discountPercent,
         genders: next.genders,
         imageUrl: next.imageUrl || current.imageUrl,
         galleryImages: next.galleryImages,
         variants: next.variants.map((variant, index) => {
           const existing = current.variants[index];
-          const stockBySize = { ...variant.stockBySize };
-          if (existing?.stockBySize) {
-            for (const size of Object.keys(stockBySize)) stockBySize[size] = Number(existing.stockBySize[size]) || 0;
-          }
           return {
             ...variant,
             id: existing?.id || variant.id,
-            priceOverride: existing?.priceOverride ?? null,
-            stockBySize,
+            // Keep existing override only when AI did not supply one.
+            priceOverride: variant.priceOverride ?? existing?.priceOverride ?? null,
           };
         }),
       }));

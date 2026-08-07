@@ -612,24 +612,61 @@ const STORE_AI_SYSTEM = [
   '  "description": string,',
   '  "genders": ["men"|"women"|"unisex"],',
   '  "sizes": string[],',
+  '  "price": number,',
+  '  "discountPercent": number,',
   '  "mainImageIndex": number,',
   '  "galleryImageIndexes": number[],',
-  '  "variants": [{ "name": string, "colorHex": "#RRGGBB", "imageIndex": number }]',
+  '  "variants": [{',
+  '    "name": string,',
+  '    "colorHex": "#RRGGBB",',
+  '    "imageIndex": number,',
+  '    "priceOverride": number|null,',
+  '    "stockBySize": { "<size>": number }',
+  '  }]',
   '}',
   'Quy tắc:',
-  '- NOTE của admin là ưu tiên cao nhất: số mẫu, màu, size, mô tả bắt buộc, giá gợi ý… phải tuân theo.',
+  '- NOTE của admin là ưu tiên tuyệt đối: số mẫu, màu, size, mô tả, GIÁ, TỒN KHO… phải tuân theo đúng số liệu trong NOTE.',
+  '- price: giá mặc định (TWD). Lấy số từ NOTE (vd "180", "180 TWD", "giá 180"). Không bịa giá nếu NOTE không nói — khi đó để 0.',
+  '- discountPercent: % giảm nếu NOTE có; không thì 0. Chỉ 0–95.',
+  '- stockBySize: bắt buộc điền theo NOTE. Nếu NOTE nói tồn chung (vd "còn 10", "stock 10") thì gán cùng số cho mọi size của mọi mẫu.',
+  '- Nếu NOTE nói tồn theo size/mẫu (vd "Đen S:5 M:3", "mỗi mẫu 8 cái") thì map đúng từng ô stockBySize.',
+  '- Nếu NOTE không nói tồn kho thì để 0 (không tự bịa).',
+  '- priceOverride: chỉ khi NOTE ghi giá khác theo mẫu; không thì null (dùng price chung).',
   '- Viết title/subtitle/description bằng tiếng Việt, tự nhiên, bán hàng, không phóng đại quá đà.',
   '- title ngắn gọn (≤ 80 ký tự). subtitle một dòng. description 2–4 câu (bổ sung chi tiết từ NOTE nếu có).',
   '- sizes: lấy từ NOTE nếu admin ghi; không thì gợi ý phù hợp sản phẩm.',
   '- mainImageIndex: ảnh đẹp/đại diện nhất làm ảnh chính (0-based).',
-  '- galleryImageIndexes: ảnh phụ (chi tiết/góc khác), không trùng main và không bắt buộc trùng variant.',
+  '- galleryImageIndexes: ảnh phụ (chi tiết/góc khác), không trùng main.',
   '- variants: mỗi màu/kiểu là một mẫu. imageIndex trỏ ảnh phù hợp nhất cho mẫu đó.',
   '- Nếu NOTE yêu cầu N mẫu thì trả đúng N mẫu (trong khả năng ảnh).',
-  '- colorHex phải là hex hợp lệ. Không bịa giá. Không trả field ngoài schema.',
+  '- colorHex phải là hex hợp lệ. Không trả field ngoài schema.',
 ].join('\n');
 
 function isHttpOrDataImage(value) {
   return /^https?:\/\//i.test(value) || /^data:image\/(png|jpe?g|webp);base64,/i.test(value);
+}
+
+function stockMapFrom(raw, sizes) {
+  const out = Object.fromEntries(sizes.map((size) => [size, 0]));
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return out;
+  for (const size of sizes) {
+    const direct = raw[size];
+    if (direct != null) {
+      out[size] = Math.max(0, Math.min(9999, Math.round(Number(direct) || 0)));
+      continue;
+    }
+    // Case-insensitive key match
+    const hit = Object.keys(raw).find((key) => String(key).trim().toLowerCase() === size.toLowerCase());
+    if (hit != null) out[size] = Math.max(0, Math.min(9999, Math.round(Number(raw[hit]) || 0)));
+  }
+  // If NOTE-style single stock was returned as { all: N } / { default: N } / { "*": N }
+  const sharedKeys = ['all', 'default', '*', 'total', 'chung'];
+  const shared = sharedKeys.map((key) => raw[key]).find((value) => value != null && Number.isFinite(Number(value)));
+  if (shared != null && sizes.every((size) => out[size] === 0)) {
+    const n = Math.max(0, Math.min(9999, Math.round(Number(shared) || 0)));
+    for (const size of sizes) out[size] = n;
+  }
+  return out;
 }
 
 function normalizeAiFill(raw, imageCount) {
@@ -645,6 +682,11 @@ function normalizeAiFill(raw, imageCount) {
 
   let sizes = list(parsed.sizes, 12, 32);
   if (!sizes.length) sizes = ['Free size'];
+
+  const price = Math.max(0, Math.min(1_000_000, Math.round(Number(parsed.price) || 0)));
+  let discountPercent = Math.round(Number(parsed.discountPercent) || 0);
+  if (!Number.isFinite(discountPercent)) discountPercent = 0;
+  discountPercent = Math.max(0, Math.min(95, discountPercent));
 
   let mainImageIndex = Number.parseInt(parsed.mainImageIndex, 10);
   if (!Number.isFinite(mainImageIndex) || mainImageIndex < 0 || mainImageIndex >= imageCount) mainImageIndex = 0;
@@ -664,10 +706,27 @@ function normalizeAiFill(raw, imageCount) {
     if (!Number.isFinite(imageIndex) || imageIndex < 0 || imageIndex >= imageCount) {
       imageIndex = Math.min(index, Math.max(0, imageCount - 1));
     }
-    return { name, colorHex, imageIndex };
+    let priceOverride = null;
+    if (entry?.priceOverride != null && entry.priceOverride !== '') {
+      const n = Math.round(Number(entry.priceOverride));
+      if (Number.isFinite(n) && n >= 0) priceOverride = Math.min(1_000_000, n);
+    }
+    // Accept stockBySize object, or a flat stock number for all sizes.
+    let stockBySize = stockMapFrom(entry?.stockBySize, sizes);
+    if (sizes.every((size) => stockBySize[size] === 0)) {
+      const flat = entry?.stock ?? entry?.quantity ?? entry?.qty ?? parsed.stock ?? parsed.quantity;
+      if (flat != null && Number.isFinite(Number(flat))) {
+        const n = Math.max(0, Math.min(9999, Math.round(Number(flat) || 0)));
+        stockBySize = Object.fromEntries(sizes.map((size) => [size, n]));
+      }
+    }
+    return { name, colorHex, imageIndex, priceOverride, stockBySize };
   });
 
-  return { title, subtitle, description, genders, sizes, mainImageIndex, galleryImageIndexes, variants };
+  return {
+    title, subtitle, description, genders, sizes, price, discountPercent,
+    mainImageIndex, galleryImageIndexes, variants,
+  };
 }
 
 async function handleAiFill(req, res) {
@@ -691,7 +750,10 @@ async function handleAiFill(req, res) {
   const prompt = [
     `Có ${images.length} ảnh sản phẩm (imageIndex 0 → ${images.length - 1}), chưa xếp sẵn vai trò.`,
     'Hãy tự chọn ảnh chính, ảnh phụ và ảnh cho từng mẫu.',
-    hint ? `NOTE BẮT BUỘC TỪ ADMIN (ưu tiên tuyệt đối):\n${hint}` : 'Admin không để NOTE — tự suy luận hợp lý từ ảnh.',
+    hint
+      ? `NOTE BẮT BUỘC TỪ ADMIN (ưu tiên tuyệt đối — trích đúng GIÁ và TỒN KHO nếu có):\n${hint}`
+      : 'Admin không để NOTE — tự suy luận hợp lý từ ảnh; price=0 và stockBySize=0 nếu không chắc.',
+    'Nhớ trả price (number) và variants[].stockBySize theo NOTE.',
     'Hãy điền listing KataShop theo schema đã cho.',
   ].filter(Boolean).join('\n');
 
