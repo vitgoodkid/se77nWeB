@@ -118,6 +118,12 @@ async function callVisionChat({ system, prompt, images, history, max_tokens, tem
     temperature,
   };
   if (jsonMode) body.response_format = { type: 'json_object' };
+  // Gemini 2.5 via OpenRouter often burns the whole max_tokens budget on
+  // "thinking" and returns empty message.content — keep reasoning low for
+  // structured product fills so JSON actually comes back.
+  if (/gemini/i.test(visionModel)) {
+    body.reasoning = { effort: 'low' };
+  }
   const upstream = await fetch(`${baseUrl}/chat/completions`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
@@ -130,7 +136,36 @@ async function callVisionChat({ system, prompt, images, history, max_tokens, tem
     err.status = upstream.status;
     throw err;
   }
-  return data?.choices?.[0]?.message?.content || data?.choices?.[0]?.text || '';
+  const choice = data?.choices?.[0];
+  const textOut = extractAssistantText(choice?.message) || String(choice?.text || '').trim();
+  if (!textOut) {
+    const finish = choice?.finish_reason || data?.error?.message || 'empty';
+    const err = new Error(`OpenRouter/Gemini trả về rỗng (finish=${finish}). Thử lại hoặc đổi STORE_AI_MODEL sang google/gemini-2.5-flash.`);
+    err.status = 422;
+    err.upstream = data;
+    throw err;
+  }
+  return textOut;
+}
+
+/** Normalize OpenAI/OpenRouter message.content (string | parts[]) to text. */
+function extractAssistantText(message) {
+  if (!message || typeof message !== 'object') return '';
+  const content = message.content;
+  if (typeof content === 'string') return content.trim();
+  if (Array.isArray(content)) {
+    return content
+      .map((part) => {
+        if (typeof part === 'string') return part;
+        if (!part || typeof part !== 'object') return '';
+        if (part.type === 'text') return part.text || '';
+        return part.text || part.content || '';
+      })
+      .join('')
+      .trim();
+  }
+  if (typeof message.refusal === 'string' && message.refusal.trim()) return message.refusal.trim();
+  return '';
 }
 
 // ── fal.ai queue (submit + poll until completed or pending) ────
@@ -206,14 +241,50 @@ export function stripJsonFence(s) {
   return String(s).replace(/^\s*```(?:json)?\s*/i, '').replace(/```\s*$/i, '').trim();
 }
 
+/** Extract the first balanced {...} object from a string. */
+function extractBalancedObject(s) {
+  const text = String(s || '');
+  const start = text.indexOf('{');
+  if (start < 0) return null;
+  let depth = 0;
+  let inString = false;
+  let escape = false;
+  for (let i = start; i < text.length; i += 1) {
+    const ch = text[i];
+    if (inString) {
+      if (escape) escape = false;
+      else if (ch === '\\') escape = true;
+      else if (ch === '"') inString = false;
+      continue;
+    }
+    if (ch === '"') {
+      inString = true;
+      continue;
+    }
+    if (ch === '{') depth += 1;
+    else if (ch === '}') {
+      depth -= 1;
+      if (depth === 0) return text.slice(start, i + 1);
+    }
+  }
+  return null;
+}
+
 export function tryParseJson(s) {
+  if (s == null) return null;
+  if (typeof s === 'object') return s;
+  const cleaned = stripJsonFence(s);
   try {
-    return JSON.parse(stripJsonFence(s));
+    return JSON.parse(cleaned);
   } catch {
-    // Try to extract first {...} block
+    const block = extractBalancedObject(cleaned) || extractBalancedObject(String(s));
+    if (block) {
+      try { return JSON.parse(block); } catch { /* fall through */ }
+    }
+    // Last resort: greedy {...} (may fail on nested junk)
     const m = String(s).match(/\{[\s\S]*\}/);
     if (m) {
-      try { return JSON.parse(m[0]); } catch {}
+      try { return JSON.parse(m[0]); } catch { /* ignore */ }
     }
     return null;
   }

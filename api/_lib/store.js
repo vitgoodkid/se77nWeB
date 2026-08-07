@@ -605,7 +605,7 @@ async function handleOrders(req, res) {
 
 const STORE_AI_SYSTEM = [
   'Bạn là trợ lý merchandising cho KataShop (cửa hàng thời trang/lifestyle nhỏ tại Đài Loan).',
-  'Nhìn ảnh sản phẩm + NOTE của admin (nếu có) và trả về JSON thuần (không markdown) theo schema:',
+  'Nhìn ảnh sản phẩm + NOTE của admin (nếu có) và trả về ĐÚNG MỘT JSON object thuần (không markdown, không giải thích, không ```) theo schema:',
   '{',
   '  "title": string,',
   '  "subtitle": string,',
@@ -765,16 +765,21 @@ async function handleAiFill(req, res) {
   ].filter(Boolean).join('\n');
 
   let textOut;
-  try {
-    textOut = await callChat({
+  const primaryModel = process.env.STORE_AI_MODEL || process.env.OPENROUTER_VISION_MODEL || 'google/gemini-2.5-pro';
+  const fallbackModel = process.env.STORE_AI_FALLBACK_MODEL || 'google/gemini-2.5-flash';
+  async function runFill(model) {
+    return callChat({
       system: STORE_AI_SYSTEM,
       prompt,
       images,
       jsonMode: true,
-      temperature: 0.35,
-      max_tokens: 2200,
-      model: process.env.STORE_AI_MODEL || process.env.OPENROUTER_VISION_MODEL || 'google/gemini-2.5-pro',
+      temperature: 0.2,
+      max_tokens: 8192,
+      model,
     });
+  }
+  try {
+    textOut = await runFill(primaryModel);
   } catch (error) {
     // Surface provider/config errors to the admin UI (avoid generic 5xx mask).
     const status = Number(error?.status) || 422;
@@ -785,8 +790,27 @@ async function handleAiFill(req, res) {
     );
   }
 
-  const parsed = tryParseJson(textOut);
-  if (!parsed) throw httpError(422, 'AI trả về dữ liệu không đọc được. Thử lại với ảnh rõ hơn.', 'AI_PARSE_FAILED');
+  let parsed = tryParseJson(textOut);
+  // Gemini 2.5-pro via OpenRouter sometimes returns empty/prose instead of JSON —
+  // one automatic retry on flash before failing the admin.
+  if (!parsed && fallbackModel && fallbackModel !== primaryModel) {
+    try {
+      textOut = await runFill(fallbackModel);
+      parsed = tryParseJson(textOut);
+    } catch {
+      /* keep original parse failure below */
+    }
+  }
+  if (!parsed) {
+    const preview = String(textOut || '').replace(/\s+/g, ' ').slice(0, 120);
+    throw httpError(
+      422,
+      preview
+        ? `AI trả JSON không hợp lệ (không phải ảnh mờ). Đoạn trả về: “${preview}…” — thử lại.`
+        : 'AI (OpenRouter/Gemini) trả về rỗng — thường do model reasoning nuốt hết token. Thử lại hoặc đặt STORE_AI_MODEL=google/gemini-2.5-flash.',
+      'AI_PARSE_FAILED',
+    );
+  }
   const fill = normalizeAiFill(parsed, images.length);
   return res.status(200).json({ ok: true, fill, images });
 }
