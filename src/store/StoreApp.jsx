@@ -720,6 +720,64 @@ function fileToDataUrl(file) {
   });
 }
 
+/** Shrink a data URL before posting to /api/image (Vercel body cap). */
+async function compressDataUrl(dataUrl, { maxDim = 1536, quality = 0.82, maxBytes = 2_800_000 } = {}) {
+  if (!dataUrl || typeof dataUrl !== 'string') return dataUrl;
+  if (!dataUrl.startsWith('data:image/')) return dataUrl;
+  const img = await new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error('Không giải mã được ảnh.'));
+    image.src = dataUrl;
+  });
+  let { width, height } = img;
+  const scale = Math.min(1, maxDim / Math.max(width, height));
+  width = Math.round(width * scale);
+  height = Math.round(height * scale);
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+  let q = quality;
+  let out = canvas.toDataURL('image/jpeg', q);
+  while (out.length > maxBytes && q > 0.45) {
+    q -= 0.1;
+    out = canvas.toDataURL('image/jpeg', q);
+  }
+  return out;
+}
+
+/** 1 main + 4 gen: 2 angle + 2 try-on. Keep product identity exact. */
+const PRODUCT_VIEW_GENS = [
+  {
+    kind: 'angle',
+    label: 'Đổi góc',
+    prompt: 'E-commerce product photo of the EXACT same garment/item from the reference. Change camera to a clean 3/4 front angle. Same color, fabric, pattern, logos, and cut. Soft studio lighting, plain light background, sharp focus, no text, no watermark, no props that change the product.',
+  },
+  {
+    kind: 'angle',
+    label: 'Đổi góc',
+    prompt: 'E-commerce product photo of the EXACT same garment/item from the reference. Change camera to a side or slight back 3/4 angle so construction and silhouette are clear. Same color, fabric, pattern, logos, and cut. Soft studio lighting, plain light background, sharp focus, no text, no watermark.',
+  },
+  {
+    kind: 'tryon',
+    label: 'Mặc thử',
+    prompt: 'Photorealistic fashion try-on: an East Asian female model wearing the EXACT product from the reference. Keep product color, fabric, pattern, logos, and cut identical. Full or three-quarter body, natural pose, clean studio background, soft daylight, commercial catalog look. No text, no watermark.',
+  },
+  {
+    kind: 'tryon',
+    label: 'Mặc thử',
+    prompt: 'Photorealistic fashion try-on: an East Asian female model wearing the EXACT product from the reference in a different natural pose (walking or slight turn). Keep product color, fabric, pattern, logos, and cut identical. Lifestyle-soft studio light, plain background, commercial catalog look. No text, no watermark.',
+  },
+];
+
+function imageRoleLabel(entry, index) {
+  if (entry?.role === 'main' || index === 0) return 'Chính';
+  if (entry?.role === 'angle') return 'Đổi góc';
+  if (entry?.role === 'tryon') return 'Mặc thử';
+  return `Ảnh ${index}`;
+}
+
 function Admin({ config, setConfig, refreshPublicProducts }) {
   const [localConfig, setLocalConfig] = useState(config);
   const [loginBusy, setLoginBusy] = useState(false);
@@ -952,6 +1010,8 @@ function AiAddProductComposer({ onClose, onReady }) {
   const [images, setImages] = useState([]);
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
+  const [genBusy, setGenBusy] = useState(false);
+  const [genStatus, setGenStatus] = useState('');
   const [error, setError] = useState('');
 
   async function addFiles(fileList) {
@@ -966,6 +1026,7 @@ function AiAddProductComposer({ onClose, onReady }) {
         next.push({
           id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
           name: file.name,
+          role: images.length + next.length === 0 ? 'main' : 'upload',
           dataUrl: await fileToDataUrl(file),
         });
       }
@@ -976,7 +1037,57 @@ function AiAddProductComposer({ onClose, onReady }) {
   }
 
   function removeImage(id) {
-    setImages((current) => current.filter((entry) => entry.id !== id));
+    setImages((current) => {
+      const next = current.filter((entry) => entry.id !== id);
+      if (next.length && next[0].role !== 'main') {
+        next[0] = { ...next[0], role: 'main' };
+      }
+      return next;
+    });
+  }
+
+  async function generateViews() {
+    const main = images[0];
+    if (!main?.dataUrl) {
+      setError('Hãy thêm 1 ảnh chính trước.');
+      return;
+    }
+    setGenBusy(true);
+    setError('');
+    setGenStatus('Đang nén ảnh chính…');
+    try {
+      const source = await compressDataUrl(main.dataUrl);
+      const generated = [];
+      for (let index = 0; index < PRODUCT_VIEW_GENS.length; index += 1) {
+        const slot = PRODUCT_VIEW_GENS[index];
+        setGenStatus(`Đang gen ${index + 1}/4 · ${slot.label}…`);
+        try {
+          const url = await storeApi.generateImage({
+            prompt: slot.prompt,
+            image: source,
+            engine: 'nano',
+          });
+          generated.push({
+            id: `gen-${Date.now()}-${index}`,
+            name: `${slot.label} ${index + 1}`,
+            role: slot.kind,
+            dataUrl: url,
+          });
+        } catch (cause) {
+          throw new Error(`${slot.label} (${index + 1}/4): ${cause.message || 'gen thất bại'}`);
+        }
+      }
+      setImages([
+        { ...main, role: 'main', name: main.name || 'Ảnh chính' },
+        ...generated,
+      ]);
+      setGenStatus('Xong · 1 chính + 4 gen');
+    } catch (cause) {
+      setError(cause.message || 'Không gen được ảnh phụ.');
+      setGenStatus('');
+    } finally {
+      setGenBusy(false);
+    }
   }
 
   async function complete() {
@@ -999,46 +1110,59 @@ function AiAddProductComposer({ onClose, onReady }) {
     }
   }
 
+  const locked = busy || genBusy;
+
   return (
     <div className="ks-modal ks-modal--editor" role="dialog" aria-modal="true" aria-label="Thêm hàng bằng AI">
-      <button className="ks-modal__backdrop" type="button" onClick={onClose} aria-label="Đóng" />
+      <button className="ks-modal__backdrop" type="button" onClick={onClose} aria-label="Đóng" disabled={locked} />
       <div className="ks-editor ks-ai-composer">
         <div className="ks-editor__head">
           <div>
             <p className="ks-kicker">AI ADD PRODUCT</p>
             <h2>Thêm hàng bằng AI</h2>
           </div>
-          <button type="button" onClick={onClose}>×</button>
+          <button type="button" onClick={onClose} disabled={locked}>×</button>
         </div>
 
         <section className="ks-ai-composer__section">
           <div className="ks-ai-composer__section-head">
             <div>
               <p className="ks-kicker">1 · ẢNH</p>
-              <strong>Thêm ảnh để AI xem</strong>
-              <small>AI sẽ tự xếp ảnh chính, ảnh phụ và ảnh từng mẫu. Tối đa 8 ảnh.</small>
+              <strong>1 ảnh chính + 4 ảnh gen</strong>
+              <small>Thêm ảnh chính → Gen 4 ảnh (2 đổi góc + 2 mặc thử). Tổng 5 ảnh / sản phẩm.</small>
             </div>
-            <label className="ks-file ks-file--small ks-ai-composer__pick">
-              <input
-                type="file"
-                accept="image/png,image/jpeg,image/webp"
-                multiple
-                onChange={(event) => {
-                  addFiles(event.target.files);
-                  event.target.value = '';
-                }}
-              />
-              <strong>+ Thêm ảnh</strong>
-            </label>
+            <div className="ks-ai-composer__tools">
+              <button
+                className="ks-button ks-button--light ks-ai-composer__gen"
+                type="button"
+                disabled={locked || !images.length}
+                onClick={generateViews}
+              >
+                {genBusy ? (genStatus || 'Đang gen…') : 'Gen 4 ảnh · góc + mặc thử'}
+              </button>
+              <label className="ks-file ks-file--small ks-ai-composer__pick">
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  multiple
+                  disabled={locked}
+                  onChange={(event) => {
+                    addFiles(event.target.files);
+                    event.target.value = '';
+                  }}
+                />
+                <strong>+ Thêm ảnh</strong>
+              </label>
+            </div>
           </div>
           {images.length ? (
             <div className="ks-ai-composer__grid">
               {images.map((image, index) => (
-                <article className="ks-ai-composer__card" key={image.id}>
+                <article className={`ks-ai-composer__card${image.role === 'main' || index === 0 ? ' is-main' : ''}`} key={image.id}>
                   <ProductArt src={image.dataUrl} alt={image.name} />
                   <footer>
-                    <span>Ảnh {index}</span>
-                    <button type="button" onClick={() => removeImage(image.id)}>Xoá</button>
+                    <span>{imageRoleLabel(image, index)}</span>
+                    <button type="button" disabled={locked} onClick={() => removeImage(image.id)}>Xoá</button>
                   </footer>
                 </article>
               ))}
@@ -1058,10 +1182,11 @@ function AiAddProductComposer({ onClose, onReady }) {
                   event.target.value = '';
                 }}
               />
-              <strong>Thả ảnh vào đây hoặc bấm để chọn</strong>
-              <span>PNG / JPG / WEBP · mỗi ảnh &lt; 2 MB</span>
+              <strong>Thả ảnh chính vào đây hoặc bấm để chọn</strong>
+              <span>PNG / JPG / WEBP · mỗi ảnh &lt; 2 MB · rồi Gen 4 ảnh phụ</span>
             </label>
           )}
+          {genStatus && !genBusy && <p className="ks-ai-composer__status">{genStatus}</p>}
         </section>
 
         <section className="ks-ai-composer__section">
@@ -1076,6 +1201,7 @@ function AiAddProductComposer({ onClose, onReady }) {
             className="ks-ai-composer__note"
             rows="7"
             value={note}
+            disabled={locked}
             onChange={(event) => setNote(event.target.value)}
             placeholder={'VD:\n- 2 màu: Đen, Be\n- Size: Free size\n- Nữ, nhấn “chống tụt / đệm dày”\n- Giá: 180 TWD\n- Giảm 10%\n- Free ship\n- Tồn kho: mỗi mẫu 10 cái'}
           />
@@ -1084,8 +1210,8 @@ function AiAddProductComposer({ onClose, onReady }) {
         {error && <p className="ks-form-error">{error}</p>}
 
         <div className="ks-editor__actions">
-          <button className="ks-button ks-button--light" type="button" onClick={onClose} disabled={busy}>Huỷ</button>
-          <button className="ks-button ks-button--dark" type="button" disabled={busy || !images.length} onClick={complete}>
+          <button className="ks-button ks-button--light" type="button" onClick={onClose} disabled={locked}>Huỷ</button>
+          <button className="ks-button ks-button--dark" type="button" disabled={locked || !images.length} onClick={complete}>
             {busy ? 'AI đang điền…' : 'Hoàn tất · mở form sản phẩm'}
           </button>
         </div>
