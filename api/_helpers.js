@@ -100,7 +100,7 @@ async function callVisionChat({ system, prompt, images, history, max_tokens, tem
         .slice(-10)
         .map((m) => ({ role: m.role, content: m.content }))
     : [];
-  const imageParts = (Array.isArray(images) ? images : []).slice(0, 6).map((url) => ({
+  const imageParts = (Array.isArray(images) ? images : []).slice(0, 8).map((url) => ({
     type: 'image_url',
     image_url: { url },
   }));

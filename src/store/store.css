@@ -786,6 +786,7 @@
 .ks-admin__error { margin-bottom: 22px; }
 .ks-admin-panel { padding: clamp(30px, 4vw, 58px); border: 1px solid var(--line); background: var(--paper); }
 .ks-admin-panel__head { display: flex; align-items: end; justify-content: space-between; gap: 30px; margin-bottom: 38px; }
+.ks-admin-panel__actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; }
 .ks-admin-panel h2 { font-size: clamp(46px, 4vw, 66px); }
 .ks-admin-products { border-top: 1px solid var(--line); }
 .ks-admin-product { display: grid; grid-template-columns: minmax(260px, 34%) minmax(0, 1fr) auto; align-items: center; gap: clamp(26px, 3vw, 52px); padding: 28px 0; border-bottom: 1px solid var(--line); }
@@ -839,6 +840,79 @@
 .ks-ai-fill strong { display: block; font-size: 16px; letter-spacing: -0.03em; }
 .ks-ai-fill small { display: block; margin-top: 6px; color: var(--muted); font: 500 11px/1.45 'JetBrains Mono', monospace; }
 .ks-ai-fill .ks-button { flex: 0 0 auto; min-height: 48px; white-space: nowrap; }
+
+.ks-ai-composer { width: min(920px, 96vw); }
+.ks-ai-composer__section {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 22px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,.22);
+}
+.ks-ai-composer__section-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.ks-ai-composer__section-head strong { display: block; font-size: 18px; letter-spacing: -.03em; }
+.ks-ai-composer__section-head small { display: block; margin-top: 6px; color: var(--muted); font: 500 11px/1.45 'JetBrains Mono', monospace; }
+.ks-ai-composer__pick { min-height: 44px; padding: 0 16px; display: inline-grid; place-items: center; cursor: pointer; }
+.ks-ai-composer__pick input { display: none; }
+.ks-ai-composer__drop {
+  min-height: 180px;
+  display: grid;
+  place-content: center;
+  gap: 8px;
+  padding: 28px;
+  border: 2px dashed var(--line);
+  background: var(--paper-2);
+  text-align: center;
+  cursor: pointer;
+}
+.ks-ai-composer__drop input { display: none; }
+.ks-ai-composer__drop strong { font-size: 15px; }
+.ks-ai-composer__drop span { color: var(--muted); font: 500 11px/1.4 'JetBrains Mono', monospace; }
+.ks-ai-composer__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.ks-ai-composer__card {
+  min-width: 0;
+  border: 1px solid var(--line);
+  background: var(--paper);
+}
+.ks-ai-composer__card .ks-art { aspect-ratio: 1 / 1; }
+.ks-ai-composer__card .ks-art__mark { font-size: 54px; }
+.ks-ai-composer__card footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border-top: 1px solid var(--line);
+}
+.ks-ai-composer__card footer span { color: var(--muted); font: 700 9px/1 'JetBrains Mono', monospace; }
+.ks-ai-composer__card footer button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #a84253;
+  font: 700 9px/1 'JetBrains Mono', monospace;
+  cursor: pointer;
+}
+.ks-ai-composer__note {
+  width: 100%;
+  min-height: 160px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--ink);
+  font: 500 14px/1.55 Geist, system-ui, sans-serif;
+  resize: vertical;
+}
 .ks-editor__grid { display: grid; grid-template-columns: minmax(0, .8fr) minmax(420px, 1.2fr); gap: 42px; }
 .ks-editor__row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .ks-editor__row--variant { grid-template-columns: 1.15fr .68fr 1fr; }
@@ -1187,6 +1261,12 @@
   .ks-editor__head h2 { font-size: 40px; }
   .ks-ai-fill { flex-direction: column; align-items: stretch; gap: 12px; padding: 14px; margin-bottom: 18px; }
   .ks-ai-fill .ks-button { width: 100%; }
+  .ks-admin-panel__actions { width: 100%; }
+  .ks-admin-panel__actions .ks-button { flex: 1; min-height: 44px; }
+  .ks-ai-composer__section { padding: 14px; }
+  .ks-ai-composer__section-head { flex-direction: column; }
+  .ks-ai-composer__pick { width: 100%; }
+  .ks-ai-composer__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
   .ks-editor__grid > section { padding: 18px; }
   .ks-editor__row,
   .ks-editor__row--variant { grid-template-columns: 1fr; }

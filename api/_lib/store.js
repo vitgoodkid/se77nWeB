@@ -605,22 +605,27 @@ async function handleOrders(req, res) {
 
 const STORE_AI_SYSTEM = [
   'Bạn là trợ lý merchandising cho KataShop (cửa hàng thời trang/lifestyle nhỏ tại Đài Loan).',
-  'Nhìn ảnh sản phẩm do admin cung cấp và trả về JSON thuần (không markdown) theo schema:',
+  'Nhìn ảnh sản phẩm + NOTE của admin (nếu có) và trả về JSON thuần (không markdown) theo schema:',
   '{',
   '  "title": string,',
   '  "subtitle": string,',
   '  "description": string,',
   '  "genders": ["men"|"women"|"unisex"],',
   '  "sizes": string[],',
+  '  "mainImageIndex": number,',
+  '  "galleryImageIndexes": number[],',
   '  "variants": [{ "name": string, "colorHex": "#RRGGBB", "imageIndex": number }]',
   '}',
   'Quy tắc:',
+  '- NOTE của admin là ưu tiên cao nhất: số mẫu, màu, size, mô tả bắt buộc, giá gợi ý… phải tuân theo.',
   '- Viết title/subtitle/description bằng tiếng Việt, tự nhiên, bán hàng, không phóng đại quá đà.',
-  '- title ngắn gọn (≤ 80 ký tự). subtitle một dòng. description 2–4 câu.',
-  '- sizes: gợi ý size phù hợp sản phẩm (vd Free size, S/M/L…).',
-  '- variants: mỗi màu/kiểu nhìn thấy trên ảnh là một mẫu. imageIndex là chỉ số ảnh 0-based trong danh sách ảnh gửi kèm.',
-  '- Nếu chỉ có 1 ảnh, vẫn trả ít nhất 1 variant. colorHex phải là hex hợp lệ.',
-  '- Không bịa giá. Không trả field ngoài schema.',
+  '- title ngắn gọn (≤ 80 ký tự). subtitle một dòng. description 2–4 câu (bổ sung chi tiết từ NOTE nếu có).',
+  '- sizes: lấy từ NOTE nếu admin ghi; không thì gợi ý phù hợp sản phẩm.',
+  '- mainImageIndex: ảnh đẹp/đại diện nhất làm ảnh chính (0-based).',
+  '- galleryImageIndexes: ảnh phụ (chi tiết/góc khác), không trùng main và không bắt buộc trùng variant.',
+  '- variants: mỗi màu/kiểu là một mẫu. imageIndex trỏ ảnh phù hợp nhất cho mẫu đó.',
+  '- Nếu NOTE yêu cầu N mẫu thì trả đúng N mẫu (trong khả năng ảnh).',
+  '- colorHex phải là hex hợp lệ. Không bịa giá. Không trả field ngoài schema.',
 ].join('\n');
 
 function isHttpOrDataImage(value) {
@@ -641,30 +646,41 @@ function normalizeAiFill(raw, imageCount) {
   let sizes = list(parsed.sizes, 12, 32);
   if (!sizes.length) sizes = ['Free size'];
 
+  let mainImageIndex = Number.parseInt(parsed.mainImageIndex, 10);
+  if (!Number.isFinite(mainImageIndex) || mainImageIndex < 0 || mainImageIndex >= imageCount) mainImageIndex = 0;
+
+  const galleryImageIndexes = [...new Set(
+    (Array.isArray(parsed.galleryImageIndexes) ? parsed.galleryImageIndexes : [])
+      .map((entry) => Number.parseInt(entry, 10))
+      .filter((entry) => Number.isFinite(entry) && entry >= 0 && entry < imageCount && entry !== mainImageIndex),
+  )].slice(0, 8);
+
   const rawVariants = Array.isArray(parsed.variants) ? parsed.variants.slice(0, 8) : [];
-  const variants = (rawVariants.length ? rawVariants : [{ name: 'Mặc định', colorHex: '#d36a79', imageIndex: 0 }]).map((entry, index) => {
+  const variants = (rawVariants.length ? rawVariants : [{ name: 'Mặc định', colorHex: '#d36a79', imageIndex: mainImageIndex }]).map((entry, index) => {
     const name = text(entry?.name, 60) || `Mẫu ${index + 1}`;
     let colorHex = text(entry?.colorHex, 7).toLowerCase();
     if (!/^#[0-9a-f]{6}$/.test(colorHex)) colorHex = '#d36a79';
     let imageIndex = Number.parseInt(entry?.imageIndex, 10);
-    if (!Number.isFinite(imageIndex) || imageIndex < 0 || imageIndex >= imageCount) imageIndex = Math.min(index, Math.max(0, imageCount - 1));
+    if (!Number.isFinite(imageIndex) || imageIndex < 0 || imageIndex >= imageCount) {
+      imageIndex = Math.min(index, Math.max(0, imageCount - 1));
+    }
     return { name, colorHex, imageIndex };
   });
 
-  return { title, subtitle, description, genders, sizes, variants };
+  return { title, subtitle, description, genders, sizes, mainImageIndex, galleryImageIndexes, variants };
 }
 
 async function handleAiFill(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'METHOD_NOT_ALLOWED' });
   await requireOwner(req);
   const body = requestBody(req);
-  const hint = text(body.hint, 300);
+  const hint = text(body.hint || body.note, 2000);
   const images = [];
   const pushImage = (value) => {
     const url = text(value, 2_500_000);
     if (!url || !isHttpOrDataImage(url)) return;
     if (images.includes(url)) return;
-    if (images.length >= 6) return;
+    if (images.length >= 8) return;
     images.push(url);
   };
   pushImage(body.imageUrl);
@@ -673,9 +689,9 @@ async function handleAiFill(req, res) {
   if (!images.length) throw httpError(400, 'Cần ít nhất một ảnh sản phẩm để AI điền.', 'AI_IMAGE_REQUIRED');
 
   const prompt = [
-    `Có ${images.length} ảnh sản phẩm (imageIndex 0 → ${images.length - 1}).`,
-    'Ảnh 0 thường là ảnh chính; các ảnh sau có thể là màu/kiểu khác.',
-    hint ? `Gợi ý thêm từ admin: ${hint}` : '',
+    `Có ${images.length} ảnh sản phẩm (imageIndex 0 → ${images.length - 1}), chưa xếp sẵn vai trò.`,
+    'Hãy tự chọn ảnh chính, ảnh phụ và ảnh cho từng mẫu.',
+    hint ? `NOTE BẮT BUỘC TỪ ADMIN (ưu tiên tuyệt đối):\n${hint}` : 'Admin không để NOTE — tự suy luận hợp lý từ ảnh.',
     'Hãy điền listing KataShop theo schema đã cho.',
   ].filter(Boolean).join('\n');
 
@@ -686,8 +702,8 @@ async function handleAiFill(req, res) {
       prompt,
       images,
       jsonMode: true,
-      temperature: 0.4,
-      max_tokens: 1800,
+      temperature: 0.35,
+      max_tokens: 2200,
       model: process.env.STORE_AI_MODEL || process.env.OPENROUTER_VISION_MODEL || 'google/gemini-2.5-flash',
     });
   } catch (error) {

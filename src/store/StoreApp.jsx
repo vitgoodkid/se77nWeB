@@ -774,6 +774,40 @@ function emptyProduct() {
   };
 }
 
+function productFromAiFill(fill, orderedImages = []) {
+  const images = Array.isArray(orderedImages) ? orderedImages.filter(Boolean) : [];
+  const fallback = images[0] || '/og.svg';
+  const mainIndex = Number.isFinite(fill?.mainImageIndex) ? fill.mainImageIndex : 0;
+  const imageUrl = images[mainIndex] || fallback;
+  const galleryImages = [...new Set(
+    (Array.isArray(fill?.galleryImageIndexes) ? fill.galleryImageIndexes : [])
+      .map((index) => images[index])
+      .filter((url) => url && url !== imageUrl),
+  )];
+  const sizes = Array.isArray(fill?.sizes) && fill.sizes.length ? fill.sizes : ['Free size'];
+  const stockTemplate = Object.fromEntries(sizes.map((size) => [size, 0]));
+  const variants = (Array.isArray(fill?.variants) && fill.variants.length ? fill.variants : [{ name: 'Mặc định', colorHex: '#d36a79', imageIndex: mainIndex }])
+    .map((variant, index) => ({
+      id: `variant-${index + 1}`,
+      name: variant.name || `Mẫu ${index + 1}`,
+      colorHex: variant.colorHex || '#d36a79',
+      imageUrl: images[variant.imageIndex] || imageUrl,
+      priceOverride: null,
+      stockBySize: { ...stockTemplate },
+    }));
+  return {
+    ...emptyProduct(),
+    title: fill?.title || '',
+    subtitle: fill?.subtitle || '',
+    description: fill?.description || '',
+    genders: Array.isArray(fill?.genders) && fill.genders.length ? fill.genders : ['unisex'],
+    sizes,
+    imageUrl,
+    galleryImages,
+    variants,
+  };
+}
+
 function AdminWorkspace({ user, refreshPublicProducts }) {
   const [tab, setTab] = useState('products');
   const [products, setProducts] = useState([]);
@@ -781,6 +815,7 @@ function AdminWorkspace({ user, refreshPublicProducts }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [editor, setEditor] = useState(null);
+  const [aiComposerOpen, setAiComposerOpen] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true); setError('');
@@ -819,10 +854,25 @@ function AdminWorkspace({ user, refreshPublicProducts }) {
       {error && <p className="ks-form-error ks-admin__error">{error}</p>}
       {loading ? <StoreLoading compact /> : tab === 'products' ? (
         <section className="ks-admin-panel">
-          <div className="ks-admin-panel__head"><div><p className="ks-kicker">CATALOG</p><h2>Bộ sưu tập hiện tại</h2></div><button className="ks-button ks-button--dark" type="button" onClick={() => setEditor(emptyProduct())}>+ Thêm sản phẩm</button></div>
+          <div className="ks-admin-panel__head">
+            <div><p className="ks-kicker">CATALOG</p><h2>Bộ sưu tập hiện tại</h2></div>
+            <div className="ks-admin-panel__actions">
+              <button className="ks-button ks-button--light" type="button" onClick={() => setAiComposerOpen(true)}>✨ Thêm bằng AI</button>
+              <button className="ks-button ks-button--dark" type="button" onClick={() => setEditor(emptyProduct())}>+ Thêm sản phẩm</button>
+            </div>
+          </div>
           <div className="ks-admin-products">{products.map((product, index) => <AdminProductRow key={product.id} product={product} index={index} onEdit={() => setEditor(product)} onDelete={() => removeProduct(product)} />)}</div>
         </section>
       ) : <Orders orders={orders} onStatus={updateStatus} onDelete={removeOrder} />}
+      {aiComposerOpen && (
+        <AiAddProductComposer
+          onClose={() => setAiComposerOpen(false)}
+          onReady={(draft) => {
+            setAiComposerOpen(false);
+            setEditor(draft);
+          }}
+        />
+      )}
       {editor && <ProductEditor product={editor} onClose={() => setEditor(null)} onSaved={async () => { setEditor(null); await load(); await refreshPublicProducts(); }} />}
     </main>
   );
@@ -875,6 +925,152 @@ function ImageField({ label, value, onChange, onPick, uploadLabel }) {
         <label><span>{label} URL</span><input value={value || ''} onChange={(event) => onChange(event.target.value)} placeholder="https://..." /></label>
         <label className="ks-file ks-file--small"><input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => onPick(event.target.files?.[0])} /><strong>{uploadLabel}</strong></label>
         {value && <a href={value} target="_blank" rel="noreferrer">Mở ảnh ↗</a>}
+      </div>
+    </div>
+  );
+}
+
+function AiAddProductComposer({ onClose, onReady }) {
+  const [images, setImages] = useState([]);
+  const [note, setNote] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  async function addFiles(fileList) {
+    const files = Array.from(fileList || []).filter((file) => file.type.startsWith('image/'));
+    if (!files.length) return;
+    setError('');
+    try {
+      const next = [];
+      for (const file of files) {
+        if (file.size > 2 * 1024 * 1024) throw new Error(`Ảnh “${file.name}” vượt 2 MB.`);
+        if (images.length + next.length >= 8) break;
+        next.push({
+          id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          name: file.name,
+          dataUrl: await fileToDataUrl(file),
+        });
+      }
+      setImages((current) => [...current, ...next].slice(0, 8));
+    } catch (cause) {
+      setError(cause.message || 'Không đọc được ảnh.');
+    }
+  }
+
+  function removeImage(id) {
+    setImages((current) => current.filter((entry) => entry.id !== id));
+  }
+
+  async function complete() {
+    if (!images.length) {
+      setError('Hãy thêm ít nhất một ảnh để AI xem.');
+      return;
+    }
+    setBusy(true);
+    setError('');
+    try {
+      const payload = await storeApi.aiFill({
+        images: images.map((entry) => entry.dataUrl),
+        note: note.trim(),
+      });
+      onReady(productFromAiFill(payload.fill, payload.images || images.map((entry) => entry.dataUrl)));
+    } catch (cause) {
+      setError(cause.message || 'AI chưa điền được sản phẩm.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="ks-modal ks-modal--editor" role="dialog" aria-modal="true" aria-label="Thêm hàng bằng AI">
+      <button className="ks-modal__backdrop" type="button" onClick={onClose} aria-label="Đóng" />
+      <div className="ks-editor ks-ai-composer">
+        <div className="ks-editor__head">
+          <div>
+            <p className="ks-kicker">AI ADD PRODUCT</p>
+            <h2>Thêm hàng bằng AI</h2>
+          </div>
+          <button type="button" onClick={onClose}>×</button>
+        </div>
+
+        <section className="ks-ai-composer__section">
+          <div className="ks-ai-composer__section-head">
+            <div>
+              <p className="ks-kicker">1 · ẢNH</p>
+              <strong>Thêm ảnh để AI xem</strong>
+              <small>AI sẽ tự xếp ảnh chính, ảnh phụ và ảnh từng mẫu. Tối đa 8 ảnh.</small>
+            </div>
+            <label className="ks-file ks-file--small ks-ai-composer__pick">
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                multiple
+                onChange={(event) => {
+                  addFiles(event.target.files);
+                  event.target.value = '';
+                }}
+              />
+              <strong>+ Thêm ảnh</strong>
+            </label>
+          </div>
+          {images.length ? (
+            <div className="ks-ai-composer__grid">
+              {images.map((image, index) => (
+                <article className="ks-ai-composer__card" key={image.id}>
+                  <ProductArt src={image.dataUrl} alt={image.name} />
+                  <footer>
+                    <span>Ảnh {index}</span>
+                    <button type="button" onClick={() => removeImage(image.id)}>Xoá</button>
+                  </footer>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <label
+              className="ks-ai-composer__drop"
+              onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = 'copy'; }}
+              onDrop={(event) => { event.preventDefault(); addFiles(event.dataTransfer.files); }}
+            >
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                multiple
+                onChange={(event) => {
+                  addFiles(event.target.files);
+                  event.target.value = '';
+                }}
+              />
+              <strong>Thả ảnh vào đây hoặc bấm để chọn</strong>
+              <span>PNG / JPG / WEBP · mỗi ảnh &lt; 2 MB</span>
+            </label>
+          )}
+        </section>
+
+        <section className="ks-ai-composer__section">
+          <div className="ks-ai-composer__section-head">
+            <div>
+              <p className="ks-kicker">2 · NOTE</p>
+              <strong>Thông tin bắt buộc / ý chính cho AI</strong>
+              <small>Ví dụ: 3 mẫu (đen/be/hồng), Free size, nhấn chống tụt, giá khoảng 180 TWD…</small>
+            </div>
+          </div>
+          <textarea
+            className="ks-ai-composer__note"
+            rows="7"
+            value={note}
+            onChange={(event) => setNote(event.target.value)}
+            placeholder={'VD:\n- 2 màu: Đen, Be\n- Size: Free size\n- Nữ, nhấn “chống tụt / đệm dày”\n- Giá khoảng 180 TWD'}
+          />
+        </section>
+
+        {error && <p className="ks-form-error">{error}</p>}
+
+        <div className="ks-editor__actions">
+          <button className="ks-button ks-button--light" type="button" onClick={onClose} disabled={busy}>Huỷ</button>
+          <button className="ks-button ks-button--dark" type="button" disabled={busy || !images.length} onClick={complete}>
+            {busy ? 'AI đang điền…' : 'Hoàn tất · mở form sản phẩm'}
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -967,34 +1163,36 @@ function ProductEditor({ product, onClose, onSaved }) {
         galleryImages,
         images: draft.variants.map((variant) => variant.imageUrl).filter(Boolean),
       });
-      const nextSizes = Array.isArray(fill.sizes) && fill.sizes.length ? fill.sizes : (sizes.length ? sizes : ['Free size']);
-      const stockTemplate = Object.fromEntries(nextSizes.map((size) => [size, 0]));
-      const nextVariants = (fill.variants || []).map((variant, index) => {
-        const imageIndex = Number.isFinite(variant.imageIndex) ? variant.imageIndex : index;
-        const imageUrl = ordered?.[imageIndex] || draft.imageUrl || ordered?.[0] || '';
-        const existing = draft.variants[index];
-        const stockBySize = { ...stockTemplate };
-        if (existing?.stockBySize) {
-          for (const size of nextSizes) stockBySize[size] = Number(existing.stockBySize[size]) || 0;
-        }
-        return {
-          id: existing?.id || `variant-${index + 1}`,
-          name: variant.name || `Mẫu ${index + 1}`,
-          colorHex: variant.colorHex || '#d36a79',
-          imageUrl,
-          priceOverride: existing?.priceOverride ?? null,
-          stockBySize,
-        };
-      });
+      const next = productFromAiFill(fill, ordered?.length ? ordered : [
+        draft.imageUrl,
+        ...galleryImages,
+        ...draft.variants.map((variant) => variant.imageUrl),
+      ].filter(Boolean));
+      // Keep price/flags from current draft; merge AI listing fields.
       setDraft((current) => ({
         ...current,
-        title: fill.title || current.title,
-        subtitle: fill.subtitle ?? current.subtitle,
-        description: fill.description ?? current.description,
-        genders: Array.isArray(fill.genders) && fill.genders.length ? fill.genders : current.genders,
-        variants: nextVariants.length ? nextVariants : current.variants,
+        title: next.title || current.title,
+        subtitle: next.subtitle ?? current.subtitle,
+        description: next.description ?? current.description,
+        genders: next.genders,
+        imageUrl: next.imageUrl || current.imageUrl,
+        galleryImages: next.galleryImages,
+        variants: next.variants.map((variant, index) => {
+          const existing = current.variants[index];
+          const stockBySize = { ...variant.stockBySize };
+          if (existing?.stockBySize) {
+            for (const size of Object.keys(stockBySize)) stockBySize[size] = Number(existing.stockBySize[size]) || 0;
+          }
+          return {
+            ...variant,
+            id: existing?.id || variant.id,
+            priceOverride: existing?.priceOverride ?? null,
+            stockBySize,
+          };
+        }),
       }));
-      setSizeInputs(nextSizes);
+      setGalleryImages(next.galleryImages);
+      setSizeInputs(next.sizes.length ? next.sizes : ['Free size']);
     } catch (cause) {
       setError(cause.message || 'AI không điền được sản phẩm.');
     } finally {
