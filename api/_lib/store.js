@@ -689,6 +689,11 @@ function normalizeAiFill(raw, imageCount) {
   let discountPercent = Math.round(Number(parsed.discountPercent) || 0);
   if (!Number.isFinite(discountPercent)) discountPercent = 0;
   discountPercent = Math.max(0, Math.min(95, discountPercent));
+  const freeship = parsed.freeship === true
+    || parsed.freeship === 1
+    || parsed.freeship === 'true'
+    || parsed.freeShip === true
+    || parsed.free_shipping === true;
 
   let mainImageIndex = Number.parseInt(parsed.mainImageIndex, 10);
   if (!Number.isFinite(mainImageIndex) || mainImageIndex < 0 || mainImageIndex >= imageCount) mainImageIndex = 0;
@@ -726,7 +731,7 @@ function normalizeAiFill(raw, imageCount) {
   });
 
   return {
-    title, subtitle, description, genders, sizes, price, discountPercent,
+    title, subtitle, description, genders, sizes, price, discountPercent, freeship,
     mainImageIndex, galleryImageIndexes, variants,
   };
 }
@@ -753,9 +758,9 @@ async function handleAiFill(req, res) {
     `Có ${images.length} ảnh sản phẩm (imageIndex 0 → ${images.length - 1}), chưa xếp sẵn vai trò.`,
     'Hãy tự chọn ảnh chính, ảnh phụ và ảnh cho từng mẫu.',
     hint
-      ? `NOTE BẮT BUỘC TỪ ADMIN (ưu tiên tuyệt đối — trích đúng GIÁ và TỒN KHO nếu có):\n${hint}`
-      : 'Admin không để NOTE — tự suy luận hợp lý từ ảnh; price=0 và stockBySize=0 nếu không chắc.',
-    'Nhớ trả price (number) và variants[].stockBySize theo NOTE.',
+      ? `NOTE BẮT BUỘC TỪ ADMIN (ưu tiên tuyệt đối — trích đúng GIÁ, % GIẢM, FREESHIP và TỒN KHO nếu có):\n${hint}`
+      : 'Admin không để NOTE — tự suy luận hợp lý từ ảnh; price=0, discountPercent=0, freeship=false và stockBySize=0 nếu không chắc.',
+    'Nhớ trả price, discountPercent, freeship và variants[].stockBySize theo NOTE.',
     'Hãy điền listing KataShop theo schema đã cho.',
   ].filter(Boolean).join('\n');
 

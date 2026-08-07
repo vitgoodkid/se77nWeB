@@ -809,6 +809,7 @@ function productFromAiFill(fill, orderedImages = []) {
     });
   const price = Math.max(0, Math.round(Number(fill?.price) || 0));
   const discountPercent = Math.max(0, Math.min(95, Math.round(Number(fill?.discountPercent) || 0)));
+  const freeship = fill?.freeship === true;
   return {
     ...emptyProduct(),
     title: fill?.title || '',
@@ -816,6 +817,7 @@ function productFromAiFill(fill, orderedImages = []) {
     description: fill?.description || '',
     price,
     discountPercent,
+    freeship,
     genders: Array.isArray(fill?.genders) && fill.genders.length ? fill.genders : ['unisex'],
     sizes,
     imageUrl,
@@ -1075,7 +1077,7 @@ function AiAddProductComposer({ onClose, onReady }) {
             rows="7"
             value={note}
             onChange={(event) => setNote(event.target.value)}
-            placeholder={'VD:\n- 2 màu: Đen, Be\n- Size: Free size\n- Nữ, nhấn “chống tụt / đệm dày”\n- Giá: 180 TWD\n- Tồn kho: mỗi mẫu 10 cái'}
+            placeholder={'VD:\n- 2 màu: Đen, Be\n- Size: Free size\n- Nữ, nhấn “chống tụt / đệm dày”\n- Giá: 180 TWD\n- Giảm 10%\n- Free ship\n- Tồn kho: mỗi mẫu 10 cái'}
           />
         </section>
 
@@ -1191,7 +1193,8 @@ function ProductEditor({ product, onClose, onSaved }) {
         subtitle: next.subtitle ?? current.subtitle,
         description: next.description ?? current.description,
         price: next.price || current.price,
-        discountPercent: next.discountPercent || current.discountPercent,
+        discountPercent: Number.isFinite(Number(next.discountPercent)) ? next.discountPercent : current.discountPercent,
+        freeship: next.freeship === true ? true : current.freeship,
         genders: next.genders,
         imageUrl: next.imageUrl || current.imageUrl,
         galleryImages: next.galleryImages,
