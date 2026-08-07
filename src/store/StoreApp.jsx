@@ -1057,29 +1057,30 @@ function AiAddProductComposer({ onClose, onReady }) {
     setGenStatus('Đang nén ảnh chính…');
     try {
       const source = await compressDataUrl(main.dataUrl);
-      const generated = [];
-      for (let index = 0; index < PRODUCT_VIEW_GENS.length; index += 1) {
-        const slot = PRODUCT_VIEW_GENS[index];
-        setGenStatus(`Đang gen ${index + 1}/4 · ${slot.label}…`);
+      setGenStatus('Đang gen 4 ảnh song song…');
+      let done = 0;
+      const results = await Promise.all(PRODUCT_VIEW_GENS.map(async (slot, index) => {
         try {
           const url = await storeApi.generateImage({
             prompt: slot.prompt,
             image: source,
             engine: 'nano',
           });
-          generated.push({
+          done += 1;
+          setGenStatus(`Đang gen… xong ${done}/4`);
+          return {
             id: `gen-${Date.now()}-${index}`,
             name: `${slot.label} ${index + 1}`,
             role: slot.kind,
             dataUrl: url,
-          });
+          };
         } catch (cause) {
           throw new Error(`${slot.label} (${index + 1}/4): ${cause.message || 'gen thất bại'}`);
         }
-      }
+      }));
       setImages([
         { ...main, role: 'main', name: main.name || 'Ảnh chính' },
-        ...generated,
+        ...results,
       ]);
       setGenStatus('Xong · 1 chính + 4 gen');
     } catch (cause) {
