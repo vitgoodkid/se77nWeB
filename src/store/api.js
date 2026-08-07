@@ -28,7 +28,17 @@ async function safeJson(response, label) {
     try { data = JSON.parse(raw); } catch { /* not JSON */ }
   }
   if (!response.ok) {
-    throw new Error(data?.error || data?.message || `${label} ${response.status}`);
+    const detail = data?.error ?? data?.detail ?? data?.message;
+    let msg;
+    if (typeof detail === 'string') msg = detail;
+    else if (Array.isArray(detail)) msg = detail.map((entry) => entry?.msg || JSON.stringify(entry)).join('; ');
+    else if (detail && typeof detail === 'object') msg = detail.msg || detail.message || JSON.stringify(detail);
+    else msg = `${label} ${response.status}`;
+    const lower = msg.toLowerCase();
+    if (lower.includes('credential') || lower.includes('unauthorized') || lower.includes('invalid key')) {
+      msg = 'FAL_API_KEY không hợp lệ hoặc đã hết hạn. Kiểm tra lại trên Vercel (fal.ai dashboard → Keys).';
+    }
+    throw new Error(msg);
   }
   if (!data) throw new Error(`${label}: empty response`);
   return data;
