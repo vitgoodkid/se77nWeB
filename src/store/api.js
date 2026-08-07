@@ -29,6 +29,7 @@ export const storeApi = {
   updateProduct: (id, body) => call('products', { method: 'PUT', query: { id }, body }),
   deleteProduct: (id) => call('products', { method: 'DELETE', query: { id } }),
   uploadImage: (body) => call('uploads', { method: 'POST', body }),
+  aiFill: (body) => call('ai', { method: 'POST', body }),
   createOrder: (body) => call('orders', { method: 'POST', body }),
   orders: () => call('orders'),
   updateOrder: (id, status) => call('orders', { method: 'PATCH', query: { id }, body: { status } }),

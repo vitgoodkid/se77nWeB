@@ -3,6 +3,7 @@ import { ObjectId } from 'mongodb';
 import { getDb } from './mongo.js';
 import { readSession } from './session.js';
 import { uploadStoreImage } from './store-media.js';
+import { callChat, tryParseJson } from '../_helpers.js';
 
 const PRODUCT_COLLECTION = 'storeproducts';
 const ORDER_COLLECTION = 'storeorders';
@@ -602,6 +603,109 @@ async function handleOrders(req, res) {
   return res.status(405).json({ error: 'METHOD_NOT_ALLOWED' });
 }
 
+const STORE_AI_SYSTEM = [
+  'Bạn là trợ lý merchandising cho KataShop (cửa hàng thời trang/lifestyle nhỏ tại Đài Loan).',
+  'Nhìn ảnh sản phẩm do admin cung cấp và trả về JSON thuần (không markdown) theo schema:',
+  '{',
+  '  "title": string,',
+  '  "subtitle": string,',
+  '  "description": string,',
+  '  "genders": ["men"|"women"|"unisex"],',
+  '  "sizes": string[],',
+  '  "variants": [{ "name": string, "colorHex": "#RRGGBB", "imageIndex": number }]',
+  '}',
+  'Quy tắc:',
+  '- Viết title/subtitle/description bằng tiếng Việt, tự nhiên, bán hàng, không phóng đại quá đà.',
+  '- title ngắn gọn (≤ 80 ký tự). subtitle một dòng. description 2–4 câu.',
+  '- sizes: gợi ý size phù hợp sản phẩm (vd Free size, S/M/L…).',
+  '- variants: mỗi màu/kiểu nhìn thấy trên ảnh là một mẫu. imageIndex là chỉ số ảnh 0-based trong danh sách ảnh gửi kèm.',
+  '- Nếu chỉ có 1 ảnh, vẫn trả ít nhất 1 variant. colorHex phải là hex hợp lệ.',
+  '- Không bịa giá. Không trả field ngoài schema.',
+].join('\n');
+
+function isHttpOrDataImage(value) {
+  return /^https?:\/\//i.test(value) || /^data:image\/(png|jpe?g|webp);base64,/i.test(value);
+}
+
+function normalizeAiFill(raw, imageCount) {
+  const parsed = raw && typeof raw === 'object' ? raw : {};
+  const title = text(parsed.title, 120);
+  const subtitle = text(parsed.subtitle, 160);
+  const description = text(parsed.description, 2000);
+  if (!title) throw httpError(422, 'AI không trả về tên sản phẩm.', 'AI_TITLE_MISSING');
+
+  let genders = list(parsed.genders, 3, 16).filter((entry) => entry === 'men' || entry === 'women' || entry === 'unisex');
+  if (!genders.length) genders = ['unisex'];
+  if (genders.includes('unisex') && genders.length > 1) genders = ['unisex'];
+
+  let sizes = list(parsed.sizes, 12, 32);
+  if (!sizes.length) sizes = ['Free size'];
+
+  const rawVariants = Array.isArray(parsed.variants) ? parsed.variants.slice(0, 8) : [];
+  const variants = (rawVariants.length ? rawVariants : [{ name: 'Mặc định', colorHex: '#d36a79', imageIndex: 0 }]).map((entry, index) => {
+    const name = text(entry?.name, 60) || `Mẫu ${index + 1}`;
+    let colorHex = text(entry?.colorHex, 7).toLowerCase();
+    if (!/^#[0-9a-f]{6}$/.test(colorHex)) colorHex = '#d36a79';
+    let imageIndex = Number.parseInt(entry?.imageIndex, 10);
+    if (!Number.isFinite(imageIndex) || imageIndex < 0 || imageIndex >= imageCount) imageIndex = Math.min(index, Math.max(0, imageCount - 1));
+    return { name, colorHex, imageIndex };
+  });
+
+  return { title, subtitle, description, genders, sizes, variants };
+}
+
+async function handleAiFill(req, res) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'METHOD_NOT_ALLOWED' });
+  await requireOwner(req);
+  const body = requestBody(req);
+  const hint = text(body.hint, 300);
+  const images = [];
+  const pushImage = (value) => {
+    const url = text(value, 2_500_000);
+    if (!url || !isHttpOrDataImage(url)) return;
+    if (images.includes(url)) return;
+    if (images.length >= 6) return;
+    images.push(url);
+  };
+  pushImage(body.imageUrl);
+  (Array.isArray(body.images) ? body.images : []).forEach(pushImage);
+  (Array.isArray(body.galleryImages) ? body.galleryImages : []).forEach(pushImage);
+  if (!images.length) throw httpError(400, 'Cần ít nhất một ảnh sản phẩm để AI điền.', 'AI_IMAGE_REQUIRED');
+
+  const prompt = [
+    `Có ${images.length} ảnh sản phẩm (imageIndex 0 → ${images.length - 1}).`,
+    'Ảnh 0 thường là ảnh chính; các ảnh sau có thể là màu/kiểu khác.',
+    hint ? `Gợi ý thêm từ admin: ${hint}` : '',
+    'Hãy điền listing KataShop theo schema đã cho.',
+  ].filter(Boolean).join('\n');
+
+  let textOut;
+  try {
+    textOut = await callChat({
+      system: STORE_AI_SYSTEM,
+      prompt,
+      images,
+      jsonMode: true,
+      temperature: 0.4,
+      max_tokens: 1800,
+      model: process.env.STORE_AI_MODEL || process.env.OPENROUTER_VISION_MODEL || 'google/gemini-2.5-flash',
+    });
+  } catch (error) {
+    // Surface provider/config errors to the admin UI (avoid generic 5xx mask).
+    const status = Number(error?.status) || 422;
+    throw httpError(
+      status >= 500 ? 422 : status,
+      error?.message || 'AI điền sản phẩm thất bại.',
+      error?.code || 'AI_FILL_FAILED',
+    );
+  }
+
+  const parsed = tryParseJson(textOut);
+  if (!parsed) throw httpError(422, 'AI trả về dữ liệu không đọc được. Thử lại với ảnh rõ hơn.', 'AI_PARSE_FAILED');
+  const fill = normalizeAiFill(parsed, images.length);
+  return res.status(200).json({ ok: true, fill, images });
+}
+
 export async function handleStore(req, res) {
   const resource = text(req.query?.resource, 32) || 'config';
   try {
@@ -609,6 +713,7 @@ export async function handleStore(req, res) {
     if (resource === 'products') return await handleProducts(req, res);
     if (resource === 'uploads') return await handleUploads(req, res);
     if (resource === 'orders') return await handleOrders(req, res);
+    if (resource === 'ai') return await handleAiFill(req, res);
     return res.status(400).json({ error: 'UNKNOWN_STORE_RESOURCE' });
   } catch (error) {
     console.error('[store]', resource, error);

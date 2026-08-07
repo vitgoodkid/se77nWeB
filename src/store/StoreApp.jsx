@@ -885,6 +885,7 @@ function ProductEditor({ product, onClose, onSaved }) {
   const [sizeInputs, setSizeInputs] = useState(() => product.sizes.length ? [...product.sizes] : ['']);
   const [galleryImages, setGalleryImages] = useState(() => [...(product.galleryImages || [])]);
   const [busy, setBusy] = useState(false);
+  const [aiBusy, setAiBusy] = useState(false);
   const [error, setError] = useState('');
   const sizes = useMemo(() => [...new Set(sizeInputs.map((entry) => entry.trim()).filter(Boolean))], [sizeInputs]);
 
@@ -947,9 +948,73 @@ function ProductEditor({ product, onClose, onSaved }) {
     const index = draft.variants.length + 1;
     setDraft((current) => ({ ...current, variants: [...current.variants, { id: `variant-${index}`, name: `Variant ${index}`, colorHex: '#d36a79', imageUrl: draft.imageUrl, priceOverride: null, stockBySize: Object.fromEntries(sizes.map((size) => [size, 0])) }] }));
   }
+
+  async function runAiFill() {
+    const images = [
+      draft.imageUrl,
+      ...galleryImages,
+      ...draft.variants.map((variant) => variant.imageUrl),
+    ].filter(Boolean);
+    if (!images.length) {
+      setError('Hãy tải ít nhất một ảnh sản phẩm trước khi dùng AI.');
+      return;
+    }
+    setAiBusy(true);
+    setError('');
+    try {
+      const { fill, images: ordered } = await storeApi.aiFill({
+        imageUrl: draft.imageUrl,
+        galleryImages,
+        images: draft.variants.map((variant) => variant.imageUrl).filter(Boolean),
+      });
+      const nextSizes = Array.isArray(fill.sizes) && fill.sizes.length ? fill.sizes : (sizes.length ? sizes : ['Free size']);
+      const stockTemplate = Object.fromEntries(nextSizes.map((size) => [size, 0]));
+      const nextVariants = (fill.variants || []).map((variant, index) => {
+        const imageIndex = Number.isFinite(variant.imageIndex) ? variant.imageIndex : index;
+        const imageUrl = ordered?.[imageIndex] || draft.imageUrl || ordered?.[0] || '';
+        const existing = draft.variants[index];
+        const stockBySize = { ...stockTemplate };
+        if (existing?.stockBySize) {
+          for (const size of nextSizes) stockBySize[size] = Number(existing.stockBySize[size]) || 0;
+        }
+        return {
+          id: existing?.id || `variant-${index + 1}`,
+          name: variant.name || `Mẫu ${index + 1}`,
+          colorHex: variant.colorHex || '#d36a79',
+          imageUrl,
+          priceOverride: existing?.priceOverride ?? null,
+          stockBySize,
+        };
+      });
+      setDraft((current) => ({
+        ...current,
+        title: fill.title || current.title,
+        subtitle: fill.subtitle ?? current.subtitle,
+        description: fill.description ?? current.description,
+        genders: Array.isArray(fill.genders) && fill.genders.length ? fill.genders : current.genders,
+        variants: nextVariants.length ? nextVariants : current.variants,
+      }));
+      setSizeInputs(nextSizes);
+    } catch (cause) {
+      setError(cause.message || 'AI không điền được sản phẩm.');
+    } finally {
+      setAiBusy(false);
+    }
+  }
+
   return (
     <div className="ks-modal ks-modal--editor" role="dialog" aria-modal="true" aria-label="Sửa sản phẩm"><button className="ks-modal__backdrop" type="button" onClick={onClose} aria-label="Đóng" /><form className="ks-editor" onSubmit={save}>
       <div className="ks-editor__head"><div><p className="ks-kicker">PRODUCT EDITOR</p><h2>{product.id ? 'Chỉnh sửa sản phẩm' : 'Sản phẩm mới'}</h2></div><button type="button" onClick={onClose}>×</button></div>
+      <div className="ks-ai-fill">
+        <div>
+          <p className="ks-kicker">AI ASSIST</p>
+          <strong>Điền tên, mô tả và mẫu từ ảnh</strong>
+          <small>Tải ảnh chính / ảnh màu trước, rồi bấm AI. Có thể chỉnh lại trước khi lưu.</small>
+        </div>
+        <button className="ks-button ks-button--dark" type="button" disabled={aiBusy || busy} onClick={runAiFill}>
+          {aiBusy ? 'AI đang đọc ảnh…' : 'AI điền từ ảnh'}
+        </button>
+      </div>
       <div className="ks-editor__grid"><section>
         <label><span>Tên sản phẩm *</span><input value={draft.title} onChange={(event) => patch('title', event.target.value)} /></label>
         <label><span>Dòng mô tả ngắn</span><input value={draft.subtitle || ''} onChange={(event) => patch('subtitle', event.target.value)} /></label>
@@ -963,7 +1028,7 @@ function ProductEditor({ product, onClose, onSaved }) {
         {draft.variants.map((variant, index) => <div className="ks-variant-editor" key={`${variant.id}-${index}`}><div className="ks-variant-editor__head"><span style={{ background: variant.colorHex }} /><strong>Mẫu {index + 1}</strong>{draft.variants.length > 1 && <button type="button" onClick={() => setDraft((current) => ({ ...current, variants: current.variants.filter((_, variantIndex) => variantIndex !== index) }))}>Xoá</button>}</div><div className="ks-editor__row ks-editor__row--variant"><label><span>Tên mẫu</span><input value={variant.name} onChange={(event) => patchVariant(index, 'name', event.target.value)} /></label><label><span>Màu</span><input type="color" value={variant.colorHex} onChange={(event) => patchVariant(index, 'colorHex', event.target.value)} /></label><label><span>Giá mẫu (TWD)</span><input type="number" min="0" value={variant.priceOverride ?? ''} placeholder={`Mặc định: ${draft.price}`} onChange={(event) => patchVariant(index, 'priceOverride', event.target.value)} /></label></div><ImageField label={`Ảnh mẫu ${index + 1}`} value={variant.imageUrl} onChange={(value) => patchVariant(index, 'imageUrl', value)} onPick={(file) => pickImage(file, index)} uploadLabel="Tải ảnh mẫu lên" /><div className="ks-stock-grid">{sizes.map((size) => <label key={size}><span>{size}</span><input type="number" min="0" value={variant.stockBySize?.[size] || 0} onChange={(event) => patchStock(index, size, event.target.value)} /></label>)}</div></div>)}
       </section></div>
       {error && <p className="ks-form-error">{error}</p>}
-      <div className="ks-editor__actions"><button className="ks-button ks-button--light" type="button" onClick={onClose}>Huỷ</button><button className="ks-button ks-button--dark" disabled={busy} type="submit">{busy ? 'Đang lưu…' : 'Lưu sản phẩm'}</button></div>
+      <div className="ks-editor__actions"><button className="ks-button ks-button--light" type="button" onClick={onClose}>Huỷ</button><button className="ks-button ks-button--dark" disabled={busy || aiBusy} type="submit">{busy ? 'Đang lưu…' : 'Lưu sản phẩm'}</button></div>
     </form></div>
   );
 }

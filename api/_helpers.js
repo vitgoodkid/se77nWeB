@@ -73,15 +73,18 @@ export async function falChat({ system, history, prompt, model, temperature = 0.
 // classify/detect, vision chat), fall back to OpenRouter's OpenAI-compatible
 // endpoint — but only if OPENROUTER_API_KEY is set. Without it, image requests
 // surface a clear error rather than silently dropping the picture.
-export async function callChat({ system, prompt, image, history, max_tokens = 1024, temperature = 0.7, jsonMode = false, model }) {
-  if (!image) {
+export async function callChat({ system, prompt, image, images, history, max_tokens = 1024, temperature = 0.7, jsonMode = false, model }) {
+  const visionImages = Array.isArray(images)
+    ? images.map((entry) => String(entry || '').trim()).filter(Boolean)
+    : (image ? [String(image).trim()].filter(Boolean) : []);
+  if (!visionImages.length) {
     const { text } = await falChat({ system, history, prompt, model, temperature, maxTokens: max_tokens, jsonMode });
     return text;
   }
-  return callVisionChat({ system, prompt, image, history, max_tokens, temperature, jsonMode, model });
+  return callVisionChat({ system, prompt, images: visionImages, history, max_tokens, temperature, jsonMode, model });
 }
 
-async function callVisionChat({ system, prompt, image, history, max_tokens, temperature, jsonMode, model }) {
+async function callVisionChat({ system, prompt, images, history, max_tokens, temperature, jsonMode, model }) {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
     const err = new Error('Phân tích ảnh cần OPENROUTER_API_KEY (fal openrouter/router không nhận ảnh).');
@@ -97,6 +100,10 @@ async function callVisionChat({ system, prompt, image, history, max_tokens, temp
         .slice(-10)
         .map((m) => ({ role: m.role, content: m.content }))
     : [];
+  const imageParts = (Array.isArray(images) ? images : []).slice(0, 6).map((url) => ({
+    type: 'image_url',
+    image_url: { url },
+  }));
   const body = {
     model: visionModel,
     messages: [
@@ -104,7 +111,7 @@ async function callVisionChat({ system, prompt, image, history, max_tokens, temp
       ...priorMsgs,
       { role: 'user', content: [
         { type: 'text', text: prompt || 'Describe this image.' },
-        { type: 'image_url', image_url: { url: image } },
+        ...imageParts,
       ] },
     ],
     max_tokens,
