@@ -704,7 +704,7 @@ async function handleAiFill(req, res) {
       jsonMode: true,
       temperature: 0.35,
       max_tokens: 2200,
-      model: process.env.STORE_AI_MODEL || process.env.OPENROUTER_VISION_MODEL || 'google/gemini-2.5-flash',
+      model: process.env.STORE_AI_MODEL || process.env.OPENROUTER_VISION_MODEL || 'google/gemini-2.5-pro',
     });
   } catch (error) {
     // Surface provider/config errors to the admin UI (avoid generic 5xx mask).

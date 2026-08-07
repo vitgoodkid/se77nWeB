@@ -92,7 +92,7 @@ async function callVisionChat({ system, prompt, images, history, max_tokens, tem
     throw err;
   }
   const baseUrl = process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1';
-  const visionModel = (model || process.env.OPENROUTER_VISION_MODEL || 'google/gemini-2.5-flash')
+  const visionModel = (model || process.env.OPENROUTER_VISION_MODEL || 'google/gemini-2.5-pro')
     .replace(/^(?:openrouter|fal):/, '');
   const priorMsgs = Array.isArray(history)
     ? history
