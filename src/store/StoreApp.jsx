@@ -769,12 +769,12 @@ const PRODUCT_VIEW_GENS = [
   {
     kind: 'tryon',
     label: 'Mặc thử',
-    prompt: `${PRODUCT_PHOTO_STYLE} Fashion ad try-on: a real East Asian female model wearing the exact product. Three-quarter or full body, natural pose, real skin, real fabric drape on the body, soft studio softbox, plain light backdrop, commercial lookbook style.`,
+    prompt: `${PRODUCT_PHOTO_STYLE} Fashion ad try-on: a stunning East Asian female fashion model — beautiful face, clear skin, soft makeup, long hair, slim waist, fuller bust / curvy chest, attractive and alluring commercial-model look. She wears the exact product. Three-quarter or full body, confident natural pose that flatters the figure, real skin, real fabric drape on the body, soft studio softbox, plain light backdrop, premium lookbook / Instagram shop style. Tasteful and glamorous, not cartoon, not plastic doll.`,
   },
   {
     kind: 'tryon',
     label: 'Mặc thử',
-    prompt: `${PRODUCT_PHOTO_STYLE} Fashion ad try-on: a real East Asian female model wearing the exact product in a different natural pose (slight turn or easy walk). Real skin and cloth, soft advertising studio light, plain light backdrop, Instagram shop / lookbook feel.`,
+    prompt: `${PRODUCT_PHOTO_STYLE} Fashion ad try-on: a stunning East Asian female fashion model — pretty face, refined features, soft glam makeup, slim waist, fuller bust / curvy chest, sexy but elegant catalog vibe. She wears the exact product in a different pose (slight turn, hand on hip, or easy walk) that shows body shape and the garment fit. Real skin and cloth, soft advertising studio light, plain light backdrop, high-end Shopee / lookbook feel. Tasteful, alluring, photoreal — not 3D, not CGI, not exaggerated anime.`,
   },
 ];
 
