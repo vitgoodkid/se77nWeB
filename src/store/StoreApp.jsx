@@ -748,26 +748,33 @@ async function compressDataUrl(dataUrl, { maxDim = 1536, quality = 0.82, maxByte
 }
 
 /** 1 main + 4 gen: 2 angle + 2 try-on. Keep product identity exact. */
+const PRODUCT_PHOTO_STYLE = [
+  'Real commercial product advertising photo shot on a real camera for an online fashion store.',
+  'Look like Shopee / Instagram ads catalog photography: real fabric texture, natural wrinkles, soft studio softbox light, subtle contact shadows.',
+  'NOT 3D, NOT CGI, NOT Blender/Unreal render, NOT plastic mannequin toy look, NOT glossy AI sculpture, NOT floating packshot on infinite white void.',
+  'Keep the EXACT same garment from the reference: color, fabric, stitching, logos, cut, and proportions. No text, no watermark, no logo overlays.',
+].join(' ');
+
 const PRODUCT_VIEW_GENS = [
   {
     kind: 'angle',
     label: 'Đổi góc',
-    prompt: 'E-commerce product photo of the EXACT same garment/item from the reference. Change camera to a clean 3/4 front angle. Same color, fabric, pattern, logos, and cut. Soft studio lighting, plain light background, sharp focus, no text, no watermark, no props that change the product.',
+    prompt: `${PRODUCT_PHOTO_STYLE} Flat-lay or gently draped product hero shot from a clean 3/4 front advertising angle on a simple light seamless backdrop. Real cloth, real shadows, sharp commercial detail.`,
   },
   {
     kind: 'angle',
     label: 'Đổi góc',
-    prompt: 'E-commerce product photo of the EXACT same garment/item from the reference. Change camera to a side or slight back 3/4 angle so construction and silhouette are clear. Same color, fabric, pattern, logos, and cut. Soft studio lighting, plain light background, sharp focus, no text, no watermark.',
+    prompt: `${PRODUCT_PHOTO_STYLE} Advertising product photo from a side or slight back 3/4 angle so silhouette and construction read clearly. Same real-cloth catalog lighting and plain light backdrop.`,
   },
   {
     kind: 'tryon',
     label: 'Mặc thử',
-    prompt: 'Photorealistic fashion try-on: an East Asian female model wearing the EXACT product from the reference. Keep product color, fabric, pattern, logos, and cut identical. Full or three-quarter body, natural pose, clean studio background, soft daylight, commercial catalog look. No text, no watermark.',
+    prompt: `${PRODUCT_PHOTO_STYLE} Fashion ad try-on: a real East Asian female model wearing the exact product. Three-quarter or full body, natural pose, real skin, real fabric drape on the body, soft studio softbox, plain light backdrop, commercial lookbook style.`,
   },
   {
     kind: 'tryon',
     label: 'Mặc thử',
-    prompt: 'Photorealistic fashion try-on: an East Asian female model wearing the EXACT product from the reference in a different natural pose (walking or slight turn). Keep product color, fabric, pattern, logos, and cut identical. Lifestyle-soft studio light, plain background, commercial catalog look. No text, no watermark.',
+    prompt: `${PRODUCT_PHOTO_STYLE} Fashion ad try-on: a real East Asian female model wearing the exact product in a different natural pose (slight turn or easy walk). Real skin and cloth, soft advertising studio light, plain light backdrop, Instagram shop / lookbook feel.`,
   },
 ];
 
