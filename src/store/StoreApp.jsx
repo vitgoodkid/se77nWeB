@@ -778,11 +778,33 @@ const PRODUCT_VIEW_GENS = [
   },
 ];
 
+const PRODUCT_SHARPEN_PROMPT = [
+  PRODUCT_PHOTO_STYLE,
+  'Enhance THIS exact product photo for a store listing hero:',
+  'increase apparent sharpness and micro-contrast on fabric weave and edges,',
+  'cleaner focus, slightly clearer details, natural advertising retouch only.',
+  'Do NOT change product design, color, logos, cut, pose, crop, or background layout.',
+  'No beauty filter plastic skin, no 3D, no CGI, no heavy HDR.',
+].join(' ');
+
+const PRODUCT_MAIN_REGEN_PROMPT = [
+  PRODUCT_PHOTO_STYLE,
+  'Refine this into a clean commercial product advertising hero photo of the EXACT same item.',
+  'Same product identity and composition intent; real cloth, softbox light, plain light backdrop.',
+].join(' ');
+
 function imageRoleLabel(entry, index) {
   if (entry?.role === 'main' || index === 0) return 'Chính';
   if (entry?.role === 'angle') return 'Đổi góc';
   if (entry?.role === 'tryon') return 'Mặc thử';
   return `Ảnh ${index}`;
+}
+
+function demoteMainRole(entry) {
+  if (!entry) return entry;
+  if (entry.genKind === 'angle' || entry.genKind === 'tryon') return { ...entry, role: entry.genKind };
+  if (entry.role === 'main') return { ...entry, role: 'upload' };
+  return entry;
 }
 
 function Admin({ config, setConfig, refreshPublicProducts }) {
@@ -1018,6 +1040,7 @@ function AiAddProductComposer({ onClose, onReady }) {
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
   const [genBusy, setGenBusy] = useState(false);
+  const [actionBusy, setActionBusy] = useState(null); // { id, kind }
   const [genStatus, setGenStatus] = useState('');
   const [error, setError] = useState('');
 
@@ -1053,6 +1076,73 @@ function AiAddProductComposer({ onClose, onReady }) {
     });
   }
 
+  function setAsMain(id) {
+    setImages((current) => {
+      const index = current.findIndex((entry) => entry.id === id);
+      if (index <= 0) return current;
+      const next = current.map((entry, entryIndex) => (
+        entryIndex === 0 ? demoteMainRole(entry) : entry
+      ));
+      const [picked] = next.splice(index, 1);
+      return [{ ...picked, role: 'main' }, ...next];
+    });
+    setGenStatus('Đã đặt ảnh chính mới');
+    setError('');
+  }
+
+  async function runImageEdit({ id, kind, prompt, sourceUrl, label }) {
+    setActionBusy({ id, kind });
+    setError('');
+    setGenStatus(label);
+    try {
+      const source = await compressDataUrl(sourceUrl);
+      const url = await storeApi.generateImage({
+        prompt,
+        image: source,
+        engine: 'nano',
+      });
+      setImages((current) => current.map((entry) => (
+        entry.id === id ? { ...entry, dataUrl: url } : entry
+      )));
+      setGenStatus(`${label.replace(/…$/, '')} · xong`);
+    } catch (cause) {
+      setError(cause.message || 'Không xử lý được ảnh.');
+      setGenStatus('');
+    } finally {
+      setActionBusy(null);
+    }
+  }
+
+  async function regenImage(id) {
+    const target = images.find((entry) => entry.id === id);
+    if (!target?.dataUrl) return;
+    const isMain = target.role === 'main' || images[0]?.id === id;
+    const slot = Number.isInteger(target.genSlot) ? PRODUCT_VIEW_GENS[target.genSlot] : null;
+    // ReGen phụ: lấy ảnh chính hiện tại làm nguồn + đúng prompt slot.
+    // ReGen chính: tinh chỉnh chính ảnh đó thành hero quảng cáo.
+    const sourceUrl = (!isMain && images[0]?.dataUrl) ? images[0].dataUrl : target.dataUrl;
+    const prompt = slot?.prompt || (isMain ? PRODUCT_MAIN_REGEN_PROMPT : PRODUCT_VIEW_GENS[0].prompt);
+    await runImageEdit({
+      id,
+      kind: 'regen',
+      prompt,
+      sourceUrl,
+      label: isMain ? 'Đang ReGen ảnh chính…' : `Đang ReGen · ${slot?.label || 'ảnh'}…`,
+    });
+  }
+
+  async function sharpenMain() {
+    const main = images[0];
+    if (!main?.dataUrl) return;
+    await runImageEdit({
+      id: main.id,
+      kind: 'sharpen',
+      prompt: PRODUCT_SHARPEN_PROMPT,
+      sourceUrl: main.dataUrl,
+      label: 'Đang làm nét ảnh chính…',
+    });
+  }
+
   async function generateViews() {
     const main = images[0];
     if (!main?.dataUrl) {
@@ -1066,6 +1156,7 @@ function AiAddProductComposer({ onClose, onReady }) {
       const source = await compressDataUrl(main.dataUrl);
       setGenStatus('Đang gen 4 ảnh song song…');
       let done = 0;
+      const stamp = Date.now();
       const results = await Promise.all(PRODUCT_VIEW_GENS.map(async (slot, index) => {
         try {
           const url = await storeApi.generateImage({
@@ -1076,9 +1167,11 @@ function AiAddProductComposer({ onClose, onReady }) {
           done += 1;
           setGenStatus(`Đang gen… xong ${done}/4`);
           return {
-            id: `gen-${Date.now()}-${index}`,
+            id: `gen-${stamp}-${index}`,
             name: `${slot.label} ${index + 1}`,
             role: slot.kind,
+            genKind: slot.kind,
+            genSlot: index,
             dataUrl: url,
           };
         } catch (cause) {
@@ -1110,7 +1203,10 @@ function AiAddProductComposer({ onClose, onReady }) {
         images: images.map((entry) => entry.dataUrl),
         note: note.trim(),
       });
-      onReady(productFromAiFill(payload.fill, payload.images || images.map((entry) => entry.dataUrl)));
+      // Force image[0] as main in fill result (user may have reordered).
+      const ordered = payload.images || images.map((entry) => entry.dataUrl);
+      const fill = { ...(payload.fill || {}), mainImageIndex: 0 };
+      onReady(productFromAiFill(fill, ordered));
     } catch (cause) {
       setError(cause.message || 'AI chưa điền được sản phẩm.');
     } finally {
@@ -1118,7 +1214,7 @@ function AiAddProductComposer({ onClose, onReady }) {
     }
   }
 
-  const locked = busy || genBusy;
+  const locked = busy || genBusy || Boolean(actionBusy);
 
   return (
     <div className="ks-modal ks-modal--editor" role="dialog" aria-modal="true" aria-label="Thêm hàng bằng AI">
@@ -1137,7 +1233,7 @@ function AiAddProductComposer({ onClose, onReady }) {
             <div>
               <p className="ks-kicker">1 · ẢNH</p>
               <strong>1 ảnh chính + 4 ảnh gen</strong>
-              <small>Thêm ảnh chính → Gen 4 ảnh (2 đổi góc + 2 mặc thử). Tổng 5 ảnh / sản phẩm.</small>
+              <small>Gen xong có thể chọn ảnh chính, ReGen từng ảnh, hoặc Làm nét ảnh chính.</small>
             </div>
             <div className="ks-ai-composer__tools">
               <button
@@ -1165,15 +1261,36 @@ function AiAddProductComposer({ onClose, onReady }) {
           </div>
           {images.length ? (
             <div className="ks-ai-composer__grid">
-              {images.map((image, index) => (
-                <article className={`ks-ai-composer__card${image.role === 'main' || index === 0 ? ' is-main' : ''}`} key={image.id}>
-                  <ProductArt src={image.dataUrl} alt={image.name} />
-                  <footer>
-                    <span>{imageRoleLabel(image, index)}</span>
-                    <button type="button" disabled={locked} onClick={() => removeImage(image.id)}>Xoá</button>
-                  </footer>
-                </article>
-              ))}
+              {images.map((image, index) => {
+                const isMain = image.role === 'main' || index === 0;
+                const cardBusy = actionBusy?.id === image.id;
+                return (
+                  <article className={`ks-ai-composer__card${isMain ? ' is-main' : ''}${cardBusy ? ' is-busy' : ''}`} key={image.id}>
+                    <ProductArt src={image.dataUrl} alt={image.name} />
+                    <footer>
+                      <span>{imageRoleLabel(image, index)}</span>
+                      <div className="ks-ai-composer__card-actions">
+                        {!isMain && (
+                          <button type="button" disabled={locked} onClick={() => setAsMain(image.id)}>
+                            Chọn làm ảnh chính
+                          </button>
+                        )}
+                        {isMain && (
+                          <button type="button" disabled={locked} onClick={sharpenMain}>
+                            {cardBusy && actionBusy?.kind === 'sharpen' ? 'Đang làm nét…' : 'Làm nét'}
+                          </button>
+                        )}
+                        <button type="button" disabled={locked} onClick={() => regenImage(image.id)}>
+                          {cardBusy && actionBusy?.kind === 'regen' ? 'Đang ReGen…' : 'ReGen'}
+                        </button>
+                        <button type="button" className="is-danger" disabled={locked} onClick={() => removeImage(image.id)}>
+                          Xoá
+                        </button>
+                      </div>
+                    </footer>
+                  </article>
+                );
+              })}
             </div>
           ) : (
             <label
@@ -1194,7 +1311,8 @@ function AiAddProductComposer({ onClose, onReady }) {
               <span>PNG / JPG / WEBP · mỗi ảnh &lt; 2 MB · rồi Gen 4 ảnh phụ</span>
             </label>
           )}
-          {genStatus && !genBusy && <p className="ks-ai-composer__status">{genStatus}</p>}
+          {genStatus && !genBusy && !actionBusy && <p className="ks-ai-composer__status">{genStatus}</p>}
+          {actionBusy && <p className="ks-ai-composer__status">{genStatus || 'Đang xử lý ảnh…'}</p>}
         </section>
 
         <section className="ks-ai-composer__section">

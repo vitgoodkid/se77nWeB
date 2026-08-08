@@ -903,26 +903,37 @@
   min-width: 0;
   border: 1px solid var(--line);
   background: var(--paper);
+  display: grid;
+  grid-template-rows: auto 1fr;
 }
+.ks-ai-composer__card.is-busy { opacity: .72; }
 .ks-ai-composer__card .ks-art { aspect-ratio: 1 / 1; }
 .ks-ai-composer__card .ks-art__mark { font-size: 54px; }
 .ks-ai-composer__card footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  display: grid;
   gap: 8px;
   padding: 8px 10px;
   border-top: 1px solid var(--line);
+  align-content: start;
 }
-.ks-ai-composer__card footer span { color: var(--muted); font: 700 9px/1 'JetBrains Mono', monospace; }
-.ks-ai-composer__card footer button {
+.ks-ai-composer__card footer > span { color: var(--muted); font: 700 9px/1 'JetBrains Mono', monospace; }
+.ks-ai-composer__card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+}
+.ks-ai-composer__card-actions button {
   padding: 0;
   border: 0;
   background: transparent;
-  color: #a84253;
-  font: 700 9px/1 'JetBrains Mono', monospace;
+  color: var(--ink);
+  font: 700 9px/1.2 'JetBrains Mono', monospace;
   cursor: pointer;
+  text-align: left;
 }
+.ks-ai-composer__card-actions button:hover:not(:disabled) { text-decoration: underline; }
+.ks-ai-composer__card-actions button:disabled { opacity: .45; cursor: not-allowed; }
+.ks-ai-composer__card-actions button.is-danger { color: #a84253; }
 .ks-ai-composer__note {
   width: 100%;
   min-height: 160px;
