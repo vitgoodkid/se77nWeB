@@ -59,8 +59,11 @@ async function pollImage(initial) {
   throw new Error('image: still rendering after 10 min');
 }
 
-/** Edit/generate one product photo via /api/image (fal). */
-async function generateImage({ prompt, image, engine = 'nano' }) {
+function isContentBlocked(message) {
+  return /content[_\s-]?policy|content checker|safety|moderation|nsfw|violat/i.test(String(message || ''));
+}
+
+async function generateImageOnce({ prompt, image, engine }) {
   const response = await fetch('/api/image', {
     method: 'POST',
     credentials: 'include',
@@ -68,6 +71,25 @@ async function generateImage({ prompt, image, engine = 'nano' }) {
     body: JSON.stringify({ prompt, image, engine }),
   });
   return pollImage(await safeJson(response, 'image'));
+}
+
+/**
+ * Edit/generate one product photo via /api/image (fal).
+ * Default engine: nano. On content-checker / policy blocks, retry once with Grok Imagine.
+ */
+async function generateImage({ prompt, image, engine = 'nano' }) {
+  try {
+    return await generateImageOnce({ prompt, image, engine });
+  } catch (cause) {
+    if (engine !== 'grok' && isContentBlocked(cause?.message)) {
+      try {
+        return await generateImageOnce({ prompt, image, engine: 'grok' });
+      } catch (fallbackErr) {
+        throw new Error(`Grok fallback: ${fallbackErr.message || 'gen thất bại'} (sau khi nano bị content checker)`);
+      }
+    }
+    throw cause;
+  }
 }
 
 export const storeApi = {

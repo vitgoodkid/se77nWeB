@@ -1,17 +1,20 @@
 // POST /api/image
-// Body: { prompt: string, image?: string (data URL or http URL), engine?: 'openai'|'nano' }
+// Body: { prompt: string, image?: string (data URL or http URL), engine?: 'openai'|'nano'|'grok' }
 // Returns:
-//   - { image: url }                              when result is ready within ~55s
+//   - { image: url, model }                      when result is ready within ~55s
 //   - { pending: true, requestId, model, statusUrl, message }  when render still running
 //
 // GET /api/image?requestId=...&model=...
 //   - { image: url }              when COMPLETED
 //   - { pending: true }           still running
-//   - { error: ... }              FAILED / CANCELLED
+//   - { error: ... }              FAILED / CANCELLED / content policy
 //
 // Proxies to fal.ai. Hides FAL_API_KEY server-side. fal openai/gpt-image-2 often
 // takes 60–120s, longer than Vercel Hobby's 60s function cap, so we surface a
 // pending response that the client polls separately.
+//
+// When engine is nano/openai and fal returns a content-policy / content-checker
+// rejection, we automatically retry once with Grok Imagine (xai/grok-imagine-image).
 
 import { pickImageUrl } from './_helpers.js';
 import { resolveOwner } from './_lib/threads.js';
@@ -20,6 +23,11 @@ import { enforceLimits, LIMITS } from './_lib/ratelimit.js';
 export const config = { maxDuration: 60 };
 
 function pickModel(engine, hasImage) {
+  if (engine === 'grok') {
+    return hasImage
+      ? (process.env.FAL_IMAGE_GROK_MODEL || 'xai/grok-imagine-image/edit')
+      : (process.env.FAL_IMAGE_GROK_T2I_MODEL || 'xai/grok-imagine-image');
+  }
   if (engine === 'nano') {
     return hasImage
       ? (process.env.FAL_IMAGE_NANO_MODEL || 'fal-ai/nano-banana-pro/edit')
@@ -61,6 +69,105 @@ async function proxyImage(req, res) {
   }
 }
 
+// fal returns COMPLETED status even when output is rejected by safety filters —
+// the result body has { detail: [{ msg, type: 'content_policy_violation' }] }
+// instead of { images: [...] }. Surface that as a clear user-facing error.
+function extractPolicyError(final) {
+  const d = final?.detail;
+  if (typeof d === 'string' && /content|policy|checker|safety|moderation|nsfw|violat/i.test(d)) {
+    return d;
+  }
+  if (!Array.isArray(d) || !d.length) {
+    const msg = final?.error || final?.message;
+    if (typeof msg === 'string' && /content|policy|checker|safety|moderation|nsfw|violat/i.test(msg)) {
+      return msg;
+    }
+    return null;
+  }
+  const item = d[0];
+  if (item?.type === 'content_policy_violation') {
+    return item.msg || 'content policy violation';
+  }
+  const joined = d.map((entry) => entry?.msg || entry?.type || '').filter(Boolean).join('; ');
+  if (/content|policy|checker|safety|moderation|nsfw|violat/i.test(joined)) {
+    return joined || 'content policy violation';
+  }
+  if (item?.msg) return item.msg;
+  return null;
+}
+
+function isPolicyText(value) {
+  return /content[_\s-]?policy|content checker|safety|moderation|nsfw|violat/i.test(String(value || ''));
+}
+
+async function submitFalJob({ apiKey, model, input }) {
+  const submit = await fetch(`https://queue.fal.run/${model}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Key ${apiKey}` },
+    body: JSON.stringify(input),
+  });
+  const submitData = await submit.json().catch(() => ({}));
+  if (!submit.ok) {
+    const detail = submitData?.detail || submitData?.error || submitData?.message || 'submit failed';
+    const msg = typeof detail === 'string' ? detail : (Array.isArray(detail) ? detail.map((x) => x?.msg || JSON.stringify(x)).join('; ') : JSON.stringify(detail));
+    const err = new Error(msg);
+    err.status = submit.status;
+    err.policy = isPolicyText(msg);
+    err.upstream = submitData;
+    throw err;
+  }
+  return {
+    requestId: submitData.request_id,
+    statusUrl: submitData.status_url || `https://queue.fal.run/${model}/requests/${submitData.request_id}/status`,
+    resultUrl: submitData.response_url || `https://queue.fal.run/${model}/requests/${submitData.request_id}`,
+    model,
+  };
+}
+
+async function waitFalJob({ apiKey, job, deadlineMs }) {
+  const { statusUrl, resultUrl, requestId, model } = job;
+  while (Date.now() < deadlineMs) {
+    await new Promise((r) => setTimeout(r, 2500));
+    const s = await fetch(statusUrl, { headers: { Authorization: `Key ${apiKey}` } });
+    const sd = await s.json().catch(() => ({}));
+    if (sd.status === 'COMPLETED') {
+      const finalRes = await fetch(resultUrl, { headers: { Authorization: `Key ${apiKey}` } });
+      const final = await finalRes.json().catch(() => ({}));
+      const policyErr = extractPolicyError(final);
+      if (policyErr) {
+        const err = new Error(policyErr);
+        err.status = 422;
+        err.policy = true;
+        err.upstream = final;
+        throw err;
+      }
+      const url = pickImageUrl(final);
+      if (!url) {
+        const err = new Error('no image in response');
+        err.status = 502;
+        err.upstream = final;
+        throw err;
+      }
+      return { image: url, model };
+    }
+    if (sd.status === 'FAILED' || sd.status === 'CANCELLED') {
+      const policyErr = extractPolicyError(sd) || (isPolicyText(sd?.error || sd?.detail) ? String(sd.error || sd.detail) : null);
+      const err = new Error(policyErr || ('fal job ' + sd.status));
+      err.status = policyErr ? 422 : 502;
+      err.policy = Boolean(policyErr);
+      err.upstream = sd;
+      throw err;
+    }
+  }
+  return {
+    pending: true,
+    requestId,
+    model,
+    statusUrl: `/api/image?requestId=${encodeURIComponent(requestId)}&model=${encodeURIComponent(model)}`,
+    message: 'still rendering — image gen often exceeds 60s; client should poll',
+  };
+}
+
 export default async function handler(req, res) {
   // Image cache proxy (no fal key needed) — folded in to stay under the
   // Hobby-plan 12-serverless-function cap.
@@ -90,54 +197,52 @@ export default async function handler(req, res) {
   const owner = await resolveOwner(req, res);
   if (!(await enforceLimits(res, owner?.ownerKey, [LIMITS.imageMin, LIMITS.imageDay]))) return;
 
-  const model = pickModel(engine, imageUrls.length > 0);
-
+  const primaryEngine = ['nano', 'openai', 'grok'].includes(engine) ? engine : 'openai';
+  const engines = primaryEngine === 'grok' ? ['grok'] : [primaryEngine, 'grok'];
   const input = { prompt };
   if (imageUrls.length) input.image_urls = imageUrls;
 
-  try {
-    const submit = await fetch(`https://queue.fal.run/${model}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Key ${apiKey}` },
-      body: JSON.stringify(input),
-    });
-    const submitData = await submit.json();
-    if (!submit.ok) return res.status(submit.status).json({ error: submitData?.detail || 'submit failed', upstream: submitData });
+  const hardDeadline = Date.now() + 55_000;
+  let lastError = null;
 
-    const requestId = submitData.request_id;
-    const statusUrl = submitData.status_url || `https://queue.fal.run/${model}/requests/${requestId}/status`;
-    const resultUrl = submitData.response_url || `https://queue.fal.run/${model}/requests/${requestId}`;
-
-    // Inline poll up to ~55s. fal openai/gpt-image-2 commonly exceeds this; we
-    // hand back a job ID so the client can poll /api/image?requestId=... after.
-    const deadline = Date.now() + 55_000;
-    while (Date.now() < deadline) {
-      await new Promise((r) => setTimeout(r, 2500));
-      const s = await fetch(statusUrl, { headers: { Authorization: `Key ${apiKey}` } });
-      const sd = await s.json();
-      if (sd.status === 'COMPLETED') {
-        const finalRes = await fetch(resultUrl, { headers: { Authorization: `Key ${apiKey}` } });
-        const final = await finalRes.json();
-        const policyErr = extractPolicyError(final);
-        if (policyErr) return res.status(422).json({ error: policyErr, upstream: final });
-        const url = pickImageUrl(final);
-        if (!url) return res.status(502).json({ error: 'no image in response', upstream: final });
-        return res.status(200).json({ image: url, model });
+  for (let i = 0; i < engines.length; i += 1) {
+    const eng = engines[i];
+    const model = pickModel(eng, imageUrls.length > 0);
+    const remaining = hardDeadline - Date.now();
+    // Need a little room to submit + at least one poll; otherwise hand pending to client.
+    if (remaining < 8_000 && i > 0) break;
+    try {
+      const job = await submitFalJob({ apiKey, model, input });
+      const result = await waitFalJob({ apiKey, job, deadlineMs: hardDeadline });
+      if (result.pending) {
+        return res.status(202).json(result);
       }
-      if (sd.status === 'FAILED' || sd.status === 'CANCELLED') {
-        return res.status(502).json({ error: 'fal job ' + sd.status, upstream: sd });
+      return res.status(200).json({
+        image: result.image,
+        model: result.model,
+        engine: eng,
+        fallback: i > 0,
+      });
+    } catch (e) {
+      lastError = e;
+      // Only auto-fallback to Grok on content-checker / policy blocks.
+      if (!e?.policy || eng === 'grok' || i === engines.length - 1) {
+        const status = Number(e?.status) || 502;
+        return res.status(status).json({
+          error: String(e?.message || e),
+          upstream: e?.upstream,
+          engine: eng,
+          model,
+        });
       }
+      // else: continue loop → grok
     }
-    return res.status(202).json({
-      pending: true,
-      requestId,
-      model,
-      statusUrl: `/api/image?requestId=${encodeURIComponent(requestId)}&model=${encodeURIComponent(model)}`,
-      message: 'still rendering — image gen often exceeds 60s; client should poll',
-    });
-  } catch (e) {
-    return res.status(502).json({ error: String(e.message || e) });
   }
+
+  return res.status(Number(lastError?.status) || 502).json({
+    error: String(lastError?.message || lastError || 'image gen failed'),
+    upstream: lastError?.upstream,
+  });
 }
 
 async function pollOnce({ apiKey, model, requestId, res }) {
@@ -150,30 +255,18 @@ async function pollOnce({ apiKey, model, requestId, res }) {
       const finalRes = await fetch(resultUrl, { headers: { Authorization: `Key ${apiKey}` } });
       const final = await finalRes.json();
       const policyErr = extractPolicyError(final);
-      if (policyErr) return res.status(422).json({ error: policyErr, upstream: final });
+      if (policyErr) return res.status(422).json({ error: policyErr, upstream: final, policy: true });
       const url = pickImageUrl(final);
       if (!url) return res.status(502).json({ error: 'no image in response', upstream: final });
       return res.status(200).json({ image: url, model });
     }
     if (sd.status === 'FAILED' || sd.status === 'CANCELLED') {
+      const policyErr = extractPolicyError(sd);
+      if (policyErr) return res.status(422).json({ error: policyErr, upstream: sd, policy: true });
       return res.status(502).json({ error: 'fal job ' + sd.status, upstream: sd });
     }
     return res.status(202).json({ pending: true, requestId, model });
   } catch (e) {
     return res.status(502).json({ error: String(e.message || e) });
   }
-}
-
-// fal returns COMPLETED status even when output is rejected by safety filters —
-// the result body has { detail: [{ msg, type: 'content_policy_violation' }] }
-// instead of { images: [...] }. Surface that as a clear user-facing error.
-function extractPolicyError(final) {
-  const d = final?.detail;
-  if (!Array.isArray(d) || !d.length) return null;
-  const item = d[0];
-  if (item?.type === 'content_policy_violation') {
-    return item.msg || 'content policy violation';
-  }
-  if (item?.msg) return item.msg;
-  return null;
 }
