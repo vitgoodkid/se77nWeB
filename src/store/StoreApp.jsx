@@ -769,12 +769,30 @@ const PRODUCT_VIEW_GENS = [
   {
     kind: 'tryon',
     label: 'Mặc thử',
-    prompt: `${PRODUCT_PHOTO_STYLE} Fashion ad try-on: a stunning East Asian female fashion model — beautiful face, clear skin, soft makeup, long hair, slim waist, fuller bust / curvy chest, attractive and alluring commercial-model look. She wears the exact product. Three-quarter or full body, confident natural pose that flatters the figure, real skin, real fabric drape on the body, soft studio softbox, plain light backdrop, premium lookbook / Instagram shop style. Tasteful and glamorous, not cartoon, not plastic doll.`,
+    prompt: [
+      'Stunning young Vietnamese woman, 19yrs, beautiful soft facial features, fair skin, big expressive eyes, long wavy black hair,',
+      'slim waist, toned flat stomach, natural feminine curves, fuller bust,',
+      'wearing the EXACT same garment from the reference photo (same color, fabric, cut, logos, stitching — do not invent a different top),',
+      'slight side turn pose showing midriff and body shape, confident alluring commercial-model expression,',
+      'soft golden hour studio light, commercial fashion campaign style, ultra realistic,',
+      'real camera lookbook / Instagram shop ad, sharp detail on fabric and skin.',
+      'NOT 3D, NOT CGI, NOT plastic doll, NOT anime.',
+      'No text, no watermark, no logo overlays.',
+    ].join(' '),
   },
   {
     kind: 'tryon',
     label: 'Mặc thử',
-    prompt: `${PRODUCT_PHOTO_STYLE} Fashion ad try-on: a stunning East Asian female fashion model — pretty face, refined features, soft glam makeup, slim waist, fuller bust / curvy chest, sexy but elegant catalog vibe. She wears the exact product in a different pose (slight turn, hand on hip, or easy walk) that shows body shape and the garment fit. Real skin and cloth, soft advertising studio light, plain light backdrop, high-end Shopee / lookbook feel. Tasteful, alluring, photoreal — not 3D, not CGI, not exaggerated anime.`,
+    prompt: [
+      'Stunning young Vietnamese woman, 19yrs, beautiful soft facial features, fair skin, big expressive eyes, long wavy black hair,',
+      'slim waist, toned flat stomach, natural feminine curves, fuller bust,',
+      'wearing the EXACT same garment from the reference photo (keep product identity identical),',
+      'different pose: front-facing 3/4 or hand-on-hip with a gentle hip turn, elegant and sexy catalog vibe,',
+      'soft golden hour studio light, commercial fashion campaign style, ultra realistic,',
+      'premium Shopee / lookbook advertising photo, real skin and real cloth drape.',
+      'NOT 3D, NOT CGI, NOT plastic doll, NOT anime.',
+      'No text, no watermark, no logo overlays.',
+    ].join(' '),
   },
 ];
 
