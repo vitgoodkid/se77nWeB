@@ -3,6 +3,7 @@ import { storeApi } from './api.js';
 import './store.css';
 
 const CART_KEY = 'se77n.store.cart.v2';
+const CUSTOMER_KEY = 'se77n.store.customer.v1';
 const ORDER_STATUS = [
   ['new', 'Đơn mới'],
   ['confirmed', 'Đã xác nhận'],
@@ -26,6 +27,34 @@ function readCart() {
     const parsed = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
     return Array.isArray(parsed) ? parsed.slice(0, 25) : [];
   } catch { return []; }
+}
+
+function readCustomerForm() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(CUSTOMER_KEY) || '{}');
+    if (!parsed || typeof parsed !== 'object') {
+      return { fullName: '', phone: '', address: '', note: '' };
+    }
+    return {
+      fullName: typeof parsed.fullName === 'string' ? parsed.fullName.slice(0, 100) : '',
+      phone: typeof parsed.phone === 'string' ? parsed.phone.slice(0, 40) : '',
+      address: typeof parsed.address === 'string' ? parsed.address.slice(0, 700) : '',
+      note: typeof parsed.note === 'string' ? parsed.note.slice(0, 1000) : '',
+    };
+  } catch {
+    return { fullName: '', phone: '', address: '', note: '' };
+  }
+}
+
+function writeCustomerForm(form) {
+  try {
+    localStorage.setItem(CUSTOMER_KEY, JSON.stringify({
+      fullName: (form.fullName || '').slice(0, 100),
+      phone: (form.phone || '').slice(0, 40),
+      address: (form.address || '').slice(0, 700),
+      note: (form.note || '').slice(0, 1000),
+    }));
+  } catch { /* ignore quota / private mode */ }
 }
 
 function routeFromPath() {
@@ -631,13 +660,17 @@ function CartDrawer({ open, items, config, onClose, onQuantity, onCheckout }) {
 }
 
 function Checkout({ checkout, config, onClose, onSuccess }) {
-  const [form, setForm] = useState({ fullName: '', phone: '', address: '', note: '' });
+  const [form, setForm] = useState(readCustomerForm);
   const [mapImages, setMapImages] = useState([]);
   const mapImageLimit = 3;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(null);
   const summary = totals(checkout.items, config);
+
+  useEffect(() => {
+    writeCustomerForm(form);
+  }, [form]);
 
   async function pickMaps(files) {
     const selected = Array.from(files || []);
@@ -1105,6 +1138,8 @@ function AiAddProductComposer({ onClose, onReady }) {
   const [actionBusy, setActionBusy] = useState(null); // { id, kind }
   const [genStatus, setGenStatus] = useState('');
   const [error, setError] = useState('');
+  const [regenTargetId, setRegenTargetId] = useState(null);
+  const [regenNote, setRegenNote] = useState('');
 
   async function addFiles(fileList) {
     const files = Array.from(fileList || []).filter((file) => file.type.startsWith('image/'));
@@ -1175,7 +1210,7 @@ function AiAddProductComposer({ onClose, onReady }) {
     }
   }
 
-  async function regenImage(id) {
+  async function regenImage(id, directorNote = '') {
     const target = images.find((entry) => entry.id === id);
     if (!target?.dataUrl) return;
     const isMain = target.role === 'main' || images[0]?.id === id;
@@ -1183,9 +1218,13 @@ function AiAddProductComposer({ onClose, onReady }) {
     // ReGen phụ: lấy ảnh chính hiện tại làm nguồn + đúng prompt slot.
     // ReGen chính: tinh chỉnh chính ảnh đó thành hero quảng cáo.
     const sourceUrl = (!isMain && images[0]?.dataUrl) ? images[0].dataUrl : target.dataUrl;
-    const prompt = slot?.kind === 'angle'
+    let prompt = slot?.kind === 'angle'
       ? pickRandomAnglePrompt()
       : (slot?.prompt || (isMain ? PRODUCT_MAIN_REGEN_PROMPT : pickRandomAnglePrompt()));
+    const note = directorNote.trim();
+    if (note) {
+      prompt = `${prompt} DIRECTOR NOTE (follow closely if compatible with product identity): ${note}`;
+    }
     await runImageEdit({
       id,
       kind: 'regen',
@@ -1193,6 +1232,26 @@ function AiAddProductComposer({ onClose, onReady }) {
       sourceUrl,
       label: isMain ? 'Đang ReGen ảnh chính…' : `Đang ReGen · ${slot?.label || 'ảnh'}…`,
     });
+  }
+
+  function openRegen(id) {
+    setRegenTargetId(id);
+    setRegenNote('');
+    setError('');
+  }
+
+  function cancelRegen() {
+    setRegenTargetId(null);
+    setRegenNote('');
+  }
+
+  async function confirmRegen() {
+    const id = regenTargetId;
+    if (!id) return;
+    const note = regenNote;
+    setRegenTargetId(null);
+    setRegenNote('');
+    await regenImage(id, note);
   }
 
   async function sharpenMain() {
@@ -1285,7 +1344,7 @@ function AiAddProductComposer({ onClose, onReady }) {
     }
   }
 
-  const locked = busy || genBusy || Boolean(actionBusy);
+  const locked = busy || genBusy || Boolean(actionBusy) || Boolean(regenTargetId);
 
   return (
     <div className="ks-modal ks-modal--editor" role="dialog" aria-modal="true" aria-label="Thêm hàng bằng AI">
@@ -1351,7 +1410,7 @@ function AiAddProductComposer({ onClose, onReady }) {
                             {cardBusy && actionBusy?.kind === 'sharpen' ? 'Đang làm nét…' : 'Làm nét'}
                           </button>
                         )}
-                        <button type="button" disabled={locked} onClick={() => regenImage(image.id)}>
+                        <button type="button" disabled={locked} onClick={() => openRegen(image.id)}>
                           {cardBusy && actionBusy?.kind === 'regen' ? 'Đang ReGen…' : 'ReGen'}
                         </button>
                         <button type="button" className="is-danger" disabled={locked} onClick={() => removeImage(image.id)}>
@@ -1385,6 +1444,33 @@ function AiAddProductComposer({ onClose, onReady }) {
           {genStatus && !genBusy && !actionBusy && <p className="ks-ai-composer__status">{genStatus}</p>}
           {actionBusy && <p className="ks-ai-composer__status">{genStatus || 'Đang xử lý ảnh…'}</p>}
         </section>
+
+        {regenTargetId && (
+          <div className="ks-regen-note" role="dialog" aria-modal="true" aria-label="Note ReGen">
+            <button className="ks-regen-note__backdrop" type="button" onClick={cancelRegen} aria-label="Đóng" />
+            <div className="ks-regen-note__panel">
+              <div className="ks-regen-note__head">
+                <p className="ks-kicker">REGEN NOTE</p>
+                <strong>Ghi chú thêm khi ReGen</strong>
+                <small>Tuỳ chọn — để trống nếu chỉ muốn regen theo prompt mặc định.</small>
+              </div>
+              <textarea
+                className="ks-regen-note__input"
+                rows="4"
+                autoFocus
+                value={regenNote}
+                onChange={(event) => setRegenNote(event.target.value)}
+                placeholder={'VD: góc nghiêng hơn, nền sáng hơn, nhấn túi trước, không đổi màu/logo…'}
+              />
+              <div className="ks-regen-note__actions">
+                <button className="ks-button ks-button--light" type="button" onClick={cancelRegen}>Huỷ</button>
+                <button className="ks-button ks-button--dark" type="button" onClick={confirmRegen}>
+                  {regenNote.trim() ? 'ReGen với note' : 'ReGen'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <section className="ks-ai-composer__section">
           <div className="ks-ai-composer__section-head">
