@@ -759,12 +759,28 @@ const PRODUCT_VIEW_GENS = [
   {
     kind: 'angle',
     label: 'Đổi góc',
-    prompt: `${PRODUCT_PHOTO_STYLE} Flat-lay or gently draped product hero shot from a clean 3/4 front advertising angle on a simple light seamless backdrop. Real cloth, real shadows, sharp commercial detail.`,
+    prompt: [
+      PRODUCT_PHOTO_STYLE,
+      'CRITICAL: invent a brand-new catalog composition — do NOT lightly edit, retouch, or reuse the reference crop, pose, fold layout, or camera height.',
+      'The result must look like a different photo shoot of the SAME item: clearly new camera angle and garment arrangement.',
+      'Shoot a creative overhead / top-down flat-lay (or high 45° bird\'s-eye) on a clean light seamless backdrop.',
+      'Art-direct the garment: open it flat, fold one sleeve/leg intentionally, or drape with soft natural folds so silhouette, pockets, collar, waistband, and logos read clearly.',
+      'PRODUCT IDENTITY LOCK: keep exact same color, fabric, cut, stitching, logos, prints, and proportions — do not redesign, recolor, restyle, or invent a different product.',
+      'Real cloth, real contact shadows, sharp commercial detail. No mannequin, no model, no hanger clutter.',
+    ].join(' '),
   },
   {
     kind: 'angle',
     label: 'Đổi góc',
-    prompt: `${PRODUCT_PHOTO_STYLE} Advertising product photo from a side or slight back 3/4 angle so silhouette and construction read clearly. Same real-cloth catalog lighting and plain light backdrop.`,
+    prompt: [
+      PRODUCT_PHOTO_STYLE,
+      'CRITICAL: invent a brand-new catalog composition — do NOT lightly edit, retouch, or reuse the reference crop, pose, fold layout, or camera height.',
+      'The result must look like a different photo shoot of the SAME item: clearly new camera angle and garment arrangement, distinct from a front packshot.',
+      'Shoot a strong side-profile or rear 3/4 advertising angle (camera clearly beside or behind the product), low-to-mid hero height, on a clean light seamless backdrop.',
+      'Present the garment hanging, gently draped over a simple edge, or standing with depth so side seams, back panel, silhouette, and construction details dominate the frame.',
+      'PRODUCT IDENTITY LOCK: keep exact same color, fabric, cut, stitching, logos, prints, and proportions — do not redesign, recolor, restyle, or invent a different product.',
+      'Real cloth, directional softbox light, sharp commercial detail. No mannequin, no model.',
+    ].join(' '),
   },
   {
     kind: 'tryon',
