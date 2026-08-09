@@ -507,6 +507,7 @@ function productUrl(productId) {
 async function sendWebhook(order, mapImages = []) {
   const webhookUrl = text(process.env.STORE_DISCORD_WEBHOOK_URL || process.env.DISCORD_STORE_WEBHOOK_URL);
   if (!webhookUrl) return;
+  const ownerId = text(process.env.STORE_OWNER_DISCORD_ID || process.env.OWNER_DISCORD_ID || DEFAULT_OWNER_DISCORD_ID) || DEFAULT_OWNER_DISCORD_ID;
   const products = order.items.map((item) => `• [${item.title}](${productUrl(item.productId)})`).join('\n').slice(0, 1024);
   const variants = order.items.map((item) => `• ${item.variantName} ×${item.quantity}`).join('\n').slice(0, 1024);
   const sizes = order.items.map((item) => `• ${item.size} ×${item.quantity}`).join('\n').slice(0, 1024);
@@ -514,8 +515,8 @@ async function sendWebhook(order, mapImages = []) {
   const totals = `${prices}\nTạm tính: ${formatTwd(order.subtotal)}\nGiao hàng: ${order.shippingFee ? formatTwd(order.shippingFee) : 'Miễn phí'}\n**Tổng cộng: ${formatTwd(order.total)}**`.slice(0, 1024);
   const payload = {
     username: 'KataShop',
-    content: 'Đơn hàng KataShop mới',
-    allowed_mentions: { parse: [] },
+    content: `<@${ownerId}> Đơn hàng KataShop mới`,
+    allowed_mentions: { parse: [], users: [ownerId] },
     embeds: [{
       title: `Đơn ${order._id}`,
       color: 0xd36a79,
