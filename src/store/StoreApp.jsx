@@ -755,32 +755,60 @@ const PRODUCT_PHOTO_STYLE = [
   'Keep the EXACT same garment from the reference: color, fabric, stitching, logos, cut, and proportions. No text, no watermark, no logo overlays.',
 ].join(' ');
 
+/** Pool of creative catalog viewpoints — picked at random each angle gen. */
+const ANGLE_CAMERA_CHOICES = [
+  'overhead / top-down flat-lay (bird\'s-eye), garment opened or artfully folded on a light seamless backdrop',
+  'high 45° three-quarter look-down, soft draped folds showing collar, pockets, or waistband',
+  'low hero camera looking slightly up at the garment standing / draped with depth and contact shadows',
+  'strong pure side-profile so silhouette, side seams, and thickness of fabric read clearly',
+  'rear 3/4 angle (camera clearly behind/beside) highlighting back panel, yoke, or rear construction',
+  'garment hanging freely with natural swing folds, mid-height camera, clean light backdrop',
+  'gently draped over a simple edge / surface with cascading folds, creative diagonal crop',
+  'tight detail-hero crop on a signature zone (collar, logo, pocket, waistband, hem) while full product identity stays obvious',
+  'neat folded / stacked presentation from a creative high angle, commercial packshot energy but not copying the reference layout',
+  'dynamic Dutch-tilt / diagonal advertising composition with bold negative space on a light seamless backdrop',
+];
+
+function shuffleCopy(list) {
+  const pool = [...list];
+  for (let i = pool.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  return pool;
+}
+
+function buildAnglePrompt(cameraIdea) {
+  return [
+    PRODUCT_PHOTO_STYLE,
+    'CRITICAL: invent a brand-new catalog composition — do NOT lightly edit, retouch, or reuse the reference crop, pose, fold layout, or camera height.',
+    'The result must look like a different photo shoot of the SAME item: clearly new camera angle and garment arrangement.',
+    `THIS SHOT'S RANDOMIZED VIEWPOINT (commit to it fully): ${cameraIdea}.`,
+    'Art-direct the garment to fit that viewpoint (open, fold, drape, hang, or stack) so construction details read clearly.',
+    'PRODUCT IDENTITY LOCK: keep exact same color, fabric, cut, stitching, logos, prints, and proportions — do not redesign, recolor, restyle, or invent a different product.',
+    'Real cloth, real contact shadows, softbox light, sharp commercial detail. No mannequin, no model.',
+  ].join(' ');
+}
+
+function pickRandomAnglePrompt() {
+  const idea = ANGLE_CAMERA_CHOICES[Math.floor(Math.random() * ANGLE_CAMERA_CHOICES.length)];
+  return buildAnglePrompt(idea);
+}
+
+function pickDistinctAnglePrompts(count) {
+  return shuffleCopy(ANGLE_CAMERA_CHOICES).slice(0, count).map(buildAnglePrompt);
+}
+
 const PRODUCT_VIEW_GENS = [
   {
     kind: 'angle',
     label: 'Đổi góc',
-    prompt: [
-      PRODUCT_PHOTO_STYLE,
-      'CRITICAL: invent a brand-new catalog composition — do NOT lightly edit, retouch, or reuse the reference crop, pose, fold layout, or camera height.',
-      'The result must look like a different photo shoot of the SAME item: clearly new camera angle and garment arrangement.',
-      'Shoot a creative overhead / top-down flat-lay (or high 45° bird\'s-eye) on a clean light seamless backdrop.',
-      'Art-direct the garment: open it flat, fold one sleeve/leg intentionally, or drape with soft natural folds so silhouette, pockets, collar, waistband, and logos read clearly.',
-      'PRODUCT IDENTITY LOCK: keep exact same color, fabric, cut, stitching, logos, prints, and proportions — do not redesign, recolor, restyle, or invent a different product.',
-      'Real cloth, real contact shadows, sharp commercial detail. No mannequin, no model, no hanger clutter.',
-    ].join(' '),
+    prompt: null, // resolved at gen time via pickRandomAnglePrompt / pickDistinctAnglePrompts
   },
   {
     kind: 'angle',
     label: 'Đổi góc',
-    prompt: [
-      PRODUCT_PHOTO_STYLE,
-      'CRITICAL: invent a brand-new catalog composition — do NOT lightly edit, retouch, or reuse the reference crop, pose, fold layout, or camera height.',
-      'The result must look like a different photo shoot of the SAME item: clearly new camera angle and garment arrangement, distinct from a front packshot.',
-      'Shoot a strong side-profile or rear 3/4 advertising angle (camera clearly beside or behind the product), low-to-mid hero height, on a clean light seamless backdrop.',
-      'Present the garment hanging, gently draped over a simple edge, or standing with depth so side seams, back panel, silhouette, and construction details dominate the frame.',
-      'PRODUCT IDENTITY LOCK: keep exact same color, fabric, cut, stitching, logos, prints, and proportions — do not redesign, recolor, restyle, or invent a different product.',
-      'Real cloth, directional softbox light, sharp commercial detail. No mannequin, no model.',
-    ].join(' '),
+    prompt: null,
   },
   {
     kind: 'tryon',
@@ -1155,7 +1183,9 @@ function AiAddProductComposer({ onClose, onReady }) {
     // ReGen phụ: lấy ảnh chính hiện tại làm nguồn + đúng prompt slot.
     // ReGen chính: tinh chỉnh chính ảnh đó thành hero quảng cáo.
     const sourceUrl = (!isMain && images[0]?.dataUrl) ? images[0].dataUrl : target.dataUrl;
-    const prompt = slot?.prompt || (isMain ? PRODUCT_MAIN_REGEN_PROMPT : PRODUCT_VIEW_GENS[0].prompt);
+    const prompt = slot?.kind === 'angle'
+      ? pickRandomAnglePrompt()
+      : (slot?.prompt || (isMain ? PRODUCT_MAIN_REGEN_PROMPT : pickRandomAnglePrompt()));
     await runImageEdit({
       id,
       kind: 'regen',
@@ -1191,10 +1221,17 @@ function AiAddProductComposer({ onClose, onReady }) {
       setGenStatus('Đang gen 4 ảnh song song…');
       let done = 0;
       const stamp = Date.now();
+      const anglePrompts = pickDistinctAnglePrompts(
+        PRODUCT_VIEW_GENS.filter((slot) => slot.kind === 'angle').length,
+      );
+      let angleCursor = 0;
+      const resolvedPrompts = PRODUCT_VIEW_GENS.map((slot) => (
+        slot.kind === 'angle' ? anglePrompts[angleCursor++] : slot.prompt
+      ));
       const results = await Promise.all(PRODUCT_VIEW_GENS.map(async (slot, index) => {
         try {
           const url = await storeApi.generateImage({
-            prompt: slot.prompt,
+            prompt: resolvedPrompts[index],
             image: source,
             engine: 'nano',
           });
