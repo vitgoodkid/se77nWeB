@@ -9,6 +9,7 @@ const PRODUCT_COLLECTION = 'storeproducts';
 const ORDER_COLLECTION = 'storeorders';
 const VISIT_DAY_COLLECTION = 'storevisitdays';
 const VISIT_UNIQUE_COLLECTION = 'storevisituniques';
+const MAX_PRODUCT_CLICK_KEY = 80;
 const MAX_CART_ITEMS = 25;
 const MAX_MAP_IMAGE_BYTES = 1 * 1024 * 1024;
 const MAX_MAP_IMAGES = 3;
@@ -852,22 +853,40 @@ function normalizeVisitPath(rawPath) {
   return '';
 }
 
+function sanitizeProductClickId(value) {
+  return text(value, MAX_PRODUCT_CLICK_KEY).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, MAX_PRODUCT_CLICK_KEY);
+}
+
+function extractProductIdFromPath(rawPath) {
+  const path = text(rawPath, 200).split('?')[0];
+  const match = path.match(/^\/store\/product\/([^/]+)$/i);
+  if (!match) return '';
+  try { return sanitizeProductClickId(decodeURIComponent(match[1])); }
+  catch { return sanitizeProductClickId(match[1]); }
+}
+
 async function recordVisit(req, res) {
   if (req.method !== 'POST') throw httpError(405, 'Method not allowed.', 'METHOD_NOT_ALLOWED');
   const body = requestBody(req);
-  const path = normalizeVisitPath(body.path || req.query?.path);
+  const rawPath = body.path || req.query?.path;
+  const path = normalizeVisitPath(rawPath);
   if (!path) return res.status(200).json({ ok: true, skipped: true });
   const visitorId = text(body.visitorId, 80).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64);
+  const productId = path === '/store/product'
+    ? (sanitizeProductClickId(body.productId) || extractProductIdFromPath(rawPath))
+    : '';
   const day = taiwanDayKey();
   const now = new Date();
   const { db } = await ensureStore();
   const days = db.collection(VISIT_DAY_COLLECTION);
   const uniques = db.collection(VISIT_UNIQUE_COLLECTION);
   const pathKey = path.replace(/\./g, '_');
+  const inc = { views: 1, [`paths.${pathKey}`]: 1 };
+  if (productId) inc[`products.${productId}`] = 1;
   await days.updateOne(
     { _id: day },
     {
-      $inc: { views: 1, [`paths.${pathKey}`]: 1 },
+      $inc: inc,
       $set: { updatedAt: now },
       $setOnInsert: { day, createdAt: now },
     },
@@ -876,21 +895,21 @@ async function recordVisit(req, res) {
   let unique = false;
   if (visitorId) {
     try {
-      await uniques.insertOne({ _id: `${day}:${visitorId}`, day, visitorId, path, createdAt: now });
+      await uniques.insertOne({ _id: `${day}:${visitorId}`, day, visitorId, path, productId: productId || null, createdAt: now });
       unique = true;
       await days.updateOne({ _id: day }, { $inc: { uniques: 1 }, $set: { updatedAt: now } });
     } catch (error) {
       if (error?.code !== 11000) throw error;
     }
   }
-  return res.status(200).json({ ok: true, unique });
+  return res.status(200).json({ ok: true, unique, productId: productId || null });
 }
 
 async function handleVisits(req, res) {
   if (req.method === 'POST') return recordVisit(req, res);
   if (req.method !== 'GET') throw httpError(405, 'Method not allowed.', 'METHOD_NOT_ALLOWED');
   await requireOwner(req);
-  const { db } = await ensureStore();
+  const { db, products, orders } = await ensureStore();
   const days = db.collection(VISIT_DAY_COLLECTION);
   const today = taiwanDayKey();
   const start = new Date();
@@ -916,11 +935,15 @@ async function handleVisits(req, res) {
     for (const [key, value] of Object.entries(paths)) {
       acc.paths[key] = (acc.paths[key] || 0) + Number(value || 0);
     }
+    const productClicks = doc.products || {};
+    for (const [key, value] of Object.entries(productClicks)) {
+      acc.products[key] = (acc.products[key] || 0) + Number(value || 0);
+    }
     return acc;
-  }, { views: 0, uniques: 0, paths: {} });
+  }, { views: 0, uniques: 0, paths: {}, products: {} });
   const last7Keys = series.slice(-7).map((entry) => entry.day);
   const last7Docs = last7Keys.map((key) => byId.get(key)).filter(Boolean);
-  const todayDoc = byId.get(today) || { views: 0, uniques: 0, paths: {} };
+  const todayDoc = byId.get(today) || { views: 0, uniques: 0, paths: {}, products: {} };
   const last7 = sumDocs(last7Docs);
   const last30 = sumDocs(recent);
   const pathLabel = {
@@ -932,6 +955,70 @@ async function handleVisits(req, res) {
   const topPaths = Object.entries({ ...(last30.paths || {}) })
     .map(([path, views]) => ({ path, label: pathLabel[path] || path, views: Number(views || 0) }))
     .sort((a, b) => b.views - a.views);
+
+  const productMeta = new Map();
+  const productDocs = await products.find({}, { projection: { title: 1, imageUrl: 1 } }).toArray();
+  for (const doc of productDocs) {
+    productMeta.set(String(doc._id), {
+      title: text(doc.title, 160) || String(doc._id),
+      imageUrl: text(doc.imageUrl, 500) || '',
+    });
+  }
+
+  const topClicked = Object.entries({ ...(last30.products || {}) })
+    .map(([productId, clicks]) => {
+      const meta = productMeta.get(productId) || {};
+      return {
+        productId,
+        title: meta.title || productId,
+        imageUrl: meta.imageUrl || '',
+        clicks: Number(clicks || 0),
+      };
+    })
+    .sort((a, b) => b.clicks - a.clicks)
+    .slice(0, 8);
+
+  const orderDocs = await orders.find(
+    { status: { $ne: 'cancelled' } },
+    { projection: { items: 1, status: 1 } },
+  ).toArray();
+  const soldMap = new Map();
+  for (const order of orderDocs) {
+    for (const item of (order.items || [])) {
+      const productId = text(item.productId, 80);
+      if (!productId) continue;
+      const current = soldMap.get(productId) || {
+        productId,
+        title: text(item.title, 160) || productId,
+        imageUrl: '',
+        quantity: 0,
+        revenue: 0,
+        orders: 0,
+      };
+      const qty = Math.max(0, Number(item.quantity) || 0);
+      const line = Number(item.lineTotal);
+      const revenue = Number.isFinite(line)
+        ? line
+        : qty * Math.max(0, Number(item.unitPrice) || 0);
+      current.quantity += qty;
+      current.revenue += revenue;
+      current.orders += 1;
+      if (!current.title && item.title) current.title = text(item.title, 160);
+      soldMap.set(productId, current);
+    }
+  }
+  const topSold = [...soldMap.values()]
+    .map((entry) => {
+      const meta = productMeta.get(entry.productId);
+      return {
+        ...entry,
+        title: meta?.title || entry.title,
+        imageUrl: meta?.imageUrl || entry.imageUrl || '',
+      };
+    })
+    .sort((a, b) => b.quantity - a.quantity || b.revenue - a.revenue)
+    .slice(0, 8);
+
   return res.status(200).json({
     ok: true,
     timezone: 'Asia/Taipei',
@@ -945,6 +1032,8 @@ async function handleVisits(req, res) {
     last30: { views: last30.views, uniques: last30.uniques, paths: last30.paths },
     series,
     topPaths,
+    topClicked,
+    topSold,
   });
 }
 

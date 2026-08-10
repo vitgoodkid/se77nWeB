@@ -196,7 +196,11 @@ export default function StoreApp() {
     if (route.view === 'admin') return undefined;
     const path = window.location.pathname.replace(/\/+$/, '') || '/store';
     const timer = window.setTimeout(() => {
-      storeApi.trackVisit({ path, visitorId: readVisitorId() }).catch(() => {});
+      storeApi.trackVisit({
+        path,
+        visitorId: readVisitorId(),
+        productId: route.view === 'product' ? route.id : undefined,
+      }).catch(() => {});
     }, 400);
     return () => window.clearTimeout(timer);
   }, [route.view, route.id, route.gender]);
@@ -1125,7 +1129,7 @@ function AdminWorkspace({ user, refreshPublicProducts }) {
       </div>
       {error && <p className="ks-form-error ks-admin__error">{error}</p>}
       {loading ? <StoreLoading compact /> : tab === 'dashboard' ? (
-        <AdminDashboard analytics={analytics} products={products.length} orders={orders} />
+        <AdminDashboard analytics={analytics} productCount={products.length} orders={orders} />
       ) : tab === 'products' ? (
         <section className="ks-admin-panel">
           <div className="ks-admin-panel__head">
@@ -1152,13 +1156,15 @@ function AdminWorkspace({ user, refreshPublicProducts }) {
   );
 }
 
-function AdminDashboard({ analytics, products, orders }) {
+function AdminDashboard({ analytics, productCount, orders }) {
   const series = analytics?.series || [];
   const maxViews = Math.max(1, ...series.map((entry) => Number(entry.views || 0)));
   const today = analytics?.today || { views: 0, uniques: 0 };
   const last7 = analytics?.last7 || { views: 0, uniques: 0 };
   const last30 = analytics?.last30 || { views: 0, uniques: 0 };
   const topPaths = analytics?.topPaths || [];
+  const topSold = analytics?.topSold || [];
+  const topClicked = analytics?.topClicked || [];
   const newOrders = orders.filter((order) => order.status === 'new').length;
   const pathViews = (bucket, key) => Number(bucket?.paths?.[key] || 0);
   const income = useMemo(() => summarizeStoreIncome(orders), [orders]);
@@ -1177,7 +1183,7 @@ function AdminDashboard({ analytics, products, orders }) {
         <article className="ks-dash-card"><span>Hôm nay</span><strong>{today.views}</strong><small>{today.uniques} unique</small></article>
         <article className="ks-dash-card"><span>7 ngày</span><strong>{last7.views}</strong><small>{last7.uniques} unique</small></article>
         <article className="ks-dash-card"><span>30 ngày</span><strong>{last30.views}</strong><small>{last30.uniques} unique</small></article>
-        <article className="ks-dash-card"><span>Đơn mới</span><strong>{newOrders}</strong><small>{products} sản phẩm</small></article>
+        <article className="ks-dash-card"><span>Đơn mới</span><strong>{newOrders}</strong><small>{productCount} sản phẩm</small></article>
       </div>
 
       <div className="ks-dash-tables">
@@ -1211,6 +1217,37 @@ function AdminDashboard({ analytics, products, orders }) {
             <li><span>Đang xử lý</span><strong>{money(income.pipelineTotal)}</strong><em>{income.pipelineCount} đơn mới/xác nhận/đang giao</em></li>
             <li><span>Tổng chưa huỷ</span><strong>{money(income.activeTotal)}</strong><em>{income.activeCount} đơn</em></li>
           </ul>
+        </div>
+      </div>
+
+      <div className="ks-dash-tables ks-dash-tables--tops">
+        <div className="ks-dash-rank">
+          <p className="ks-kicker">TOP BÁN CHẠY</p>
+          <ol>
+            {topSold.length ? topSold.map((entry, index) => (
+              <li key={entry.productId}>
+                <em>{String(index + 1).padStart(2, '0')}</em>
+                <div>
+                  <strong>{entry.title}</strong>
+                  <small>{entry.quantity} đã bán · {money(entry.revenue)}</small>
+                </div>
+              </li>
+            )) : <li className="is-empty"><div><strong>Chưa có dữ liệu bán</strong><small>Sẽ hiện khi có đơn chưa huỷ.</small></div></li>}
+          </ol>
+        </div>
+        <div className="ks-dash-rank">
+          <p className="ks-kicker">TOP ĐƯỢC CLICK</p>
+          <ol>
+            {topClicked.length ? topClicked.map((entry, index) => (
+              <li key={entry.productId}>
+                <em>{String(index + 1).padStart(2, '0')}</em>
+                <div>
+                  <strong>{entry.title}</strong>
+                  <small>{entry.clicks} lượt xem trang · 30 ngày</small>
+                </div>
+              </li>
+            )) : <li className="is-empty"><div><strong>Chưa có dữ liệu click</strong><small>Sẽ ghi khi khách mở trang sản phẩm.</small></div></li>}
+          </ol>
         </div>
       </div>
 
