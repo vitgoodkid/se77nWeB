@@ -1161,14 +1161,15 @@ function AdminDashboard({ analytics, products, orders }) {
   const topPaths = analytics?.topPaths || [];
   const newOrders = orders.filter((order) => order.status === 'new').length;
   const pathViews = (bucket, key) => Number(bucket?.paths?.[key] || 0);
+  const income = useMemo(() => summarizeStoreIncome(orders), [orders]);
 
   return (
     <section className="ks-admin-panel ks-admin-dashboard">
       <div className="ks-admin-panel__head">
         <div>
           <p className="ks-kicker">DASHBOARD</p>
-          <h2>Lượt truy cập Store</h2>
-          <small>Theo ngày (Asia/Taipei). Unique = khách khác nhau trong ngày.</small>
+          <h2>Lượt truy cập & thu nhập</h2>
+          <small>Theo ngày (Asia/Taipei). Unique = khách khác nhau trong ngày. Thu nhập tính từ đơn chưa huỷ.</small>
         </div>
       </div>
 
@@ -1179,36 +1180,112 @@ function AdminDashboard({ analytics, products, orders }) {
         <article className="ks-dash-card"><span>Đơn mới</span><strong>{newOrders}</strong><small>{products} sản phẩm</small></article>
       </div>
 
-      <div className="ks-dash-split">
-        <div className="ks-dash-chart">
-          <p className="ks-kicker">14 NGÀY GẦN ĐÂY</p>
-          <div className="ks-dash-bars" role="img" aria-label="Biểu đồ lượt xem 14 ngày">
-            {series.map((entry) => (
-              <div className="ks-dash-bar" key={entry.day} title={`${entry.day}: ${entry.views} views / ${entry.uniques} unique`}>
-                <i style={{ height: `${Math.max(4, (Number(entry.views || 0) / maxViews) * 100)}%` }} />
-                <span>{entry.day.slice(5)}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="ks-dash-paths">
-          <p className="ks-kicker">PHÂN BỔ HÔM NAY</p>
+      <div className="ks-dash-tables">
+        <div className="ks-dash-paths ks-dash-paths--large">
+          <p className="ks-kicker">PHÂN BỐ HÔM NAY</p>
           <ul>
             <li><span>Tất cả / trang chủ</span><strong>{pathViews(today, '/store')}</strong></li>
             <li><span>Nam · /store/M</span><strong>{pathViews(today, '/store/M')}</strong></li>
             <li><span>Nữ · /store/F</span><strong>{pathViews(today, '/store/F')}</strong></li>
             <li><span>Trang sản phẩm</span><strong>{pathViews(today, '/store/product')}</strong></li>
           </ul>
-          <p className="ks-kicker" style={{ marginTop: 28 }}>TOP 30 NGÀY</p>
+          <p className="ks-kicker ks-dash-paths__sub">TOP 30 NGÀY</p>
           <ul>
             {topPaths.length ? topPaths.map((entry) => (
               <li key={entry.path}><span>{entry.label}</span><strong>{entry.views}</strong></li>
             )) : <li><span>Chưa có dữ liệu</span><strong>0</strong></li>}
           </ul>
         </div>
+
+        <div className="ks-dash-income">
+          <p className="ks-kicker">THU NHẬP</p>
+          <div className="ks-dash-income__hero">
+            <span>Đã hoàn tất</span>
+            <strong>{money(income.completedTotal)}</strong>
+            <small>{income.completedCount} đơn · không gồm đơn huỷ</small>
+          </div>
+          <ul>
+            <li><span>Hôm nay</span><strong>{money(income.todayTotal)}</strong><em>{income.todayCount} đơn</em></li>
+            <li><span>7 ngày</span><strong>{money(income.last7Total)}</strong><em>{income.last7Count} đơn</em></li>
+            <li><span>30 ngày</span><strong>{money(income.last30Total)}</strong><em>{income.last30Count} đơn</em></li>
+            <li><span>Đang xử lý</span><strong>{money(income.pipelineTotal)}</strong><em>{income.pipelineCount} đơn mới/xác nhận/đang giao</em></li>
+            <li><span>Tổng chưa huỷ</span><strong>{money(income.activeTotal)}</strong><em>{income.activeCount} đơn</em></li>
+          </ul>
+        </div>
+      </div>
+
+      <div className="ks-dash-chart ks-dash-chart--bottom">
+        <p className="ks-kicker">14 NGÀY GẦN ĐÂY</p>
+        <div className="ks-dash-bars" role="img" aria-label="Biểu đồ lượt xem 14 ngày">
+          {series.map((entry) => (
+            <div className="ks-dash-bar" key={entry.day} title={`${entry.day}: ${entry.views} views / ${entry.uniques} unique`}>
+              <i style={{ height: `${Math.max(4, (Number(entry.views || 0) / maxViews) * 100)}%` }} />
+              <span>{entry.day.slice(5)}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );
+}
+
+function taiwanDayKeyClient(date = new Date()) {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Taipei',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date);
+}
+
+function summarizeStoreIncome(orders) {
+  const today = taiwanDayKeyClient();
+  const last7 = new Set();
+  const last30 = new Set();
+  for (let offset = 0; offset < 30; offset += 1) {
+    const date = new Date();
+    date.setUTCDate(date.getUTCDate() - offset);
+    const key = taiwanDayKeyClient(date);
+    last30.add(key);
+    if (offset < 7) last7.add(key);
+  }
+
+  const empty = {
+    todayTotal: 0, todayCount: 0,
+    last7Total: 0, last7Count: 0,
+    last30Total: 0, last30Count: 0,
+    completedTotal: 0, completedCount: 0,
+    pipelineTotal: 0, pipelineCount: 0,
+    activeTotal: 0, activeCount: 0,
+  };
+
+  return (orders || []).reduce((acc, order) => {
+    if (!order || order.status === 'cancelled') return acc;
+    const total = Number(order.total || 0);
+    const day = order.createdAt ? taiwanDayKeyClient(new Date(order.createdAt)) : '';
+    acc.activeTotal += total;
+    acc.activeCount += 1;
+    if (day === today) {
+      acc.todayTotal += total;
+      acc.todayCount += 1;
+    }
+    if (last7.has(day)) {
+      acc.last7Total += total;
+      acc.last7Count += 1;
+    }
+    if (last30.has(day)) {
+      acc.last30Total += total;
+      acc.last30Count += 1;
+    }
+    if (order.status === 'completed') {
+      acc.completedTotal += total;
+      acc.completedCount += 1;
+    } else if (order.status === 'new' || order.status === 'confirmed' || order.status === 'shipping') {
+      acc.pipelineTotal += total;
+      acc.pipelineCount += 1;
+    }
+    return acc;
+  }, empty);
 }
 
 function AdminProductRow({ product, index, onEdit, onDelete }) {
