@@ -106,6 +106,8 @@ export const storeApi = {
   orders: () => call('orders'),
   updateOrder: (id, status) => call('orders', { method: 'PATCH', query: { id }, body: { status } }),
   deleteOrder: (id) => call('orders', { method: 'DELETE', query: { id } }),
+  trackVisit: (body) => call('visits', { method: 'POST', body }),
+  visits: () => call('visits'),
 };
 
 export { BASE };

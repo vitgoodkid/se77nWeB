@@ -4,6 +4,7 @@ import './store.css';
 
 const CART_KEY = 'se77n.store.cart.v2';
 const CUSTOMER_KEY = 'se77n.store.customer.v1';
+const VISITOR_KEY = 'se77n.store.visitor.v1';
 const ORDER_STATUS = [
   ['new', 'Đơn mới'],
   ['confirmed', 'Đã xác nhận'],
@@ -57,12 +58,37 @@ function writeCustomerForm(form) {
   } catch { /* ignore quota / private mode */ }
 }
 
+function readVisitorId() {
+  try {
+    const existing = localStorage.getItem(VISITOR_KEY);
+    if (existing && /^[a-zA-Z0-9_-]{8,64}$/.test(existing)) return existing;
+    const next = `v_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+    localStorage.setItem(VISITOR_KEY, next);
+    return next;
+  } catch {
+    return '';
+  }
+}
+
 function routeFromPath() {
   const path = window.location.pathname.replace(/\/+$/, '') || '/store';
   if (path === '/store/admin') return { view: 'admin' };
   const match = path.match(/^\/store\/product\/([^/]+)$/);
   if (match) return { view: 'product', id: decodeURIComponent(match[1]) };
-  return { view: 'catalog' };
+  const genderMatch = path.match(/^\/store\/([MF])$/i);
+  if (genderMatch) {
+    return {
+      view: 'catalog',
+      gender: genderMatch[1].toUpperCase() === 'M' ? 'men' : 'women',
+    };
+  }
+  return { view: 'catalog', gender: null };
+}
+
+function catalogPathForGender(gender) {
+  if (gender === 'men') return '/store/M';
+  if (gender === 'women') return '/store/F';
+  return '/store';
 }
 
 function useStoreRoute() {
@@ -72,10 +98,12 @@ function useStoreRoute() {
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
   }, []);
-  const navigate = useCallback((path) => {
+  const navigate = useCallback((path, options = {}) => {
     window.history.pushState(null, '', path);
     setRoute(routeFromPath());
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (options.scroll !== false) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   }, []);
   return [route, navigate];
 }
@@ -165,10 +193,13 @@ export default function StoreApp() {
   }, [route.view]);
 
   useEffect(() => {
-    if (!toast) return undefined;
-    const timer = window.setTimeout(() => setToast(''), 2800);
+    if (route.view === 'admin') return undefined;
+    const path = window.location.pathname.replace(/\/+$/, '') || '/store';
+    const timer = window.setTimeout(() => {
+      storeApi.trackVisit({ path, visitorId: readVisitorId() }).catch(() => {});
+    }, 400);
     return () => window.clearTimeout(timer);
-  }, [toast]);
+  }, [route.view, route.id, route.gender]);
 
   function addToCart(product, variant, size, quantity = 1, open = true) {
     const key = `${product.id}:${variant.id}:${size}`;
@@ -285,7 +316,13 @@ export default function StoreApp() {
       {loading && <StoreLoading />}
       {!loading && error && <StoreError message={error} onRetry={() => window.location.reload()} />}
       {!loading && !error && route.view === 'catalog' && (
-        <Catalog products={products} navigate={navigate} config={config} onQuickAction={(product, action) => setQuickPicker({ product, action })} />
+        <Catalog
+          products={products}
+          navigate={navigate}
+          config={config}
+          gender={route.gender}
+          onQuickAction={(product, action) => setQuickPicker({ product, action })}
+        />
       )}
       {!loading && !error && route.view === 'product' && (
         selectedProduct
@@ -364,8 +401,8 @@ function StoreHeader({ route, navigate, cartCount, onCart, config, authBusy, onL
   );
 }
 
-function Catalog({ products, navigate, config, onQuickAction }) {
-  const [filter, setFilter] = useState('all');
+function Catalog({ products, navigate, config, onQuickAction, gender = null }) {
+  const filter = gender === 'men' || gender === 'women' ? gender : 'all';
   const catalogProducts = useMemo(() => {
     const shuffled = [...products];
     for (let index = shuffled.length - 1; index > 0; index -= 1) {
@@ -377,7 +414,7 @@ function Catalog({ products, navigate, config, onQuickAction }) {
   const shown = catalogProducts.filter((product) => {
     if (filter === 'all') return true;
     const genders = Array.isArray(product.genders) ? product.genders : [];
-    const hasExplicitGender = genders.some((gender) => gender === 'men' || gender === 'women');
+    const hasExplicitGender = genders.some((entry) => entry === 'men' || entry === 'women');
     return genders.includes(filter) || (!hasExplicitGender && genders.includes('unisex'));
   });
   const featuredProducts = useMemo(() => products.filter((product) => product.featured && product.hasStock), [products]);
@@ -388,7 +425,19 @@ function Catalog({ products, navigate, config, onQuickAction }) {
     const timer = window.setInterval(() => setFeaturedIndex((current) => (current + 1) % featuredProducts.length), 2000);
     return () => window.clearInterval(timer);
   }, [featuredProducts.length]);
+  useEffect(() => {
+    if (filter === 'all') return undefined;
+    const frame = window.requestAnimationFrame(() => {
+      document.getElementById('catalog')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [filter]);
   const featured = featuredProducts[featuredIndex] || null;
+
+  function setGenderFilter(value) {
+    navigate(catalogPathForGender(value === 'all' ? null : value), { scroll: false });
+  }
+
   return (
     <main className="ks-home">
       <section className="ks-hero ks-hero--closing">
@@ -424,7 +473,14 @@ function Catalog({ products, navigate, config, onQuickAction }) {
           <div><p className="ks-kicker">THE CURRENT EDIT</p><h2>Chọn món hợp gu</h2></div>
           <div className="ks-filters" role="group" aria-label="Lọc sản phẩm">
             {[['all', 'Tất cả'], ['men', 'Nam'], ['women', 'Nữ']].map(([value, label]) => (
-              <button type="button" className={filter === value ? 'is-active' : ''} onClick={() => setFilter(value)} key={value}>{label}</button>
+              <button
+                type="button"
+                className={filter === value ? 'is-active' : ''}
+                onClick={() => setGenderFilter(value)}
+                key={value}
+              >
+                {label}
+              </button>
             ))}
           </div>
         </div>
@@ -1011,9 +1067,10 @@ function productFromAiFill(fill, orderedImages = []) {
 }
 
 function AdminWorkspace({ user, refreshPublicProducts }) {
-  const [tab, setTab] = useState('products');
+  const [tab, setTab] = useState('dashboard');
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [editor, setEditor] = useState(null);
@@ -1022,8 +1079,14 @@ function AdminWorkspace({ user, refreshPublicProducts }) {
   const load = useCallback(async () => {
     setLoading(true); setError('');
     try {
-      const [productPayload, orderPayload] = await Promise.all([storeApi.products(true), storeApi.orders()]);
-      setProducts(productPayload.products || []); setOrders(orderPayload.orders || []);
+      const [productPayload, orderPayload, visitPayload] = await Promise.all([
+        storeApi.products(true),
+        storeApi.orders(),
+        storeApi.visits().catch(() => null),
+      ]);
+      setProducts(productPayload.products || []);
+      setOrders(orderPayload.orders || []);
+      setAnalytics(visitPayload);
     } catch (cause) { setError(cause.message || 'Không tải được dữ liệu quản trị.'); }
     finally { setLoading(false); }
   }, []);
@@ -1049,12 +1112,21 @@ function AdminWorkspace({ user, refreshPublicProducts }) {
     catch (cause) { setError(cause.message); }
   }
 
+  const newOrders = orders.filter((order) => order.status === 'new').length;
+
   return (
     <main className="ks-admin">
-      <section className="ks-admin__hero"><div><p className="ks-kicker">KATASHOP / CONTROL ROOM</p><h1>Chào, {user?.displayName || 'owner'}.</h1><p>Quản lý bộ sưu tập, tồn kho và đơn hàng trong cùng một nơi.</p></div><div className="ks-admin__stats"><span><strong>{products.length}</strong>sản phẩm</span><span><strong>{orders.filter((order) => order.status === 'new').length}</strong>đơn mới</span><span><strong>{money(orders.filter((order) => order.status !== 'cancelled').reduce((sum, order) => sum + order.total, 0))}</strong>tổng giá trị</span></div></section>
-      <div className="ks-admin__tabs"><button type="button" className={tab === 'products' ? 'is-active' : ''} onClick={() => setTab('products')}>Sản phẩm</button><button type="button" className={tab === 'orders' ? 'is-active' : ''} onClick={() => setTab('orders')}>Đơn hàng <span>{orders.filter((order) => order.status === 'new').length}</span></button><button type="button" onClick={load}>Làm mới ↻</button></div>
+      <section className="ks-admin__hero"><div><p className="ks-kicker">KATASHOP / CONTROL ROOM</p><h1>Chào, {user?.displayName || 'owner'}.</h1><p>Quản lý bộ sưu tập, tồn kho và đơn hàng trong cùng một nơi.</p></div><div className="ks-admin__stats"><span><strong>{products.length}</strong>sản phẩm</span><span><strong>{newOrders}</strong>đơn mới</span><span><strong>{money(orders.filter((order) => order.status !== 'cancelled').reduce((sum, order) => sum + order.total, 0))}</strong>tổng giá trị</span></div></section>
+      <div className="ks-admin__tabs">
+        <button type="button" className={tab === 'dashboard' ? 'is-active' : ''} onClick={() => setTab('dashboard')}>Dashboard</button>
+        <button type="button" className={tab === 'products' ? 'is-active' : ''} onClick={() => setTab('products')}>Sản phẩm</button>
+        <button type="button" className={tab === 'orders' ? 'is-active' : ''} onClick={() => setTab('orders')}>Đơn hàng {newOrders ? <span>{newOrders}</span> : null}</button>
+        <button type="button" className="ks-admin__tabs-refresh" onClick={load}>Làm mới ↻</button>
+      </div>
       {error && <p className="ks-form-error ks-admin__error">{error}</p>}
-      {loading ? <StoreLoading compact /> : tab === 'products' ? (
+      {loading ? <StoreLoading compact /> : tab === 'dashboard' ? (
+        <AdminDashboard analytics={analytics} products={products.length} orders={orders} />
+      ) : tab === 'products' ? (
         <section className="ks-admin-panel">
           <div className="ks-admin-panel__head">
             <div><p className="ks-kicker">CATALOG</p><h2>Bộ sưu tập hiện tại</h2></div>
@@ -1077,6 +1149,65 @@ function AdminWorkspace({ user, refreshPublicProducts }) {
       )}
       {editor && <ProductEditor product={editor} onClose={() => setEditor(null)} onSaved={async () => { setEditor(null); await load(); await refreshPublicProducts(); }} />}
     </main>
+  );
+}
+
+function AdminDashboard({ analytics, products, orders }) {
+  const series = analytics?.series || [];
+  const maxViews = Math.max(1, ...series.map((entry) => Number(entry.views || 0)));
+  const today = analytics?.today || { views: 0, uniques: 0 };
+  const last7 = analytics?.last7 || { views: 0, uniques: 0 };
+  const last30 = analytics?.last30 || { views: 0, uniques: 0 };
+  const topPaths = analytics?.topPaths || [];
+  const newOrders = orders.filter((order) => order.status === 'new').length;
+  const pathViews = (bucket, key) => Number(bucket?.paths?.[key] || 0);
+
+  return (
+    <section className="ks-admin-panel ks-admin-dashboard">
+      <div className="ks-admin-panel__head">
+        <div>
+          <p className="ks-kicker">DASHBOARD</p>
+          <h2>Lượt truy cập Store</h2>
+          <small>Theo ngày (Asia/Taipei). Unique = khách khác nhau trong ngày.</small>
+        </div>
+      </div>
+
+      <div className="ks-dash-grid">
+        <article className="ks-dash-card"><span>Hôm nay</span><strong>{today.views}</strong><small>{today.uniques} unique</small></article>
+        <article className="ks-dash-card"><span>7 ngày</span><strong>{last7.views}</strong><small>{last7.uniques} unique</small></article>
+        <article className="ks-dash-card"><span>30 ngày</span><strong>{last30.views}</strong><small>{last30.uniques} unique</small></article>
+        <article className="ks-dash-card"><span>Đơn mới</span><strong>{newOrders}</strong><small>{products} sản phẩm</small></article>
+      </div>
+
+      <div className="ks-dash-split">
+        <div className="ks-dash-chart">
+          <p className="ks-kicker">14 NGÀY GẦN ĐÂY</p>
+          <div className="ks-dash-bars" role="img" aria-label="Biểu đồ lượt xem 14 ngày">
+            {series.map((entry) => (
+              <div className="ks-dash-bar" key={entry.day} title={`${entry.day}: ${entry.views} views / ${entry.uniques} unique`}>
+                <i style={{ height: `${Math.max(4, (Number(entry.views || 0) / maxViews) * 100)}%` }} />
+                <span>{entry.day.slice(5)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="ks-dash-paths">
+          <p className="ks-kicker">PHÂN BỔ HÔM NAY</p>
+          <ul>
+            <li><span>Tất cả / trang chủ</span><strong>{pathViews(today, '/store')}</strong></li>
+            <li><span>Nam · /store/M</span><strong>{pathViews(today, '/store/M')}</strong></li>
+            <li><span>Nữ · /store/F</span><strong>{pathViews(today, '/store/F')}</strong></li>
+            <li><span>Trang sản phẩm</span><strong>{pathViews(today, '/store/product')}</strong></li>
+          </ul>
+          <p className="ks-kicker" style={{ marginTop: 28 }}>TOP 30 NGÀY</p>
+          <ul>
+            {topPaths.length ? topPaths.map((entry) => (
+              <li key={entry.path}><span>{entry.label}</span><strong>{entry.views}</strong></li>
+            )) : <li><span>Chưa có dữ liệu</span><strong>0</strong></li>}
+          </ul>
+        </div>
+      </div>
+    </section>
   );
 }
 

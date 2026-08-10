@@ -48,11 +48,16 @@ function getPath(req) {
 // `/kata` originally only treated the user as owner when their Discord ID
 // matched OWNER_DISCORD_ID. That breaks the (legit) case of an admin who
 // signs in with Google: same human, different account. We accept both:
-//   - Discord ID match (OWNER_DISCORD_ID, default 397342895327150080)
+//   - Discord ID match (OWNER_DISCORD_ID / OWNER_DISCORD_IDS, comma-separated)
 //   - Email match against OWNER_EMAILS (comma-separated, default
 //     beliketp@gmail.com so existing local logins keep working)
 // One env var per surface; case-insensitive on the email side.
-const DEFAULT_OWNER_DISCORD_ID = '397342895327150080';
+const DEFAULT_OWNER_DISCORD_IDS = [
+  '397342895327150080',
+  '609407967586156544',
+  '489092502998220812',
+];
+const DEFAULT_OWNER_DISCORD_ID = DEFAULT_OWNER_DISCORD_IDS[0];
 const DEFAULT_OWNER_EMAILS = 'beliketp@gmail.com';
 
 function getOwnerEmails() {
@@ -60,10 +65,18 @@ function getOwnerEmails() {
   return raw.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
 }
 
+function getOwnerDiscordIds() {
+  const raw = process.env.OWNER_DISCORD_IDS?.trim()
+    || process.env.OWNER_DISCORD_ID?.trim()
+    || '';
+  const fromEnv = raw.split(/[\s,]+/).map((s) => s.trim()).filter(Boolean);
+  return [...new Set([...DEFAULT_OWNER_DISCORD_IDS, ...fromEnv])];
+}
+
 function isUserOwner(user) {
   if (!user) return false;
-  const ownerId = process.env.OWNER_DISCORD_ID?.trim() || DEFAULT_OWNER_DISCORD_ID;
-  if (user.providerUserId && user.providerUserId === ownerId) return true;
+  const discordId = (user.providerUserId || '').trim();
+  if (discordId && getOwnerDiscordIds().includes(discordId)) return true;
   const email = (user.email || '').trim().toLowerCase();
   if (!email) return false;
   return getOwnerEmails().includes(email);

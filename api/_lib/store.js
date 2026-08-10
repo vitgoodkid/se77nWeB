@@ -7,6 +7,8 @@ import { callChat, tryParseJson } from '../_helpers.js';
 
 const PRODUCT_COLLECTION = 'storeproducts';
 const ORDER_COLLECTION = 'storeorders';
+const VISIT_DAY_COLLECTION = 'storevisitdays';
+const VISIT_UNIQUE_COLLECTION = 'storevisituniques';
 const MAX_CART_ITEMS = 25;
 const MAX_MAP_IMAGE_BYTES = 1 * 1024 * 1024;
 const MAX_MAP_IMAGES = 3;
@@ -15,7 +17,12 @@ const DEFAULT_SHIPPING_FEE = 38;
 const FREESHIP_THRESHOLD = 700;
 const DEFAULT_PRODUCT_IMAGE = '/og.svg';
 const ORDER_STATUSES = new Set(['new', 'confirmed', 'shipping', 'completed', 'cancelled']);
-const DEFAULT_OWNER_DISCORD_ID = '397342895327150080';
+const DEFAULT_OWNER_DISCORD_IDS = [
+  '397342895327150080',
+  '609407967586156544',
+  '489092502998220812',
+];
+const DEFAULT_OWNER_DISCORD_ID = DEFAULT_OWNER_DISCORD_IDS[0];
 
 const DEFAULT_PRODUCTS = [
   {
@@ -288,10 +295,20 @@ function ownerEmails() {
   return new Set(raw.split(/[\s,]+/).map((entry) => entry.trim().toLowerCase()).filter(Boolean));
 }
 
+function ownerDiscordIds() {
+  const raw = process.env.STORE_OWNER_DISCORD_IDS
+    || process.env.STORE_OWNER_DISCORD_ID
+    || process.env.OWNER_DISCORD_IDS
+    || process.env.OWNER_DISCORD_ID
+    || '';
+  const fromEnv = String(raw).split(/[\s,]+/).map((entry) => entry.trim()).filter(Boolean);
+  return [...new Set([...DEFAULT_OWNER_DISCORD_IDS, ...fromEnv])];
+}
+
 function isOwner(user) {
   if (!user) return false;
-  const ownerId = text(process.env.STORE_OWNER_DISCORD_ID || process.env.OWNER_DISCORD_ID || DEFAULT_OWNER_DISCORD_ID);
-  if (user.provider === 'discord' && text(user.providerUserId) === ownerId) return true;
+  const discordId = text(user.providerUserId);
+  if (user.provider === 'discord' && discordId && ownerDiscordIds().includes(discordId)) return true;
   const email = text(user.email).toLowerCase();
   return Boolean(email && ownerEmails().has(email));
 }
@@ -507,7 +524,8 @@ function productUrl(productId) {
 async function sendWebhook(order, mapImages = []) {
   const webhookUrl = text(process.env.STORE_DISCORD_WEBHOOK_URL || process.env.DISCORD_STORE_WEBHOOK_URL);
   if (!webhookUrl) return;
-  const ownerId = text(process.env.STORE_OWNER_DISCORD_ID || process.env.OWNER_DISCORD_ID || DEFAULT_OWNER_DISCORD_ID) || DEFAULT_OWNER_DISCORD_ID;
+  const ownerIds = ownerDiscordIds();
+  const mentionIds = ownerIds.length ? ownerIds : [DEFAULT_OWNER_DISCORD_ID];
   const products = order.items.map((item) => `• [${item.title}](${productUrl(item.productId)})`).join('\n').slice(0, 1024);
   const variants = order.items.map((item) => `• ${item.variantName} ×${item.quantity}`).join('\n').slice(0, 1024);
   const sizes = order.items.map((item) => `• ${item.size} ×${item.quantity}`).join('\n').slice(0, 1024);
@@ -515,8 +533,8 @@ async function sendWebhook(order, mapImages = []) {
   const totals = `${prices}\nTạm tính: ${formatTwd(order.subtotal)}\nGiao hàng: ${order.shippingFee ? formatTwd(order.shippingFee) : 'Miễn phí'}\n**Tổng cộng: ${formatTwd(order.total)}**`.slice(0, 1024);
   const payload = {
     username: 'KataShop',
-    content: `<@${ownerId}> Đơn hàng KataShop mới`,
-    allowed_mentions: { parse: [], users: [ownerId] },
+    content: `${mentionIds.map((id) => `<@${id}>`).join(' ')} Đơn hàng KataShop mới`,
+    allowed_mentions: { parse: [], users: mentionIds },
     embeds: [{
       title: `Đơn ${order._id}`,
       color: 0xd36a79,
@@ -816,6 +834,120 @@ async function handleAiFill(req, res) {
   return res.status(200).json({ ok: true, fill, images });
 }
 
+function taiwanDayKey(date = new Date()) {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Taipei',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date);
+}
+
+function normalizeVisitPath(rawPath) {
+  const path = text(rawPath, 200).split('?')[0].replace(/\/+$/, '') || '/store';
+  if (path === '/store') return '/store';
+  if (/^\/store\/[MF]$/i.test(path)) return `/store/${path.slice(-1).toUpperCase()}`;
+  if (/^\/store\/product\/[^/]+$/i.test(path)) return '/store/product';
+  if (path.startsWith('/store/') && path !== '/store/admin') return '/store';
+  return '';
+}
+
+async function recordVisit(req, res) {
+  if (req.method !== 'POST') throw httpError(405, 'Method not allowed.', 'METHOD_NOT_ALLOWED');
+  const body = requestBody(req);
+  const path = normalizeVisitPath(body.path || req.query?.path);
+  if (!path) return res.status(200).json({ ok: true, skipped: true });
+  const visitorId = text(body.visitorId, 80).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64);
+  const day = taiwanDayKey();
+  const now = new Date();
+  const { db } = await ensureStore();
+  const days = db.collection(VISIT_DAY_COLLECTION);
+  const uniques = db.collection(VISIT_UNIQUE_COLLECTION);
+  const pathKey = path.replace(/\./g, '_');
+  await days.updateOne(
+    { _id: day },
+    {
+      $inc: { views: 1, [`paths.${pathKey}`]: 1 },
+      $set: { updatedAt: now },
+      $setOnInsert: { day, createdAt: now },
+    },
+    { upsert: true },
+  );
+  let unique = false;
+  if (visitorId) {
+    try {
+      await uniques.insertOne({ _id: `${day}:${visitorId}`, day, visitorId, path, createdAt: now });
+      unique = true;
+      await days.updateOne({ _id: day }, { $inc: { uniques: 1 }, $set: { updatedAt: now } });
+    } catch (error) {
+      if (error?.code !== 11000) throw error;
+    }
+  }
+  return res.status(200).json({ ok: true, unique });
+}
+
+async function handleVisits(req, res) {
+  if (req.method === 'POST') return recordVisit(req, res);
+  if (req.method !== 'GET') throw httpError(405, 'Method not allowed.', 'METHOD_NOT_ALLOWED');
+  await requireOwner(req);
+  const { db } = await ensureStore();
+  const days = db.collection(VISIT_DAY_COLLECTION);
+  const today = taiwanDayKey();
+  const start = new Date();
+  start.setUTCDate(start.getUTCDate() - 29);
+  const recent = await days.find({ _id: { $gte: taiwanDayKey(start) } }).sort({ _id: 1 }).toArray();
+  const byId = new Map(recent.map((doc) => [doc._id, doc]));
+  const series = [];
+  for (let offset = 13; offset >= 0; offset -= 1) {
+    const date = new Date();
+    date.setUTCDate(date.getUTCDate() - offset);
+    const key = taiwanDayKey(date);
+    const doc = byId.get(key);
+    series.push({
+      day: key,
+      views: Number(doc?.views || 0),
+      uniques: Number(doc?.uniques || 0),
+    });
+  }
+  const sumDocs = (docs) => docs.reduce((acc, doc) => {
+    acc.views += Number(doc.views || 0);
+    acc.uniques += Number(doc.uniques || 0);
+    const paths = doc.paths || {};
+    for (const [key, value] of Object.entries(paths)) {
+      acc.paths[key] = (acc.paths[key] || 0) + Number(value || 0);
+    }
+    return acc;
+  }, { views: 0, uniques: 0, paths: {} });
+  const last7Keys = series.slice(-7).map((entry) => entry.day);
+  const last7Docs = last7Keys.map((key) => byId.get(key)).filter(Boolean);
+  const todayDoc = byId.get(today) || { views: 0, uniques: 0, paths: {} };
+  const last7 = sumDocs(last7Docs);
+  const last30 = sumDocs(recent);
+  const pathLabel = {
+    '/store': 'Tất cả / trang chủ',
+    '/store/M': 'Nam (/store/M)',
+    '/store/F': 'Nữ (/store/F)',
+    '/store/product': 'Trang sản phẩm',
+  };
+  const topPaths = Object.entries({ ...(last30.paths || {}) })
+    .map(([path, views]) => ({ path, label: pathLabel[path] || path, views: Number(views || 0) }))
+    .sort((a, b) => b.views - a.views);
+  return res.status(200).json({
+    ok: true,
+    timezone: 'Asia/Taipei',
+    today: {
+      day: today,
+      views: Number(todayDoc.views || 0),
+      uniques: Number(todayDoc.uniques || 0),
+      paths: todayDoc.paths || {},
+    },
+    last7: { views: last7.views, uniques: last7.uniques, paths: last7.paths },
+    last30: { views: last30.views, uniques: last30.uniques, paths: last30.paths },
+    series,
+    topPaths,
+  });
+}
+
 export async function handleStore(req, res) {
   const resource = text(req.query?.resource, 32) || 'config';
   try {
@@ -824,6 +956,7 @@ export async function handleStore(req, res) {
     if (resource === 'uploads') return await handleUploads(req, res);
     if (resource === 'orders') return await handleOrders(req, res);
     if (resource === 'ai') return await handleAiFill(req, res);
+    if (resource === 'visits') return await handleVisits(req, res);
     return res.status(400).json({ error: 'UNKNOWN_STORE_RESOURCE' });
   } catch (error) {
     console.error('[store]', resource, error);
