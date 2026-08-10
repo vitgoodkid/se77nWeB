@@ -575,33 +575,35 @@ function ProductDetail({ product, navigate, addToCart, beginCheckout }) {
           <div className="ks-detail__stamp"><span>KATA</span><strong>{product.id.slice(0, 12).toUpperCase()}</strong></div>
         </div>
         <section className="ks-detail__info">
-          <p className="ks-kicker">KATASHOP / {product.featured ? 'FEATURED' : 'CURRENT DROP'}</p>
+          <p className="ks-kicker ks-detail__lead">KATASHOP / {product.featured ? 'FEATURED' : 'CURRENT DROP'}</p>
           <h1>{product.title}</h1>
           <p className="ks-detail__subtitle">{product.subtitle}</p>
           <div className="ks-detail__price"><strong>{money(price)}</strong>{product.discountPercent > 0 && <><del>{money((variant?.priceOverride ?? product.price) + Number(product.sizeAdjustments?.[size] || 0))}</del><span>−{product.discountPercent}%</span></>}</div>
           <p className="ks-detail__description">{product.description}</p>
 
-          <fieldset className="ks-option"><legend>Phối màu <span>{variant?.name}</span></legend><div className="ks-color-options">
-            {product.variants.map((entry) => (
-              <button key={entry.id} type="button" className={entry.id === variant?.id ? 'is-active' : ''} onClick={() => pickVariant(entry.id)} title={entry.name}>
-                <span style={{ background: entry.colorHex }} /><small>{entry.name}</small>
-              </button>
-            ))}
-          </div></fieldset>
+          <div className="ks-detail__buyblock">
+            <fieldset className="ks-option"><legend>Phối màu <span>{variant?.name}</span></legend><div className="ks-color-options">
+              {product.variants.map((entry) => (
+                <button key={entry.id} type="button" className={entry.id === variant?.id ? 'is-active' : ''} onClick={() => pickVariant(entry.id)} title={entry.name}>
+                  <span style={{ background: entry.colorHex }} /><small>{entry.name}</small>
+                </button>
+              ))}
+            </div></fieldset>
 
-          <fieldset className="ks-option"><legend>Kích thước <span>{size}</span></legend><div className="ks-size-options">
-            {product.sizes.map((entry) => {
-              const count = Number(variant?.stockBySize?.[entry] || 0);
-              return <button key={entry} type="button" disabled={!count} className={entry === size ? 'is-active' : ''} onClick={() => { setSize(entry); setQuantity(1); }}>{entry}<small>{count ? `${count} còn` : 'hết'}</small></button>;
-            })}
-          </div></fieldset>
+            <fieldset className="ks-option"><legend>Kích thước <span>{size}</span></legend><div className="ks-size-options">
+              {product.sizes.map((entry) => {
+                const count = Number(variant?.stockBySize?.[entry] || 0);
+                return <button key={entry} type="button" disabled={!count} className={entry === size ? 'is-active' : ''} onClick={() => { setSize(entry); setQuantity(1); }}>{entry}<small>{count ? `${count} còn` : 'hết'}</small></button>;
+              })}
+            </div></fieldset>
 
-          <div className="ks-buy-row">
-            <div className="ks-stepper"><button type="button" onClick={() => setQuantity((value) => Math.max(1, value - 1))}>−</button><strong>{quantity}</strong><button type="button" onClick={() => setQuantity((value) => Math.min(available, value + 1))}>+</button></div>
-            <button className="ks-button ks-button--dark" type="button" disabled={!available} onClick={() => addToCart(product, variant, size, quantity)}>Thêm vào giỏ</button>
-            <button className="ks-button ks-button--rose" type="button" disabled={!available} onClick={() => beginCheckout([lineItem], 'buy')}>Mua ngay</button>
+            <div className="ks-buy-row">
+              <div className="ks-stepper"><button type="button" onClick={() => setQuantity((value) => Math.max(1, value - 1))}>−</button><strong>{quantity}</strong><button type="button" onClick={() => setQuantity((value) => Math.min(available, value + 1))}>+</button></div>
+              <button className="ks-button ks-button--dark" type="button" disabled={!available} onClick={() => addToCart(product, variant, size, quantity)}>Thêm vào giỏ</button>
+              <button className="ks-button ks-button--rose" type="button" disabled={!available} onClick={() => beginCheckout([lineItem], 'buy')}>Mua ngay</button>
+            </div>
+            <div className="ks-detail__notes"><span>{product.freeship ? '✓ Sản phẩm được miễn phí giao hàng' : '✓ Phí giao hàng hiển thị trước khi đặt'}</span><span>✓ Tồn kho được kiểm tra lại khi gửi đơn</span></div>
           </div>
-          <div className="ks-detail__notes"><span>{product.freeship ? '✓ Sản phẩm được miễn phí giao hàng' : '✓ Phí giao hàng hiển thị trước khi đặt'}</span><span>✓ Tồn kho được kiểm tra lại khi gửi đơn</span></div>
         </section>
       </div>
     </main>
