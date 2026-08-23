@@ -2882,6 +2882,7 @@ function fmtClock(sec) {
 }
 
 function VoiceRecorderTool({ accent }) {
+  const { lang } = useLang();
   const [status, setStatus] = useState('idle'); // idle | recording | paused
   const [elapsed, setElapsed] = useState(0);
   const [enhance, setEnhance] = useState(true);
@@ -2895,6 +2896,74 @@ function VoiceRecorderTool({ accent }) {
   const [output, setOutput] = useState(null);
   const [micPerm, setMicPerm] = useState('unknown'); // unknown | prompt | granted | denied | requesting
   const [permErr, setPermErr] = useState('');
+
+  const labels = useMemo(() => (lang === 'vi' ? {
+    statusRecording: 'Đang ghi', statusPaused: 'Đã tạm dừng', statusProcessing: 'Đang xử lý',
+    statusReady: 'Sẵn sàng', statusBlocked: 'Mic bị chặn', statusNeeded: 'Cần quyền mic',
+    permPrompt: 'Công cụ này cần dùng micro của bạn. Nó chỉ hỏi khi bạn bấm "Cho phép micro" — không ghi âm gì cho đến khi bạn bấm ghi.',
+    permRequesting: 'Đang chờ bạn cho phép quyền micro…',
+    permDenied: 'Micro đang bị chặn. Bật lại trong cài đặt trang của trình duyệt (biểu tượng 🔒 trên thanh địa chỉ), rồi thử lại.',
+    btnAllow: 'Cho phép micro', btnRequesting: 'Đang xin quyền…', btnRetry: 'Thử lại quyền micro',
+    btnStart: 'Bắt đầu ghi', btnProcessing: 'Đang xử lý…', btnPause: 'Tạm dừng', btnResume: 'Tiếp tục',
+    btnStop: 'Dừng & lưu', btnDiscard: 'Xóa bản ghi', discardTitle: 'Xóa bản ghi này',
+    clarityTitle: 'ĐỘ TRONG GIỌNG NÓI',
+    cleanLabel: 'Thu âm sạch',
+    cleanHint: 'Khử tiếng vọng + lọc tạp âm + tự cân âm lượng, cùng bộ lọc cao tần, tăng dải trung (EQ) và nén động để giọng rõ hơn.',
+    normLabel: 'Cân bằng âm lượng',
+    normHint: 'Cân âm lượng chuẩn phát thanh (loudnorm −16 LUFS) để đoạn to/nhỏ đều nhau.',
+    trimLabel: 'Cắt khoảng lặng',
+    trimHint: 'Cắt bỏ khoảng lặng ở đầu và cuối bản ghi.',
+    bitrateTitle: 'BITRATE MP3',
+    footer: '◇ Mọi thứ chạy ngay trong trình duyệt. Mic được ghi cục bộ rồi chuyển sang MP3 qua ffmpeg.wasm (~25 MB, chỉ tải lần đầu) — không upload lên đâu cả. Cần trang HTTPS (hoặc localhost) và quyền micro.',
+    rawTakeBadge: '· bản gốc',
+    download: '↓ Tải xuống',
+    errNoRecorder: 'Trình duyệt này không hỗ trợ ghi âm (thiếu MediaRecorder / getUserMedia).',
+    errNoGetUserMedia: 'Trình duyệt này không thể truy cập micro (thiếu getUserMedia).',
+    errPermDeniedStart: 'Quyền truy cập micro bị từ chối. Hãy cho phép micro trong trình duyệt rồi thử lại.',
+    errPermBlockedRequest: 'Micro đang bị chặn. Bật lại trong cài đặt trang của trình duyệt (biểu tượng 🔒 trên thanh địa chỉ), rồi thử lại.',
+    errNoMic: 'Không tìm thấy micro. Hãy cắm micro rồi thử lại.',
+    errOpenMicFailed: (d) => `Không thể mở micro: ${d}`,
+    errAccessMicFailed: (d) => `Không thể truy cập micro: ${d}`,
+    errRecorderInit: (d) => `Khởi tạo bộ ghi âm thất bại: ${d}`,
+    errEmptyTake: 'Không ghi được gì — bản ghi trống.',
+    errMp3NotProduced: (tail) => `Không tạo được MP3. Log gần nhất: ${tail}`,
+    errMp3EncodeFailed: (d, ext) => `Chuyển MP3 thất bại (${d}). Đã lưu bản gốc ${ext} thay thế.`,
+    stageLoadingFFmpeg: 'Đang tải FFmpeg…', stageLoadingTake: 'Đang tải bản ghi…',
+    stageEncoding: 'Đang mã hóa MP3…', stageDone: 'Xong',
+  } : {
+    statusRecording: 'Recording', statusPaused: 'Paused', statusProcessing: 'Processing',
+    statusReady: 'Ready', statusBlocked: 'Mic blocked', statusNeeded: 'Mic access needed',
+    permPrompt: 'This tool needs your microphone. It only asks when you tap "Allow microphone" — nothing records until you press record.',
+    permRequesting: 'Waiting for you to allow microphone access…',
+    permDenied: 'Mic access is blocked. Enable it in your browser\'s site settings (🔒 in the address bar), then allow again.',
+    btnAllow: 'Allow microphone', btnRequesting: 'Requesting…', btnRetry: 'Retry mic access',
+    btnStart: 'Start recording', btnProcessing: 'Processing…', btnPause: 'Pause', btnResume: 'Resume',
+    btnStop: 'Stop & save', btnDiscard: 'Discard', discardTitle: 'Discard this take',
+    clarityTitle: 'VOICE CLARITY',
+    cleanLabel: 'Clean capture',
+    cleanHint: 'Echo cancel + noise suppression + auto-gain, plus a high-pass, presence EQ and compressor for a clearer voice.',
+    normLabel: 'Normalize loudness',
+    normHint: 'Broadcast-style leveling (loudnorm −16 LUFS) so quiet & loud parts sit evenly.',
+    trimLabel: 'Trim silence',
+    trimHint: 'Cut dead air from the start and end of the take.',
+    bitrateTitle: 'MP3 BITRATE',
+    footer: '◇ Everything runs in your browser. The mic feed is recorded locally and transcoded to MP3 via ffmpeg.wasm (~25 MB lib, cached on first use) — nothing is uploaded. Recording needs an HTTPS page (or localhost) and mic permission.',
+    rawTakeBadge: '· raw take',
+    download: '↓ Download',
+    errNoRecorder: 'This browser can\'t record audio (no MediaRecorder / getUserMedia).',
+    errNoGetUserMedia: 'This browser can\'t access a microphone (no getUserMedia).',
+    errPermDeniedStart: 'Microphone permission denied. Allow mic access in your browser, then try again.',
+    errPermBlockedRequest: 'Microphone blocked. Enable it in your browser\'s site settings (the 🔒 icon in the address bar), then retry.',
+    errNoMic: 'No microphone found. Plug one in and retry.',
+    errOpenMicFailed: (d) => `Could not open the mic: ${d}`,
+    errAccessMicFailed: (d) => `Could not access the mic: ${d}`,
+    errRecorderInit: (d) => `Recorder init failed: ${d}`,
+    errEmptyTake: 'Nothing was recorded — the take was empty.',
+    errMp3NotProduced: (tail) => `Output MP3 not produced. Last log: ${tail}`,
+    errMp3EncodeFailed: (d, ext) => `MP3 encode failed (${d}). Saved the raw ${ext} take instead.`,
+    stageLoadingFFmpeg: 'Loading FFmpeg…', stageLoadingTake: 'Loading take…',
+    stageEncoding: 'Encoding MP3…', stageDone: 'Done',
+  }), [lang]);
 
   const streamRef = useRef(null);
   const ctxRef = useRef(null);
@@ -2951,7 +3020,7 @@ function VoiceRecorderTool({ accent }) {
   async function requestMic() {
     setPermErr('');
     if (!navigator.mediaDevices?.getUserMedia) {
-      setPermErr('This browser can\'t access a microphone (no getUserMedia).');
+      setPermErr(labels.errNoGetUserMedia);
       setMicPerm('denied');
       return;
     }
@@ -2965,10 +3034,10 @@ function VoiceRecorderTool({ accent }) {
       setMicPerm(name === 'NotAllowedError' || name === 'SecurityError' ? 'denied' : 'prompt');
       setPermErr(
         name === 'NotAllowedError' || name === 'SecurityError'
-          ? 'Microphone blocked. Enable it in your browser\'s site settings (the 🔒 icon in the address bar), then retry.'
+          ? labels.errPermBlockedRequest
           : name === 'NotFoundError'
-            ? 'No microphone found. Plug one in and retry.'
-            : `Could not access the mic: ${e?.message || name || 'unknown error'}`,
+            ? labels.errNoMic
+            : labels.errAccessMicFailed(e?.message || name || 'unknown error'),
       );
     }
   }
@@ -3008,7 +3077,7 @@ function VoiceRecorderTool({ accent }) {
     if (status !== 'idle') return;
     setErr(''); clearOutput(); setProgress(0); setStage('');
     if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
-      setErr('This browser can\'t record audio (no MediaRecorder / getUserMedia).');
+      setErr(labels.errNoRecorder);
       return;
     }
     let stream;
@@ -3027,10 +3096,10 @@ function VoiceRecorderTool({ accent }) {
       setMicPerm(denied ? 'denied' : 'prompt');
       setErr(
         denied
-          ? 'Microphone permission denied. Allow mic access in your browser, then try again.'
+          ? labels.errPermDeniedStart
           : name === 'NotFoundError'
-            ? 'No microphone found. Plug one in and retry.'
-            : `Could not open the mic: ${e?.message || name || 'unknown error'}`,
+            ? labels.errNoMic
+            : labels.errOpenMicFailed(e?.message || name || 'unknown error'),
       );
       return;
     }
@@ -3077,7 +3146,7 @@ function VoiceRecorderTool({ accent }) {
     try {
       recorder = mimeType ? new MediaRecorder(recordStream, { mimeType }) : new MediaRecorder(recordStream);
     } catch (e) {
-      setErr(`Recorder init failed: ${e?.message || e}`);
+      setErr(labels.errRecorderInit(e?.message || e));
       teardown();
       return;
     }
@@ -3140,14 +3209,14 @@ function VoiceRecorderTool({ accent }) {
     ctxRef.current = null;
     analyserRef.current = null;
 
-    if (!chunks.length) { setErr('Nothing was recorded — the take was empty.'); return; }
+    if (!chunks.length) { setErr(labels.errEmptyTake); return; }
     const rawMime = (recMime || 'audio/webm').split(';')[0];
     const raw = new Blob(chunks, { type: rawMime });
     await encodeToMp3(raw, rawMime);
   }
 
   async function encodeToMp3(raw, rawMime) {
-    setBusy(true); setErr(''); setProgress(0); setStage('Loading FFmpeg…');
+    setBusy(true); setErr(''); setProgress(0); setStage(labels.stageLoadingFFmpeg);
     const stamp = new Date().toISOString().replace(/[:T]/g, '-').slice(0, 19);
     const outFile = `voice-${stamp}.mp3`;
     const logs = [];
@@ -3161,7 +3230,7 @@ function VoiceRecorderTool({ accent }) {
       ff.on('progress', onProgress);
 
       const inName = 'take.' + mimeToExt(rawMime);
-      setStage('Loading take…');
+      setStage(labels.stageLoadingTake);
       await ff.writeFile(inName, await fetchFile(raw));
 
       const filters = [];
@@ -3174,19 +3243,19 @@ function VoiceRecorderTool({ accent }) {
       if (filters.length) args.push('-af', filters.join(','));
       args.push('out.mp3');
 
-      setStage('Encoding MP3…');
+      setStage(labels.stageEncoding);
       await ff.exec(args);
 
       let data;
       try { data = await ff.readFile('out.mp3'); }
       catch {
         const tail = logs.slice(-8).join(' | ');
-        throw new Error(`MP3 not produced. Last log: ${tail || '(empty)'}`);
+        throw new Error(labels.errMp3NotProduced(tail || '(empty)'));
       }
       const blob = new Blob([data.buffer], { type: 'audio/mpeg' });
       clearOutput();
       setOutput({ url: URL.createObjectURL(blob), name: outFile, size: blob.size });
-      setStage('Done'); setProgress(1);
+      setStage(labels.stageDone); setProgress(1);
       try { await ff.deleteFile(inName); } catch {}
       try { await ff.deleteFile('out.mp3'); } catch {}
     } catch (e) {
@@ -3195,7 +3264,7 @@ function VoiceRecorderTool({ accent }) {
       const ext = mimeToExt(rawMime);
       clearOutput();
       setOutput({ url: URL.createObjectURL(raw), name: outFile.replace(/\.mp3$/, `.${ext}`), size: raw.size, fallback: true });
-      setErr(`MP3 encode failed (${e?.message || e}). Saved the raw ${ext.toUpperCase()} take instead.`);
+      setErr(labels.errMp3EncodeFailed(e?.message || e, ext.toUpperCase()));
       setStage('');
     } finally {
       try { ff?.off?.('log', onLog); } catch {}
@@ -3253,9 +3322,9 @@ function VoiceRecorderTool({ accent }) {
               animation: recording ? 'blink 1s step-start infinite' : 'none',
             }} />
             <span className="mono" style={{ fontSize: 11, letterSpacing: '0.16em', color: COLORS.muted, textTransform: 'uppercase' }}>
-              {recording ? 'Recording' : paused ? 'Paused' : busy ? 'Processing'
-                : micPerm === 'granted' ? 'Ready'
-                : micPerm === 'denied' ? 'Mic blocked' : 'Mic access needed'}
+              {recording ? labels.statusRecording : paused ? labels.statusPaused : busy ? labels.statusProcessing
+                : micPerm === 'granted' ? labels.statusReady
+                : micPerm === 'denied' ? labels.statusBlocked : labels.statusNeeded}
             </span>
           </div>
           <span className="mono" style={{ fontSize: 26, fontWeight: 700, color: active ? COLORS.text : COLORS.muted, fontVariantNumeric: 'tabular-nums' }}>
@@ -3282,10 +3351,10 @@ function VoiceRecorderTool({ accent }) {
             color: micPerm === 'denied' ? COLORS.red : COLORS.muted,
           }}>
             {micPerm === 'denied'
-              ? (permErr || 'Mic access is blocked. Enable it in your browser\'s site settings (🔒 in the address bar), then allow again.')
+              ? (permErr || labels.permDenied)
               : micPerm === 'requesting'
-                ? 'Waiting for you to allow microphone access…'
-                : 'This tool needs your microphone. It only asks when you tap “Allow microphone” — nothing records until you press record.'}
+                ? labels.permRequesting
+                : labels.permPrompt}
           </div>
         )}
 
@@ -3293,44 +3362,41 @@ function VoiceRecorderTool({ accent }) {
           {!active && micPerm !== 'granted' && (
             <Btn variant="solid" color={accent} disabled={busy || micPerm === 'requesting'}
               onClick={requestMic} style={{ flex: 1, minWidth: 130 }}>
-              🎙 {micPerm === 'requesting' ? 'Requesting…' : micPerm === 'denied' ? 'Retry mic access' : 'Allow microphone'}
+              🎙 {micPerm === 'requesting' ? labels.btnRequesting : micPerm === 'denied' ? labels.btnRetry : labels.btnAllow}
             </Btn>
           )}
           {!active && micPerm === 'granted' && (
             <Btn variant="solid" color={accent} disabled={busy} onClick={start} style={{ flex: 1, minWidth: 130 }}>
-              ⏺ {busy ? 'Processing…' : 'Start recording'}
+              ⏺ {busy ? labels.btnProcessing : labels.btnStart}
             </Btn>
           )}
           {recording && (
-            <Btn variant="tinted" color={COLORS.gold} onClick={pause} style={{ flex: 1, minWidth: 100 }}>❚❚ Pause</Btn>
+            <Btn variant="tinted" color={COLORS.gold} onClick={pause} style={{ flex: 1, minWidth: 100 }}>❚❚ {labels.btnPause}</Btn>
           )}
           {paused && (
-            <Btn variant="tinted" color={COLORS.green} onClick={resume} style={{ flex: 1, minWidth: 100 }}>▶ Resume</Btn>
+            <Btn variant="tinted" color={COLORS.green} onClick={resume} style={{ flex: 1, minWidth: 100 }}>▶ {labels.btnResume}</Btn>
           )}
           {active && (
-            <Btn variant="solid" color={accent} onClick={stop} style={{ flex: 1, minWidth: 100 }}>■ Stop &amp; save</Btn>
+            <Btn variant="solid" color={accent} onClick={stop} style={{ flex: 1, minWidth: 100 }}>■ {labels.btnStop}</Btn>
           )}
           {active && (
-            <Btn variant="ghost" onClick={cancel} title="Discard this take" style={{ minWidth: 90 }}>✕ Discard</Btn>
+            <Btn variant="ghost" onClick={cancel} title={labels.discardTitle} style={{ minWidth: 90 }}>✕ {labels.btnDiscard}</Btn>
           )}
         </div>
       </div>
 
       {/* Clarity options */}
       <div>
-        <Kicker style={{ marginBottom: 8 }}>VOICE CLARITY</Kicker>
+        <Kicker style={{ marginBottom: 8 }}>{labels.clarityTitle}</Kicker>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 8 }}>
-          <Toggle on={enhance} set={setEnhance} label="Clean capture"
-            hint="Echo cancel + noise suppression + auto-gain, plus a high-pass, presence EQ and compressor for a clearer voice." />
-          <Toggle on={normalize} set={setNormalize} label="Normalize loudness"
-            hint="Broadcast-style leveling (loudnorm −16 LUFS) so quiet & loud parts sit evenly." />
-          <Toggle on={trimSilence} set={setTrimSilence} label="Trim silence"
-            hint="Cut dead air from the start and end of the take." />
+          <Toggle on={enhance} set={setEnhance} label={labels.cleanLabel} hint={labels.cleanHint} />
+          <Toggle on={normalize} set={setNormalize} label={labels.normLabel} hint={labels.normHint} />
+          <Toggle on={trimSilence} set={setTrimSilence} label={labels.trimLabel} hint={labels.trimHint} />
         </div>
       </div>
 
       <div>
-        <Kicker style={{ marginBottom: 8 }}>MP3 BITRATE</Kicker>
+        <Kicker style={{ marginBottom: 8 }}>{labels.bitrateTitle}</Kicker>
         <div style={{ display: 'flex', gap: 6 }}>
           {['128k', '192k', '320k'].map((b) => (
             <Btn key={b} variant={bitrate === b ? 'tinted' : 'ghost'} color={accent}
@@ -3343,7 +3409,7 @@ function VoiceRecorderTool({ accent }) {
         padding: '10px 14px', borderRadius: 10, background: COLORS.bg,
         border: '1px solid ' + COLORS.line, fontSize: 11, color: COLORS.muted, lineHeight: 1.5,
       }}>
-        ◇ Everything runs in your browser. The mic feed is recorded locally and transcoded to MP3 via ffmpeg.wasm (~25 MB lib, cached on first use) — nothing is uploaded. Recording needs an HTTPS page (or localhost) and mic permission.
+        {labels.footer}
       </div>
 
       {(busy || progress > 0) && (
@@ -3375,10 +3441,10 @@ function VoiceRecorderTool({ accent }) {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
             <div className="mono" style={{ fontSize: 11, color: COLORS.muted }}>
               {output.name} · {(output.size / 1024).toFixed(1)} KB
-              {output.fallback && <span style={{ color: COLORS.gold }}> · raw take</span>}
+              {output.fallback && <span style={{ color: COLORS.gold }}> {labels.rawTakeBadge}</span>}
             </div>
             <a href={output.url} download={output.name} style={{ textDecoration: 'none' }}>
-              <Btn variant="solid" color={accent}>↓ Download</Btn>
+              <Btn variant="solid" color={accent}>{labels.download}</Btn>
             </a>
           </div>
         </div>
