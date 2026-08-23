@@ -907,26 +907,28 @@
 
 // ── 12-command list render ──
 (function renderCommands() {
+  // Kept in sync with the bot's real registry (apps/bot/src/commands/index.ts).
+  // Music has no slash command — mention/chat only, same as TTS.
   const COMMANDS = [
-    { n: '/img',     d: 'Generate ảnh từ prompt',     m: 'IMG' },
-    { n: '/edit',    d: 'Inpaint, sửa ảnh',           m: 'IMG' },
-    { n: '/upscale', d: 'Upscale 4x',                 m: 'IMG' },
-    { n: '/remix',   d: 'Variations từ seed',         m: 'IMG' },
-    { n: '/avatar',  d: 'Xem avatar @user',           m: 'UTIL' },
-    { n: '/ask',     d: 'Q&A nhanh',                  m: 'TXT' },
-    { n: '/sum',     d: 'Tóm tắt link, file',         m: 'TXT' },
-    { n: '/code',    d: 'Code: explain, fix, write',  m: 'TXT' },
-    { n: '/t2v',     d: 'Text-to-video 10s',          m: 'VID' },
-    { n: '/i2v',     d: 'Animate ảnh tĩnh',           m: 'VID' },
-    { n: 'text_to_speech', d: 'Tool TTS ElevenLabs (VI ok)', m: 'AUD' },
-    { n: '/persona', d: 'Manage characters',          m: 'SYS' },
+    { n: '/img',      d: 'Generate ảnh từ prompt',     m: 'IMG' },
+    { n: '/edit',     d: 'Sửa ảnh theo mô tả',         m: 'IMG' },
+    { n: '/bgremove', d: 'Xoá nền ảnh',                m: 'IMG' },
+    { n: '/wan',      d: 'Sửa ảnh bằng WAN 2.6',       m: 'IMG' },
+    { n: '/t2v',      d: 'Text-to-video 15s 720p',     m: 'VID' },
+    { n: '/i2v',      d: 'Animate ảnh / avatar',       m: 'VID' },
+    { n: '/video',    d: 'Tải video từ link',          m: 'VID' },
+    { n: '@KataS',    d: 'Chat, nhạc, voice, search',  m: 'CHAT' },
+    { n: '/search',   d: 'Tìm kiếm web realtime',      m: 'TXT' },
+    { n: '/avatar',   d: 'Xem avatar @user',           m: 'UTIL' },
+    { n: '/reset',    d: 'Xoá context chat của bạn',   m: 'UTIL' },
+    { n: '/worldcreate', d: 'Tạo world roleplay',      m: 'SYS' },
   ];
   const host = document.getElementById('cmd-list');
   if (!host) return;
   host.innerHTML = COMMANDS.map((c, i) => `
     <a class="m-cmd" href="#commands">
       <span class="num">${String(i + 1).padStart(2, '0')}</span>
-      <span class="name"><span class="slash">/</span>${c.n.slice(1)}</span>
+      <span class="name">${c.n.startsWith('/') ? `<span class="slash">/</span>${c.n.slice(1)}` : c.n}</span>
       <span class="desc">${c.d}</span>
       <span class="tag">${c.m}</span>
     </a>

@@ -902,19 +902,22 @@
 
 // ── 12-command grid render ─────────────────────────────────────
 (function renderCommands() {
+  // Kept in sync with the bot's real registry (apps/bot/src/commands/index.ts).
+  // Music has no slash command — it's mention/chat only via the generate_music
+  // tool, same as TTS.
   const COMMANDS = [
-    { n: '/img',     d: 'Generate ảnh từ prompt. Photoreal, anime, pixel.', m: 'IMAGE' },
-    { n: '/edit',    d: 'Inpaint, outpaint, sửa ảnh có sẵn bằng mask.',     m: 'IMAGE' },
-    { n: '/upscale', d: 'Upscale 4x, refine details, sharpen.',             m: 'IMAGE' },
-    { n: '/remix',   d: 'Variations từ một ảnh seed.',                      m: 'IMAGE' },
-    { n: '/avatar',  d: 'Xem avatar Discord của bạn hoặc @user.',           m: 'UTIL'  },
-    { n: '/ask',     d: 'Q&A nhanh, không lưu context.',                    m: 'TEXT'  },
-    { n: '/sum',     d: 'Tóm tắt link, tin nhắn, file đính kèm.',           m: 'TEXT'  },
-    { n: '/code',    d: 'Code assist: explain, fix, write.',                m: 'TEXT'  },
-    { n: '/t2v',     d: 'Text-to-video, max 10s, 720p.',                    m: 'VIDEO' },
-    { n: '/i2v',     d: 'Animate ảnh tĩnh thành clip.',                     m: 'VIDEO' },
-    { n: 'text_to_speech', d: 'Tool TTS ElevenLabs multilingual, hỗ trợ tiếng Việt.', m: 'AUDIO' },
-    { n: '/persona', d: 'Tạo & quản lý character / persona cho chat.',      m: 'SYSTEM'},
+    { n: '/img',      d: 'Generate ảnh từ prompt. Photoreal, anime, pixel.',  m: 'IMAGE' },
+    { n: '/edit',     d: 'Sửa ảnh có sẵn theo mô tả.',                        m: 'IMAGE' },
+    { n: '/bgremove', d: 'Xoá nền ảnh.',                                      m: 'IMAGE' },
+    { n: '/wan',      d: 'Sửa ảnh bằng WAN 2.6 (NanoGPT).',                   m: 'IMAGE' },
+    { n: '/t2v',      d: 'Text-to-video 15s, 720p (grok imagine v1.5).',      m: 'VIDEO' },
+    { n: '/i2v',      d: 'Animate ảnh / avatar thành clip.',                  m: 'VIDEO' },
+    { n: '/video',    d: 'Tải video từ YouTube, TikTok, X, Instagram…',       m: 'VIDEO' },
+    { n: '@KataS',    d: 'Chat, tạo nhạc, đọc voice, search — nhắc là chạy.', m: 'CHAT'  },
+    { n: '/search',   d: 'Tìm kiếm web realtime.',                            m: 'TEXT'  },
+    { n: '/avatar',   d: 'Xem avatar Discord của bạn hoặc @user.',            m: 'UTIL'  },
+    { n: '/reset',    d: 'Xoá context chat của bạn trong kênh này.',          m: 'UTIL'  },
+    { n: '/worldcreate', d: 'Tạo thế giới roleplay (Tavern).',                m: 'SYSTEM'},
   ];
   const host = document.getElementById('cmd-grid');
   if (!host) return;
@@ -922,7 +925,7 @@
     <a class="cmd-cell" href="#" style="animation-delay:${i * 40}ms">
       <span class="cmd-num">${String(i + 1).padStart(2, '0')}</span>
       <div>
-        <div class="cmd-name"><span class="slash">/</span>${c.n.slice(1)}</div>
+        <div class="cmd-name">${c.n.startsWith('/') ? `<span class="slash">/</span>${c.n.slice(1)}` : c.n}</div>
         <div class="cmd-desc">${c.d}</div>
       </div>
       <div class="cmd-meta"><span>${c.m}</span><span>READY</span></div>

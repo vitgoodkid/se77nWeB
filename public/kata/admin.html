@@ -576,7 +576,9 @@ function logBotReply(type, r) {
 /* ==================== GLOBAL COST ==================== */
 // CostEntry.service keys from the bot (CostService). Model ids are free-form
 // (e.g. fal / elevenlabs-tts-multilingual-v2) — UI aggregates whatever Mongo returns.
-const SERVICE_COLORS = { fal: '#D4A858', yunwu: '#5BA868', nanogpt: '#8a7f78', '9router': '#E04545', openrouter: '#7a9eb5', tavily: '#8a7f78', google: '#5BA868' };
+// `yunwu` kept ONLY as a legend colour for historical cost rows (the provider
+// was removed from the bot 2026-08-23; TTL purges those rows after 90 days).
+const SERVICE_COLORS = { fal: '#D4A858', nanogpt: '#8a7f78', '9router': '#E04545', openrouter: '#7a9eb5', tavily: '#8a7f78', google: '#5BA868', yunwu: '#5f6a63' };
 
 async function renderCost() {
   const range = params.get('range') || '30d';
@@ -691,12 +693,9 @@ async function renderCost() {
 // (apps/bot pricing + image/video pipelines). Provider keys are UI labels;
 // ids that route to a non-default provider carry a `<provider>:` prefix.
 const CHAT_MODELS_BY_PROVIDER = {
-  YUNWU: [
-    'gemini-3.1-flash-lite','gemini-3.1-flash-preview','gemini-3-pro-preview','gemini-3.1-pro-preview',
-    'gemini-2.5-flash','gemini-2.5-flash-lite','gemini-2.5-pro',
-    'claude-haiku-4-5','claude-sonnet-4-6','claude-opus-4-7',
-    'grok-4','grok-4.1','grok-4-fast',
-  ],
+  // Provider `yunwu` was removed from the bot entirely (2026-08-23). Bare
+  // (unprefixed) ids now route to OpenRouter, which needs `vendor/model` ids,
+  // so the old bare ids are gone rather than relabelled.
   '9ROUTER': ['9router:kr/claude-opus-4.7'],
   OPENROUTER: ['openrouter:google/gemini-2.5-flash'],
   // Bot default chat model. fal is one-shot (no tool-call); bot may briefly
@@ -710,14 +709,18 @@ const IMAGE_MODELS_BY_PROVIDER = {
   'FAL.AI': ['fal-ai/nano-banana-pro','fal-ai/gpt-image-2','xai/grok-imagine-image/quality/text-to-image'],
   NANOGPT: ['wavespeed-ai/flux-2-klein-base-9b/text-to-image'],
 };
+// Video chain (2026-08-23): grok imagine v1.5 primary, seedance 2.0 fallback.
+// happy-horse retired. The image path uses each model's reference-to-video
+// endpoint (multi-image), so those are the ids the bot actually calls.
 const VIDEO_MODELS_BY_PROVIDER = {
   'FAL.AI': [
-    'bytedance/seedance-2.0/text-to-video','bytedance/seedance-2.0/image-to-video',
-    'alibaba/happy-horse/text-to-video','alibaba/happy-horse/image-to-video',
-    'xai/grok-imagine-video/text-to-video','xai/grok-imagine-video/image-to-video',
+    'xai/grok-imagine-video/v1.5/reference-to-video',
+    'xai/grok-imagine-video/v1.5/text-to-video',
+    'bytedance/seedance-2.0/reference-to-video',
+    'bytedance/seedance-2.0/text-to-video',
   ],
 };
-const PROVIDER_ACCENT = { YUNWU: '#5BA868', '9ROUTER': '#D4A858', OPENROUTER: '#7a9eb5', FAL: '#a78bfa', 'FAL.AI': '#D4A858', NANOGPT: '#8a7f78' };
+const PROVIDER_ACCENT = { '9ROUTER': '#D4A858', OPENROUTER: '#7a9eb5', FAL: '#a78bfa', 'FAL.AI': '#D4A858', NANOGPT: '#8a7f78' };
 
 const SETTINGS_FIELDS = [
   { key: 'systemPrompt', type: 'textarea', title: 'SYSTEM PROMPT', desc: 'Persona mặc định của bot trên mọi guild', rows: 7, placeholder: '(trống — bot không dùng prompt phụ)' },

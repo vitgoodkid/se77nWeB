@@ -1408,7 +1408,9 @@ async function renderDefaults() {
   };
 
   const provDisplay = (v) => (v && v.includes(':') ? v.split(':').slice(1).join(':') : v);
-  const provName = (v) => (!v ? 'default' : v.includes(':') ? v.split(':')[0] : 'yunwu');
+  // Bare (unprefixed) ids route to the bot's default provider, which became
+  // openrouter when yunwu was removed (2026-08-23).
+  const provName = (v) => (!v ? 'default' : v.includes(':') ? v.split(':')[0] : 'openrouter');
 
   const cust = {
     narration: !!(t.storytellerSystemPrompt && t.storytellerSystemPrompt.trim()),

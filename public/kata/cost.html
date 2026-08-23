@@ -365,7 +365,9 @@ async function loadGuildBootstrap(){
 // CostEntry.service keys from the bot. Model strings (e.g. fal /
 // elevenlabs-tts-multilingual-v2, google/gemini-3.1-pro-preview) arrive via
 // byModel aggregation — no whitelist; costUSD is already logged by the bot.
-const SERVICE_COLORS = { fal: '#D4A858', yunwu: '#5BA868', nanogpt: '#8a7f78', '9router': '#E04545', openrouter: '#7a9eb5', tavily: '#8a7f78', google: '#5BA868' };
+// `yunwu` kept ONLY as a legend colour for historical rows (the provider was
+// removed from the bot 2026-08-23; TTL purges those rows after 90 days).
+const SERVICE_COLORS = { fal: '#D4A858', nanogpt: '#8a7f78', '9router': '#E04545', openrouter: '#7a9eb5', tavily: '#8a7f78', google: '#5BA868', yunwu: '#5f6a63' };
 
 function renderCostV2(data){
   // ── total ──

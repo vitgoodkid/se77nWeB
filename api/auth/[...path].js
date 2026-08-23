@@ -669,11 +669,14 @@ async function hydrateUsernames(kataDb, userIds) {
   }
 }
 
+// Mirrors DEFAULT_CONFIG in the bot repo (apps/bot/src/services/guildConfig.ts).
+// Keep in sync — this is what the dashboard shows as "(use default · …)".
 const KATA_SERVER_CONFIG_DEFAULTS = {
   systemPrompt: '',
   chatModel: 'fal:google/gemini-3.1-pro-preview',
   imageModel: 'fal-ai/nano-banana-pro',
-  videoModel: 'bytedance/seedance-2.0/image-to-video',
+  // grok imagine v1.5 (2026-08-23); the image path uses reference-to-video.
+  videoModel: 'xai/grok-imagine-video/v1.5/reference-to-video',
   rateLimitPerUser: 30,
   allowedChannels: [],
 };
@@ -1879,14 +1882,8 @@ async function adminGlobalConfigGet(req, res, kataDb) {
   return res.status(200).json({
     config: doc ?? { scope: GLOBAL_SCOPE },
     // Mirror of the bot's DEFAULT_CONFIG (apps/bot/src/services/guildConfig.ts).
-    codeDefaults: {
-      systemPrompt: '',
-      chatModel: 'fal:google/gemini-3.1-pro-preview',
-      imageModel: 'fal-ai/nano-banana-pro',
-      videoModel: 'bytedance/seedance-2.0/image-to-video',
-      rateLimitPerUser: 30,
-      allowedChannels: [],
-    },
+    // Single source in this file so the two endpoints can't drift apart.
+    codeDefaults: { ...KATA_SERVER_CONFIG_DEFAULTS },
   });
 }
 
