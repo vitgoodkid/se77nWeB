@@ -25,18 +25,18 @@ const TodoList           = lazy(() => import('./featuresB.jsx').then((m) => ({ d
 const Feed               = lazy(() => import('./featuresB.jsx').then((m) => ({ default: m.Feed })));
 const Stylist            = lazy(() => import('./featuresC.jsx').then((m) => ({ default: m.Stylist })));
 
+// Travel Plan, Subscription Manager and To Do are NOT standalone modules —
+// they live inside the Toolbox (routes 'tv4' / 'tech' / 'todo' are still
+// rendered, and reached from the Toolbox cards). This mirrors the desktop rail.
 const MODULES = [
   { id: 'ai',     short: '01', accent: COLORS.red,   icon: '✦', i18nLabel: 'nav.ai',     i18nDesc: 'feature.ai.desc' },
   { id: 'tools',  short: '02', accent: COLORS.green, icon: '⚒', i18nLabel: 'nav.tools',  i18nDesc: 'feature.tools.desc' },
-  { id: 'stylist',short: '07', accent: COLORS.gold,  icon: '👗', i18nLabel: 'nav.stylist', i18nDesc: 'feature.stylist.desc' },
-  { id: 'tv4',    short: '03', accent: COLORS.gold,  icon: '✈', i18nLabel: 'nav.travel', i18nDesc: 'feature.travel.desc' },
+  { id: 'stylist',short: '03', accent: COLORS.gold,  icon: '👗', i18nLabel: 'nav.stylist', i18nDesc: 'feature.stylist.desc' },
   { id: 'game',   short: '04', accent: COLORS.red,   icon: '◐', i18nLabel: 'nav.game',   i18nDesc: 'feature.game.desc' },
-  { id: 'tech',   short: '05', accent: COLORS.green, icon: '⌬', i18nLabel: 'nav.tech',   i18nDesc: 'feature.tech.desc' },
-  { id: 'crypto', short: '06', accent: COLORS.gold,  icon: '$', i18nLabel: 'nav.crypto', i18nDesc: 'feature.crypto.desc' },
-  { id: 'todo',   short: '07', accent: COLORS.green, icon: '✓', i18nLabel: 'nav.todo',   i18nDesc: 'feature.todo.desc' },
-  { id: 'feed',   short: '08', accent: COLORS.gold,  icon: '◧', i18nLabel: 'nav.feed',   i18nDesc: 'feature.feed.desc', ownerOnly: true },
-  { id: 'kata',   short: '09', accent: COLORS.red,   icon: '⌨', i18nLabel: 'nav.kata',   i18nDesc: 'feature.kata.desc' },
-  { id: 'store',  short: '10', accent: '#d36a79', icon: 'K', i18nLabel: 'nav.store', i18nDesc: 'feature.store.desc' },
+  { id: 'crypto', short: '05', accent: COLORS.gold,  icon: '$', i18nLabel: 'nav.crypto', i18nDesc: 'feature.crypto.desc' },
+  { id: 'feed',   short: '06', accent: COLORS.gold,  icon: '◧', i18nLabel: 'nav.feed',   i18nDesc: 'feature.feed.desc', ownerOnly: true },
+  { id: 'kata',   short: '07', accent: COLORS.red,   icon: '⌨', i18nLabel: 'nav.kata',   i18nDesc: 'feature.kata.desc' },
+  { id: 'store',  short: '08', accent: '#d36a79', icon: 'K', i18nLabel: 'nav.store', i18nDesc: 'feature.store.desc' },
 ];
 
 // Slash commands → either prefix the prompt for the chat agent (so the
@@ -1127,7 +1127,7 @@ export default function MobileShell() {
           paddingBottom: 'calc(20px + env(safe-area-inset-bottom, 0px))',
         }}>
           <Suspense fallback={<RouteFallback />}>
-            {route === 'tools'  && <Toolbox />}
+            {route === 'tools'  && <Toolbox nav={nav} />}
             {route === 'stylist'&& <Stylist />}
             {route === 'game'   && <GamePanel />}
             {route === 'tech'   && <TechStackMonitor />}
