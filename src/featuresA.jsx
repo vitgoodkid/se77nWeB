@@ -755,6 +755,7 @@ const PUBLIC_TOOLS = [
   { id: 'game',    nameKey: 'tools.game.name',    descKey: 'tools.game.desc',    icon: '◉',  accent: COLORS.gold,  tag: 'ARCHIVE' },
   { id: 'bmi',     nameKey: 'tools.bmi.name',     descKey: 'tools.bmi.desc',     icon: '⚖',  accent: COLORS.green, tag: 'HEALTH' },
   { id: 'convert', nameKey: 'tools.convert.name', descKey: 'tools.convert.desc', icon: '⇄',  accent: COLORS.gold,  tag: 'MEDIA' },
+  { id: 'mic',     nameKey: 'tools.mic.name',     descKey: 'tools.mic.desc',     icon: '⏺',  accent: COLORS.red,   tag: 'MEDIA' },
   { id: 'hex',     nameKey: 'tools.hex.name',     descKey: 'tools.hex.desc',     icon: '0x', accent: COLORS.green, tag: 'DEV' },
   { id: '2fa',     nameKey: 'tools.2fa.name',     descKey: 'tools.2fa.desc',     icon: '2F', accent: COLORS.red,   tag: 'SECURITY' },
   { id: 'thao',    nameKey: 'tools.thao.name',    descKey: 'tools.thao.desc',    icon: '♥',  accent: PINK,         tag: 'PIN · 4 DIGIT' },
@@ -1080,6 +1081,7 @@ function ToolDetail({ tool, accent, onBack }) {
         {tool.id === 'short'   ? <ShortenerTool accent={accent} /> :
          tool.id === 'pst'     ? <PastebinTool accent={accent} /> :
          tool.id === 'convert' ? <ConverterTool accent={accent} /> :
+         tool.id === 'mic'     ? <VoiceRecorderTool accent={accent} /> :
          tool.id === 'hex'     ? <HexToTextTool accent={accent} /> :
          tool.id === 'bmi'     ? <BMICalculatorTool accent={accent} /> :
          tool.id === '2fa'     ? <TotpAuthenticatorTool accent={accent} /> :
@@ -2841,6 +2843,476 @@ function VideoToTool({ accent }) {
       <Btn variant="solid" color={accent} disabled={!src || busy || urlBusy} onClick={convert}>
         {busy ? 'Converting…' : 'Convert'}
       </Btn>
+    </div>
+  );
+}
+
+// ── Voice Recorder ─────────────────────────────────────────────
+// Captures the mic and exports a clean MP3. "Clarity" is applied in two
+// places: (1) at capture — the browser's own echo-cancel / noise-suppress /
+// auto-gain DSP plus an in-browser Web Audio chain (high-pass to kill rumble,
+// a presence EQ lift around 3 kHz, and a compressor to even out levels); and
+// (2) at encode — optional ffmpeg loudnorm (broadcast-style level) and silence
+// trimming. Recording is MediaRecorder (webm/opus) then transcoded to MP3 via
+// the same ffmpeg.wasm singleton the converter uses (libmp3lame, mono 44.1k).
+function pickRecorderMime() {
+  const candidates = [
+    'audio/webm;codecs=opus',
+    'audio/webm',
+    'audio/ogg;codecs=opus',
+    'audio/mp4',
+  ];
+  if (typeof MediaRecorder === 'undefined') return '';
+  return candidates.find((m) => {
+    try { return MediaRecorder.isTypeSupported(m); } catch { return false; }
+  }) || '';
+}
+
+function mimeToExt(mime) {
+  if (/mp4/.test(mime)) return 'm4a';
+  if (/ogg/.test(mime)) return 'ogg';
+  return 'webm';
+}
+
+function fmtClock(sec) {
+  const s = Math.max(0, Math.floor(sec));
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  return `${String(m).padStart(2, '0')}:${String(r).padStart(2, '0')}`;
+}
+
+function VoiceRecorderTool({ accent }) {
+  const [status, setStatus] = useState('idle'); // idle | recording | paused
+  const [elapsed, setElapsed] = useState(0);
+  const [enhance, setEnhance] = useState(true);
+  const [normalize, setNormalize] = useState(true);
+  const [trimSilence, setTrimSilence] = useState(false);
+  const [bitrate, setBitrate] = useState('192k');
+  const [busy, setBusy] = useState(false);
+  const [stage, setStage] = useState('');
+  const [progress, setProgress] = useState(0);
+  const [err, setErr] = useState('');
+  const [output, setOutput] = useState(null);
+
+  const streamRef = useRef(null);
+  const ctxRef = useRef(null);
+  const analyserRef = useRef(null);
+  const freqRef = useRef(null);
+  const recorderRef = useRef(null);
+  const chunksRef = useRef([]);
+  const rafRef = useRef(0);
+  const timerRef = useRef(null);
+  const startTsRef = useRef(0);
+  const pausedAtRef = useRef(0);
+  const pausedTotalRef = useRef(0);
+  const canvasRef = useRef(null);
+
+  const clearOutput = useCallback(() => {
+    setOutput((prev) => { if (prev?.url) URL.revokeObjectURL(prev.url); return null; });
+  }, []);
+
+  const stopMeter = useCallback(() => {
+    if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = 0; }
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+  }, []);
+
+  const teardown = useCallback(() => {
+    stopMeter();
+    try { recorderRef.current?.state !== 'inactive' && recorderRef.current?.stop(); } catch {}
+    recorderRef.current = null;
+    try { streamRef.current?.getTracks().forEach((t) => t.stop()); } catch {}
+    streamRef.current = null;
+    try { ctxRef.current?.close(); } catch {}
+    ctxRef.current = null;
+    analyserRef.current = null;
+  }, [stopMeter]);
+
+  // Stop the mic + free resources if the tool unmounts mid-session.
+  useEffect(() => () => { teardown(); if (output?.url) URL.revokeObjectURL(output.url); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  function drawMeter() {
+    rafRef.current = requestAnimationFrame(drawMeter);
+    const canvas = canvasRef.current;
+    const analyser = analyserRef.current;
+    if (!canvas || !analyser) return;
+    const data = freqRef.current || (freqRef.current = new Uint8Array(analyser.frequencyBinCount));
+    analyser.getByteFrequencyData(data);
+    const ctx2d = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    ctx2d.clearRect(0, 0, W, H);
+    const bars = 48;
+    const step = Math.max(1, Math.floor(data.length / bars));
+    const bw = W / bars;
+    for (let i = 0; i < bars; i++) {
+      const v = data[i * step] / 255;
+      const h = Math.max(2, v * H);
+      ctx2d.fillStyle = accent;
+      ctx2d.globalAlpha = 0.35 + v * 0.65;
+      ctx2d.fillRect(i * bw + 1, (H - h) / 2, bw - 2, h);
+    }
+    ctx2d.globalAlpha = 1;
+  }
+
+  function tickTimer() {
+    timerRef.current = setInterval(() => {
+      if (startTsRef.current) {
+        setElapsed((performance.now() - startTsRef.current - pausedTotalRef.current) / 1000);
+      }
+    }, 200);
+  }
+
+  async function start() {
+    if (status !== 'idle') return;
+    setErr(''); clearOutput(); setProgress(0); setStage('');
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
+      setErr('This browser can\'t record audio (no MediaRecorder / getUserMedia).');
+      return;
+    }
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: enhance,
+          noiseSuppression: enhance,
+          autoGainControl: enhance,
+          channelCount: 1,
+        },
+      });
+    } catch (e) {
+      const name = e?.name || '';
+      setErr(
+        name === 'NotAllowedError' || name === 'SecurityError'
+          ? 'Microphone permission denied. Allow mic access in your browser, then try again.'
+          : name === 'NotFoundError'
+            ? 'No microphone found. Plug one in and retry.'
+            : `Could not open the mic: ${e?.message || name || 'unknown error'}`,
+      );
+      return;
+    }
+    streamRef.current = stream;
+
+    // Web Audio graph: always tap an analyser for the meter. When "enhance" is
+    // on, route the mic through cleanup nodes into a fresh MediaStream and
+    // record THAT; otherwise record the raw mic stream.
+    let recordStream = stream;
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      const ctx = new AudioCtx();
+      ctxRef.current = ctx;
+      if (ctx.state === 'suspended') { try { await ctx.resume(); } catch {} }
+      const source = ctx.createMediaStreamSource(stream);
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 256;
+      analyser.smoothingTimeConstant = 0.8;
+      analyserRef.current = analyser;
+
+      if (enhance) {
+        const highpass = ctx.createBiquadFilter();
+        highpass.type = 'highpass'; highpass.frequency.value = 85; // cut rumble / handling noise
+        const presence = ctx.createBiquadFilter();
+        presence.type = 'peaking'; presence.frequency.value = 3000; presence.Q.value = 1; presence.gain.value = 3; // vocal intelligibility
+        const comp = ctx.createDynamicsCompressor();
+        comp.threshold.value = -24; comp.knee.value = 30; comp.ratio.value = 3; comp.attack.value = 0.003; comp.release.value = 0.25;
+        const dest = ctx.createMediaStreamDestination();
+        source.connect(highpass); highpass.connect(presence); presence.connect(comp);
+        comp.connect(dest); comp.connect(analyser);
+        recordStream = dest.stream;
+      } else {
+        source.connect(analyser);
+      }
+    } catch (e) {
+      // Meter/enhancement are best-effort — fall back to recording the raw stream.
+      console.warn('[mic] audio graph failed', e);
+      recordStream = stream;
+    }
+
+    const mimeType = pickRecorderMime();
+    let recorder;
+    try {
+      recorder = mimeType ? new MediaRecorder(recordStream, { mimeType }) : new MediaRecorder(recordStream);
+    } catch (e) {
+      setErr(`Recorder init failed: ${e?.message || e}`);
+      teardown();
+      return;
+    }
+    recorderRef.current = recorder;
+    chunksRef.current = [];
+    recorder.ondataavailable = (ev) => { if (ev.data && ev.data.size) chunksRef.current.push(ev.data); };
+    recorder.onstop = () => finalize(recorder.mimeType || mimeType);
+    recorder.start(250); // gather chunks periodically so long takes don't buffer one huge blob
+
+    startTsRef.current = performance.now();
+    pausedTotalRef.current = 0;
+    pausedAtRef.current = 0;
+    setElapsed(0);
+    setStatus('recording');
+    tickTimer();
+    rafRef.current = requestAnimationFrame(drawMeter);
+  }
+
+  function pause() {
+    const rec = recorderRef.current;
+    if (!rec || status !== 'recording') return;
+    try { rec.pause(); } catch { return; }
+    pausedAtRef.current = performance.now();
+    setStatus('paused');
+  }
+
+  function resume() {
+    const rec = recorderRef.current;
+    if (!rec || status !== 'paused') return;
+    try { rec.resume(); } catch { return; }
+    if (pausedAtRef.current) { pausedTotalRef.current += performance.now() - pausedAtRef.current; pausedAtRef.current = 0; }
+    setStatus('recording');
+  }
+
+  function stop() {
+    const rec = recorderRef.current;
+    if (!rec || status === 'idle') return;
+    stopMeter();
+    setStatus('idle');
+    try { rec.stop(); } catch { finalize(rec.mimeType); } // onstop fires finalize
+    // stop tracks after a tick so the last chunk flushes
+    setTimeout(() => { try { streamRef.current?.getTracks().forEach((t) => t.stop()); } catch {} }, 100);
+  }
+
+  function cancel() {
+    stopMeter();
+    try { recorderRef.current && (recorderRef.current.onstop = null); } catch {}
+    teardown();
+    chunksRef.current = [];
+    setStatus('idle'); setElapsed(0); setStage(''); setProgress(0);
+  }
+
+  async function finalize(recMime) {
+    const chunks = chunksRef.current;
+    chunksRef.current = [];
+    // release the mic + audio context now that capture is done
+    try { streamRef.current?.getTracks().forEach((t) => t.stop()); } catch {}
+    streamRef.current = null;
+    try { ctxRef.current?.close(); } catch {}
+    ctxRef.current = null;
+    analyserRef.current = null;
+
+    if (!chunks.length) { setErr('Nothing was recorded — the take was empty.'); return; }
+    const rawMime = (recMime || 'audio/webm').split(';')[0];
+    const raw = new Blob(chunks, { type: rawMime });
+    await encodeToMp3(raw, rawMime);
+  }
+
+  async function encodeToMp3(raw, rawMime) {
+    setBusy(true); setErr(''); setProgress(0); setStage('Loading FFmpeg…');
+    const stamp = new Date().toISOString().replace(/[:T]/g, '-').slice(0, 19);
+    const outFile = `voice-${stamp}.mp3`;
+    const logs = [];
+    const onLog = ({ message }) => logs.push(message);
+    const onProgress = ({ progress }) => setProgress(Math.max(0, Math.min(1, progress)));
+    let ff = null;
+    try {
+      ff = await getFFmpeg();
+      const { fetchFile } = await import('@ffmpeg/util');
+      ff.on('log', onLog);
+      ff.on('progress', onProgress);
+
+      const inName = 'take.' + mimeToExt(rawMime);
+      setStage('Loading take…');
+      await ff.writeFile(inName, await fetchFile(raw));
+
+      const filters = [];
+      if (trimSilence) {
+        filters.push('silenceremove=start_periods=1:start_silence=0.15:start_threshold=-50dB:detection=peak,areverse,silenceremove=start_periods=1:start_silence=0.25:start_threshold=-50dB:detection=peak,areverse');
+      }
+      if (normalize) filters.push('loudnorm=I=-16:TP=-1.5:LRA=11');
+
+      const args = ['-i', inName, '-vn', '-ac', '1', '-ar', '44100', '-acodec', 'libmp3lame', '-b:a', bitrate];
+      if (filters.length) args.push('-af', filters.join(','));
+      args.push('out.mp3');
+
+      setStage('Encoding MP3…');
+      await ff.exec(args);
+
+      let data;
+      try { data = await ff.readFile('out.mp3'); }
+      catch {
+        const tail = logs.slice(-8).join(' | ');
+        throw new Error(`MP3 not produced. Last log: ${tail || '(empty)'}`);
+      }
+      const blob = new Blob([data.buffer], { type: 'audio/mpeg' });
+      clearOutput();
+      setOutput({ url: URL.createObjectURL(blob), name: outFile, size: blob.size });
+      setStage('Done'); setProgress(1);
+      try { await ff.deleteFile(inName); } catch {}
+      try { await ff.deleteFile('out.mp3'); } catch {}
+    } catch (e) {
+      console.error('[mic] encode', e, '\n— logs —\n', logs.join('\n'));
+      // Fallback: still hand the user the untranscoded take so a recording is never lost.
+      const ext = mimeToExt(rawMime);
+      clearOutput();
+      setOutput({ url: URL.createObjectURL(raw), name: outFile.replace(/\.mp3$/, `.${ext}`), size: raw.size, fallback: true });
+      setErr(`MP3 encode failed (${e?.message || e}). Saved the raw ${ext.toUpperCase()} take instead.`);
+      setStage('');
+    } finally {
+      try { ff?.off?.('log', onLog); } catch {}
+      try { ff?.off?.('progress', onProgress); } catch {}
+      setBusy(false);
+    }
+  }
+
+  const recording = status === 'recording';
+  const paused = status === 'paused';
+  const active = recording || paused;
+
+  const Toggle = ({ on, set, label, hint }) => (
+    <button
+      type="button"
+      onClick={() => set(!on)}
+      disabled={active || busy}
+      className="mono"
+      style={{
+        textAlign: 'left', display: 'grid', gap: 3, padding: '10px 12px', borderRadius: 10,
+        cursor: active || busy ? 'not-allowed' : 'pointer', width: '100%',
+        border: `1px solid ${on ? accent + '66' : COLORS.line}`,
+        background: on ? accent + '12' : COLORS.bg,
+        opacity: active || busy ? 0.55 : 1, transition: 'border-color 120ms, background 120ms',
+      }}
+    >
+      <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: COLORS.text }}>
+        <span style={{
+          width: 26, height: 15, borderRadius: 999, position: 'relative', flexShrink: 0,
+          background: on ? accent : COLORS.line, transition: 'background 120ms',
+        }}>
+          <span style={{
+            position: 'absolute', top: 2, left: on ? 13 : 2, width: 11, height: 11, borderRadius: 999,
+            background: '#0d0a08', transition: 'left 120ms',
+          }} />
+        </span>
+        {label}
+      </span>
+      <span style={{ fontSize: 10, color: COLORS.muted, lineHeight: 1.4, paddingLeft: 34 }}>{hint}</span>
+    </button>
+  );
+
+  return (
+    <div style={{ display: 'grid', gap: 16 }}>
+      {/* Recorder stage */}
+      <div style={{
+        padding: 20, borderRadius: 14, border: `1px solid ${active ? accent + '55' : COLORS.line}`,
+        background: COLORS.bg, display: 'grid', gap: 14, transition: 'border-color 200ms',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{
+              width: 10, height: 10, borderRadius: 999,
+              background: recording ? COLORS.red : paused ? COLORS.gold : COLORS.line,
+              animation: recording ? 'blink 1s step-start infinite' : 'none',
+            }} />
+            <span className="mono" style={{ fontSize: 11, letterSpacing: '0.16em', color: COLORS.muted, textTransform: 'uppercase' }}>
+              {recording ? 'Recording' : paused ? 'Paused' : busy ? 'Processing' : 'Ready'}
+            </span>
+          </div>
+          <span className="mono" style={{ fontSize: 26, fontWeight: 700, color: active ? COLORS.text : COLORS.muted, fontVariantNumeric: 'tabular-nums' }}>
+            {fmtClock(elapsed)}
+          </span>
+        </div>
+
+        <canvas
+          ref={canvasRef}
+          width={600}
+          height={72}
+          style={{
+            width: '100%', height: 72, borderRadius: 8, background: COLORS.panel,
+            border: '1px solid ' + COLORS.line, opacity: active ? 1 : 0.4,
+          }}
+        />
+
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {!active && (
+            <Btn variant="solid" color={accent} disabled={busy} onClick={start} style={{ flex: 1, minWidth: 130 }}>
+              ⏺ {busy ? 'Processing…' : 'Start recording'}
+            </Btn>
+          )}
+          {recording && (
+            <Btn variant="tinted" color={COLORS.gold} onClick={pause} style={{ flex: 1, minWidth: 100 }}>❚❚ Pause</Btn>
+          )}
+          {paused && (
+            <Btn variant="tinted" color={COLORS.green} onClick={resume} style={{ flex: 1, minWidth: 100 }}>▶ Resume</Btn>
+          )}
+          {active && (
+            <Btn variant="solid" color={accent} onClick={stop} style={{ flex: 1, minWidth: 100 }}>■ Stop &amp; save</Btn>
+          )}
+          {active && (
+            <Btn variant="ghost" onClick={cancel} title="Discard this take" style={{ minWidth: 90 }}>✕ Discard</Btn>
+          )}
+        </div>
+      </div>
+
+      {/* Clarity options */}
+      <div>
+        <Kicker style={{ marginBottom: 8 }}>VOICE CLARITY</Kicker>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 8 }}>
+          <Toggle on={enhance} set={setEnhance} label="Clean capture"
+            hint="Echo cancel + noise suppression + auto-gain, plus a high-pass, presence EQ and compressor for a clearer voice." />
+          <Toggle on={normalize} set={setNormalize} label="Normalize loudness"
+            hint="Broadcast-style leveling (loudnorm −16 LUFS) so quiet & loud parts sit evenly." />
+          <Toggle on={trimSilence} set={setTrimSilence} label="Trim silence"
+            hint="Cut dead air from the start and end of the take." />
+        </div>
+      </div>
+
+      <div>
+        <Kicker style={{ marginBottom: 8 }}>MP3 BITRATE</Kicker>
+        <div style={{ display: 'flex', gap: 6 }}>
+          {['128k', '192k', '320k'].map((b) => (
+            <Btn key={b} variant={bitrate === b ? 'tinted' : 'ghost'} color={accent}
+              disabled={active} onClick={() => setBitrate(b)}>{b}</Btn>
+          ))}
+        </div>
+      </div>
+
+      <div className="mono" style={{
+        padding: '10px 14px', borderRadius: 10, background: COLORS.bg,
+        border: '1px solid ' + COLORS.line, fontSize: 11, color: COLORS.muted, lineHeight: 1.5,
+      }}>
+        ◇ Everything runs in your browser. The mic feed is recorded locally and transcoded to MP3 via ffmpeg.wasm (~25 MB lib, cached on first use) — nothing is uploaded. Recording needs an HTTPS page (or localhost) and mic permission.
+      </div>
+
+      {(busy || progress > 0) && (
+        <div>
+          <div className="mono" style={{ fontSize: 11, color: COLORS.muted, marginBottom: 6, display: 'flex', justifyContent: 'space-between' }}>
+            <span>{stage}</span>
+            <span>{Math.round(progress * 100)}%</span>
+          </div>
+          <div style={{ height: 4, background: COLORS.line, borderRadius: 4, overflow: 'hidden' }}>
+            <div style={{ height: '100%', width: `${progress * 100}%`, background: accent, transition: 'width 120ms' }} />
+          </div>
+        </div>
+      )}
+
+      {err && (
+        <div className="mono" style={{
+          padding: '10px 14px', borderRadius: 10,
+          border: `1px solid ${COLORS.red}55`, background: COLORS.red + '0e',
+          color: COLORS.red, fontSize: 12, lineHeight: 1.5,
+        }}>✕ {err}</div>
+      )}
+
+      {output && (
+        <div style={{
+          padding: 14, borderRadius: 12, border: `1px solid ${accent}55`,
+          background: accent + '08', display: 'grid', gap: 10,
+        }}>
+          <audio src={output.url} controls style={{ width: '100%' }} />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <div className="mono" style={{ fontSize: 11, color: COLORS.muted }}>
+              {output.name} · {(output.size / 1024).toFixed(1)} KB
+              {output.fallback && <span style={{ color: COLORS.gold }}> · raw take</span>}
+            </div>
+            <a href={output.url} download={output.name} style={{ textDecoration: 'none' }}>
+              <Btn variant="solid" color={accent}>↓ Download</Btn>
+            </a>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
