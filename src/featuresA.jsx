@@ -2893,6 +2893,8 @@ function VoiceRecorderTool({ accent }) {
   const [progress, setProgress] = useState(0);
   const [err, setErr] = useState('');
   const [output, setOutput] = useState(null);
+  const [micPerm, setMicPerm] = useState('unknown'); // unknown | prompt | granted | denied | requesting
+  const [permErr, setPermErr] = useState('');
 
   const streamRef = useRef(null);
   const ctxRef = useRef(null);
@@ -2929,6 +2931,47 @@ function VoiceRecorderTool({ accent }) {
 
   // Stop the mic + free resources if the tool unmounts mid-session.
   useEffect(() => () => { teardown(); if (output?.url) URL.revokeObjectURL(output.url); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Reflect the current mic-permission state (best effort — not all browsers
+  // expose the 'microphone' Permissions descriptor). We only READ here; the
+  // actual prompt is triggered on user intent (the button below or Start).
+  useEffect(() => {
+    let permStatus = null;
+    const onChange = () => setMicPerm(permStatus?.state || 'unknown');
+    if (navigator.permissions?.query) {
+      navigator.permissions.query({ name: 'microphone' })
+        .then((st) => { permStatus = st; setMicPerm(st.state); st.onchange = onChange; })
+        .catch(() => { /* descriptor unsupported — leave as 'unknown', Start still works */ });
+    }
+    return () => { if (permStatus) permStatus.onchange = null; };
+  }, []);
+
+  // Explicitly ask for mic access on user intent, without starting a take.
+  // Grabbing a stream is what surfaces the browser prompt; we release it at once.
+  async function requestMic() {
+    setPermErr('');
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setPermErr('This browser can\'t access a microphone (no getUserMedia).');
+      setMicPerm('denied');
+      return;
+    }
+    setMicPerm('requesting');
+    try {
+      const s = await navigator.mediaDevices.getUserMedia({ audio: true });
+      s.getTracks().forEach((t) => t.stop());
+      setMicPerm('granted');
+    } catch (e) {
+      const name = e?.name || '';
+      setMicPerm(name === 'NotAllowedError' || name === 'SecurityError' ? 'denied' : 'prompt');
+      setPermErr(
+        name === 'NotAllowedError' || name === 'SecurityError'
+          ? 'Microphone blocked. Enable it in your browser\'s site settings (the 🔒 icon in the address bar), then retry.'
+          : name === 'NotFoundError'
+            ? 'No microphone found. Plug one in and retry.'
+            : `Could not access the mic: ${e?.message || name || 'unknown error'}`,
+      );
+    }
+  }
 
   function drawMeter() {
     rafRef.current = requestAnimationFrame(drawMeter);
@@ -2980,8 +3023,10 @@ function VoiceRecorderTool({ accent }) {
       });
     } catch (e) {
       const name = e?.name || '';
+      const denied = name === 'NotAllowedError' || name === 'SecurityError';
+      setMicPerm(denied ? 'denied' : 'prompt');
       setErr(
-        name === 'NotAllowedError' || name === 'SecurityError'
+        denied
           ? 'Microphone permission denied. Allow mic access in your browser, then try again.'
           : name === 'NotFoundError'
             ? 'No microphone found. Plug one in and retry.'
@@ -2989,6 +3034,7 @@ function VoiceRecorderTool({ accent }) {
       );
       return;
     }
+    setMicPerm('granted');
     streamRef.current = stream;
 
     // Web Audio graph: always tap an analyser for the meter. When "enhance" is
@@ -3207,7 +3253,9 @@ function VoiceRecorderTool({ accent }) {
               animation: recording ? 'blink 1s step-start infinite' : 'none',
             }} />
             <span className="mono" style={{ fontSize: 11, letterSpacing: '0.16em', color: COLORS.muted, textTransform: 'uppercase' }}>
-              {recording ? 'Recording' : paused ? 'Paused' : busy ? 'Processing' : 'Ready'}
+              {recording ? 'Recording' : paused ? 'Paused' : busy ? 'Processing'
+                : micPerm === 'granted' ? 'Ready'
+                : micPerm === 'denied' ? 'Mic blocked' : 'Mic access needed'}
             </span>
           </div>
           <span className="mono" style={{ fontSize: 26, fontWeight: 700, color: active ? COLORS.text : COLORS.muted, fontVariantNumeric: 'tabular-nums' }}>
@@ -3225,8 +3273,30 @@ function VoiceRecorderTool({ accent }) {
           }}
         />
 
+        {/* Permission gate — only ask for the mic once the user opts in here. */}
+        {!active && micPerm !== 'granted' && (
+          <div className="mono" style={{
+            padding: '10px 12px', borderRadius: 10, fontSize: 11, lineHeight: 1.5,
+            border: `1px solid ${micPerm === 'denied' ? COLORS.red + '55' : COLORS.line}`,
+            background: micPerm === 'denied' ? COLORS.red + '0e' : COLORS.bg,
+            color: micPerm === 'denied' ? COLORS.red : COLORS.muted,
+          }}>
+            {micPerm === 'denied'
+              ? (permErr || 'Mic access is blocked. Enable it in your browser\'s site settings (🔒 in the address bar), then allow again.')
+              : micPerm === 'requesting'
+                ? 'Waiting for you to allow microphone access…'
+                : 'This tool needs your microphone. It only asks when you tap “Allow microphone” — nothing records until you press record.'}
+          </div>
+        )}
+
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {!active && (
+          {!active && micPerm !== 'granted' && (
+            <Btn variant="solid" color={accent} disabled={busy || micPerm === 'requesting'}
+              onClick={requestMic} style={{ flex: 1, minWidth: 130 }}>
+              🎙 {micPerm === 'requesting' ? 'Requesting…' : micPerm === 'denied' ? 'Retry mic access' : 'Allow microphone'}
+            </Btn>
+          )}
+          {!active && micPerm === 'granted' && (
             <Btn variant="solid" color={accent} disabled={busy} onClick={start} style={{ flex: 1, minWidth: 130 }}>
               ⏺ {busy ? 'Processing…' : 'Start recording'}
             </Btn>
