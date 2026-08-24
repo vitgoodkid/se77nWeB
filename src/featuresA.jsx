@@ -2913,6 +2913,9 @@ function VoiceRecorderTool({ accent }) {
     normHint: 'Cân âm lượng chuẩn phát thanh (loudnorm −16 LUFS) để đoạn to/nhỏ đều nhau.',
     trimLabel: 'Cắt khoảng lặng',
     trimHint: 'Cắt bỏ khoảng lặng ở đầu và cuối bản ghi.',
+    clarityCount: (n) => `${n}/3 đang bật`,
+    tapHint: 'BẤM ĐỂ GHI · PHÍM CÁCH',
+    btnReRecord: 'Ghi lại',
     bitrateTitle: 'BITRATE MP3',
     footer: '◇ Mọi thứ chạy ngay trong trình duyệt. Mic được ghi cục bộ rồi chuyển sang MP3 qua ffmpeg.wasm (~25 MB, chỉ tải lần đầu) — không upload lên đâu cả. Cần trang HTTPS (hoặc localhost) và quyền micro.',
     rawTakeBadge: '· bản gốc',
@@ -2946,6 +2949,9 @@ function VoiceRecorderTool({ accent }) {
     normHint: 'Broadcast-style leveling (loudnorm −16 LUFS) so quiet & loud parts sit evenly.',
     trimLabel: 'Trim silence',
     trimHint: 'Cut dead air from the start and end of the take.',
+    clarityCount: (n) => `${n} of 3 on`,
+    tapHint: 'TAP TO RECORD · SPACE',
+    btnReRecord: 'Re-record',
     bitrateTitle: 'MP3 BITRATE',
     footer: '◇ Everything runs in your browser. The mic feed is recorded locally and transcoded to MP3 via ffmpeg.wasm (~25 MB lib, cached on first use) — nothing is uploaded. Recording needs an HTTPS page (or localhost) and mic permission.',
     rawTakeBadge: '· raw take',
@@ -3042,6 +3048,32 @@ function VoiceRecorderTool({ accent }) {
     }
   }
 
+  const METER_BARS = 48;
+
+  // Rounded, evenly-gapped bars centred on the baseline (matches the design's
+  // 48-column meter). `color` and `alphaFor` differ per state so an idle meter
+  // reads as a faint resting pattern rather than a dead canvas.
+  function paintBars(ctx2d, W, H, heightAt, color, alphaFor) {
+    ctx2d.clearRect(0, 0, W, H);
+    const slot = W / METER_BARS;
+    const bw = Math.max(2, Math.min(5, slot - 3));
+    const r = bw / 2;
+    ctx2d.fillStyle = color;
+    for (let i = 0; i < METER_BARS; i++) {
+      const v = heightAt(i);
+      const h = Math.max(bw, v * H);
+      const x = i * slot + (slot - bw) / 2;
+      const y = (H - h) / 2;
+      ctx2d.globalAlpha = alphaFor(v);
+      ctx2d.beginPath();
+      // roundRect isn't in older Safari — fall back to a plain rect.
+      if (ctx2d.roundRect) ctx2d.roundRect(x, y, bw, h, r);
+      else ctx2d.rect(x, y, bw, h);
+      ctx2d.fill();
+    }
+    ctx2d.globalAlpha = 1;
+  }
+
   function drawMeter() {
     rafRef.current = requestAnimationFrame(drawMeter);
     const canvas = canvasRef.current;
@@ -3049,21 +3081,35 @@ function VoiceRecorderTool({ accent }) {
     if (!canvas || !analyser) return;
     const data = freqRef.current || (freqRef.current = new Uint8Array(analyser.frequencyBinCount));
     analyser.getByteFrequencyData(data);
-    const ctx2d = canvas.getContext('2d');
-    const W = canvas.width, H = canvas.height;
-    ctx2d.clearRect(0, 0, W, H);
-    const bars = 48;
-    const step = Math.max(1, Math.floor(data.length / bars));
-    const bw = W / bars;
-    for (let i = 0; i < bars; i++) {
-      const v = data[i * step] / 255;
-      const h = Math.max(2, v * H);
-      ctx2d.fillStyle = accent;
-      ctx2d.globalAlpha = 0.35 + v * 0.65;
-      ctx2d.fillRect(i * bw + 1, (H - h) / 2, bw - 2, h);
-    }
-    ctx2d.globalAlpha = 1;
+    const step = Math.max(1, Math.floor(data.length / METER_BARS));
+    paintBars(
+      canvas.getContext('2d'),
+      canvas.width,
+      canvas.height,
+      (i) => data[i * step] / 255,
+      accent,
+      (v) => 0.35 + v * 0.65,
+    );
   }
+
+  // Resting meter: a low, static ripple so the panel still reads as a meter
+  // before the first take (and after one finishes, when the analyser is gone).
+  useEffect(() => {
+    if (active) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    // Canvas pixels don't follow the light/dark CSS layer, so the resting
+    // bars use the (theme-independent) accent rather than a text colour that
+    // would vanish on a light panel.
+    paintBars(
+      canvas.getContext('2d'),
+      canvas.width,
+      canvas.height,
+      (i) => 0.06 + (i % 5) * 0.018,
+      accent,
+      () => (output ? 0.5 : 0.28),
+    );
+  }, [active, output, accent]);
 
   function tickTimer() {
     timerRef.current = setInterval(() => {
@@ -3277,140 +3323,267 @@ function VoiceRecorderTool({ accent }) {
   const paused = status === 'paused';
   const active = recording || paused;
 
-  const Toggle = ({ on, set, label, hint }) => (
+  // Compact take player (the design shows a single round play button, not the
+  // browser's default audio chrome), so playback state lives here.
+  const audioRef = useRef(null);
+  const [playing, setPlaying] = useState(false);
+  useEffect(() => { setPlaying(false); }, [output]);
+
+  function togglePlay() {
+    const el = audioRef.current;
+    if (!el) return;
+    if (el.paused) el.play().catch(() => {});
+    else el.pause();
+  }
+
+  // Space starts/stops a take, matching the "TAP TO RECORD · SPACE" hint.
+  // Ignored while typing or when the mic hasn't been granted yet.
+  useEffect(() => {
+    function onKey(e) {
+      if (e.code !== 'Space' || e.repeat || e.metaKey || e.ctrlKey || e.altKey) return;
+      const el = e.target;
+      const tag = el?.tagName;
+      if (el?.isContentEditable || tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      // A focused button already treats Space as "click it" — don't double-fire.
+      if (tag === 'BUTTON' || tag === 'A') return;
+      if (busy) return;
+      if (active) { e.preventDefault(); stop(); return; }
+      if (micPerm === 'granted') { e.preventDefault(); start(); }
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [active, busy, micPerm, status]);
+
+  // Full-width row with a pill switch on the left; rows stack and are divided
+  // by a hairline rather than sitting in separate cards.
+  const Toggle = ({ on, set, label, hint, first }) => (
     <button
       type="button"
       onClick={() => set(!on)}
       disabled={active || busy}
       className="mono"
       style={{
-        textAlign: 'left', display: 'grid', gap: 3, padding: '10px 12px', borderRadius: 10,
-        cursor: active || busy ? 'not-allowed' : 'pointer', width: '100%',
-        border: `1px solid ${on ? accent + '66' : COLORS.line}`,
-        background: on ? accent + '12' : COLORS.bg,
-        opacity: active || busy ? 0.55 : 1, transition: 'border-color 120ms, background 120ms',
+        textAlign: 'left', display: 'flex', alignItems: 'flex-start', gap: 12,
+        padding: '11px 4px', width: '100%', background: 'transparent', borderRadius: 0,
+        border: 'none', borderTop: first ? 'none' : `1px solid ${COLORS.line}`,
+        cursor: active || busy ? 'not-allowed' : 'pointer',
+        opacity: active || busy ? 0.55 : 1, transition: 'opacity 120ms',
       }}
     >
-      <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: COLORS.text }}>
+      <span style={{
+        width: 32, height: 18, flex: 'none', marginTop: 1, borderRadius: 999, padding: '0 2px',
+        display: 'flex', alignItems: 'center', justifyContent: on ? 'flex-end' : 'flex-start',
+        background: on ? accent : COLORS.line,
+        border: `1px solid ${on ? accent : COLORS.line}`,
+        transition: 'background 160ms, justify-content 160ms',
+      }}>
+        {/* COLORS.bg (not text) — styles.css flips bg-coloured surfaces in
+            light mode, so the knob stays readable on both themes. */}
         <span style={{
-          width: 26, height: 15, borderRadius: 999, position: 'relative', flexShrink: 0,
-          background: on ? accent : COLORS.line, transition: 'background 120ms',
-        }}>
-          <span style={{
-            position: 'absolute', top: 2, left: on ? 13 : 2, width: 11, height: 11, borderRadius: 999,
-            background: '#0d0a08', transition: 'left 120ms',
-          }} />
-        </span>
-        {label}
+          width: 13, height: 13, borderRadius: 999, display: 'block',
+          background: COLORS.bg, boxShadow: '0 1px 2px rgba(0,0,0,.2)',
+        }} />
       </span>
-      <span style={{ fontSize: 10, color: COLORS.muted, lineHeight: 1.4, paddingLeft: 34 }}>{hint}</span>
+      <span style={{ display: 'grid', gap: 4, minWidth: 0 }}>
+        <span style={{ fontSize: 11.5, color: COLORS.text }}>{label}</span>
+        <span style={{ fontSize: 10, color: COLORS.muted, lineHeight: 1.55 }}>{hint}</span>
+      </span>
     </button>
   );
+
+  const onCount = [enhance, normalize, trimSilence].filter(Boolean).length;
+  const statusText = recording ? labels.statusRecording
+    : paused ? labels.statusPaused
+      : busy ? labels.statusProcessing
+        : micPerm === 'granted' ? labels.statusReady
+          : micPerm === 'denied' ? labels.statusBlocked : labels.statusNeeded;
+  const roundBtn = (size) => ({
+    width: size, height: size, borderRadius: 999, background: accent,
+    border: `3px solid ${COLORS.panel}`, boxShadow: `0 0 0 1px ${COLORS.line}, 0 2px 6px rgba(0,0,0,.14)`,
+    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+  });
 
   return (
     <div style={{ display: 'grid', gap: 16 }}>
       {/* Recorder stage */}
       <div style={{
         padding: 20, borderRadius: 14, border: `1px solid ${active ? accent + '55' : COLORS.line}`,
-        background: COLORS.bg, display: 'grid', gap: 14, transition: 'border-color 200ms',
+        background: COLORS.panel, display: 'grid', gap: 16, transition: 'border-color 200ms',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{
-              width: 10, height: 10, borderRadius: 999,
-              background: recording ? COLORS.red : paused ? COLORS.gold : COLORS.line,
+              width: 7, height: 7, borderRadius: 999,
+              background: recording ? accent
+                : paused ? COLORS.gold
+                  : output ? COLORS.green
+                    : micPerm === 'granted' ? COLORS.muted : accent,
               animation: recording ? 'blink 1s step-start infinite' : 'none',
             }} />
-            <span className="mono" style={{ fontSize: 11, letterSpacing: '0.16em', color: COLORS.muted, textTransform: 'uppercase' }}>
-              {recording ? labels.statusRecording : paused ? labels.statusPaused : busy ? labels.statusProcessing
-                : micPerm === 'granted' ? labels.statusReady
-                : micPerm === 'denied' ? labels.statusBlocked : labels.statusNeeded}
+            <span className="mono" style={{ fontSize: 9.5, letterSpacing: '0.14em', color: COLORS.muted, textTransform: 'uppercase' }}>
+              {statusText}
             </span>
           </div>
-          <span className="mono" style={{ fontSize: 26, fontWeight: 700, color: active ? COLORS.text : COLORS.muted, fontVariantNumeric: 'tabular-nums' }}>
+          <span className="mono" style={{
+            fontSize: 26, fontWeight: 700, letterSpacing: '0.02em',
+            color: recording ? accent : (active || output) ? COLORS.text : COLORS.muted,
+            fontVariantNumeric: 'tabular-nums',
+          }}>
             {fmtClock(elapsed)}
           </span>
         </div>
 
-        <canvas
-          ref={canvasRef}
-          width={600}
-          height={72}
-          style={{
-            width: '100%', height: 72, borderRadius: 8, background: COLORS.panel,
-            border: '1px solid ' + COLORS.line, opacity: active ? 1 : 0.4,
-          }}
-        />
+        <div style={{
+          height: 92, borderRadius: 10, background: COLORS.panel2,
+          border: `1px solid ${COLORS.line}`, display: 'flex', alignItems: 'center',
+          padding: '0 14px', overflow: 'hidden',
+        }}>
+          <canvas ref={canvasRef} width={600} height={72} style={{ width: '100%', height: 72, display: 'block' }} />
+        </div>
 
         {/* Permission gate — only ask for the mic once the user opts in here. */}
-        {!active && micPerm !== 'granted' && (
-          <div className="mono" style={{
-            padding: '10px 12px', borderRadius: 10, fontSize: 11, lineHeight: 1.5,
-            border: `1px solid ${micPerm === 'denied' ? COLORS.red + '55' : COLORS.line}`,
-            background: micPerm === 'denied' ? COLORS.red + '0e' : COLORS.bg,
-            color: micPerm === 'denied' ? COLORS.red : COLORS.muted,
-          }}>
-            {micPerm === 'denied'
-              ? (permErr || labels.permDenied)
-              : micPerm === 'requesting'
-                ? labels.permRequesting
-                : labels.permPrompt}
+        {!active && !busy && micPerm !== 'granted' && (
+          <div style={{ display: 'grid', gap: 12, justifyItems: 'center' }}>
+            <p className="mono" style={{
+              margin: 0, maxWidth: 430, textAlign: 'center', fontSize: 11, lineHeight: 1.65,
+              color: micPerm === 'denied' ? COLORS.red : COLORS.muted,
+            }}>
+              {micPerm === 'denied'
+                ? (permErr || labels.permDenied)
+                : micPerm === 'requesting' ? labels.permRequesting : labels.permPrompt}
+            </p>
+            <Btn variant="solid" color={accent} disabled={busy || micPerm === 'requesting'} onClick={requestMic}>
+              ⏺ {micPerm === 'requesting' ? labels.btnRequesting : micPerm === 'denied' ? labels.btnRetry : labels.btnAllow}
+            </Btn>
           </div>
         )}
 
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {!active && micPerm !== 'granted' && (
-            <Btn variant="solid" color={accent} disabled={busy || micPerm === 'requesting'}
-              onClick={requestMic} style={{ flex: 1, minWidth: 130 }}>
-              🎙 {micPerm === 'requesting' ? labels.btnRequesting : micPerm === 'denied' ? labels.btnRetry : labels.btnAllow}
-            </Btn>
-          )}
-          {!active && micPerm === 'granted' && (
-            <Btn variant="solid" color={accent} disabled={busy} onClick={start} style={{ flex: 1, minWidth: 130 }}>
-              ⏺ {busy ? labels.btnProcessing : labels.btnStart}
-            </Btn>
-          )}
-          {recording && (
-            <Btn variant="tinted" color={COLORS.gold} onClick={pause} style={{ flex: 1, minWidth: 100 }}>❚❚ {labels.btnPause}</Btn>
-          )}
-          {paused && (
-            <Btn variant="tinted" color={COLORS.green} onClick={resume} style={{ flex: 1, minWidth: 100 }}>▶ {labels.btnResume}</Btn>
-          )}
-          {active && (
-            <Btn variant="solid" color={accent} onClick={stop} style={{ flex: 1, minWidth: 100 }}>■ {labels.btnStop}</Btn>
-          )}
-          {active && (
-            <Btn variant="ghost" onClick={cancel} title={labels.discardTitle} style={{ minWidth: 90 }}>✕ {labels.btnDiscard}</Btn>
-          )}
-        </div>
+        {/* Ready — one big target, the way a recorder should read. */}
+        {!active && !busy && micPerm === 'granted' && (
+          <div style={{ display: 'grid', gap: 10, justifyItems: 'center' }}>
+            <button type="button" onClick={start} title={labels.btnStart} aria-label={labels.btnStart} style={roundBtn(64)}>
+              <span style={{ width: 20, height: 20, borderRadius: 999, background: COLORS.text, display: 'block' }} />
+            </button>
+            <span className="mono" style={{ fontSize: 10, letterSpacing: '0.1em', color: COLORS.muted }}>{labels.tapHint}</span>
+          </div>
+        )}
+
+        {active && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
+            {recording
+              ? <Btn variant="ghost" onClick={pause}>❚❚ {labels.btnPause}</Btn>
+              : <Btn variant="ghost" onClick={resume}>▶ {labels.btnResume}</Btn>}
+            <button type="button" onClick={stop} title={labels.btnStop} aria-label={labels.btnStop} style={roundBtn(56)}>
+              <span style={{ width: 17, height: 17, borderRadius: 3, background: COLORS.text, display: 'block' }} />
+            </button>
+            <Btn variant="ghost" onClick={cancel} title={labels.discardTitle}>✕ {labels.btnDiscard}</Btn>
+          </div>
+        )}
+
+        {/* Finished take — compact row, then the two things you'd do next. */}
+        {output && !active && !busy && (
+          <div style={{ display: 'grid', gap: 12 }}>
+            <audio
+              ref={audioRef}
+              src={output.url}
+              onPlay={() => setPlaying(true)}
+              onPause={() => setPlaying(false)}
+              onEnded={() => setPlaying(false)}
+              style={{ display: 'none' }}
+            />
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+              background: COLORS.panel2, border: `1px solid ${COLORS.line}`, borderRadius: 9, padding: '10px 12px',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                <button
+                  type="button"
+                  onClick={togglePlay}
+                  aria-label={playing ? labels.btnPause : labels.btnResume}
+                  className="mono"
+                  style={{
+                    width: 32, height: 32, flex: 'none', borderRadius: 999, border: 'none',
+                    background: accent, color: COLORS.bg, fontSize: 11, cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}
+                >
+                  {playing ? '❚❚' : '▶'}
+                </button>
+                <span className="mono" style={{
+                  fontSize: 10.5, lineHeight: 1.3, color: COLORS.text,
+                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                }}>
+                  {output.name} · {bitrate} · {(output.size / 1024).toFixed(1)} KB
+                  {output.fallback && <span style={{ color: COLORS.gold }}> {labels.rawTakeBadge}</span>}
+                </span>
+              </div>
+              <span className="mono" style={{ fontSize: 10, color: COLORS.muted, whiteSpace: 'nowrap' }}>{fmtClock(elapsed)}</span>
+            </div>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <a href={output.url} download={output.name} style={{ textDecoration: 'none', flex: 1, minWidth: 170 }}>
+                <Btn variant="solid" color={accent} style={{ width: '100%' }}>{labels.download}</Btn>
+              </a>
+              <Btn variant="ghost" onClick={start}>⏺ {labels.btnReRecord}</Btn>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Clarity options */}
-      <div>
-        <Kicker style={{ marginBottom: 8 }}>{labels.clarityTitle}</Kicker>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 8 }}>
-          <Toggle on={enhance} set={setEnhance} label={labels.cleanLabel} hint={labels.cleanHint} />
+      {/* Clarity options + bitrate */}
+      <div style={{
+        padding: '16px 18px', borderRadius: 14, border: `1px solid ${COLORS.line}`,
+        background: COLORS.panel, display: 'grid', gap: 14,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+          <Kicker style={{ margin: 0 }}>{labels.clarityTitle}</Kicker>
+          <span className="mono" style={{ fontSize: 9.5, color: COLORS.muted }}>{labels.clarityCount(onCount)}</span>
+        </div>
+
+        <div style={{ display: 'grid' }}>
+          <Toggle first on={enhance} set={setEnhance} label={labels.cleanLabel} hint={labels.cleanHint} />
           <Toggle on={normalize} set={setNormalize} label={labels.normLabel} hint={labels.normHint} />
           <Toggle on={trimSilence} set={setTrimSilence} label={labels.trimLabel} hint={labels.trimHint} />
         </div>
-      </div>
 
-      <div>
-        <Kicker style={{ marginBottom: 8 }}>{labels.bitrateTitle}</Kicker>
-        <div style={{ display: 'flex', gap: 6 }}>
-          {['128k', '192k', '320k'].map((b) => (
-            <Btn key={b} variant={bitrate === b ? 'tinted' : 'ghost'} color={accent}
-              disabled={active} onClick={() => setBitrate(b)}>{b}</Btn>
-          ))}
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+          paddingTop: 13, borderTop: `1px solid ${COLORS.line}`,
+        }}>
+          <Kicker style={{ margin: 0 }}>{labels.bitrateTitle}</Kicker>
+          <div style={{
+            display: 'flex', gap: 3, background: COLORS.panel2,
+            border: `1px solid ${COLORS.line}`, borderRadius: 8, padding: 3,
+          }}>
+            {['128k', '192k', '320k'].map((b) => {
+              const sel = bitrate === b;
+              return (
+                <button
+                  key={b}
+                  type="button"
+                  className="mono"
+                  disabled={active || busy}
+                  onClick={() => setBitrate(b)}
+                  style={{
+                    border: 'none', borderRadius: 6, padding: '6px 13px', fontSize: 10,
+                    letterSpacing: '0.06em', cursor: active || busy ? 'not-allowed' : 'pointer',
+                    background: sel ? COLORS.panel : 'transparent',
+                    color: sel ? COLORS.text : COLORS.muted,
+                    boxShadow: sel ? '0 1px 2px rgba(0,0,0,.1)' : 'none',
+                    opacity: active || busy ? 0.55 : 1,
+                    transition: 'background 120ms, color 120ms',
+                  }}
+                >
+                  {b.toUpperCase()}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
-      <div className="mono" style={{
-        padding: '10px 14px', borderRadius: 10, background: COLORS.bg,
-        border: '1px solid ' + COLORS.line, fontSize: 11, color: COLORS.muted, lineHeight: 1.5,
-      }}>
+      <p className="mono" style={{ margin: 0, padding: '0 4px', fontSize: 9.5, lineHeight: 1.7, color: COLORS.muted }}>
         {labels.footer}
-      </div>
+      </p>
 
       {(busy || progress > 0) && (
         <div>
@@ -3430,24 +3603,6 @@ function VoiceRecorderTool({ accent }) {
           border: `1px solid ${COLORS.red}55`, background: COLORS.red + '0e',
           color: COLORS.red, fontSize: 12, lineHeight: 1.5,
         }}>✕ {err}</div>
-      )}
-
-      {output && (
-        <div style={{
-          padding: 14, borderRadius: 12, border: `1px solid ${accent}55`,
-          background: accent + '08', display: 'grid', gap: 10,
-        }}>
-          <audio src={output.url} controls style={{ width: '100%' }} />
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-            <div className="mono" style={{ fontSize: 11, color: COLORS.muted }}>
-              {output.name} · {(output.size / 1024).toFixed(1)} KB
-              {output.fallback && <span style={{ color: COLORS.gold }}> {labels.rawTakeBadge}</span>}
-            </div>
-            <a href={output.url} download={output.name} style={{ textDecoration: 'none' }}>
-              <Btn variant="solid" color={accent}>{labels.download}</Btn>
-            </a>
-          </div>
-        </div>
       )}
     </div>
   );
