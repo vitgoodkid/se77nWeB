@@ -2897,6 +2897,14 @@ function VoiceRecorderTool({ accent }) {
   const [micPerm, setMicPerm] = useState('unknown'); // unknown | prompt | granted | denied | requesting
   const [permErr, setPermErr] = useState('');
 
+  // Derived from `status`, and declared up here because effects further down
+  // read `active` in their dependency arrays — those are evaluated during
+  // render, so a `const` declared lower would still be in its temporal dead
+  // zone and throw before the tool could paint.
+  const recording = status === 'recording';
+  const paused = status === 'paused';
+  const active = recording || paused;
+
   const labels = useMemo(() => (lang === 'vi' ? {
     statusRecording: 'Đang ghi', statusPaused: 'Đã tạm dừng', statusProcessing: 'Đang xử lý',
     statusReady: 'Sẵn sàng', statusBlocked: 'Mic bị chặn', statusNeeded: 'Cần quyền mic',
@@ -3318,10 +3326,6 @@ function VoiceRecorderTool({ accent }) {
       setBusy(false);
     }
   }
-
-  const recording = status === 'recording';
-  const paused = status === 'paused';
-  const active = recording || paused;
 
   // Compact take player (the design shows a single round play button, not the
   // browser's default audio chrome), so playback state lives here.
