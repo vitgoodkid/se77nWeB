@@ -1,0 +1,267 @@
+html, body {
+  margin: 0;
+  height: 100%;
+  background: #03050a;
+  overflow: hidden;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+#scene {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+}
+
+#cult-bar {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#cult-bar a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: rgba(13, 10, 8, 0.7);
+  border: 1px solid rgba(143, 211, 255, 0.35);
+  backdrop-filter: blur(8px);
+  color: #dfeeff;
+  text-decoration: none;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+
+#cult-bar a:hover {
+  border-color: rgba(143, 211, 255, 0.7);
+}
+
+/* Màn hình chờ xin quyền camera — trình duyệt chặn getUserMedia tự động, và
+   người dùng cũng cần biết chuyện gì sắp xảy ra trước khi bật webcam. */
+#cult-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  background: rgba(3, 5, 10, 0.82);
+  backdrop-filter: blur(6px);
+}
+
+#cult-gate[hidden] { display: none; }
+
+.gate-card {
+  max-width: 460px;
+  padding: 34px 34px 28px;
+  border-radius: 16px;
+  border: 1px solid rgba(143, 211, 255, 0.25);
+  background: rgba(10, 16, 26, 0.9);
+  color: #dfeeff;
+  text-align: center;
+  box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.9);
+}
+
+.gate-card h1 {
+  margin: 0 0 14px;
+  font-size: 26px;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+}
+
+.gate-card p {
+  margin: 0 0 12px;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: rgba(223, 238, 255, 0.72);
+}
+
+.gate-privacy {
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(143, 211, 255, 0.07);
+  border: 1px solid rgba(143, 211, 255, 0.18);
+  font-size: 11.5px !important;
+}
+
+.gate-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin: 20px 0 10px;
+}
+
+.gate-card button {
+  padding: 11px 22px;
+  border-radius: 999px;
+  border: 1px solid rgba(143, 211, 255, 0.55);
+  background: rgba(143, 211, 255, 0.16);
+  color: #dfeeff;
+  font-family: inherit;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  transition: background 140ms, border-color 140ms;
+}
+
+.gate-card button:hover { background: rgba(143, 211, 255, 0.3); }
+.gate-card button:disabled { opacity: 0.5; cursor: default; }
+
+.gate-card button.ghost {
+  background: transparent;
+  border-color: rgba(223, 238, 255, 0.22);
+  color: rgba(223, 238, 255, 0.72);
+}
+
+#gate-status {
+  min-height: 16px;
+  margin: 0;
+  font-size: 11px;
+  color: rgba(143, 211, 255, 0.85);
+}
+
+/* Khung xem trước nhỏ + trạng thái nhận diện: không thấy mình trong khung thì
+   rất khó biết vì sao kiếm không theo tay. */
+#cult-hud {
+  position: fixed;
+  left: 12px;
+  bottom: 12px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#cult-hud[hidden] { display: none; }
+
+#cult-video {
+  width: 132px;
+  border-radius: 10px;
+  border: 1px solid rgba(143, 211, 255, 0.3);
+  transform: scaleX(-1); /* soi gương cho khớp cảm giác của người dùng */
+  opacity: 0.7;
+}
+
+#cult-hand-status {
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: rgba(13, 10, 8, 0.7);
+  border: 1px solid rgba(143, 211, 255, 0.3);
+  color: #dfeeff;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}
+
+/* Bảng tra cử chỉ và màn căn chỉnh — dùng chung kiểu thẻ nổi với màn hình chờ. */
+#cult-sheet, #cult-calib {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  display: grid;
+  place-items: center;
+  background: rgba(3, 5, 10, 0.78);
+  backdrop-filter: blur(6px);
+}
+
+#cult-sheet[hidden], #cult-calib[hidden] { display: none; }
+
+.sheet-card, .calib-card {
+  max-width: 560px;
+  padding: 26px 30px 22px;
+  border-radius: 16px;
+  border: 1px solid rgba(143, 211, 255, 0.25);
+  background: rgba(10, 16, 26, 0.94);
+  color: #dfeeff;
+  box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.9);
+}
+
+.sheet-card h2, .calib-card h2 {
+  margin: 0 0 12px;
+  font-size: 16px;
+  letter-spacing: 0.16em;
+  font-weight: 700;
+}
+
+.sheet-note, .sheet-keys {
+  margin: 0 0 14px;
+  font-size: 10.5px;
+  color: rgba(223, 238, 255, 0.55);
+  line-height: 1.7;
+}
+
+.sheet-keys { margin: 14px 0 0; }
+.sheet-keys b { color: #8fd3ff; font-weight: 700; }
+
+#sheet-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11.5px;
+}
+
+#sheet-table td {
+  padding: 5px 8px 5px 0;
+  border-bottom: 1px solid rgba(143, 211, 255, 0.1);
+  vertical-align: middle;
+}
+
+#sheet-table .pose {
+  font-size: 13px;
+  letter-spacing: 0.22em;
+  white-space: nowrap;
+  width: 66px;
+}
+
+#sheet-table .name { color: rgba(223, 238, 255, 0.95); white-space: nowrap; }
+#sheet-table .desc { color: rgba(223, 238, 255, 0.5); }
+.on { color: #8fd3ff; }
+.off { color: rgba(223, 238, 255, 0.28); }
+
+.calib-card { text-align: center; min-width: 360px; }
+.calib-step { font-size: 10px; letter-spacing: 0.22em; color: rgba(143, 211, 255, 0.8); }
+.calib-hint { margin: 0 0 16px; font-size: 12px; color: rgba(223, 238, 255, 0.6); }
+.calib-msg { min-height: 16px; margin: 12px 0 14px; font-size: 11px; color: rgba(255, 200, 130, 0.9); }
+
+.calib-bar {
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(143, 211, 255, 0.15);
+  overflow: hidden;
+}
+
+.calib-bar span {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: #8fd3ff;
+  transition: width 80ms linear;
+}
+
+.calib-card button {
+  padding: 9px 20px;
+  border-radius: 999px;
+  border: 1px solid rgba(223, 238, 255, 0.22);
+  background: transparent;
+  color: rgba(223, 238, 255, 0.72);
+  font-family: inherit;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+}
+
+#cult-caption {
+  position: fixed;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  color: rgba(223, 238, 255, 0.55);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}

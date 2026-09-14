@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Ngự Kiếm — se77n</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="stylesheet" href="styles.css" />
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.170.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.170.0/examples/jsm/",
+    "lil-gui": "https://unpkg.com/lil-gui@0.19/dist/lil-gui.esm.min.js",
+    "@mediapipe/tasks-vision": "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.18/vision_bundle.mjs"
+  }
+}
+</script>
+</head>
+<body>
+<div id="cult-bar">
+  <a href="/#/game" title="Về se77n · Game">⌂ se77n</a>
+</div>
+<canvas id="scene"></canvas>
+
+<div id="cult-hud" hidden>
+  <video id="cult-video" playsinline muted></video>
+  <span id="cult-hand-status"></span>
+</div>
+
+<div id="cult-gate">
+  <div class="gate-card">
+    <h1>Ngự Kiếm</h1>
+    <p>Giơ tay trước webcam để điều khiển đàn kiếm bay.</p>
+    <p class="gate-privacy">
+      Video <strong>không rời khỏi máy bạn</strong>. Toàn bộ việc nhận diện bàn tay
+      chạy ngay trong trình duyệt — không khung hình nào được gửi lên máy chủ nào.
+    </p>
+    <div class="gate-actions">
+      <button id="gate-cam" type="button">Bật camera</button>
+      <button id="gate-mouse" type="button" class="ghost">Dùng chuột</button>
+    </div>
+    <p id="gate-status"></p>
+  </div>
+</div>
+
+<div id="cult-sheet" hidden>
+  <div class="sheet-card">
+    <h2>Cử chỉ</h2>
+    <p class="sheet-note"><span class="on">|</span> ngón duỗi · <span class="off">·</span> ngón co · thứ tự: trỏ giữa áp út</p>
+    <table id="sheet-table"></table>
+    <p class="sheet-keys">
+      <b>?</b> đóng bảng này · <b>H</b> ẩn bảng chỉnh · <b>C</b> khoá camera ·
+      <b>lăn chuột</b> / <b>+ −</b> zoom · <b>0</b> zoom mặc định · <b>K</b> căn lại cử chỉ
+    </p>
+  </div>
+</div>
+
+<div id="cult-calib" hidden>
+  <div class="calib-card">
+    <div class="calib-step"></div>
+    <h2 class="calib-label"></h2>
+    <p class="calib-hint"></p>
+    <div class="calib-bar"><span></span></div>
+    <p class="calib-msg"></p>
+    <button id="calib-cancel" type="button" class="ghost">Bỏ qua</button>
+  </div>
+</div>
+
+<div id="cult-caption">? xem cử chỉ · H ẩn bảng chỉnh · C khoá camera · lăn chuột để zoom</div>
+<script type="module" src="main.js"></script>
+</body>
+</html>

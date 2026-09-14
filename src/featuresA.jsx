@@ -5140,6 +5140,17 @@ const GAME_TILES = [
     href: '/games/ludo/',
     external: true,
   },
+  {
+    id: 'cultivation',
+    label: 'Ngự Kiếm',
+    accent: '#8fd3ff',
+    glyph: '⚔',
+    tagline: 'Flying Swords · webcam',
+    desc: '13 cử chỉ tay điều khiển đàn kiếm bay. Nhận diện tay chạy hoàn toàn trong trình duyệt — video không rời khỏi máy bạn.',
+    chips: ['3D', 'WEBCAM', '13 CỬ CHỈ'],
+    href: '/games/cultivation/',
+    external: true,
+  },
 ];
 
 function readGameSubRoute() {
