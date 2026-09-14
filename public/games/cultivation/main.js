@@ -509,30 +509,67 @@ const calibStep = calibEl.querySelector('.calib-step');
 const calibLabel = calibEl.querySelector('.calib-label');
 const calibHint = calibEl.querySelector('.calib-hint');
 const calibBar = calibEl.querySelector('.calib-bar span');
+const calibBarWrap = calibEl.querySelector('.calib-bar');
+const calibCount = calibEl.querySelector('.calib-count');
 const calibMsg = calibEl.querySelector('.calib-msg');
+const calibNext = document.getElementById('calib-next');
+
+const INTRO_HTML = `
+  <ul class="calib-intro">
+    <li>Sẽ có <b>4 thế tay</b>, mỗi thế đo khoảng 1,5 giây.</li>
+    <li>Mỗi bước hiện hướng dẫn kèm <b>đếm ngược</b> — đọc xong rồi mới vào thế.</li>
+    <li>Đã sẵn sàng thì bấm <b>Sẵn sàng</b> hoặc phím <b>Space</b> để đo ngay.</li>
+    <li>Làm <b>dứt khoát</b>: thế tay nửa vời thì kết quả bị loại.</li>
+  </ul>`;
 
 const calibration = createCalibration({
   config: CONFIG,
   onStatus(s) {
     if (!s) { calibEl.hidden = true; return; }
     calibEl.hidden = false;
+
     if (s.phase === 'done' || s.phase === 'failed') {
       calibStep.textContent = '';
       calibLabel.textContent = s.phase === 'done' ? 'Xong' : 'Chưa đo được';
       calibHint.textContent = '';
+      calibCount.textContent = '';
+      calibCount.hidden = true;
+      calibBarWrap.hidden = false;
       calibBar.style.width = '100%';
       calibMsg.textContent = s.message || '';
-      setTimeout(() => { calibEl.hidden = true; }, 2200);
+      calibNext.hidden = true;
+      setTimeout(() => { calibEl.hidden = true; }, 2600);
       return;
     }
+
+    if (s.phase === 'intro') {
+      calibStep.textContent = 'CĂN CỬ CHỈ THEO TAY BẠN';
+      calibLabel.textContent = 'Trước khi bắt đầu';
+      calibHint.innerHTML = INTRO_HTML;
+      calibCount.textContent = '';
+      calibCount.hidden = true;
+      calibBarWrap.hidden = true;
+      calibMsg.textContent = '';
+      calibNext.hidden = false;
+      calibNext.textContent = 'Bắt đầu';
+      return;
+    }
+
     calibStep.textContent = `BƯỚC ${s.index + 1} / ${s.total}`;
     calibLabel.textContent = s.label;
-    calibHint.textContent = s.phase === 'ready' ? s.hint : 'Giữ nguyên thế tay…';
+    // Hướng dẫn hiện SUỐT cả bước, kể cả lúc đang đo — đổi mất là không kịp đọc.
+    calibHint.textContent = s.hint;
+    calibCount.textContent = s.phase === 'ready' ? s.countdown : 'ĐANG ĐO';
+    calibCount.hidden = false;
+    calibBarWrap.hidden = false;
     calibBar.style.width = `${Math.min(100, Math.max(0, s.progress * 100))}%`;
     calibMsg.textContent = s.message || '';
+    calibNext.hidden = s.phase !== 'ready';
+    calibNext.textContent = 'Sẵn sàng';
   },
 });
 
+calibNext.addEventListener('click', () => calibration.advance());
 document.getElementById('calib-cancel').addEventListener('click', () => calibration.cancel());
 
 function startCalibration() {
@@ -569,6 +606,12 @@ window.addEventListener('keydown', (e) => {
   }
   if (e.key === '0') {
     showZoom(cameraRig.resetZoom());
+    return;
+  }
+  // Đang căn cử chỉ thì Space là "sẵn sàng, đo luôn".
+  if (calibration.active && (e.key === ' ' || e.key === 'Enter')) {
+    e.preventDefault();
+    calibration.advance();
     return;
   }
   if (e.key === '?' || e.key === '/') { toggleSheet(); return; }

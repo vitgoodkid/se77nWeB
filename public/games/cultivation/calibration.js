@@ -15,22 +15,42 @@ const STEPS = [
   { id: 'pinch', label: 'Kẹp ngón cái và ngón trỏ', hint: 'hai đầu ngón chạm nhau' },
 ];
 
-const READY_SECONDS = 1.4;  // thời gian để kịp vào thế
-const SAMPLE_SECONDS = 1.2; // thời gian lấy mẫu
+// Đủ dài để ĐỌC XONG hướng dẫn rồi mới vào thế tay, chứ không phải vừa đủ để
+// đổi tư thế. Ai đọc nhanh thì bấm bỏ qua phần chờ.
+const READY_SECONDS = 4.5;
+const SAMPLE_SECONDS = 1.5;
 
 export function createCalibration({ config, onStatus, onFinish }) {
   let stepIndex = -1;
-  let phase = 'idle'; // idle | ready | sampling | done
+  let phase = 'idle'; // idle | intro | ready | sampling | done
   let timer = 0;
   let samples = null;
   const results = {};
 
   function start() {
-    stepIndex = 0;
-    phase = 'ready';
+    stepIndex = -1;
+    // Màn giới thiệu đứng yên chờ người dùng bấm — không tự chạy tiếp, để có
+    // thời gian đọc xem sắp phải làm gì.
+    phase = 'intro';
     timer = 0;
     resetSamples();
     report();
+  }
+
+  // Bấm để bỏ qua phần chờ: từ màn giới thiệu sang bước đầu, hoặc từ đếm ngược
+  // vào thẳng phần đo.
+  function advance() {
+    if (phase === 'intro') {
+      stepIndex = 0;
+      phase = 'ready';
+      timer = 0;
+      report();
+    } else if (phase === 'ready') {
+      phase = 'sampling';
+      timer = 0;
+      resetSamples();
+      report();
+    }
   }
 
   function cancel() {
@@ -53,12 +73,16 @@ export function createCalibration({ config, onStatus, onFinish }) {
       hint: step?.hint,
       phase,
       progress: phase === 'sampling' ? timer / SAMPLE_SECONDS : timer / READY_SECONDS,
+      countdown: phase === 'ready' ? Math.max(1, Math.ceil(READY_SECONDS - timer)) : null,
       message: extra,
     });
   }
 
   function update(dt, hand) {
     if (phase === 'idle' || phase === 'done') return false;
+
+    // Màn giới thiệu chờ vô hạn cho tới khi người dùng bấm.
+    if (phase === 'intro') { report(); return true; }
 
     // Không thấy tay thì đứng chờ, không tính giờ — đỡ phải làm lại từ đầu.
     if (!hand?.present) {
@@ -110,7 +134,11 @@ export function createCalibration({ config, onStatus, onFinish }) {
     return false;
   }
 
-  return { start, cancel, update, get active() { return phase !== 'idle' && phase !== 'done'; } };
+  return {
+    start, cancel, update, advance,
+    get active() { return phase !== 'idle' && phase !== 'done'; },
+    get phase() { return phase; },
+  };
 }
 
 // Ngưỡng vào và ngưỡng ra đặt lệch nhau trong khoảng giữa hai thế đo được —

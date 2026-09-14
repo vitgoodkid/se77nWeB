@@ -242,17 +242,55 @@ html, body {
   transition: width 80ms linear;
 }
 
+/* Số đếm ngược to, để biết còn bao lâu nữa mới bắt đầu đo. */
+.calib-count {
+  height: 46px;
+  font-size: 38px;
+  font-weight: 700;
+  line-height: 46px;
+  color: #8fd3ff;
+  letter-spacing: 0.05em;
+}
+
+.calib-count[hidden] { display: none; }
+
+.calib-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
 .calib-card button {
   padding: 9px 20px;
   border-radius: 999px;
-  border: 1px solid rgba(223, 238, 255, 0.22);
-  background: transparent;
-  color: rgba(223, 238, 255, 0.72);
+  border: 1px solid rgba(143, 211, 255, 0.55);
+  background: rgba(143, 211, 255, 0.16);
+  color: #dfeeff;
   font-family: inherit;
   font-size: 11px;
   letter-spacing: 0.12em;
   cursor: pointer;
+  transition: background 140ms;
 }
+
+.calib-card button:hover { background: rgba(143, 211, 255, 0.3); }
+.calib-card button[hidden] { display: none; }
+
+.calib-card button.ghost {
+  background: transparent;
+  border-color: rgba(223, 238, 255, 0.22);
+  color: rgba(223, 238, 255, 0.72);
+}
+
+.calib-intro {
+  margin: 0 0 6px;
+  font-size: 12px;
+  line-height: 1.8;
+  color: rgba(223, 238, 255, 0.72);
+  text-align: left;
+}
+
+.calib-intro li { margin: 2px 0; }
 
 #cult-caption {
   position: fixed;
