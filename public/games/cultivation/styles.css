@@ -139,12 +139,18 @@ html, body {
 
 #cult-hud[hidden] { display: none; }
 
+/* Trang chỉ XIN QUYỀN camera, không chiếu lại hình lên màn hình. Thẻ video vẫn
+   phải nằm trong DOM và vẫn phải đang phát thì MediaPipe mới đọc được khung
+   hình — nên giấu bằng kích thước 1px + trong suốt, KHÔNG dùng display:none
+   (trình duyệt có thể ngừng giải mã khung hình của thẻ đã bị gỡ khỏi layout). */
 #cult-video {
-  width: 132px;
-  border-radius: 10px;
-  border: 1px solid rgba(143, 211, 255, 0.3);
-  transform: scaleX(-1); /* soi gương cho khớp cảm giác của người dùng */
-  opacity: 0.7;
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
 }
 
 #cult-hand-status {

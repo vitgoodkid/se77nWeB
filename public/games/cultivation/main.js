@@ -236,19 +236,28 @@ const GESTURE_LABEL = {
 
 function updateHandStatus(state, handSpeed) {
   const label = GESTURE_LABEL[swarm.formation] || swarm.formation;
+
   if (!state.present) {
-    // Mất tay không còn là lỗi: đàn kiếm vẫn bay theo quán tính và giữ cử chỉ.
-    handStatus.textContent = `${label}  ·  KHÔNG THẤY TAY — vẫn bay theo quán tính`;
-    handStatus.style.color = 'rgba(255,190,120,0.9)';
+    // Không còn khung xem trước nên người dùng không tự biết tay có lọt khung
+    // hay không — cảnh báo này là phản hồi duy nhất, luôn hiện kể cả khi đã ẩn
+    // bảng chỉnh.
+    handStatus.textContent = 'KHÔNG THẤY TAY — đưa tay vào trước camera';
+    handStatus.style.color = 'rgba(255,190,120,0.95)';
     return;
   }
   handStatus.style.color = '#dfeeff';
+
   if (state.twoHands) {
     handStatus.textContent = `ZOOM 2 TAY  ·  giang ra = xa, chụm lại = gần  ·  ×${cameraRig.zoomFactor.toFixed(2)}`;
     return;
   }
-  // Số đo hiện ngay cạnh khung hình để căn ngưỡng cử chỉ — bàn tay mỗi người
-  // một khác, không nhìn số thật thì không đặt ngưỡng đúng được.
+
+  if (!debugVisible) {
+    handStatus.textContent = label;
+    return;
+  }
+
+  // Số đo chi tiết chỉ hiện khi đã bật bảng chỉnh — dùng để căn ngưỡng cử chỉ.
   const e = state.extended;
   const dots = ['index', 'middle', 'ring', 'pinky'].map((k) => (e[k] ? '|' : '·')).join('');
   handStatus.textContent =
@@ -275,7 +284,7 @@ document.getElementById('gate-cam').addEventListener('click', async (e) => {
 document.getElementById('gate-mouse').addEventListener('click', () => {
   inputMode = 'mouse';
   gate.hidden = true;
-  caption.textContent = 'Rê chuột để điều khiển · nhấn H để ẩn bảng chỉnh';
+  caption.textContent = 'Rê chuột để điều khiển · ? xem cử chỉ · H bảng chỉnh';
 });
 
 const quality = createQuality({ config: CONFIG, renderer, bloomPass, tracker });
@@ -594,7 +603,11 @@ window.addEventListener('wheel', (e) => {
   showZoom(cameraRig.nudgeZoom(e.deltaY > 0 ? zoomStep() : 1 / zoomStep()));
 }, { passive: true });
 
-let guiHidden = false;
+// Bảng chỉnh là công cụ lúc dựng, không phải phần của trò chơi — mặc định ẩn,
+// nhấn H mới hiện. Cờ này cũng quyết định dòng trạng thái hiện số đo chi tiết
+// hay chỉ hiện tên đội hình.
+let debugVisible = false;
+gui.domElement.style.display = 'none';
 window.addEventListener('keydown', (e) => {
   if (e.key === '+' || e.key === '=') {
     showZoom(cameraRig.nudgeZoom(1 / zoomStep())); // phóng to = camera lại gần
@@ -617,16 +630,16 @@ window.addEventListener('keydown', (e) => {
   if (e.key === '?' || e.key === '/') { toggleSheet(); return; }
   if (e.key === 'k' || e.key === 'K') { startCalibration(); return; }
   if (e.key === 'Escape') { toggleSheet(false); calibration.cancel(); return; }
-  if (e.key === 'h') {
-    guiHidden = !guiHidden;
-    gui.domElement.style.display = guiHidden ? 'none' : '';
-  } else if (e.key === 'c') {
+  if (e.key === 'h' || e.key === 'H') {
+    debugVisible = !debugVisible;
+    gui.domElement.style.display = debugVisible ? '' : 'none';
+  } else if (e.key === 'c' || e.key === 'C') {
     // Khoá camera về tĩnh — để so sánh lúc chỉnh, và để thấy camera động hơn
     // camera tĩnh đến mức nào.
     const locked = cameraRig.toggleLock();
     caption.textContent = locked
       ? 'CAMERA TĨNH (nhấn C để bật lại camera động)'
-      : 'Nhấn H ẩn bảng chỉnh · C khoá camera';
+      : 'H bảng chỉnh · C khoá camera · ? xem cử chỉ';
   }
 });
 
