@@ -10,6 +10,7 @@
   },
   "redirects": [
     { "source": "/games/whosnext", "destination": "/games/project-k/", "permanent": true },
+    { "source": "/games/whosnext/", "destination": "/games/project-k/", "permanent": true },
     { "source": "/games/whosnext/:path*", "destination": "/games/project-k/:path*", "permanent": true }
   ],
   "rewrites": [
