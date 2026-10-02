@@ -27,6 +27,7 @@
   <a class="brand" href="#hero">WHOSNEXT<small>GDD</small></a>
   <nav class="nav" id="nav">
     <a href="#overview">Tổng quan</a>
+    <a href="#mynotes">Ghi chú</a>
     <a href="#systems">Hệ thống</a>
     <a href="#weapons">Vũ khí</a>
     <a href="#world">Thế giới</a>
@@ -60,7 +61,7 @@
   </section>
 
   <section class="sec wrap" id="overview">
-    <div class="sec-head"><span class="num">01</span><h2>Tổng quan</h2></div>
+    <div class="sec-head"><span class="num"></span><h2>Tổng quan</h2></div>
     <div class="overview">
       <div class="pitch">
         <p id="pitch"></p>
@@ -72,22 +73,31 @@
   </section>
 
   <section class="sec wrap" id="progress">
-    <div class="sec-head"><span class="num">02</span><h2>Tiến độ</h2><p class="sub">Ước lượng mức hoàn thiện theo mảng — bấm một mảng để lọc danh sách hệ thống.</p></div>
+    <div class="sec-head"><span class="num"></span><h2>Tiến độ</h2><p class="sub">Ước lượng mức hoàn thiện theo mảng — bấm một mảng để lọc danh sách hệ thống.</p></div>
     <div class="progress-grid">
       <div class="progress-total" id="progressTotal"></div>
       <div class="progress-bars" id="progressBars"></div>
     </div>
   </section>
 
+  <section class="sec wrap" id="mynotes">
+    <div class="sec-head"><span class="num"></span><h2>Ghi chú của bạn</h2><p class="sub"><span id="myNotesCount"></span> · <span class="sync"></span></p></div>
+    <div class="note-tools">
+      <button class="tool" id="notesExport">Xuất ghi chú (JSON)</button>
+      <label class="tool">Nhập ghi chú<input type="file" id="notesImport" accept=".json,application/json" hidden /></label>
+    </div>
+    <div class="mynotes" id="myNotes"></div>
+  </section>
+
   <section class="sec wrap" id="systems">
-    <div class="sec-head"><span class="num">03</span><h2>Hệ thống</h2><p class="sub">Bấm một thẻ để xem chi tiết, số liệu, ghi chú thay đổi và việc sắp tới của mục đó.</p></div>
+    <div class="sec-head"><span class="num"></span><h2>Hệ thống</h2><p class="sub">Bấm một thẻ để xem chi tiết, số liệu, ghi chú thay đổi và việc sắp tới của mục đó.</p></div>
     <div class="filters" id="sysFilters"></div>
     <div class="cards" id="sysCards"></div>
     <p class="empty" id="sysEmpty" hidden>Không có hệ thống khớp bộ lọc.</p>
   </section>
 
   <section class="sec wrap" id="weapons">
-    <div class="sec-head"><span class="num">04</span><h2>Vũ khí &amp; bộ đòn</h2><p class="sub">6 bộ đòn hoàn chỉnh, 347 model vũ khí — cầm và đeo đều tự khớp với nhân vật.</p></div>
+    <div class="sec-head"><span class="num"></span><h2>Vũ khí &amp; bộ đòn</h2><p class="sub">6 bộ đòn hoàn chỉnh, 347 model vũ khí — cầm và đeo đều tự khớp với nhân vật.</p></div>
     <div class="weapons">
       <div class="wtabs" id="wTabs" role="tablist"></div>
       <div class="wview" id="wView"></div>
@@ -95,7 +105,7 @@
   </section>
 
   <section class="sec wrap" id="world">
-    <div class="sec-head"><span class="num">05</span><h2>Thế giới</h2></div>
+    <div class="sec-head"><span class="num"></span><h2>Thế giới</h2></div>
     <div class="world">
       <figure class="plan">
         <img src="img/castle-plan.jpg" alt="Sơ đồ Crimson Castle" loading="lazy" data-lightbox />
@@ -142,7 +152,7 @@
   </section>
 
   <section class="sec wrap" id="enemies">
-    <div class="sec-head"><span class="num">06</span><h2>Kẻ địch</h2><p class="sub">11 boss, 26 loại quái thường, quái Magic / Rare có mod.</p></div>
+    <div class="sec-head"><span class="num"></span><h2>Kẻ địch</h2><p class="sub">11 boss, 26 loại quái thường, quái Magic / Rare có mod.</p></div>
     <div class="enemies">
       <figure class="boss-shot">
         <img src="img/boss-archdemon.jpg" alt="Crimson Archdemon" loading="lazy" data-lightbox />
@@ -153,34 +163,34 @@
   </section>
 
   <section class="sec wrap" id="controls">
-    <div class="sec-head"><span class="num">07</span><h2>Điều khiển</h2></div>
+    <div class="sec-head"><span class="num"></span><h2>Điều khiển</h2></div>
     <div class="keys" id="keys"></div>
   </section>
 
   <section class="sec wrap" id="roadmap">
-    <div class="sec-head"><span class="num">08</span><h2>Sắp tới</h2><p class="sub">Đang làm, tiếp theo, để sau và ý tưởng — mỗi mục gắn với một mảng.</p></div>
+    <div class="sec-head"><span class="num"></span><h2>Sắp tới</h2><p class="sub">Đang làm, tiếp theo, để sau và ý tưởng — mỗi mục gắn với một mảng.</p></div>
     <div class="kanban" id="kanban"></div>
   </section>
 
   <section class="sec wrap" id="changelog">
-    <div class="sec-head"><span class="num">09</span><h2>Nhật ký thay đổi</h2><p class="sub">Ghi chú thay đổi theo ngày; lọc theo mảng.</p></div>
+    <div class="sec-head"><span class="num"></span><h2>Nhật ký thay đổi</h2><p class="sub">Ghi chú thay đổi theo ngày; lọc theo mảng.</p></div>
     <div class="filters" id="logFilters"></div>
     <div class="timeline" id="timeline"></div>
     <p class="empty" id="logEmpty" hidden>Không có ghi chú khớp bộ lọc.</p>
   </section>
 
   <section class="sec wrap" id="notes">
-    <div class="sec-head"><span class="num">10</span><h2>Ghi chú thiết kế</h2></div>
+    <div class="sec-head"><span class="num"></span><h2>Ghi chú thiết kế</h2></div>
     <div class="notes" id="notesBox"></div>
   </section>
 
   <section class="sec wrap" id="gallery">
-    <div class="sec-head"><span class="num">11</span><h2>Ảnh trong game</h2></div>
+    <div class="sec-head"><span class="num"></span><h2>Ảnh trong game</h2></div>
     <div class="gallery" id="galleryBox"></div>
   </section>
 
   <section class="sec wrap" id="tech">
-    <div class="sec-head"><span class="num">12</span><h2>Kỹ thuật</h2></div>
+    <div class="sec-head"><span class="num"></span><h2>Kỹ thuật</h2></div>
     <table class="table tech" id="techTable"></table>
   </section>
 </main>
