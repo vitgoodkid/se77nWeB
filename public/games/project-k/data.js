@@ -1,7 +1,7 @@
 // Project K — game design data. Everything the page shows comes from here.
-// Updated 2026-10-02 from the project's AGENTS.md and Documentation/GDD.
+// Updated 2026-10-03 from the project's AGENTS.md and Documentation/GDD.
 window.WN = {
-  updated: '2026-10-02',
+  updated: '2026-10-03',
   meta: {
     title: 'PROJECT K',
     tagline: 'Action RPG góc nhìn thứ ba: chiến đấu kiểu Souls/Sekiro, hệ đồ và build kiểu Path of Exile 2.',
@@ -17,9 +17,9 @@ window.WN = {
     { n: 11, label: 'Boss' },
     { n: 26, label: 'Loại quái thường' },
     { n: 130, label: 'Node cây passive' },
-    { n: 13, label: 'Phòng lâu đài' },
-    { n: 14, label: 'Ngoại hình nhân vật' },
-    { n: 8, label: 'Scene chơi được' },
+    { n: 113, label: 'Món giáp module' },
+    { n: 53, label: 'Ngoại hình nhân vật' },
+    { n: 9, label: 'Scene chơi được' },
   ],
 
   pillars: [
@@ -112,10 +112,10 @@ window.WN = {
       details: [
         'Tay cầm đặt qua tâm nắm tay (lệch ≤ 0.6 cm). Chuôi kiếm dài được rút ngắn trong mesh để không lòi ra khỏi tay; lưỡi giữ nguyên cỡ.',
         'Vị trí đeo theo chỗ clip rút kiếm với tới: song kiếm chéo X, đại kiếm & thương chéo lưng, cung phẳng trên lưng, kiếm / katana ở hông trái.',
-        'Fit theo thân đang mặc: đọc mesh nhân vật, đẩy vũ khí ra ngoài giáp / áo choàng / balo, nghiêng thêm nếu mũi chạm đất.',
+        'Fit theo thân đang mặc: đọc mesh của mọi mảnh giáp đang mặc, đẩy vũ khí ra ngoài giáp / áo choàng / balo, nghiêng thêm nếu mũi chạm đất; mặc / tháo một món là đo lại.',
         'Scene WeaponTuner để chỉnh tay từng vũ khí ở 4 tư thế (cầm/cất × đứng/di chuyển) rồi lưu.',
       ],
-      numbers: [['Kiểu đeo', '7'], ['Ngoại hình hỗ trợ', '14']],
+      numbers: [['Kiểu đeo', '7'], ['Ngoại hình hỗ trợ', '53']],
     },
     {
       id: 'loot', cat: 'items', name: 'Hạng đồ & dòng chỉ số', status: 'done', progress: 90,
@@ -142,26 +142,31 @@ window.WN = {
       numbers: [['Gem chế tạo', '9'], ['Cấp nâng tối đa', '+10'], ['Quality', '0–20%']],
     },
     {
-      id: 'gear', cat: 'items', name: 'Trang bị & flask', status: 'done', progress: 80,
-      summary: 'Trang bị kiểu PoE2 (không đai): 96 base giáp, 12 trang sức, 2 bộ vũ khí, flask theo tier.',
+      id: 'gear', cat: 'items', name: 'Trang bị & flask', status: 'wip', progress: 80,
+      summary: 'Giáp là chính các mảnh quần áo module của nhân vật: 113 món mặc vào là thấy trên người. 12 trang sức, 2 bộ vũ khí, flask theo tier.',
       details: [
-        'Mũ / giáp thân / găng / giày × Armour, Agility, Spellguard (+ 3 cặp lai) × 4 tier.',
+        'Áo (28) = thân áo + quần cùng số (quần luôn đi theo áo) + túi / váy giáp ở hông.',
+        'Găng (18) = ống tay dưới + cả bộ: bắp tay, bàn tay, bọc khuỷu, giáp vai; hai bên cùng số.',
+        'Giày (19) = ống chân + bọc gối. Mũ (34): 10 mũ đội trên tóc, 12 mũ trùm / mũ sắt hở mặt (ẩn tóc), 12 mũ sắt kín (thay cả đầu).',
+        'Ô mới Cape: 14 áo choàng / balo ở lưng.',
+        'Rơi ra đất và trong túi chỉ hiện một mảnh chính (thân áo, ống tay, ống chân, mũ, tấm lưng). Ô trống = da trần.',
+        'Mỗi món được chấm theo hình: giáp tấm = Armour, da / lông = Agility, vải = Spellguard, đồ lẫn = cặp; tier 1–4 theo độ cầu kỳ.',
         'Armour giảm sát thương vật lý (≤ 90%); Agility: sượt nửa sát thương khi lăn / né / chạy; Spellguard: đỡ mọi sát thương trước Life, hồi sau 4 s.',
         '2 bộ vũ khí đổi bằng Tab; nhẫn ×2, dây chuyền, 2 ô flask.',
         'Flask: Nhỏ / Vừa / Lớn / Thượng Hạng, 60–90 charge, uống tốn 20; quái thường +1, elite +5, boss +3 mỗi 10% máu; flask Magic 6 dòng.',
       ],
-      numbers: [['Base giáp', '96'], ['Trang sức', '12'], ['Tier flask', '4']],
+      numbers: [['Món giáp', '113'], ['Áo / găng / giày / mũ / cape', '28 / 18 / 19 / 34 / 14'], ['Trang sức', '12'], ['Tier flask', '4']],
     },
     {
       id: 'inventory', cat: 'ui', name: 'Túi đồ & kho', status: 'done', progress: 90,
-      summary: 'Lưới 12×8 kiểu PoE2, 9 ô trang bị, kho Stash, tab Skills / Character / Passives.',
+      summary: 'Lưới 12×8 kiểu PoE2, 10 ô trang bị (thêm Cape), kho Stash, tab Skills / Character / Passives.',
       details: [
         'Click trái nhấc món lên (không cần giữ chuột), click trái lần nữa để đặt; ra ngoài cửa sổ = vứt xuống đất (nằm 5 phút).',
         'Chuột phải = dùng ngay: mặc đồ, uống, lắp ngọc, cắt ngọc thô. Chuột phải món đang mặc = tháo; túi đầy thì hỏi vứt ra đất hay giữ.',
         'Thẻ item chi tiết (dòng, tier, yêu cầu đỏ khi thiếu), lọc theo nhóm, kéo-thả vẫn dùng được.',
         'Không còn trọng lượng (GDD).',
       ],
-      numbers: [['Lưới', '12 × 8'], ['Ô trang bị', '9 + 2 flask']],
+      numbers: [['Lưới', '12 × 8'], ['Ô trang bị', '10 + 2 flask']],
     },
     {
       id: 'skills', cat: 'character', name: 'Skill gem & support', status: 'done', progress: 80,
@@ -246,14 +251,15 @@ window.WN = {
     },
     {
       id: 'scenes', cat: 'world', name: 'Các khu khác', status: 'wip', progress: 60,
-      summary: 'Meadow (tutorial), Boss Arena, Valkyrie Arena, Bone Throne Dungeon, Training Room.',
+      summary: 'Vương quốc Eldmoor, Meadow (tutorial), Boss Arena, Valkyrie Arena, Bone Throne Dungeon, Training Room.',
       details: [
+        'Vương quốc Eldmoor: thế giới demo của gói POLYGON Fantasy Kingdom, mở 80 cửa, nội thất lâu đài, 13 NPC, 4 lửa trại.',
         'Meadow Tutorial: thung lũng 64 × 92 m, đường mòn tới boss Warden, ao, cối xay gió.',
         'Bone Throne Dungeon: tuyến 250 m, 7 phòng, boss Bone Warden.',
         'Arena riêng cho Warden và Neon Valkyrie.',
         'Training Room: hình nộm, cột leo, xà chui.',
       ],
-      numbers: [['Scene', '8']],
+      numbers: [['Scene', '9']],
     },
     {
       id: 'save', cat: 'tech', name: 'Lưu game', status: 'done', progress: 85,
@@ -277,13 +283,16 @@ window.WN = {
     },
     {
       id: 'appearance', cat: 'character', name: 'Nhân vật & ngoại hình', status: 'done', progress: 85,
-      summary: 'Synty Sidekick: 14 preset (hiệp sĩ, dân thường, lữ khách), shader Toon.',
+      summary: 'POLYGON Modular Fantasy Hero, nữ: 53 ngoại hình, shader Toon; quần áo trên người là các mảnh giáp đang mặc.',
       details: [
-        'Đổi ngoại hình trong game (ESC → Appearance), lưu lại.',
+        'Đổi sang model nữ của gói Fantasy Hero (2026-10-03): cao 1.84 m, 53 ngoại hình ghép từ các preset nữ của gói.',
+        'Ngoại hình giờ quyết định mặt, tóc, lông mày, tai và bảng màu; phần còn lại là giáp đang mặc (mỗi mảnh là một mesh riêng trên cùng bộ xương).',
+        'Đổi ngoại hình trong game (ESC → Appearance), lưu lại; bộ đồ đang mặc giữ nguyên.',
+        'Bàn tay POLYGON chỉ có 3 ngón: tay cầm vũ khí, bình thuốc, thương đều tính theo ngón giữa thay ngón út.',
         'Shader Toon tự viết: cel 2 tầng, bóng đổ, rim, outline; MSAA 4x + SMAA.',
-        'Trước đó đã thử Kata, Federica, Kazuko.',
+        'Trước đó đã thử Kata, Federica, Kazuko, hiệp sĩ Synty Sidekick.',
       ],
-      numbers: [['Preset', '14']],
+      numbers: [['Ngoại hình', '53'], ['Chiều cao', '1.84 m'], ['Mảnh module', '430']],
     },
     {
       id: 'audio', cat: 'av', name: 'Âm thanh & nhạc', status: 'wip', progress: 65,
@@ -367,6 +376,9 @@ window.WN = {
 
   // lane: now | next | later | idea
   roadmap: [
+    { lane: 'now', cat: 'items', title: 'Giáp module: duyệt chỉ số & cách ghép', text: 'Phòng thủ / tier chấm theo hình; túi / váy hông đang đi theo áo, ô Cape = tấm lưng — đổi được nếu cần.' },
+    { lane: 'now', cat: 'world', title: 'Dựng lại Eldmoor với nhân vật mới', text: 'Scene Eldmoor vẫn dùng người chơi Sidekick cũ.' },
+    { lane: 'now', cat: 'combat', title: 'Song kiếm: Combo_Attack_02_02 trượt với tay nhân vật mới', text: 'LockAimProbe 7/104 trượt sau khi đổi model.' },
     { lane: 'now', cat: 'weapons', title: 'Chỉnh tư thế từng vũ khí bằng WeaponTuner', text: 'Người dùng tự chỉnh 4 tư thế cho mỗi loại vũ khí rồi lưu; game áp dụng ngay.' },
     { lane: 'now', cat: 'combat', title: 'Song kiếm: Attack_Speed_End trượt mục tiêu khoá', text: 'Đòn tụ lực của song kiếm hụt 4/104 lần trong bài kiểm lock-on.' },
     { lane: 'now', cat: 'weapons', title: 'Cung: tâm ngắm lệch trong bài kiểm', text: 'BowPlayProbe.Aim 7/9 — vòng tự kéo camera của probe cho tâm ngắm lệch 7–78 m.' },
@@ -392,6 +404,9 @@ window.WN = {
 
   // Change notes — newest first. cats tag which systems the note belongs to.
   changelog: [
+    { date: '2026-10-03', cats: ['items', 'character', 'ui'], title: 'Giáp = mảnh quần áo module', items: ['Bỏ 96 base giáp cũ; 113 món mới lấy từ mảnh module của Fantasy Hero, mặc vào là thấy trên người.', 'Áo kèm quần, găng kèm cả bộ tay + giáp vai, giày kèm bọc gối; mũ trùm ẩn tóc, mũ sắt kín thay cả đầu.', 'Ô Cape mới; rơi ra đất chỉ hiện một mảnh chính; ô trống = da trần.', 'Vũ khí đeo tự khớp lại khi mặc / tháo từng món.'] },
+    { date: '2026-10-03', cats: ['character'], title: 'Nhân vật chính: nữ Fantasy Hero (POLYGON)', items: ['Bỏ Synty Sidekick; 53 ngoại hình ghép từ gói Modular Fantasy Hero.', 'Dựng lại vũ khí, tay cầm, vỏ và mọi scene (trừ Eldmoor).'] },
+    { date: '2026-10-02', cats: ['world'], title: 'Vương quốc Eldmoor', items: ['Thế giới demo của gói Fantasy Kingdom: 13 NPC, 4 lửa trại, mở cửa và nội thất lâu đài.'] },
     { date: '2026-10-02', cats: ['ui'], title: 'Túi đồ: click nhấc, chuột phải dùng', items: ['Click trái nhấc món lên, click lần nữa để đặt; không cần giữ chuột.', 'Chuột phải: mặc / dùng / lắp ngọc / cắt ngọc thô; bỏ nhấp đúp.', 'Chuột phải lúc đang cầm món = đặt lại chỗ cũ.'] },
     { date: '2026-10-02', cats: ['weapons', 'tech'], title: 'Scene chỉnh vũ khí (WeaponTuner)', items: ['Chỉnh vị trí / hướng từng vũ khí ở 4 tư thế, chỉ cho 1 vũ khí hoặc cả loại, lưu là game dùng ngay.', 'Chạy tại chỗ để xem lúc di chuyển, trục màu trên vũ khí, camera cận tay / lưng / hông.'] },
     { date: '2026-10-02', cats: ['weapons'], title: 'Chuôi kiếm vừa nắm tay', items: ['Chuôi một tay 20–27 cm rút còn 15 cm, nắm tay sát chắn kiếm; lưỡi giữ nguyên.', 'Kiếm hai tay chừa chỗ cho tay trái. Crimson Katana hết cầm "tay không".'] },
@@ -449,11 +464,19 @@ window.WN = {
     ['img/ui-skills.jpg', 'Tab Skills'],
     ['img/ui-bag-full.jpg', 'Túi đầy khi tháo đồ'],
     ['img/tool-weapon-tuner.jpg', 'Scene chỉnh vũ khí'],
+    ['img/gear-outfit.jpg', 'Bộ giáp module: giáp tấm, găng, giày, vương miện, áo choàng'],
+    ['img/gear-outfit-helm.jpg', 'Mũ sắt kín, áo da, giày giáp, áo choàng'],
+    ['img/ui-equipment-cape.jpg', 'Bảng trang bị có ô Cape'],
+    ['img/gear-helmets.jpg', '34 mũ'],
+    ['img/gear-bodies.jpg', '28 áo (kèm quần)'],
+    ['img/gear-capes.jpg', '14 áo choàng / balo'],
+    ['img/hero-default.jpg', 'Nhân vật Fantasy Hero: trước, ngang, sau'],
+    ['img/hero-looks.jpg', '53 ngoại hình'],
   ],
 
   tech: [
     ['Engine', 'Unity 6000.6.2f1, URP, Input System, Cinemachine 3'],
-    ['Nhân vật', 'Synty Sidekick (Humanoid), shader Toon tự viết'],
+    ['Nhân vật', 'POLYGON Modular Fantasy Hero (nữ, Humanoid), giáp ghép từng mảnh, shader Toon tự viết'],
     ['Animation', 'Gói 9CG (song kiếm, kiếm, katana, cung, phép), Massive GreatSword, Mixamo, clip Neon Valkyrie'],
     ['Môi trường', 'Synty POLYGON (Dungeon, Fantasy Rivals, Nature…), Craftpix'],
     ['Hiệu ứng', 'Hovl Studio, POLYGON Particle FX, shader riêng (orb chất lỏng, toon)'],
