@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Project K — Game Design · se77n</title>
+<meta name="description" content="Project K: tài liệu thiết kế game — action RPG kiểu Souls/Sekiro với hệ đồ kiểu Path of Exile 2." />
+<meta name="theme-color" content="#0d0a09" />
+<meta property="og:title" content="Project K — Game Design" />
+<meta property="og:image" content="/games/project-k/img/castle-great-hall.jpg" />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<script>
+  try { var t = localStorage.getItem('whosnext.theme'); if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t); } catch (e) {}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div class="scroll-line" id="scrollLine"></div>
+
+<header class="topbar">
+  <button class="menu-btn" id="menuBtn" aria-label="Mục lục">☰</button>
+  <a class="brand" href="#hero">PROJECT K<small>GDD</small></a>
+  <button class="icon-btn" id="searchBtn" aria-label="Tìm kiếm">⌕</button>
+</header>
+
+<aside class="side" id="side">
+  <a class="brand side-brand" href="#hero">PROJECT K<small>GDD</small></a>
+  <label class="search" title="Tìm trong hệ thống, lộ trình, nhật ký (phím /)">
+    <span aria-hidden="true">⌕</span>
+    <input id="q" type="search" placeholder="Tìm… deflect, boss, flask" autocomplete="off" />
+    <kbd>/</kbd>
+  </label>
+  <p class="q-info" id="qInfo" hidden></p>
+  <nav class="nav" id="nav"></nav>
+  <div class="side-foot">
+    <a class="back" href="/#/game">← se77n</a>
+    <button class="theme" id="theme" aria-label="Đổi giao diện sáng / tối"><span class="t-dark">◐ Tối</span><span class="t-light">◑ Sáng</span></button>
+  </div>
+</aside>
+<div class="side-scrim" id="sideScrim"></div>
+
+<main>
+  <section class="hero" id="hero">
+    <div class="hero-bg" id="heroBg"></div>
+    <canvas class="embers" id="embers"></canvas>
+    <div class="hero-shade"></div>
+    <div class="hero-in">
+      <div class="eyebrow"><span class="dot"></span>Game Design Document · cập nhật <span id="updated"></span></div>
+      <h1 class="logo" id="logo">PROJECT K</h1>
+      <p class="tagline" id="tagline"></p>
+      <div class="chips" id="heroChips"></div>
+      <div class="cta">
+        <a class="btn primary" href="#systems">Xem hệ thống</a>
+        <a class="btn" href="#progress">Tiến độ</a>
+        <a class="btn" href="#changelog">Nhật ký</a>
+      </div>
+    </div>
+    <div class="scroll-hint" aria-hidden="true"><span></span></div>
+  </section>
+
+  <div class="stats" id="stats"></div>
+
+  <section class="sec" id="overview">
+    <div class="sec-head"><span class="num"></span><div class="sec-t"><h2>Tổng quan</h2></div></div>
+    <p class="pitch reveal" id="pitch"></p>
+    <h3 class="h3 reveal">Vòng lặp chính</h3>
+    <ol class="loop reveal" id="loop"></ol>
+    <div class="pillars" id="pillars"></div>
+  </section>
+
+  <section class="sec" id="progress">
+    <div class="sec-head"><span class="num"></span><div class="sec-t"><h2>Tiến độ</h2><p class="sub">Ước lượng mức hoàn thiện theo mảng — bấm một mảng để lọc hệ thống.</p></div></div>
+    <div class="dash">
+      <div class="panel ring-panel reveal" id="progressTotal"></div>
+      <div class="panel reveal" style="--d:1"><h3 class="panel-h">Theo mảng</h3><div class="pbars" id="progressBars"></div></div>
+      <div class="panel reveal" style="--d:2">
+        <h3 class="panel-h">Đang làm ngay</h3>
+        <div class="now" id="nowList"></div>
+        <h3 class="panel-h" style="margin-top:22px">Cập nhật gần nhất · <span class="mono" id="latestDate"></span></h3>
+        <ul class="latest" id="latestList"></ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="mynotes">
+    <div class="sec-head"><span class="num"></span><div class="sec-t"><h2>Ghi chú của bạn</h2><p class="sub"><span id="myNotesCount"></span> · <span class="sync"></span></p></div></div>
+    <div class="note-tools">
+      <button class="tool" id="notesExport">↓ Xuất ghi chú (JSON)</button>
+      <label class="tool">↑ Nhập ghi chú<input type="file" id="notesImport" accept=".json,application/json" hidden /></label>
+    </div>
+    <div class="mynotes" id="myNotes"></div>
+  </section>
+
+  <section class="sec" id="systems">
+    <div class="sec-head"><span class="num"></span><div class="sec-t"><h2>Hệ thống</h2><p class="sub">Bấm một thẻ để xem chi tiết, số liệu, việc sắp tới và nhật ký liên quan.</p></div></div>
+    <div class="filters" id="sysFilters"></div>
+    <div class="cards" id="sysCards"></div>
+    <p class="empty" id="sysEmpty" hidden>Không có hệ thống khớp bộ lọc.</p>
+  </section>
+
+  <section class="sec" id="weapons">
+    <div class="sec-head"><span class="num"></span><div class="sec-t"><h2>Vũ khí &amp; bộ đòn</h2><p class="sub">6 bộ đòn hoàn chỉnh, 347 model vũ khí — cầm và đeo tự khớp với nhân vật.</p></div></div>
+    <div class="weapons reveal">
+      <div class="wtabs" id="wTabs" role="tablist"></div>
+      <div class="wview" id="wView"></div>
+    </div>
+  </section>
+
+  <section class="sec" id="world">
+    <div class="sec-head"><span class="num"></span><div class="sec-t"><h2>Thế giới</h2></div></div>
+    <div class="world">
+      <figure class="plan reveal">
+        <img src="img/castle-plan.jpg" alt="Sơ đồ Crimson Castle" loading="lazy" data-lightbox />
+        <figcaption>Sơ đồ nhìn từ trên (bắc ở trên). Cổng giữa dưới, Cathedral trên cùng.</figcaption>
+      </figure>
+      <div class="world-text reveal" style="--d:1">
+        <span class="kicker">Vùng 1 · Level 6</span>
+        <h3 class="h3 big">Crimson Castle</h3>
+        <p>Lâu đài rẽ nhánh — không đi một đường thẳng, phòng to nhỏ khác nhau. Bố cục khai báo bằng hình chữ nhật trên lưới 1 m; tường, sàn, trần và khung cửa sinh tự động, rồi kiểm tra mọi phòng tới được.</p>
+        <table class="table" id="rooms"></table>
+        <div class="mini-gallery">
+          <img src="img/castle-gate.jpg" alt="Gate Hall" loading="lazy" data-lightbox />
+          <img src="img/castle-library.jpg" alt="Library" loading="lazy" data-lightbox />
+          <img src="img/castle-armory.jpg" alt="Armory" loading="lazy" data-lightbox />
+        </div>
+      </div>
+    </div>
+    <div class="hub">
+      <div class="hub-shots reveal">
+        <img class="hs-main" src="img/hub-square.jpg" alt="Hearthvale quảng trường" loading="lazy" data-lightbox />
+        <img src="img/hub-farm.jpg" alt="Trang trại" loading="lazy" data-lightbox />
+        <img src="img/hub-west.jpg" alt="Hearthvale phía tây" loading="lazy" data-lightbox />
+      </div>
+      <div class="world-text reveal" style="--d:1">
+        <span class="kicker">Hub</span>
+        <h3 class="h3 big">Làng Hearthvale</h3>
+        <p>Hub của người chơi: lửa trại, 6 NPC dịch vụ và trang trại chạy theo giờ thật. Mọi thứ đánh được ngoài kia đổ về đây để rèn, chế thuốc, nấu ăn và đổi đồ.</p>
+        <ul class="npcs">
+          <li><b>Brannoc</b><span>Thợ rèn — gỡ dòng, Khắc Ấn, rune trang bị, phân giải, rèn base</span></li>
+          <li><b>Old Mirelle</b><span>Thầy thuốc — 10 thuốc buff</span></li>
+          <li><b>Hesta</b><span>Bếp — 5 món + Honey Milk</span></li>
+          <li><b>Quill</b><span>Tạp hoá — 14 đồ vui, mua / bán</span></li>
+          <li><b>Keeper Aldous</b><span>Điện Ký Ức — đánh lại boss</span></li>
+          <li><b>Tẩy Tủy</b><span>Hoàn điểm passive / thuộc tính</span></li>
+        </ul>
+      </div>
+    </div>
+    <h3 class="h3 reveal">Các scene khác</h3>
+    <div class="scenes">
+      <div class="reveal"><b>Meadow Tutorial</b><span>Thung lũng 64 × 92 m, đường mòn tới boss Warden.</span></div>
+      <div class="reveal" style="--d:1"><b>Boss Arena</b><span>Đấu trường của Warden.</span></div>
+      <div class="reveal" style="--d:2"><b>Valkyrie Arena</b><span>Neon Valkyrie khổng lồ ~6 m.</span></div>
+      <div class="reveal" style="--d:3"><b>Bone Throne Dungeon</b><span>Tuyến 250 m, 7 phòng, Bone Warden.</span></div>
+      <div class="reveal" style="--d:4"><b>Training Room</b><span>Hình nộm, cột leo, xà chui.</span></div>
+      <div class="reveal" style="--d:5"><b>Weapon Tuner</b><span>Scene công cụ chỉnh tư thế vũ khí.</span></div>
+    </div>
+  </section>
+
+  <section class="sec" id="enemies">
+    <div class="sec-head"><span class="num"></span><div class="sec-t"><h2>Kẻ địch</h2><p class="sub">11 boss, 26 loại quái thường, quái Magic / Rare có mod.</p></div></div>
+    <figure class="boss-shot reveal">
+      <img src="img/boss-archdemon.jpg" alt="Crimson Archdemon" loading="lazy" data-lightbox />
+      <img src="img/boss-archdemon-2.jpg" alt="Archdemon — đòn đập" loading="lazy" data-lightbox />
+      <figcaption><span class="kicker">Boss cuối lâu đài</span><b>Crimson Archdemon</b></figcaption>
+    </figure>
+    <div class="bosses" id="bosses"></div>
+  </section>
+
+  <section class="sec" id="controls">
+    <div class="sec-head"><span class="num"></span><div class="sec-t"><h2>Điều khiển</h2></div></div>
+    <div class="keys" id="keys"></div>
+  </section>
+
+  <section class="sec" id="roadmap">
+    <div class="sec-head"><span class="num"></span><div class="sec-t"><h2>Sắp tới</h2><p class="sub">Đang làm, tiếp theo, để sau và ý tưởng — mỗi mục gắn với một mảng.</p></div></div>
+    <div class="kanban" id="kanban"></div>
+  </section>
+
+  <section class="sec" id="changelog">
+    <div class="sec-head"><span class="num"></span><div class="sec-t"><h2>Nhật ký thay đổi</h2><p class="sub">Theo ngày, mới nhất trước; lọc theo mảng.</p></div></div>
+    <div class="filters" id="logFilters"></div>
+    <div class="timeline" id="timeline"></div>
+    <p class="empty" id="logEmpty" hidden>Không có ghi chú khớp bộ lọc.</p>
+  </section>
+
+  <section class="sec" id="notes">
+    <div class="sec-head"><span class="num"></span><div class="sec-t"><h2>Ghi chú thiết kế</h2></div></div>
+    <div class="dnotes" id="notesBox"></div>
+  </section>
+
+  <section class="sec" id="gallery">
+    <div class="sec-head"><span class="num"></span><div class="sec-t"><h2>Ảnh trong game</h2></div></div>
+    <div class="gallery" id="galleryBox"></div>
+  </section>
+
+  <section class="sec" id="tech">
+    <div class="sec-head"><span class="num"></span><div class="sec-t"><h2>Kỹ thuật</h2></div></div>
+    <table class="table tech reveal" id="techTable"></table>
+  </section>
+
+  <footer class="foot">
+    <span class="brand">PROJECT K<small>GDD</small></span>
+    <span>Cập nhật <b id="updated2"></b> · <a href="/#/game">← Game Hub</a></span>
+  </footer>
+</main>
+
+<div class="drawer" id="drawer" hidden>
+  <div class="drawer-bg" data-close></div>
+  <aside class="drawer-panel" role="dialog" aria-modal="true" aria-labelledby="dTitle">
+    <button class="x" data-close aria-label="Đóng">✕</button>
+    <div id="dBody"></div>
+  </aside>
+</div>
+
+<div class="lightbox" id="lightbox" hidden>
+  <button class="x" data-lb-close aria-label="Đóng">✕</button>
+  <button class="lb-nav prev" data-lb="-1" aria-label="Ảnh trước">‹</button>
+  <figure><img id="lbImg" alt="" /><figcaption id="lbCap"></figcaption></figure>
+  <button class="lb-nav next" data-lb="1" aria-label="Ảnh sau">›</button>
+</div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

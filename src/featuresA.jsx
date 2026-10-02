@@ -5141,14 +5141,14 @@ const GAME_TILES = [
     external: true,
   },
   {
-    id: 'whosnext',
-    label: 'Whosnext',
+    id: 'project-k',
+    label: 'Project K',
     accent: '#e5b85c',
     glyph: '♜',
     tagline: 'Game design · Unity',
     desc: 'Action RPG kiểu Souls/Sekiro, hệ đồ kiểu Path of Exile 2. Toàn bộ thiết kế, tiến độ, lộ trình và nhật ký thay đổi của dự án.',
     chips: ['GDD', 'ROADMAP', 'CHANGELOG'],
-    href: '/games/whosnext/',
+    href: '/games/project-k/',
     external: true,
   },
   {

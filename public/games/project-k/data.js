@@ -1,9 +1,9 @@
-// Whosnext — game design data. Everything the page shows comes from here.
+// Project K — game design data. Everything the page shows comes from here.
 // Updated 2026-10-02 from the project's AGENTS.md and Documentation/GDD.
 window.WN = {
   updated: '2026-10-02',
   meta: {
-    title: 'WHOSNEXT',
+    title: 'PROJECT K',
     tagline: 'Action RPG góc nhìn thứ ba: chiến đấu kiểu Souls/Sekiro, hệ đồ và build kiểu Path of Exile 2.',
     pitch: 'Không có class. Vũ khí đang cầm quyết định cách đánh, ngọc skill quyết định phép, trang bị + chế tạo + cây passive quyết định build. Đánh boss khó bằng lăn né, đỡ và deflect đúng nhịp; quái rơi đồ theo bảng loot, mọi nguyên liệu đổ về làng Hearthvale để rèn, nấu, trồng trọt và mạnh lên.',
     engine: 'Unity 6000.6 · URP · Input System · Cinemachine 3',
@@ -309,7 +309,7 @@ window.WN = {
       id: 'pipeline', cat: 'tech', name: 'Pipeline & kiểm thử', status: 'done', progress: 90,
       summary: 'Scene, animator, dữ liệu đòn đều sinh bằng builder; hơn 60 probe tự động kiểm trong Play mode.',
       details: [
-        'Builder (menu Tools/Whosnext) dựng lại mọi thứ từ dữ liệu — không sửa tay scene.',
+        'Builder (menu Tools trong Unity) dựng lại mọi thứ từ dữ liệu — không sửa tay scene.',
         'Job bridge: ra lệnh cho Unity editor từ bên ngoài, probe tự chạy qua nhiều frame và ghi kết quả + ảnh.',
         'Đo hiệu năng bằng bản build benchmark (CPU / GPU ms, SetPass).',
         'Scene WeaponTuner: chỉnh tư thế vũ khí bằng thanh trượt và lưu.',
