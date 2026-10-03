@@ -53,15 +53,24 @@
       <p class="tagline" id="tagline"></p>
       <div class="chips" id="heroChips"></div>
       <div class="cta">
-        <a class="btn primary" href="#systems">Xem hệ thống</a>
+        <a class="btn primary" href="#changelog">Nhật ký thay đổi</a>
         <a class="btn" href="#progress">Tiến độ</a>
-        <a class="btn" href="#changelog">Nhật ký</a>
+        <a class="btn" href="#systems">Xem hệ thống</a>
       </div>
     </div>
     <div class="scroll-hint" aria-hidden="true"><span></span></div>
   </section>
 
   <div class="stats" id="stats"></div>
+
+  <section class="sec sec-log" id="changelog">
+    <div class="sec-head"><span class="num"></span><div class="sec-t"><span class="kicker live"><i></i>Mới cập nhật</span><h2>Nhật ký thay đổi</h2><p class="sub">Mọi thay đổi của project, theo ngày — mới nhất trước. Lọc theo mảng hoặc tìm bằng ô bên trái.</p></div></div>
+    <div class="log-stats" id="logStats"></div>
+    <div class="filters" id="logFilters"></div>
+    <div class="timeline" id="timeline"></div>
+    <div class="log-more"><button class="tool" id="logMore" hidden></button></div>
+    <p class="empty" id="logEmpty" hidden>Không có ghi chú khớp bộ lọc.</p>
+  </section>
 
   <section class="sec" id="overview">
     <div class="sec-head"><span class="num"></span><div class="sec-t"><h2>Tổng quan</h2></div></div>
@@ -72,7 +81,7 @@
   </section>
 
   <section class="sec" id="progress">
-    <div class="sec-head"><span class="num"></span><div class="sec-t"><h2>Tiến độ</h2><p class="sub">Ước lượng mức hoàn thiện theo mảng — bấm một mảng để lọc hệ thống.</p></div></div>
+    <div class="sec-head"><span class="num"></span><div class="sec-t"><h2>Tiến độ</h2><p class="sub">Chỉ tính những mục bạn đã bấm <b>Done</b> (mặc định Undone) — hệ thống và việc sắp tới. Bấm một mảng để lọc hệ thống.</p></div></div>
     <div class="dash">
       <div class="panel ring-panel reveal" id="progressTotal"></div>
       <div class="panel reveal" style="--d:1"><h3 class="panel-h">Theo mảng</h3><div class="pbars" id="progressBars"></div></div>
@@ -175,16 +184,10 @@
   </section>
 
   <section class="sec" id="roadmap">
-    <div class="sec-head"><span class="num"></span><div class="sec-t"><h2>Sắp tới</h2><p class="sub">Đang làm, tiếp theo, để sau và ý tưởng — mỗi mục gắn với một mảng.</p></div></div>
+    <div class="sec-head"><span class="num"></span><div class="sec-t"><h2>Sắp tới</h2><p class="sub">Đang làm, tiếp theo, để sau và ý tưởng — mỗi mục gắn với một mảng. Bấm <b>Done</b> khi xong để tính vào tiến độ.</p></div></div>
     <div class="kanban" id="kanban"></div>
   </section>
 
-  <section class="sec" id="changelog">
-    <div class="sec-head"><span class="num"></span><div class="sec-t"><h2>Nhật ký thay đổi</h2><p class="sub">Theo ngày, mới nhất trước; lọc theo mảng.</p></div></div>
-    <div class="filters" id="logFilters"></div>
-    <div class="timeline" id="timeline"></div>
-    <p class="empty" id="logEmpty" hidden>Không có ghi chú khớp bộ lọc.</p>
-  </section>
 
   <section class="sec" id="notes">
     <div class="sec-head"><span class="num"></span><div class="sec-t"><h2>Ghi chú thiết kế</h2></div></div>

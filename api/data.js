@@ -23,6 +23,7 @@ const ALLOWED_KEYS = new Set([
   'lang',         // se77n.lang
   'wardrobe',     // se77n.wardrobe.v1 — stylist items + outfit sets (metadata only)
   'whosnextNotes', // /games/whosnext — the owner's notes on each item of the design page
+  'projectKDone',  // /games/project-k — which systems / roadmap items the owner marked Done
 ]);
 
 const MAX_VALUE_BYTES = 512 * 1024; // 512 KB per key

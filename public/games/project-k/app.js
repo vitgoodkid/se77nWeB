@@ -5,12 +5,11 @@
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const CAT = Object.fromEntries(D.categories.map((c) => [c.id, c]));
-  const STATUS = { done: '✓ Hoàn thành', wip: '◐ Đang làm', planned: '○ Kế hoạch' };
   const LANES = [['now', 'Đang làm'], ['next', 'Tiếp theo'], ['later', 'Để sau'], ['idea', 'Ý tưởng']];
   const fmtDate = (d) => { const [y, m, dd] = d.split('-'); return `${dd}/${m}/${y}`; };
   const fmtStamp = (t) => { const d = new Date(t); const p = (n) => String(n).padStart(2, '0'); return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`; };
   const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const state = { q: '', sysCat: 'all', logCat: 'all', weapon: D.weapons[0].id, wimg: 0 };
+  const state = { q: '', sysCat: 'all', logCat: 'all', logAll: false, weapon: D.weapons[0].id, wimg: 0 };
 
   const norm = (s) => String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd');
   const slug = (s) => norm(s).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -70,6 +69,10 @@
       saveLocal(); refreshBadges(); renderMyNotes(); commit();
     } catch (e) { /* offline / no API */ }
   }
+  async function initAccount() {
+    await initNotes();
+    await initDone();
+  }
   function setSync(s) {
     notes.status = s;
     const who = notes.user ? esc(notes.user.displayName || notes.user.username || 'tài khoản') : '';
@@ -123,6 +126,71 @@
   function openNotes(id) {
     const item = ITEMS[id];
     openDrawer(`<span class="cat">${esc(item ? item.kind : 'Ghi chú')}</span><h2 id="dTitle">${esc(item ? item.title : id)}</h2>${notesBlock(id)}`, id);
+  }
+
+  // ================================================================ done / undone
+  // Progress is only what the owner marked Done (default Undone): systems + roadmap items.
+  const DONE_KEY = 'projectk.done.v1';
+  const done = { data: {}, timer: 0 };
+  const sysId = (s) => 'sys:' + s.id;
+  const roadId = (r) => 'road:' + slug(r.title);
+  const TRACK = [...D.systems.map((s) => ({ id: sysId(s), cat: s.cat, kind: 'sys' })), ...D.roadmap.map((r) => ({ id: roadId(r), cat: r.cat, kind: 'road' }))];
+  function loadDone() { try { return JSON.parse(localStorage.getItem(DONE_KEY)) || {}; } catch (e) { return {}; } }
+  function saveDone() { try { localStorage.setItem(DONE_KEY, JSON.stringify(done.data)); } catch (e) {} }
+  const isDone = (id) => !!(done.data[id] && done.data[id].d);
+  function mergeDone(a, b) {
+    const out = {};
+    for (const k of new Set([...Object.keys(a || {}), ...Object.keys(b || {})])) {
+      const x = (a || {})[k], y = (b || {})[k];
+      out[k] = !y || (x && (x.t || 0) >= (y.t || 0)) ? x : y;
+    }
+    return out;
+  }
+  function setDoneSync(st) {
+    const who = notes.user ? esc(notes.user.displayName || notes.user.username || 'tài khoản') : '';
+    const text = {
+      local: 'Lưu trên trình duyệt này. <a href="/">Đăng nhập se77n</a> để đồng bộ.',
+      saving: `Đang lưu vào tài khoản ${who}…`, synced: `Đã đồng bộ với ${who}.`, error: 'Không lưu được lên tài khoản — vẫn giữ trên trình duyệt này.',
+    }[st];
+    $$('.dsync').forEach((el) => { el.innerHTML = text; el.dataset.s = st; });
+  }
+  function pushDone() {
+    if (!notes.user) return;
+    clearTimeout(done.timer); setDoneSync('saving');
+    done.timer = setTimeout(() => {
+      fetch('/api/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'projectKDone', value: done.data }) })
+        .then((r) => setDoneSync(r.ok ? 'synced' : 'error')).catch(() => setDoneSync('error'));
+    }, 600);
+  }
+  function setDone(id, v) { done.data[id] = { d: v ? 1 : 0, t: Date.now() }; saveDone(); paintDone(); pushDone(); }
+  function resetDone() { const t = Date.now(); TRACK.forEach((x) => { if (isDone(x.id)) done.data[x.id] = { d: 0, t }; }); saveDone(); paintDone(); pushDone(); }
+  async function initDone() {
+    setDoneSync('local');
+    if (!notes.user) return;
+    try {
+      const r = await fetch('/api/data?key=projectKDone');
+      if (!r.ok) { setDoneSync('error'); return; }
+      done.data = mergeDone((await r.json()).value || {}, done.data);
+      saveDone(); paintDone(); pushDone();
+    } catch (e) { /* offline / no API */ }
+  }
+  function doneBtn(id, size) {
+    const on = isDone(id);
+    return `<button class="donebtn ${size || ''} ${on ? 'on' : ''}" data-done="${esc(id)}" aria-pressed="${on}" title="Đánh dấu xong — chỉ mục đã Done mới tính vào tiến độ"><i></i><span>${on ? 'Done' : 'Undone'}</span></button>`;
+  }
+  function doneStats() {
+    const mine = (f) => TRACK.filter(f);
+    const d = (list) => list.filter((x) => isDone(x.id)).length;
+    const all = TRACK, sys = mine((x) => x.kind === 'sys'), road = mine((x) => x.kind === 'road');
+    return { total: all.length, done: d(all), pct: all.length ? Math.round(100 * d(all) / all.length) : 0, sysDone: d(sys), sysTotal: sys.length, roadDone: d(road), roadTotal: road.length, d, mine };
+  }
+  function tween(el, to, fmt) {
+    const from = +el.dataset.v || 0; el.dataset.v = to;
+    const tok = (el._tw = (el._tw || 0) + 1);
+    if (RM || from === to) { el.textContent = fmt(to); return; }
+    const t0 = performance.now();
+    const step = (t) => { if (el._tw !== tok) return; const k = Math.min(1, (t - t0) / 900); el.textContent = fmt(Math.round(from + (to - from) * (1 - Math.pow(1 - k, 3)))); if (k < 1) requestAnimationFrame(step); };
+    requestAnimationFrame(step);
   }
 
   // ================================================================ drawer
@@ -184,40 +252,65 @@
 
   // ================================================================ progress dashboard
   function progress() {
-    const sys = D.systems;
-    const avg = Math.round(sys.reduce((a, s) => a + s.progress, 0) / sys.length);
-    const n = (st) => sys.filter((s) => s.status === st).length;
     const r = 80, c = 2 * Math.PI * r;
     $('#progressTotal').innerHTML = `
       <h3 class="panel-h">Tổng thể</h3>
       <div class="ring"><svg width="190" height="190" viewBox="0 0 190 190">
         <circle cx="95" cy="95" r="${r}" fill="none" stroke="var(--bg3)" stroke-width="10"/>
-        <circle id="ringArc" cx="95" cy="95" r="${r}" fill="none" stroke="var(--gold)" stroke-width="10" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${c}" style="transition: stroke-dashoffset 1.8s cubic-bezier(.2,.7,.2,1)"/>
-      </svg><b data-count="${avg}" data-suffix="%">${avg}%</b><small>hoàn thiện</small></div>
-      <div class="ring-title">${sys.length} hệ thống</div>
-      <div class="legend"><span>✓ Hoàn thành<b>${n('done')}</b></span><span>◐ Đang làm<b>${n('wip')}</b></span><span>○ Kế hoạch<b>${n('planned')}</b></span></div>`;
-    $('#progressTotal').dataset.offset = c * (1 - avg / 100);
+        <circle id="ringArc" cx="95" cy="95" r="${r}" fill="none" stroke="var(--gold)" stroke-width="10" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${c}" style="transition: stroke-dashoffset 1.4s cubic-bezier(.2,.7,.2,1)"/>
+      </svg><b id="ringNum" data-v="0">0%</b><small>đã Done</small></div>
+      <div class="ring-title" id="ringTitle"></div>
+      <div class="legend"><span>✓ Done<b id="lgDone">0</b></span><span>○ Undone<b id="lgUndone">0</b></span>
+        <span class="lg-sub">Hệ thống<b id="lgSys"></b></span><span class="lg-sub">Việc sắp tới<b id="lgRoad"></b></span></div>
+      <p class="done-note">Chỉ những mục bạn bấm <b>Done</b> mới được tính. <span class="dsync"></span></p>
+      <button class="tool" id="doneReset">↺ Đặt lại tất cả về Undone</button>`;
+    $('#progressTotal').dataset.c = c;
     $('#progressBars').innerHTML = D.categories.map((cat, i) => {
-      const list = sys.filter((s) => s.cat === cat.id);
-      if (!list.length) return '';
-      const p = Math.round(list.reduce((a, s) => a + s.progress, 0) / list.length);
-      return `<div class="pbar" data-cat="${cat.id}" title="Lọc hệ thống: ${esc(cat.label)}"><div class="name">${esc(cat.label)}<small>${list.length}</small></div>
-        <div class="track"><div class="fill" style="--i:${i}" data-w="${p}"></div></div><div class="pct">${p}%</div></div>`;
+      if (!TRACK.some((x) => x.cat === cat.id)) return '';
+      return `<div class="pbar" data-cat="${cat.id}" title="Lọc hệ thống: ${esc(cat.label)}"><div class="name">${esc(cat.label)}<small data-frac></small></div>
+        <div class="track"><div class="fill" style="--i:${i}" data-w="0"></div></div><div class="pct" data-v="0">0%</div></div>`;
     }).join('');
     $$('.pbar').forEach((b) => b.addEventListener('click', () => { state.sysCat = b.dataset.cat; renderSystems(); go('#systems'); }));
-    $('#nowList').innerHTML = D.roadmap.filter((r) => r.lane === 'now').map((r) =>
-      `<div class="now-item"><span>${esc(CAT[r.cat].label)}</span><b>${esc(r.title)}</b>${nbtn('road:' + slug(r.title), r.title, 'Sắp tới · Đang làm')}</div>`).join('');
+    $('#doneReset').addEventListener('click', () => { if (confirm('Đặt lại mọi mục về Undone?')) resetDone(); });
     const last = D.changelog[0].date;
     $('#latestDate').textContent = fmtDate(last);
     $('#latestList').innerHTML = D.changelog.filter((l) => l.date === last).map((l) => `<li>${esc(l.title)}</li>`).join('');
+    paintNow();
+    setDoneSync('local');
   }
-  function animateProgress() {
+  // Items on the "now" lane that are not Done yet.
+  function paintNow() {
+    const list = D.roadmap.filter((r) => r.lane === 'now' && !isDone(roadId(r)));
+    $('#nowList').innerHTML = list.length ? list.map((r) =>
+      `<div class="now-item"><span>${esc(CAT[r.cat].label)}</span><b>${esc(r.title)}</b>${nbtn(roadId(r), r.title, 'Sắp tới · Đang làm')}${doneBtn(roadId(r), 'sm')}</div>`).join('')
+      : '<p class="empty small">Không còn mục nào đang làm — tất cả đã Done.</p>';
+  }
+  function paintProgress() {
+    const st = doneStats();
     const arc = $('#ringArc');
-    if (arc) arc.style.strokeDashoffset = $('#progressTotal').dataset.offset;
-    const b = $('#progressTotal [data-count]');
-    if (b) { const end = +b.dataset.count, t0 = performance.now(); const step = (t) => { const k = RM ? 1 : Math.min(1, (t - t0) / 1800); b.textContent = Math.round(end * (1 - Math.pow(1 - k, 3))) + '%'; if (k < 1) requestAnimationFrame(step); }; requestAnimationFrame(step); }
-    $$('#progressBars .fill').forEach((f) => { f.style.width = f.dataset.w + '%'; });
+    if (arc) arc.style.strokeDashoffset = +$('#progressTotal').dataset.c * (1 - st.pct / 100);
+    tween($('#ringNum'), st.pct, (n) => n + '%');
+    $('#ringTitle').textContent = `${st.done} / ${st.total} mục đã Done`;
+    $('#lgDone').textContent = st.done; $('#lgUndone').textContent = st.total - st.done;
+    $('#lgSys').textContent = `${st.sysDone} / ${st.sysTotal}`; $('#lgRoad').textContent = `${st.roadDone} / ${st.roadTotal}`;
+    $$('#progressBars .pbar').forEach((row) => {
+      const list = st.mine((x) => x.cat === row.dataset.cat), n = st.d(list), p = Math.round(100 * n / list.length);
+      $('.fill', row).style.width = p + '%';
+      $('small', row).textContent = `${n}/${list.length}`;
+      tween($('.pct', row), p, (v) => v + '%');
+    });
   }
+  function paintDone() {
+    paintNow();
+    $$('[data-done]').forEach((b) => {
+      const on = isDone(b.dataset.done);
+      b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); $('span', b).textContent = on ? 'Done' : 'Undone';
+      const host = b.closest('.card, .ritem'); if (host) host.classList.toggle('is-done', on);
+    });
+    $$('[data-hint]').forEach((h) => { h.textContent = isDone(h.dataset.hint) ? 'Đã tính vào tiến độ.' : 'Chưa tính vào tiến độ — bấm Done khi bạn làm xong.'; });
+    paintProgress();
+  }
+  function animateProgress() { paintProgress(); }
 
   // ================================================================ systems
   function chipRow(el, key, counts, onPick) {
@@ -233,16 +326,16 @@
     chipRow($('#sysFilters'), 'sysCat', counts, renderSystems);
     const list = visible.filter((s) => state.sysCat === 'all' || s.cat === state.sysCat);
     $('#sysCards').innerHTML = list.map((s, i) => `
-      <article class="card" tabindex="0" role="button" data-id="${s.id}" style="--i:${i}">
-        <div class="card-top"><span class="cat">${esc(CAT[s.cat].label)}</span><span class="badge ${s.status}">${STATUS[s.status]}</span></div>
+      <article class="card ${isDone(sysId(s)) ? 'is-done' : ''}" tabindex="0" role="button" data-id="${s.id}" style="--i:${i}">
+        <div class="card-top"><span class="cat">${esc(CAT[s.cat].label)}</span></div>
         <h4>${hl(s.name)}</h4><p>${hl(s.summary)}</p>
         <div class="nums">${(s.numbers || []).slice(0, 3).map(([k, v]) => `<span>${esc(k)} <b>${esc(v)}</b></span>`).join('')}</div>
         <span class="arrow">→</span>
-        <div class="card-foot"><div class="track"><div class="fill" style="--w:${s.progress}%;--i:${i}"></div></div><span class="pct">${s.progress}%</span>${nbtn('sys:' + s.id, s.name, 'Hệ thống', () => openSystem(s.id))}</div>
+        <div class="card-foot">${doneBtn(sysId(s))}${nbtn('sys:' + s.id, s.name, 'Hệ thống', () => openSystem(s.id))}</div>
       </article>`).join('');
     $('#sysEmpty').hidden = list.length > 0;
     $$('#sysCards .card').forEach((b) => {
-      b.addEventListener('click', (e) => { if (!e.target.closest('[data-note]')) openSystem(b.dataset.id); });
+      b.addEventListener('click', (e) => { if (!e.target.closest('[data-note], [data-done]')) openSystem(b.dataset.id); });
       b.addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target === b) openSystem(b.dataset.id); });
     });
   }
@@ -258,12 +351,12 @@
       <span class="cat">${esc(c.label)}</span>
       <h2 id="dTitle">${esc(s.name)}</h2>
       <p class="lead">${esc(s.summary)}</p>
-      <div class="meta-row"><span class="badge ${s.status}">${STATUS[s.status]}</span><div class="track"><div class="fill" style="--w:${s.progress}%"></div></div><span class="mono" style="color:var(--muted)">${s.progress}%</span></div>
+      <div class="meta-row done-row">${doneBtn(sysId(s), 'lg')}<span class="done-hint" data-hint="${sysId(s)}">${isDone(sysId(s)) ? 'Đã tính vào tiến độ.' : 'Chưa tính vào tiến độ — bấm Done khi bạn làm xong.'}</span></div>
       ${notesBlock(noteId)}
       <h5>Chi tiết</h5><ul class="det">${s.details.map((d) => `<li>${hl(d)}</li>`).join('')}</ul>
       ${s.numbers && s.numbers.length ? `<h5>Số liệu</h5><table class="table">${s.numbers.map(([k, v]) => `<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`).join('')}</table>` : ''}
       <h5>Sắp tới · ${esc(c.label)}</h5>
-      ${road.length ? road.map((r) => `<div class="ritem"><span class="tag">${esc(LANES.find((l) => l[0] === r.lane)[1])}</span><b>${esc(r.title)}</b><p>${esc(r.text)}</p></div>`).join('') : '<p class="lead">Chưa có mục nào.</p>'}
+      ${road.length ? road.map((r) => `<div class="ritem ${isDone(roadId(r)) ? 'is-done' : ''}"><span class="tag">${esc(LANES.find((l) => l[0] === r.lane)[1])}</span><b>${esc(r.title)}</b><p>${esc(r.text)}</p></div>`).join('') : '<p class="lead">Chưa có mục nào.</p>'}
       <h5>Nhật ký · ${esc(c.label)}</h5>
       ${logs.length ? logs.map((l) => `<div class="entry"><div class="entry-h"><span class="mono date">${fmtDate(l.date)}</span><b>${esc(l.title)}</b></div><ul>${l.items.map((i) => `<li>${esc(i)}</li>`).join('')}</ul></div>`).join('') : '<p class="lead">Chưa có ghi chú.</p>'}`, noteId);
     history.replaceState(null, '', '#sys-' + id);
@@ -306,10 +399,21 @@
     $('#kanban').innerHTML = LANES.map(([lane, label]) => {
       const items = D.roadmap.filter((r) => r.lane === lane && matches(r.title, r.text, CAT[r.cat].label));
       return `<div class="lane" data-lane="${lane}"><div class="lane-h"><b>${label}</b><span>${items.length}</span></div>
-        ${items.map((r, i) => `<div class="ritem" style="--i:${i}"><div class="ritem-h"><span class="tag">${esc(CAT[r.cat].label)}</span>${nbtn('road:' + slug(r.title), r.title, 'Sắp tới · ' + label)}</div><b>${hl(r.title)}</b><p>${hl(r.text)}</p></div>`).join('') || '<p class="empty">—</p>'}</div>`;
+        ${items.map((r, i) => `<div class="ritem ${isDone(roadId(r)) ? 'is-done' : ''}" style="--i:${i}"><div class="ritem-h"><span class="tag">${esc(CAT[r.cat].label)}</span><span class="ritem-act">${doneBtn(roadId(r), 'sm')}${nbtn('road:' + slug(r.title), r.title, 'Sắp tới · ' + label)}</span></div><b>${hl(r.title)}</b><p>${hl(r.text)}</p></div>`).join('') || '<p class="empty">—</p>'}</div>`;
     }).join('');
   }
   const WD = ['Chủ nhật', 'Thứ hai', 'Thứ ba', 'Thứ tư', 'Thứ năm', 'Thứ sáu', 'Thứ bảy'];
+  const LOG_DAYS = 3; // newest days shown before "show older"
+  function logStats() {
+    const last = D.changelog[0].date, today = D.changelog.filter((l) => l.date === last);
+    const days = new Set(D.changelog.map((l) => l.date)).size;
+    const bullets = D.changelog.reduce((a, l) => a + l.items.length, 0);
+    $('#logStats').innerHTML = `
+      <div class="ls main"><span>Cập nhật gần nhất</span><b>${fmtDate(last)}</b><small>${WD[new Date(...last.split('-').map((v, i) => (i === 1 ? v - 1 : +v))).getDay()]}</small></div>
+      <div class="ls"><span>Trong ngày đó</span><b>${today.length}</b><small>thay đổi lớn</small></div>
+      <div class="ls"><span>Tổng cộng</span><b>${D.changelog.length}</b><small>thay đổi · ${bullets} ý</small></div>
+      <div class="ls"><span>Đã ghi</span><b>${days}</b><small>ngày làm việc</small></div>`;
+  }
   function renderLog() {
     const visible = D.changelog.filter((l) => matches(l.title, l.items, l.cats.map((c) => CAT[c].label)));
     const counts = { all: visible.length };
@@ -319,12 +423,19 @@
     const list = visible.filter((l) => state.logCat === 'all' || l.cats.includes(state.logCat));
     const days = [];
     list.forEach((l) => { let d = days.find((x) => x.date === l.date); if (!d) days.push(d = { date: l.date, items: [] }); d.items.push(l); });
-    $('#timeline').innerHTML = days.map((d) => {
+    const collapse = !state.q && state.logCat === 'all' && !state.logAll && days.length > LOG_DAYS;
+    const shown = collapse ? days.slice(0, LOG_DAYS) : days;
+    const newest = D.changelog[0].date;
+    $('#timeline').innerHTML = shown.map((d) => {
       const [y, m, dd] = d.date.split('-');
-      return `<div class="day"><div class="day-h"><b>${dd}/${m}</b><span>${WD[new Date(+y, m - 1, +dd).getDay()]} · ${y}</span></div><div class="day-items">
+      const latest = d.date === newest;
+      return `<div class="day ${latest ? 'newest' : ''}"><div class="day-h"><b>${dd}</b><em>Tháng ${+m}</em><span>${WD[new Date(+y, m - 1, +dd).getDay()]} · ${y}</span>${latest ? '<i class="newpill"><s></s>Mới nhất</i>' : ''}</div><div class="day-items">
       ${d.items.map((l) => `<div class="entry reveal"><div class="entry-h"><b>${hl(l.title)}</b>${l.cats.map((c) => `<span class="tag">${esc(CAT[c].label)}</span>`).join('')}${nbtn('log:' + l.date + ':' + slug(l.title), l.title, 'Thay đổi ' + fmtDate(l.date))}</div>
         <ul>${l.items.map((i) => `<li>${hl(i)}</li>`).join('')}</ul></div>`).join('')}</div></div>`;
     }).join('');
+    const more = $('#logMore');
+    more.hidden = !collapse;
+    if (collapse) more.textContent = `↓ Xem ${days.length - LOG_DAYS} ngày cũ hơn`;
     $('#logEmpty').hidden = list.length > 0;
     observeReveals();
   }
@@ -405,6 +516,8 @@
     const side = $('#side');
     const closeSide = () => side.classList.remove('open');
     document.addEventListener('click', (e) => {
+      const db = e.target.closest('[data-done]');
+      if (db) { e.stopPropagation(); setDone(db.dataset.done, !isDone(db.dataset.done)); return; }
       const nb = e.target.closest('[data-note]');
       if (nb) { e.stopPropagation(); const it = ITEMS[nb.dataset.note]; it && it.kind === 'Hệ thống' ? it.open() : openNotes(nb.dataset.note); return; }
       const img = e.target.closest('img[data-lightbox]');
@@ -451,6 +564,7 @@
       document.documentElement.setAttribute('data-theme', next);
       try { localStorage.setItem('whosnext.theme', next); } catch (e) {}
     });
+    $('#logMore').addEventListener('click', () => { state.logAll = true; renderLog(); });
     $('#notesExport').addEventListener('click', exportNotes);
     $('#notesImport').addEventListener('change', (e) => { if (e.target.files[0]) importNotes(e.target.files[0]); e.target.value = ''; });
 
@@ -498,7 +612,9 @@
   }
 
   notes.data = loadLocal();
+  done.data = loadDone();
   hero();
+  logStats();
   buildNav();
   progress();
   renderSystems();
@@ -511,5 +627,5 @@
   renderMyNotes();
   refreshBadges();
   wire();
-  initNotes();
+  initAccount();
 })();

@@ -43,10 +43,10 @@ window.WN = {
     { id: 'tech', label: 'Công cụ & kỹ thuật', color: '#8fa3b8' },
   ],
 
-  // status: done | wip | planned ; progress is an estimate (0-100)
+  // Progress is not stored here: the page counts only the items marked Done in the browser (systems + roadmap items).
   systems: [
     {
-      id: 'movement', cat: 'combat', name: 'Di chuyển & né', status: 'done', progress: 90,
+      id: 'movement', cat: 'combat', name: 'Di chuyển & né',
       summary: 'State machine tự viết, animator chỉ là máy phát clip. Lăn, lùi né, nhảy, leo tường, ngồi.',
       details: [
         'Lăn bất tử trong 0–85% động tác, lùi né 0–60%. Shift chạm = né, giữ = chạy nhanh.',
@@ -58,7 +58,7 @@ window.WN = {
       numbers: [['I-frame lăn', '0 – 0.85'], ['I-frame lùi né', '0 – 0.6'], ['Nhớ phím nhảy', '0.2 s'], ['Tiếp đất đứng yên', '≤ 0.3 s']],
     },
     {
-      id: 'defense', cat: 'combat', name: 'Phòng thủ: đỡ & deflect', status: 'done', progress: 90,
+      id: 'defense', cat: 'combat', name: 'Phòng thủ: đỡ & deflect',
       summary: 'Chuột phải đỡ; bấm đúng nhịp là deflect kiểu Sekiro, không tốn stamina.',
       details: [
         'Cửa sổ deflect 12 frame mở ngay khi bấm; spam liên tục rút còn 8 → 4 frame.',
@@ -70,7 +70,7 @@ window.WN = {
       numbers: [['Deflect', '12 → 8 → 4 frame'], ['Bình máu', '70% Life'], ['Stamina gốc', '100 + 2·END']],
     },
     {
-      id: 'lockon', cat: 'combat', name: 'Lock-on & camera', status: 'done', progress: 90,
+      id: 'lockon', cat: 'combat', name: 'Lock-on & camera',
       summary: 'Lock kiểu Sekiro: chuột giữa chọn kẻ địch gần giữa màn hình, hất chuột đổi mục tiêu.',
       details: [
         'Chỉ lock trong 10 m (đo tới mép thân mục tiêu), nhả ở 16 m; cần tầm nhìn; bị tường che quá 1.5 s thì nhả.',
@@ -83,7 +83,7 @@ window.WN = {
       numbers: [['Tầm lock', '10 m'], ['Nhả lock', '16 m'], ['Hất chuột', '≥ 130 px / 0.3 s']],
     },
     {
-      id: 'movesets', cat: 'weapons', name: 'Bộ đòn theo vũ khí', status: 'wip', progress: 60,
+      id: 'movesets', cat: 'weapons', name: 'Bộ đòn theo vũ khí',
       summary: '6 bộ đòn hoàn chỉnh; các loại vũ khí khác chờ animation riêng.',
       details: [
         'Song kiếm (2 kiếm một tay), Kiếm một tay, Đại kiếm, Katana / Trường kiếm, Cung, Thương / Kích / Glaive.',
@@ -96,7 +96,7 @@ window.WN = {
       numbers: [['Bộ đòn', '6'], ['Kĩ năng vũ khí', '5'], ['Loại vũ khí', '14']],
     },
     {
-      id: 'catalog', cat: 'weapons', name: 'Catalog 347 vũ khí', status: 'done', progress: 85,
+      id: 'catalog', cat: 'weapons', name: 'Catalog 347 vũ khí',
       summary: 'Mọi model được căn tự động: gốc = chỗ nắm, +Y theo lưỡi, +X mặt rộng; icon render sẵn.',
       details: [
         'Nguồn: Craftpix + POLYGON Dungeon; phân loại theo hình dạng và chiều dài (kiếm một tay ≤ 1.3 m).',
@@ -107,7 +107,7 @@ window.WN = {
       numbers: [['Tổng', '347'], ['Kiếm một tay', '33'], ['Đại kiếm', '23'], ['Cung', '23'], ['Thương', '45'], ['Độc nhất Đỏ', '12']],
     },
     {
-      id: 'carry', cat: 'weapons', name: 'Cầm & đeo vũ khí', status: 'wip', progress: 75,
+      id: 'carry', cat: 'weapons', name: 'Cầm & đeo vũ khí',
       summary: 'Song kiếm đeo chéo X sau lưng, chuôi vừa nắm tay, vũ khí đeo tự khớp với từng ngoại hình.',
       details: [
         'Tay cầm đặt qua tâm nắm tay (lệch ≤ 0.6 cm). Chuôi kiếm dài được rút ngắn trong mesh để không lòi ra khỏi tay; lưỡi giữ nguyên cỡ.',
@@ -118,7 +118,7 @@ window.WN = {
       numbers: [['Kiểu đeo', '7'], ['Ngoại hình hỗ trợ', '53']],
     },
     {
-      id: 'loot', cat: 'items', name: 'Hạng đồ & dòng chỉ số', status: 'done', progress: 90,
+      id: 'loot', cat: 'items', name: 'Hạng đồ & dòng chỉ số',
       summary: '6 hạng màu, dòng prefix / suffix theo 6 tier, rơi đồ theo bảng GDD.',
       details: [
         'Trắng (base) → Xanh (1 prefix + 1 suffix) → Tím (2 + 2) → Vàng (2 + 2 + 1–2 nội tại) → Cam / Đỏ = độc nhất cố định.',
@@ -131,7 +131,7 @@ window.WN = {
       numbers: [['Hạng', '6'], ['Tier', '6'], ['Kiểu hiệu ứng rơi', '13']],
     },
     {
-      id: 'crafting', cat: 'items', name: 'Chế tạo & nâng cấp', status: 'done', progress: 85,
+      id: 'crafting', cat: 'items', name: 'Chế tạo & nâng cấp',
       summary: '9 gem chế tạo (4 gem riêng của game), nâng cấp +10 có thể thất bại, quality, chuyển cấp.',
       details: [
         'Transmute, Regal, Exalt, Ascension, Chaos + 4 gem riêng: Twin-Moon Prism (chọn 1 trong 3 dòng), Star Forge (hiến 1 món để chép 1 dòng), Void Pearl (chọn dòng xoá, 25% xoá nhầm), Sun Tear (roll lại, chỉ giữ nếu cao hơn).',
@@ -142,7 +142,7 @@ window.WN = {
       numbers: [['Gem chế tạo', '9'], ['Cấp nâng tối đa', '+10'], ['Quality', '0–20%']],
     },
     {
-      id: 'gear', cat: 'items', name: 'Trang bị & flask', status: 'wip', progress: 80,
+      id: 'gear', cat: 'items', name: 'Trang bị & flask',
       summary: 'Giáp là chính các mảnh quần áo module của nhân vật: 113 món mặc vào là thấy trên người. 12 trang sức, 2 bộ vũ khí, flask theo tier.',
       details: [
         'Áo (28) = thân áo + quần cùng số (quần luôn đi theo áo) + túi / váy giáp ở hông.',
@@ -158,7 +158,7 @@ window.WN = {
       numbers: [['Món giáp', '113'], ['Áo / găng / giày / mũ / cape', '28 / 18 / 19 / 34 / 14'], ['Trang sức', '12'], ['Tier flask', '4']],
     },
     {
-      id: 'inventory', cat: 'ui', name: 'Túi đồ & kho', status: 'done', progress: 90,
+      id: 'inventory', cat: 'ui', name: 'Túi đồ & kho',
       summary: 'Lưới 12×8 kiểu PoE2, 10 ô trang bị (thêm Cape), kho Stash, tab Skills / Character / Passives.',
       details: [
         'Click trái nhấc món lên (không cần giữ chuột), click trái lần nữa để đặt; ra ngoài cửa sổ = vứt xuống đất (nằm 5 phút).',
@@ -169,7 +169,7 @@ window.WN = {
       numbers: [['Lưới', '12 × 8'], ['Ô trang bị', '10 + 2 flask']],
     },
     {
-      id: 'skills', cat: 'character', name: 'Skill gem & support', status: 'done', progress: 80,
+      id: 'skills', cat: 'character', name: 'Skill gem & support',
       summary: '6 ô Q E R T C X, mỗi ngọc skill chứa 2–5 lỗ support; level gem 1–20.',
       details: [
         'Skill: Arcane Bolt, Earth Spikes, Lightning Strike, Arcane Ward, Frost Rain (ultimate), Dark Bolt, Meteor, Lava Eruption, Fire Infusion…',
@@ -181,7 +181,7 @@ window.WN = {
       numbers: [['Ô skill', '6'], ['Support', '16'], ['Level gem', '1–20']],
     },
     {
-      id: 'progression', cat: 'character', name: 'Level, thuộc tính & cây passive', status: 'done', progress: 85,
+      id: 'progression', cat: 'character', name: 'Level, thuộc tính & cây passive',
       summary: 'Level 1–100, 5 thuộc tính, cây passive 130 node với 6 keystone.',
       details: [
         'Vigor (+15 Life), Endurance (+2 Stamina), Strength (+2 Life), Dexterity (+0.5% hồi stamina), Intelligence (+3 Mana). Bắt đầu 10, cap 99.',
@@ -194,7 +194,7 @@ window.WN = {
       numbers: [['Level tối đa', '100'], ['Node passive', '130'], ['Keystone', '6'], ['Life lúc đầu', '250']],
     },
     {
-      id: 'damage', cat: 'character', name: 'Loại sát thương & kháng', status: 'done', progress: 80,
+      id: 'damage', cat: 'character', name: 'Loại sát thương & kháng',
       summary: 'Vật lý, Lửa, Băng, Sét, Chaos; giáp giảm vật lý, kháng (≤ 75%) giảm nguyên tố.',
       details: [
         'Đòn của boss / quái chia phần nguyên tố theo tên (ví dụ Archdemon 50% lửa, Valkyrie 40% sét).',
@@ -204,7 +204,7 @@ window.WN = {
       numbers: [['Loại', '5'], ['Kháng tối đa', '75%']],
     },
     {
-      id: 'bosses', cat: 'enemies', name: 'Boss', status: 'wip', progress: 70,
+      id: 'bosses', cat: 'enemies', name: 'Boss',
       summary: '11 boss: AI giữ khoảng cách, delay giả, phase 2, thanh thế; mỗi boss có độc nhất riêng.',
       details: [
         'AI chung: chọn move theo khoảng cách / trọng số / cooldown, đòn nhiều bước có cửa sổ hitbox, đòn đỏ chỉ né được.',
@@ -215,7 +215,7 @@ window.WN = {
       numbers: [['Boss', '11'], ['Cao nhất', 'Valkyrie ~6 m']],
     },
     {
-      id: 'monsters', cat: 'enemies', name: 'Quái thường & elite', status: 'done', progress: 80,
+      id: 'monsters', cat: 'enemies', name: 'Quái thường & elite',
       summary: '26 loại quái từ 3 animator (kiếm, nặng, phép); quái Magic / Rare có mod.',
       details: [
         'AI đơn giản: thấy (tầm + tầm nhìn) → gọi đồng đội 9 m → đuổi → đánh → hồi. Kẹt thì dò hai bên để vòng qua vật cản.',
@@ -227,7 +227,7 @@ window.WN = {
       numbers: [['Loại quái', '26'], ['Mod', '6'], ['Trong lâu đài', '30']],
     },
     {
-      id: 'castle', cat: 'world', name: 'Crimson Castle', status: 'wip', progress: 75,
+      id: 'castle', cat: 'world', name: 'Crimson Castle',
       summary: 'Lâu đài rẽ nhánh 13 phòng, 7 phòng boss phụ, Cathedral trần 22 m cho boss cuối.',
       details: [
         'Bố cục khai báo bằng hình chữ nhật trên lưới 1 m; tường, sàn, trần, khung cửa sinh tự động; kiểm BFS mọi phòng tới được.',
@@ -238,7 +238,7 @@ window.WN = {
       numbers: [['Phòng', '13'], ['Đèn', '~160'], ['Rương', '7'], ['Lửa trại', '3']],
     },
     {
-      id: 'hub', cat: 'world', name: 'Làng Hearthvale', status: 'wip', progress: 70,
+      id: 'hub', cat: 'world', name: 'Làng Hearthvale',
       summary: 'Hub với 6 NPC dịch vụ và trang trại thời gian thực.',
       details: [
         'Brannoc (thợ rèn): gỡ dòng, Khắc Ấn, rune trang bị, phân giải, rèn base mới + 5 base đặc biệt từ trophy boss.',
@@ -250,7 +250,7 @@ window.WN = {
       numbers: [['NPC', '6'], ['Khu trang trại', '8'], ['Đồ vui', '14']],
     },
     {
-      id: 'scenes', cat: 'world', name: 'Các khu khác', status: 'wip', progress: 60,
+      id: 'scenes', cat: 'world', name: 'Các khu khác',
       summary: 'Vương quốc Eldmoor, Meadow (tutorial), Boss Arena, Valkyrie Arena, Bone Throne Dungeon, Training Room.',
       details: [
         'Vương quốc Eldmoor: thế giới demo của gói POLYGON Fantasy Kingdom, mở 80 cửa, nội thất lâu đài, 13 NPC, 4 lửa trại.',
@@ -262,7 +262,7 @@ window.WN = {
       numbers: [['Scene', '9']],
     },
     {
-      id: 'save', cat: 'tech', name: 'Lưu game', status: 'done', progress: 85,
+      id: 'save', cat: 'tech', name: 'Lưu game',
       summary: 'JSON: level, thuộc tính, passive, túi đồ, vàng, kho, trang trại, chống xui boss.',
       details: [
         'Tự ghi ~2 s sau mỗi thay đổi, khi rời scene và khi thoát; túi và nhân vật mang qua mọi scene.',
@@ -271,7 +271,7 @@ window.WN = {
       numbers: [['Định dạng', 'JSON']],
     },
     {
-      id: 'hud', cat: 'ui', name: 'HUD & menu', status: 'done', progress: 85,
+      id: 'hud', cat: 'ui', name: 'HUD & menu',
       summary: 'Quả cầu máu / mana chia đôi góc trái, thanh EXP, 6 ô skill + ô G, thanh boss.',
       details: [
         'Khung quả cầu đá low-poly sát góc màn hình; chất lỏng shader xoáy có vân năng lượng.',
@@ -282,7 +282,7 @@ window.WN = {
       numbers: [['Tab menu', '5']],
     },
     {
-      id: 'appearance', cat: 'character', name: 'Nhân vật & ngoại hình', status: 'done', progress: 85,
+      id: 'appearance', cat: 'character', name: 'Nhân vật & ngoại hình',
       summary: 'POLYGON Modular Fantasy Hero, nữ: 53 ngoại hình, shader Toon; quần áo trên người là các mảnh giáp đang mặc.',
       details: [
         'Đổi sang model nữ của gói Fantasy Hero (2026-10-03): cao 1.84 m, 53 ngoại hình ghép từ các preset nữ của gói.',
@@ -295,7 +295,7 @@ window.WN = {
       numbers: [['Ngoại hình', '53'], ['Chiều cao', '1.84 m'], ['Mảnh module', '430']],
     },
     {
-      id: 'audio', cat: 'av', name: 'Âm thanh & nhạc', status: 'wip', progress: 65,
+      id: 'audio', cat: 'av', name: 'Âm thanh & nhạc',
       summary: 'Bộ âm thanh theo boss, nhạc 2 phase, tiếng chém / đỡ / deflect, âm thanh đồ rơi.',
       details: [
         'Nhạc boss gen bằng Lyria (2 bài mỗi boss, crossfade khi đổi phase), cắt vòng lặp đúng nhịp.',
@@ -305,7 +305,7 @@ window.WN = {
       numbers: [['Âm thanh rơi đồ', '9']],
     },
     {
-      id: 'fx', cat: 'av', name: 'Hiệu ứng hạt', status: 'done', progress: 80,
+      id: 'fx', cat: 'av', name: 'Hiệu ứng hạt',
       summary: 'Máu, tia lửa deflect vàng-cam-đỏ, bụi lăn, lửa đạo cụ, đom đóm, hiệu ứng phase boss.',
       details: [
         'Perfect parry: chớp sao + tia lửa vàng → cam → đỏ có trọng lực.',
@@ -315,7 +315,7 @@ window.WN = {
       numbers: [['Prefab FX', '180+']],
     },
     {
-      id: 'pipeline', cat: 'tech', name: 'Pipeline & kiểm thử', status: 'done', progress: 90,
+      id: 'pipeline', cat: 'tech', name: 'Pipeline & kiểm thử',
       summary: 'Scene, animator, dữ liệu đòn đều sinh bằng builder; hơn 60 probe tự động kiểm trong Play mode.',
       details: [
         'Builder (menu Tools trong Unity) dựng lại mọi thứ từ dữ liệu — không sửa tay scene.',
