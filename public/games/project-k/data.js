@@ -14,22 +14,22 @@ window.WN = {
   stats: [
     { n: 347, label: 'Vũ khí trong catalog' },
     { n: 6, label: 'Bộ đòn (moveset)' },
-    { n: 11, label: 'Boss' },
+    { n: 8, label: 'Boss' },
     { n: 26, label: 'Loại quái thường' },
     { n: 130, label: 'Node cây passive' },
     { n: 113, label: 'Món giáp module' },
     { n: 53, label: 'Ngoại hình nhân vật' },
-    { n: 9, label: 'Scene chơi được' },
+    { n: 3, label: 'Scene chơi được' },
   ],
 
   pillars: [
     { icon: '⚔', title: 'Chiến đấu đọc nhịp', text: 'Lăn bất tử, lùi né, đỡ tốn stamina, deflect 12 frame kiểu Sekiro. Chỉ đòn quyết định của boss mới làm khựng; người chơi không bao giờ bị đánh ngã.' },
     { icon: '◆', title: 'Loot có ý nghĩa', text: '6 hạng đồ, dòng chỉ số theo tier, 9 loại gem chế tạo, nâng cấp +10 có rủi ro, độc nhất riêng cho từng boss có chống xui.' },
     { icon: '✦', title: 'Build không class', text: '5 thuộc tính, cây passive 130 node với 6 keystone đổi luật chơi, 6 ô ngọc skill có ngọc hỗ trợ lắp bên trong.' },
-    { icon: '⌂', title: 'Làng & trang trại', text: 'Hearthvale: thợ rèn, thầy thuốc, bếp, tạp hoá, điện ký ức và trang trại thời gian thực nuôi vòng chế tạo.' },
+    { icon: '⌂', title: 'Làng & trang trại', text: 'Thợ rèn, thầy thuốc, bếp, tạp hoá, điện ký ức và trang trại thời gian thực nuôi vòng chế tạo. Scene hub Hearthvale tạm gỡ (03/10); trạm NPC đang đặt ở Eldmoor.' },
   ],
 
-  loop: ['Vào vùng / lâu đài', 'Hạ quái & boss', 'Rơi đồ, gem, nguyên liệu', 'Về Hearthvale: rèn, chế, nấu, trồng', 'Build mạnh hơn', 'Vùng / boss khó hơn'],
+  loop: ['Vào vùng / lâu đài', 'Hạ quái & boss', 'Rơi đồ, gem, nguyên liệu', 'Về làng: rèn, chế, nấu, trồng', 'Build mạnh hơn', 'Vùng / boss khó hơn'],
 
   categories: [
     { id: 'combat', label: 'Chiến đấu', color: '#e0524f' },
@@ -66,6 +66,7 @@ window.WN = {
         'Chỉ đòn quyết định (bước knockdown hoặc đòn đỏ 危 của boss) mới làm khựng / vỡ thủ. Đòn thường của boss, mọi đòn quái thường và phép chỉ trừ máu.',
         'Người chơi không bao giờ bị đánh ngã; bỏ cơ chế bị thương đi khập khiễng.',
         'Bình máu hồi 70% máu tối đa (theo animation uống).',
+        'Đang giữ đỡ thì đứng yên — đó là tính năng (chốt 03/10), không làm đi khi đỡ.',
       ],
       numbers: [['Deflect', '12 → 8 → 4 frame'], ['Bình máu', '70% Life'], ['Stamina gốc', '100 + 2·END']],
     },
@@ -197,7 +198,7 @@ window.WN = {
       id: 'damage', cat: 'character', name: 'Loại sát thương & kháng',
       summary: 'Vật lý, Lửa, Băng, Sét, Chaos; giáp giảm vật lý, kháng (≤ 75%) giảm nguyên tố.',
       details: [
-        'Đòn của boss / quái chia phần nguyên tố theo tên (ví dụ Archdemon 50% lửa, Valkyrie 40% sét).',
+        'Đòn của boss / quái chia phần nguyên tố theo tên (ví dụ Archdemon 50% lửa, Clockwork Golem 40% sét).',
         'Phép quái 100% nguyên tố theo hiệu ứng.',
         'Quái kháng 40% nguyên tố của chính nó.',
       ],
@@ -205,14 +206,15 @@ window.WN = {
     },
     {
       id: 'bosses', cat: 'enemies', name: 'Boss',
-      summary: '11 boss: AI giữ khoảng cách, delay giả, phase 2, thanh thế; mỗi boss có độc nhất riêng.',
+      summary: '8 boss trong Crimson Castle: AI giữ khoảng cách, delay giả, phase 2, thanh thế; mỗi boss có độc nhất riêng.',
       details: [
         'AI chung: chọn move theo khoảng cách / trọng số / cooldown, đòn nhiều bước có cửa sổ hitbox, đòn đỏ chỉ né được.',
         'Phase 2 với nhạc riêng crossfade; sự kiện cho âm thanh và hiệu ứng.',
         'Boss lâu đài ngủ tới khi người chơi bước vào phòng; chết thì hồi sinh ở cửa phòng boss.',
         'Boss khổng lồ: đòn cúi theo chiều cao người chơi (aimPitch từng bước).',
+        'Warden, Neon Valkyrie và Bone Warden đã xoá (03/10). Moveset của Warden (8 boss lâu đài đang dùng) và Valkyrie được giữ để làm boss mới.',
       ],
-      numbers: [['Boss', '11'], ['Cao nhất', 'Valkyrie ~6 m']],
+      numbers: [['Boss', '8'], ['Cao nhất', '~4.5 m (golem)'], ['Moveset giữ lại', '2']],
     },
     {
       id: 'monsters', cat: 'enemies', name: 'Quái thường & elite',
@@ -238,28 +240,28 @@ window.WN = {
       numbers: [['Phòng', '13'], ['Đèn', '~160'], ['Rương', '7'], ['Lửa trại', '3']],
     },
     {
-      id: 'hub', cat: 'world', name: 'Làng Hearthvale',
-      summary: 'Hub với 6 NPC dịch vụ và trang trại thời gian thực.',
+      id: 'hub', cat: 'world', name: 'Làng Hearthvale (tạm gỡ)',
+      summary: 'Scene hub đã gỡ 03/10. Code 6 dịch vụ NPC và trang trại thời gian thực vẫn còn; trạm NPC đang đặt trong Eldmoor.',
       details: [
         'Brannoc (thợ rèn): gỡ dòng, Khắc Ấn, rune trang bị, phân giải, rèn base mới + 5 base đặc biệt từ trophy boss.',
         'Old Mirelle (thầy thuốc): 10 thuốc buff. Hesta (bếp): 5 món + Honey Milk.',
         'Quill (tạp hoá): 14 đồ vui có cơ chế thật — vịt dụ quái, pháo hoa choáng, điện thoại cục gạch ném, kẹo cao su làm chậm, trà sữa bắn trân châu…',
-        'Keeper Aldous (Điện Ký Ức): đánh lại boss đã hạ. Tẩy Tủy: hoàn điểm passive / thuộc tính.',
+        'Keeper Aldous (Điện Ký Ức): đánh lại boss lâu đài đã hạ. Tẩy Tủy: hoàn điểm passive / thuộc tính.',
         'Trang trại: ruộng, vườn thảo dược, hầm nấm, gà, bò, ong, ao cá, mỏ; chạy theo giờ thật, trữ tối đa 12 h.',
+        'Đi lại giữa các khu: ESC → Game → Travel (Crimson Castle, Eldmoor, Training Room).',
       ],
       numbers: [['NPC', '6'], ['Khu trang trại', '8'], ['Đồ vui', '14']],
     },
     {
       id: 'scenes', cat: 'world', name: 'Các khu khác',
-      summary: 'Vương quốc Eldmoor, Meadow (tutorial), Boss Arena, Valkyrie Arena, Bone Throne Dungeon, Training Room.',
+      summary: 'Sau đợt dọn 03/10 chỉ còn: Crimson Castle, Vương quốc Eldmoor, Training Room (+ scene công cụ Weapon Tuner).',
       details: [
-        'Vương quốc Eldmoor: thế giới demo của gói POLYGON Fantasy Kingdom, mở 80 cửa, nội thất lâu đài, 13 NPC, 4 lửa trại.',
-        'Meadow Tutorial: thung lũng 64 × 92 m, đường mòn tới boss Warden, ao, cối xay gió.',
-        'Bone Throne Dungeon: tuyến 250 m, 7 phòng, boss Bone Warden.',
-        'Arena riêng cho Warden và Neon Valkyrie.',
-        'Training Room: hình nộm, cột leo, xà chui.',
+        'Vương quốc Eldmoor: thế giới demo của gói POLYGON Fantasy Kingdom, mở 80 cửa, nội thất lâu đài, 13 NPC, 4 lửa trại (agent khác làm; người chơi vẫn là Sidekick cũ).',
+        'Training Room: hình nộm, cột leo, xà chui, 1 lửa trại.',
+        'Weapon Tuner: scene công cụ chỉnh tư thế vũ khí.',
+        'Đã xoá: Meadow Tutorial, Boss Arena, Valkyrie Arena, Bone Throne Dungeon, Hearthvale, scene demo của các gói (có bản sao lưu ngoài repo).',
       ],
-      numbers: [['Scene', '9']],
+      numbers: [['Scene chơi được', '3'], ['Scene công cụ', '1']],
     },
     {
       id: 'save', cat: 'tech', name: 'Lưu game',
@@ -351,9 +353,6 @@ window.WN = {
     { name: 'Clockwork Golem', where: 'Clockwork Forge', element: 'Sét 40%', note: 'Đông Crypt' },
     { name: 'Elemental Golem', where: 'Elemental Sanctum', element: 'Lửa / Băng / Sét 40%', note: 'Đổi nguyên tố theo đòn' },
     { name: 'Fortress Golem', where: 'Fortress Vault', element: 'Vật lý', note: 'Đông Cathedral' },
-    { name: 'Warden', where: 'Boss Arena · Meadow', element: 'Lửa 30%', note: 'Boss đầu tiên, phase 2 có nhạc riêng' },
-    { name: 'Neon Valkyrie', where: 'Valkyrie Arena', element: 'Sét 40%', note: 'Khổng lồ ~6 m, đòn cúi theo người chơi' },
-    { name: 'Bone Warden', where: 'Bone Throne Dungeon', element: 'Vật lý', note: 'Cuối tuyến 250 m' },
   ],
 
   castleRooms: [
@@ -376,6 +375,8 @@ window.WN = {
 
   // lane: now | next | later | idea
   roadmap: [
+    { lane: 'now', cat: 'enemies', title: 'Lỗi quái gọi đồng đội: "Collection was modified"', text: 'EnemyController.Aggro duyệt danh sách quái trong lúc danh sách đổi (quái Rallying gọi bản sao) → ném lỗi, có từ trước đợt dọn.' },
+    { lane: 'now', cat: 'tech', title: '5 component mất script trong lâu đài', text: 'Nằm trong prefab nhân vật / đạo cụ của gói (scene không thiếu GUID nào); log cảnh báo mỗi lần nạp Crimson Castle.' },
     { lane: 'now', cat: 'items', title: 'Giáp module: duyệt chỉ số & cách ghép', text: 'Phòng thủ / tier chấm theo hình; túi / váy hông đang đi theo áo, ô Cape = tấm lưng — đổi được nếu cần.' },
     { lane: 'now', cat: 'world', title: 'Dựng lại Eldmoor với nhân vật mới', text: 'Scene Eldmoor vẫn dùng người chơi Sidekick cũ.' },
     { lane: 'now', cat: 'combat', title: 'Song kiếm: Combo_Attack_02_02 trượt với tay nhân vật mới', text: 'LockAimProbe 7/104 trượt sau khi đổi model.' },
@@ -384,18 +385,15 @@ window.WN = {
     { lane: 'now', cat: 'weapons', title: 'Cung: tâm ngắm lệch trong bài kiểm', text: 'BowPlayProbe.Aim 7/9 — vòng tự kéo camera của probe cho tâm ngắm lệch 7–78 m.' },
     { lane: 'next', cat: 'weapons', title: 'Animation cho các loại vũ khí còn lại', text: 'Dao găm, rìu, chuỳ, búa, rìu lớn, poleaxe, khiên — đang "coming later".' },
     { lane: 'next', cat: 'weapons', title: 'Cung nâng cao', text: 'Bắn trên không, bắn tụ lực 3 cấp, Ultimate, ống tên đeo lưng; tắt "vô hạn tên" đang bật để test.' },
-    { lane: 'next', cat: 'combat', title: 'Đi khi đang đỡ', text: 'Nối clip Walk_Block của gói katana / kiếm (hiện đỡ thì đứng yên).' },
     { lane: 'next', cat: 'av', title: 'Âm thanh riêng cho Archdemon & tiếng chém theo vũ khí', text: 'Archdemon đang mượn bộ âm thanh Warden; mọi vũ khí dùng chung tiếng chém.' },
     { lane: 'next', cat: 'world', title: 'Hội thoại NPC "Mysterious Knight"', text: 'NPC cốt truyện trong lâu đài đã có chỗ đứng ngẫu nhiên, chưa có hội thoại.' },
     { lane: 'next', cat: 'character', title: 'Cân bằng chỉ số gốc & sát thương quái theo level', text: 'Life gốc 250, quái chỉnh theo mốc cũ — cần scale theo level vùng.' },
-    { lane: 'next', cat: 'enemies', title: 'Sửa lỗi skin hông Valkyrie', text: 'Đã khoanh vùng (panel candidate), chưa sửa.' },
     { lane: 'later', cat: 'items', title: 'Bảng affix đầy đủ theo slot & tier', text: 'Việc tiếp theo trong GDD.' },
     { lane: 'later', cat: 'character', title: '~40 skill gem + ~40 support', text: 'Hiện 11 skill, 16 support.' },
     { lane: 'later', cat: 'world', title: 'Số vùng, boss và level từng vùng', text: 'Lâu đài là vùng đầu (level 6).' },
     { lane: 'later', cat: 'character', title: 'Bộ animation thi phép chung', text: 'Và tư thế cầm theo từng nhóm vũ khí khi thi phép.' },
     { lane: 'later', cat: 'items', title: 'Công thức học dần, thú hiếm, mở rộng chuồng / ao', text: 'Hiện mọi công thức biết sẵn; trang trại mở từ đầu (công tắc test).' },
-    { lane: 'later', cat: 'world', title: 'Bone Throne: quái, loot, chuyển map', text: 'Bản hiện tại tập trung bố cục và boss cuối.' },
-    { lane: 'later', cat: 'tech', title: 'Tối ưu map rộng', text: 'Streaming vùng, LOD, culling, giới hạn bóng; BossArena có 1 frame ~100 ms chưa rõ nguyên nhân.' },
+    { lane: 'later', cat: 'tech', title: 'Tối ưu map rộng', text: 'Streaming vùng, LOD, culling, giới hạn bóng; đo lại hiệu năng sau khi dọn scene (benchmark giờ chạy Crimson Castle + Training Room).' },
     { lane: 'idea', cat: 'items', title: 'Playtest tỉ lệ drop / upgrade / farm', text: 'Mục tiêu: quái chết sau 2–4 đòn nhẹ, trận boss 2–4 phút, 3–8 lần thử mỗi boss.' },
     { lane: 'idea', cat: 'character', title: 'Thuộc tính có giá trị hơn yêu cầu', text: 'Đề xuất +1% / điểm vượt yêu cầu cho vũ khí cùng chỉ số (chưa chốt).' },
     { lane: 'idea', cat: 'world', title: 'Endgame', text: 'Để sau theo GDD.' },
@@ -404,6 +402,7 @@ window.WN = {
 
   // Change notes — newest first. cats tag which systems the note belongs to.
   changelog: [
+    { date: '2026-10-03', cats: ['world', 'enemies', 'tech'], title: 'Dọn scene, xoá boss Warden & Valkyrie', items: ['Chỉ giữ Crimson Castle, Eldmoor, Training Room (+ Weapon Tuner); xoá Meadow, Boss Arena, Valkyrie Arena, Bone Throne, Hearthvale và scene demo — có bản sao lưu ngoài repo.', 'Xoá boss Warden, Valkyrie, Bone Warden; giữ moveset Warden (8 boss lâu đài dùng) và Valkyrie cho boss sau này.', 'ESC → Game → Travel: đi thẳng tới từng khu thay cho "về hub".', 'Đỡ đòn đứng yên được chốt là tính năng.', 'Bài kiểm parry giờ dùng Archdemon trong lâu đài: 14/14.'] },
     { date: '2026-10-03', cats: ['items', 'character', 'ui'], title: 'Giáp = mảnh quần áo module', items: ['Bỏ 96 base giáp cũ; 113 món mới lấy từ mảnh module của Fantasy Hero, mặc vào là thấy trên người.', 'Áo kèm quần, găng kèm cả bộ tay + giáp vai, giày kèm bọc gối; mũ trùm ẩn tóc, mũ sắt kín thay cả đầu.', 'Ô Cape mới; rơi ra đất chỉ hiện một mảnh chính; ô trống = da trần.', 'Vũ khí đeo tự khớp lại khi mặc / tháo từng món.'] },
     { date: '2026-10-03', cats: ['character'], title: 'Nhân vật chính: nữ Fantasy Hero (POLYGON)', items: ['Bỏ Synty Sidekick; 53 ngoại hình ghép từ gói Modular Fantasy Hero.', 'Dựng lại vũ khí, tay cầm, vỏ và mọi scene (trừ Eldmoor).'] },
     { date: '2026-10-02', cats: ['world'], title: 'Vương quốc Eldmoor', items: ['Thế giới demo của gói Fantasy Kingdom: 13 NPC, 4 lửa trại, mở cửa và nội thất lâu đài.'] },
@@ -437,6 +436,17 @@ window.WN = {
   ],
 
   notes: [
+    { title: 'Cần chú ý / cần sửa (03/10)', items: [
+      'Eldmoor vẫn dùng người chơi Sidekick cũ và chưa có giáp module — agent làm Eldmoor sẽ đổi.',
+      'EnemyController.Aggro ném lỗi "Collection was modified" khi quái gọi đồng đội.',
+      '5 component mất script trong prefab của gói ở Crimson Castle (cảnh báo khi nạp scene).',
+      'Song kiếm trượt mục tiêu khoá 7/104 (Combo_Attack_02_02 mới, Attack_Speed_End cũ); DualWield 22/23 (tỉ lệ sát thương dao động).',
+      'Cung: BowPlayProbe.Aim 7/9; "vô hạn tên" vẫn bật để test.',
+      'Chưa chạy lại trên nhân vật mới: RollIFrameProbe, GreatswordPlayProbe.Strikes, ClimbPlayProbe, SkillLootProbe.',
+      'Công tắc test đang bật sẵn: bỏ qua yêu cầu thuộc tính, mở mọi ô skill, biết mọi ấn khắc, trang trại mở từ đầu.',
+      'Giáp module: phòng thủ / tier chấm theo hình, cần duyệt; model giáp Meshy cũ giờ chỉ còn nhẫn / dây chuyền dùng.',
+      'Bản sao lưu scene đã xoá: C:\\Users\\belik\\WhosnextBackup\\RemovedScenes_2026-10-03.',
+    ] },
     { title: 'Khác GDD (đã chốt)', items: ['Giữ 6 màu hạng đồ thay vì 4.', 'Bỏ đai và charm; bỏ ô quần.', 'Chuột phải là đỡ / deflect (không phải đòn nặng).', 'Không có nỏ; không có trọng lượng.', 'Flask vẫn hồi theo animation uống.'] },
     { title: 'Câu hỏi thiết kế còn mở', items: ['Tỉ lệ orb lấy từ PoE quá hiếm với quy mô ~30 quái + 8 boss mỗi lượt (đang ×10).', 'Str / Dex gần như chỉ là yêu cầu so với Vigor.', 'Agility kéo dài i-frame có phá cân bằng lăn / deflect?', 'Phạt kháng theo vùng cần hệ vùng.', 'Trang trại không chống chỉnh giờ tiến lên được (game offline).'] },
     { title: 'Mục tiêu cân bằng ban đầu', items: ['Quái thường chết sau 2–4 đòn nhẹ với đồ đúng cấp.', 'Trận boss 2–4 phút; 3–8 lần thử cho boss chính.', 'Sức mạnh: ~35% base + nâng cấp, ~35% affix, ~30% gem + passive.', 'Rare 4 dòng đầu tiên khoảng boss thứ 2; độc nhất boss đầu sau 3–5 lần đánh lại.'] },
@@ -450,7 +460,7 @@ window.WN = {
     ['img/boss-archdemon.jpg', 'Crimson Archdemon trong Cathedral'],
     ['img/boss-archdemon-2.jpg', 'Archdemon — đòn đập'],
     ['img/castle-plan.jpg', 'Sơ đồ Crimson Castle nhìn từ trên'],
-    ['img/hub-square.jpg', 'Hearthvale — quảng trường'],
+    ['img/hub-square.jpg', 'Hearthvale — quảng trường (scene đã gỡ 03/10)'],
     ['img/hub-farm.jpg', 'Hearthvale — trang trại'],
     ['img/hub-west.jpg', 'Hearthvale — phía tây'],
     ['img/hub-east.jpg', 'Hearthvale — phía đông'],
