@@ -1,7 +1,7 @@
 // Project K — game design data. Everything the page shows comes from here.
-// Updated 2026-10-03 from the project's AGENTS.md and Documentation/GDD.
+// Updated 2026-10-04 from the project's AGENTS.md and Documentation/GDD.
 window.WN = {
-  updated: '2026-10-03',
+  updated: '2026-10-04',
   meta: {
     title: 'PROJECT K',
     tagline: 'Action RPG góc nhìn thứ ba: chiến đấu kiểu Souls/Sekiro, hệ đồ và build kiểu Path of Exile 2.',
@@ -26,7 +26,7 @@ window.WN = {
     { icon: '⚔', title: 'Chiến đấu đọc nhịp', text: 'Lăn bất tử, lùi né, đỡ tốn stamina, deflect 12 frame kiểu Sekiro. Chỉ đòn quyết định của boss mới làm khựng; người chơi không bao giờ bị đánh ngã.' },
     { icon: '◆', title: 'Loot có ý nghĩa', text: '6 hạng đồ, dòng chỉ số theo tier, 9 loại gem chế tạo, nâng cấp +10 có rủi ro, độc nhất riêng cho từng boss có chống xui.' },
     { icon: '✦', title: 'Build không class', text: '5 thuộc tính, cây passive 130 node với 6 keystone đổi luật chơi, 6 ô ngọc skill có ngọc hỗ trợ lắp bên trong.' },
-    { icon: '⌂', title: 'Làng & trang trại', text: 'Thợ rèn, thầy thuốc, bếp, tạp hoá, điện ký ức và trang trại thời gian thực nuôi vòng chế tạo. Scene hub Hearthvale tạm gỡ (03/10); trạm NPC đang đặt ở Eldmoor.' },
+    { icon: '⌂', title: 'Làng & trang trại', text: 'Thợ rèn, thầy thuốc, bếp, tạp hoá, điện ký ức và trang trại thời gian thực nuôi vòng chế tạo. 6 trạm NPC giờ ở làng Willowmere (04/10).' },
   ],
 
   loop: ['Vào vùng / lâu đài', 'Hạ quái & boss', 'Rơi đồ, gem, nguyên liệu', 'Về làng: rèn, chế, nấu, trồng', 'Build mạnh hơn', 'Vùng / boss khó hơn'],
@@ -54,6 +54,7 @@ window.WN = {
         'Tốc độ animation theo tốc độ thật (nội suy đi / chạy / chạy nhanh) để chân không trượt.',
         'Leo tường: 3 clip (leo, xuống, vượt mép), IK ép cổ tay và mũi chân vào mặt tường.',
         'Ngồi (Ctrl), chui dưới xà.',
+        'Đế giày chạm đúng mặt đất (trước lơ lửng ~4 cm ở mọi scene); giày tăng tốc không còn làm lock-on chạy ngang phát clip chạy thẳng.',
       ],
       numbers: [['I-frame lăn', '0 – 0.85'], ['I-frame lùi né', '0 – 0.6'], ['Nhớ phím nhảy', '0.2 s'], ['Tiếp đất đứng yên', '≤ 0.3 s']],
     },
@@ -67,6 +68,7 @@ window.WN = {
         'Người chơi không bao giờ bị đánh ngã; bỏ cơ chế bị thương đi khập khiễng.',
         'Bình máu hồi 70% máu tối đa (theo animation uống).',
         'Đang giữ đỡ thì đứng yên — đó là tính năng (chốt 03/10), không làm đi khi đỡ.',
+        'Mọi vũ khí cận chiến (song kiếm, kiếm, katana, đại kiếm, thương) đỡ cùng một tư thế: hạ người, kiếm chéo trên đầu (người dùng chọn 04/10).',
       ],
       numbers: [['Deflect', '12 → 8 → 4 frame'], ['Bình máu', '70% Life'], ['Stamina gốc', '100 + 2·END']],
     },
@@ -76,12 +78,13 @@ window.WN = {
       details: [
         'Chỉ lock trong 10 m (đo tới mép thân mục tiêu), nhả ở 16 m; cần tầm nhìn; bị tường che quá 1.5 s thì nhả.',
         'Không có mục tiêu → camera quay về sau lưng 0.3 s.',
-        'Hất chuột ngang dứt khoát (≥ 130 px trong 0.3 s) để đổi mục tiêu kế bên.',
+        'Đổi mục tiêu: giữ di chuột ngang một chiều ≥ 0.2 s (≥ 260 px); hất nhanh không còn đổi nhầm.',
+        'Đang lock vẫn nghiêng camera lên / xuống được bằng chuột dọc.',
         'Auto Target: mục tiêu chết thì chuyển sang kẻ địch gần nhất.',
         'Zoom camera kiểu Genshin bằng con lăn (0.3 – 1.6 lần khoảng cách gốc).',
         'Khi lock mọi đòn bám mục tiêu.',
       ],
-      numbers: [['Tầm lock', '10 m'], ['Nhả lock', '16 m'], ['Hất chuột', '≥ 130 px / 0.3 s']],
+      numbers: [['Tầm lock', '10 m'], ['Nhả lock', '16 m'], ['Đổi mục tiêu', 'giữ ngang ≥ 0.2 s']],
     },
     {
       id: 'movesets', cat: 'weapons', name: 'Bộ đòn theo vũ khí',
@@ -91,6 +94,9 @@ window.WN = {
         'Mỗi bộ: chuỗi đòn nhẹ, đòn nặng (Shift + chuột trái) + follow-up, đòn chạy, đòn sau né, nhảy chém, chém trên không, phản đòn, kết liễu, đòn tụ lực.',
         'Đòn nhiều nhát: mỗi nhát có tiếng và được trúng lại. Cửa sổ hitbox đo từ tốc độ mũi kiếm.',
         'Cung: combo tự bám mục tiêu (9 tên cho 1 chuỗi), chuột phải ngắm qua vai, tên bay có trọng lực, hết tên thì đập bằng cung.',
+        'Chém khi đang nhảy: lao xuống theo hướng nhảy rồi bổ khi chạm đất, trượt tiếp theo đà (mọi vũ khí, kể cả song kiếm).',
+        'Thương làm lại bằng gói 9CG Spear (03/10): 1 combo 4 đòn, đòn tụ lực, đỡ, nhảy chém; đòn nối không còn trượt mục tiêu.',
+        'Chỉnh hướng chém bằng mắt trong game: F10 hiện 6 đòn vừa chém, [ ] xoay ±15°, tự lưu.',
         'Kĩ năng vũ khí (G) đã bỏ hẳn (03/10).',
         'Dao găm, rìu, chuỳ, búa, rìu lớn, poleaxe, khiên: có trong catalog nhưng chưa cầm được ("coming later").',
       ],
@@ -104,6 +110,7 @@ window.WN = {
         'Mỗi vũ khí: loại, họ, hạng gốc, Attack, tốc đánh, chí mạng, trọng lượng, đoạn lưỡi cắt.',
         '12 vũ khí đẹp nhất thành độc nhất Đỏ (có huyền thoại), 26 tiếp theo thành Cam.',
         'Yêu cầu thuộc tính 8 → 80 theo item level (Str / Dex / chia đôi).',
+        'Kiếm có chắn hẹp từng bị đo nhầm chỗ lưỡi bắt đầu → hitbox chỉ 30 cm ở mũi, nhát đầu đại kiếm trượt; lưỡi cắt giờ tính từ sát tay cầm.',
       ],
       numbers: [['Tổng', '347'], ['Kiếm một tay', '33'], ['Đại kiếm', '23'], ['Cung', '23'], ['Thương', '45'], ['Độc nhất Đỏ', '12']],
     },
@@ -127,7 +134,10 @@ window.WN = {
         'Tỉ lệ rơi: Trắng 70 / Xanh 25 / Tím 4.8 / độc nhất 0.2%; elite +200%, boss +400%.',
         'Mỗi boss có độc nhất riêng 15% + 5% mỗi lần hụt (chống xui, lưu trong save).',
         'Đồ rơi là model 3D bay ra và nảy trên sàn; F nhặt; tên đồ dưới đất kiểu PoE2 (Alt ẩn/hiện).',
-        '13 kiểu hiệu ứng rơi (cột sáng theo giá trị, Divine 8 m). Chỉ đồ xịn có tiếng (Rare, Heroic, Unique, Mythic, Divine), phát lần lượt từng món; đồ trắng, Magic, vàng, tiền tệ rơi im lặng.',
+        '13 kiểu hiệu ứng rơi (cột sáng theo giá trị, Divine 8 m). Chỉ đồ xịn có tiếng (Rare, Heroic, Unique, Mythic, Divine); đồ trắng, Magic, vàng, tiền tệ rơi im lặng.',
+        'Một xác rơi nhiều món thì ra lần lượt cách nhau 0.5 s, tiếng phát lúc món bắt đầu rơi.',
+        'Vàng, vật liệu, tên, đồ ăn tự vào túi khi đi qua (1.2 m); món vừa nhặt hiện thành dòng ở mép phải trên thanh skill.',
+        'Alt ẩn tên đồ nhưng món đang nhìn và món F sẽ nhặt vẫn hiện tên.',
       ],
       numbers: [['Hạng', '6'], ['Tier', '6'], ['Kiểu hiệu ứng rơi', '13']],
     },
@@ -226,9 +236,9 @@ window.WN = {
         'Elite to gấp 2–2.5 lần người chơi, siêu giáp; tầm đánh theo chiều dài vũ khí thật.',
         'Magic 15% (1–2 mod), Rare 5% (3–4 mod): Hasted, Regenerating, Fireproof, Reflective, Rallying (gọi bản sao), Volatile (nổ khi chết).',
         '30 quái đặt trong lâu đài; sống lại khi nghỉ lửa trại hoặc chết.',
-        'Eldmoor: 17 quái thường trong 5 nhóm dọc đường mòn phía nam trại công thành và đồi phía nam tường thành (sinh lúc chạy, level vùng 3).',
+        'Willowmere: bầy 3–5 con ban ngày, ban đêm sinh thêm tới 26 bầy (4–7 con, có hồn ma / xương / quỷ); quái đi lại quanh chỗ của nó, đuổi xa quá thì quay về; quái xa > 75 m thì ngủ để nhẹ máy.',
       ],
-      numbers: [['Loại quái', '26'], ['Mod', '6'], ['Trong lâu đài', '30'], ['Ở Eldmoor', '17']],
+      numbers: [['Loại quái', '26'], ['Mod', '6'], ['Trong lâu đài', '30'], ['Bầy đêm tối đa', '26']],
     },
     {
       id: 'castle', cat: 'world', name: 'Crimson Castle',
@@ -242,26 +252,39 @@ window.WN = {
       numbers: [['Phòng', '13'], ['Đèn', '~160'], ['Rương', '7'], ['Lửa trại', '3']],
     },
     {
-      id: 'hub', cat: 'world', name: 'Làng Hearthvale (tạm gỡ)',
-      summary: 'Scene hub đã gỡ 03/10. Code 6 dịch vụ NPC và trang trại thời gian thực vẫn còn; trạm NPC đang đặt trong Eldmoor.',
+      id: 'willowmere', cat: 'world', name: 'Làng Willowmere',
+      summary: 'Thung lũng mở 600 × 520 m quanh một thị trấn: đồi, sông, hồ có đảo, hố sụt sâu 14 m, ngày / đêm, quái ngoài hoang dã.',
+      details: [
+        'Thị trấn phẳng ở giữa, 7 con đường toả ra từ đài phun nước; ngoài thị trấn là đồi cao 9 m (20 m sát núi), mesa phía đông.',
+        'Nền là Unity Terrain vẽ được bằng 7 lớp chất liệu của gói Meadow (cỏ, lá rụng, đá, bùn, đất, đá cuội); đường và quảng trường là sơn trên terrain (04/10).',
+        'Cỏ 3D chỉ mọc quanh camera và chỉ nơi terrain sơn cỏ — vẽ đường mới là cỏ tự mất.',
+        '6 NPC có trạm (thợ rèn, thầy thuốc, bếp, tạp hoá, Điện Ký Ức, Tẩy Tủy), 4 dân làng đứng / ngồi, 4 người đi bộ quanh làng; nhà phóng to ×1.4 cho đúng tỉ lệ người.',
+        'Một ngày đêm = 24 phút thật; đêm có trăng, sương dày hơn, quái nhiều hơn. Sương mù dày dần theo khoảng cách: núi xa ~300 m chỉ còn bóng nhạt.',
+        '8 lửa trại; rơi xuống nước sâu thì được đưa về bờ.',
+      ],
+      numbers: [['Kích thước', '600 × 520 m'], ['Lớp terrain', '7'], ['Lửa trại', '8'], ['Ngày đêm', '24 phút']],
+    },
+    {
+      id: 'hub', cat: 'world', name: '6 trạm NPC & trang trại',
+      summary: 'Scene Hearthvale đã gỡ 03/10; 6 NPC có trạm giờ đứng trong làng Willowmere (04/10). Trang trại thời gian thực còn code, chưa đặt vào scene nào.',
       details: [
         'Brannoc (thợ rèn): gỡ dòng, Khắc Ấn, rune trang bị, phân giải, rèn base mới + 5 base đặc biệt từ trophy boss.',
         'Old Mirelle (thầy thuốc): 10 thuốc buff. Hesta (bếp): 5 món + Honey Milk.',
         'Quill (tạp hoá): 14 đồ vui có cơ chế thật — vịt dụ quái, pháo hoa choáng, điện thoại cục gạch ném, kẹo cao su làm chậm, trà sữa bắn trân châu…',
         'Keeper Aldous (Điện Ký Ức): đánh lại boss lâu đài đã hạ. Tẩy Tủy: hoàn điểm passive / thuộc tính.',
         'Trang trại: ruộng, vườn thảo dược, hầm nấm, gà, bò, ong, ao cá, mỏ; chạy theo giờ thật, trữ tối đa 12 h.',
-        'Đi lại giữa các khu: ESC → Game → Travel (Crimson Castle, Eldmoor, Training Room).',
+        'Đi lại giữa các khu: ESC → Game → Travel (Crimson Castle, Training Room; Willowmere chưa có trong Travel).',
       ],
       numbers: [['NPC', '6'], ['Khu trang trại', '8'], ['Đồ vui', '14']],
     },
     {
       id: 'scenes', cat: 'world', name: 'Các khu khác',
-      summary: 'Sau đợt dọn 03/10 chỉ còn: Crimson Castle, Vương quốc Eldmoor, Training Room (+ scene công cụ Weapon Tuner).',
+      summary: 'Crimson Castle, làng Willowmere, Training Room (+ scene công cụ Weapon Tuner). Eldmoor đã xoá 04/10.',
       details: [
-        'Vương quốc Eldmoor: thế giới demo của gói POLYGON Fantasy Kingdom, mở 80 cửa, nội thất lâu đài, 13 NPC, 4 lửa trại (agent khác làm; người chơi vẫn là Sidekick cũ).',
-        'Training Room: hình nộm, cột leo, xà chui, 1 lửa trại.',
+        'Willowmere: xem mục riêng.',
+        'Training Room: hình nộm, cột leo, xà chui, 1 lửa trại, rương vô tận (F: tuôn đồ ngẫu nhiên mỗi 0.5 s để test).',
         'Weapon Tuner: scene công cụ chỉnh tư thế vũ khí.',
-        'Đã xoá: Meadow Tutorial, Boss Arena, Valkyrie Arena, Bone Throne Dungeon, Hearthvale, scene demo của các gói (có bản sao lưu ngoài repo).',
+        'Đã xoá: Eldmoor (04/10), Meadow Tutorial, Boss Arena, Valkyrie Arena, Bone Throne Dungeon, Hearthvale, scene demo của các gói (có bản sao lưu ngoài repo).',
       ],
       numbers: [['Scene chơi được', '3'], ['Scene công cụ', '1']],
     },
@@ -292,6 +315,7 @@ window.WN = {
         'Đổi sang model nữ của gói Fantasy Hero (2026-10-03): cao 1.84 m, 53 ngoại hình ghép từ các preset nữ của gói.',
         'Ngoại hình giờ quyết định mặt, tóc, lông mày, tai và bảng màu; phần còn lại là giáp đang mặc (mỗi mảnh là một mesh riêng trên cùng bộ xương).',
         'Đổi ngoại hình trong game (ESC → Appearance), lưu lại; bộ đồ đang mặc giữ nguyên.',
+        'Đầu mặc định: Crimson Gaze (mặt + tóc đỏ gen bằng Meshy, ghép trong Blender), thay Katarina (04/10). Đội vương miện / sừng vẫn thấy tóc; mũ trùm và mũ kín dùng đầu chuẩn.',
         'Bàn tay POLYGON chỉ có 3 ngón: tay cầm vũ khí, bình thuốc, thương đều tính theo ngón giữa thay ngón út.',
         'Shader Toon tự viết: cel 2 tầng, bóng đổ, rim, outline; MSAA 4x + SMAA.',
         'Trước đó đã thử Kata, Federica, Kazuko, hiệp sĩ Synty Sidekick.',
@@ -343,7 +367,7 @@ window.WN = {
     { id: 'bow', name: 'Cung', img: ['img/w-bow-held-front.jpg', 'img/w-bow-worn-back.jpg'],
       text: '23 cung có xương dây. Combo bắn tự bám, ngắm qua vai có trọng lực.', facts: ['Bộ đòn: Archer (9CG) + Longbow (Mixamo)', 'Đeo: phẳng trên lưng'] },
     { id: 'spear', name: 'Thương / Kích', img: ['img/w-spear-held-front.jpg', 'img/w-spear-worn-back.jpg'],
-      text: 'Spear, Halberd, Glaive dùng bộ đòn của boss Neon Valkyrie (137 clip).', facts: ['Bộ đòn: Neon Valkyrie', 'Đeo: chéo lưng, mũi qua vai trái'] },
+      text: 'Spear, Halberd, Glaive dùng gói 9CG Spear (thay clip của boss Valkyrie từ 03/10): combo 4 đòn, tụ lực, đỡ, nhảy chém.', facts: ['Bộ đòn: Spear (9CG)', 'Cầm một tay ở giữa thân như gói', 'Đeo: chéo lưng, mũi qua vai trái'] },
   ],
 
   bosses: [
@@ -377,9 +401,9 @@ window.WN = {
 
   // lane: now | next | later | idea
   roadmap: [
-    { lane: 'now', cat: 'enemies', title: 'Lỗi quái gọi đồng đội: "Collection was modified"', text: 'EnemyController.Aggro duyệt danh sách quái trong lúc danh sách đổi (quái Rallying gọi bản sao) → ném lỗi, có từ trước đợt dọn.' },
-    { lane: 'now', cat: 'tech', title: '5 component mất script trong lâu đài', text: 'Nằm trong prefab nhân vật / đạo cụ của gói (scene không thiếu GUID nào); log cảnh báo mỗi lần nạp Crimson Castle.' },
-    { lane: 'now', cat: 'world', title: 'Dựng lại Eldmoor với nhân vật mới', text: 'Scene Eldmoor vẫn dùng người chơi Sidekick cũ.' },
+    { lane: 'now', cat: 'tech', title: 'Cảnh báo script mất trong lâu đài', text: 'Còn 1 cảnh báo "referenced script (Unknown)" mỗi lần hồi sinh trong Play; quét scene + 1645 prefab không thấy component nào mất.' },
+    { lane: 'now', cat: 'world', title: 'Willowmere: Travel, đèn ban đêm, hội thoại dân làng', text: 'Làng chưa có trong Build Settings / Travel; đêm chưa có đèn trong nhà / đường; dân làng không có trạm chưa nói chuyện.' },
+    { lane: 'now', cat: 'character', title: 'Tóc Crimson Gaze nhô qua vương miện', text: 'Mũ / vương miện đội trên tóc dựng theo tóc nhỏ của gói.' },
     { lane: 'now', cat: 'weapons', title: 'Chỉnh tư thế từng vũ khí bằng WeaponTuner', text: 'Người dùng tự chỉnh 4 tư thế cho mỗi loại vũ khí rồi lưu; game áp dụng ngay.' },
     { lane: 'next', cat: 'weapons', title: 'Animation cho các loại vũ khí còn lại', text: 'Dao găm, rìu, chuỳ, búa, rìu lớn, poleaxe, khiên — đang "coming later".' },
     { lane: 'next', cat: 'weapons', title: 'Cung nâng cao', text: 'Bắn trên không, bắn tụ lực 3 cấp, Ultimate, ống tên đeo lưng; tắt "vô hạn tên" đang bật để test.' },
@@ -400,6 +424,11 @@ window.WN = {
 
   // Change notes — newest first. cats tag which systems the note belongs to.
   changelog: [
+    { date: '2026-10-04', cats: ['world'], title: 'Willowmere: nền Terrain vẽ được', items: ['Nền đất sinh bằng code đổi thành Unity Terrain với 7 lớp chất liệu Meadow, tô sẵn theo màu cũ; độ cao giữ nguyên nên mọi vật đứng yên chỗ.', 'Đường, quảng trường, ruộng giờ là sơn trên terrain (bỏ ô đất của gói Kingdom).', 'Cỏ chỉ mọc nơi sơn cỏ; phần vẽ tay được giữ khi dựng lại làng.', 'Thêm đủ gói POLYGON Meadow/Forest (190 prefab, 28 lớp terrain) và chuyển vật liệu gói Nature sang URP.'] },
+    { date: '2026-10-04', cats: ['world', 'enemies'], title: 'Làng Willowmere', items: ['Thung lũng mở: đồi, sông, hồ có đảo, hố sụt, thác; 6 NPC có trạm + dân làng + người đi bộ.', 'Ngày / đêm 24 phút; quái theo bầy ban ngày, đêm sinh thêm; quái đi lại và bỏ đuổi khi chạy xa; 8 lửa trại.', 'Cỏ mọc quanh camera, sương mù xa thật hơn.'] },
+    { date: '2026-10-04', cats: ['combat', 'weapons'], title: 'Nhảy chém theo hướng nhảy, tư thế đỡ chung, nhát đầu đại kiếm', items: ['Chém khi đang nhảy lao theo hướng nhảy và bổ theo hướng đó (trước bổ thẳng xuống tại chỗ).', 'Mọi vũ khí cận chiến đỡ bằng tư thế đỡ của kiếm đơn (người dùng chọn).', 'Đại kiếm / kiếm có chắn hẹp: hitbox phủ cả lưỡi, nhát đầu không còn trượt (84/84 trường hợp).', 'Thương: đòn nối giữ mục tiêu và đứng đúng cự ly thương; đòn bổ cuối trúng.', 'F10: chỉnh hướng chém từng đòn bằng mắt, tự lưu.', 'Katana: chân không lún xuống sàn trong đòn xoay; giày tăng tốc không làm sai clip chạy khi lock.'] },
+    { date: '2026-10-04', cats: ['items', 'ui', 'character'], title: 'Đồ rơi từng món, tự nhặt, đầu Crimson Gaze', items: ['Nhiều món rơi ra lần lượt 0.5 s; vàng / vật liệu tự vào túi khi đi qua; dòng "+ món" ở mép phải.', 'Rương vô tận trong Training Room để test đồ.', 'Đầu mặc định mới Crimson Gaze; chân chạm đúng mặt đất ở mọi scene.', 'Xoá Eldmoor (có bản sao lưu).'] },
+    { date: '2026-10-03', cats: ['combat', 'enemies', 'tech'], title: 'Thương làm lại, lock-on, sửa lỗi quái', items: ['Thương dùng gói 9CG Spear thay clip boss Valkyrie: từ lúc bấm tới lúc chém 0.01–0.41 s (trước 0.45–1.2 s).', 'Lock-on: chuột dọc vẫn nghiêng camera; đổi mục tiêu bằng giữ chuột ngang 0.2 s.', 'Katana: 2 đòn xoay trên không nhanh gấp đôi và trúng thật.', 'Hết lỗi "Collection was modified" khi quái gọi đồng đội; hạng quái tính theo máu gốc.', 'Song kiếm hơn 1 kiếm đúng +12.5% (23/23 ba lần).', 'Hiệu ứng phép không hiện mà vẫn trúng (Goblin Shaman, Lightning Strike): đã sửa.'] },
     { date: '2026-10-03', cats: ['combat', 'weapons', 'items', 'enemies', 'av'], title: 'Sửa song kiếm, cung, giáp, quái Eldmoor, âm thanh rơi', items: ['Song kiếm hết trượt mục tiêu khoá: chỉnh hướng chém 4 đòn về giữa vùng trúng (đứng yên 0/104, di chuyển 0/104).', 'Bỏ hẳn chiêu G (kĩ năng vũ khí) của mọi vũ khí.', 'Cung: góc bắn bù trọng lực để tên đi qua đúng tâm ngắm (trước rơi dưới tâm, tới ~2.8 m ở 30 m khi kéo yếu).', 'Giáp module: mỗi món có điểm 0–100 theo hình, tier theo điểm.', 'Eldmoor có 17 quái thường trong 5 nhóm phía nam thị trấn.', 'Âm thanh rơi: chỉ đồ xịn có tiếng, phát lần lượt từng món.'] },
     { date: '2026-10-03', cats: ['world', 'enemies', 'tech'], title: 'Dọn scene, xoá boss Warden & Valkyrie', items: ['Chỉ giữ Crimson Castle, Eldmoor, Training Room (+ Weapon Tuner); xoá Meadow, Boss Arena, Valkyrie Arena, Bone Throne, Hearthvale và scene demo — có bản sao lưu ngoài repo.', 'Xoá boss Warden, Valkyrie, Bone Warden; giữ moveset Warden (8 boss lâu đài dùng) và Valkyrie cho boss sau này.', 'ESC → Game → Travel: đi thẳng tới từng khu thay cho "về hub".', 'Đỡ đòn đứng yên được chốt là tính năng.', 'Bài kiểm parry giờ dùng Archdemon trong lâu đài: 14/14.'] },
     { date: '2026-10-03', cats: ['items', 'character', 'ui'], title: 'Giáp = mảnh quần áo module', items: ['Bỏ 96 base giáp cũ; 113 món mới lấy từ mảnh module của Fantasy Hero, mặc vào là thấy trên người.', 'Áo kèm quần, găng kèm cả bộ tay + giáp vai, giày kèm bọc gối; mũ trùm ẩn tóc, mũ sắt kín thay cả đầu.', 'Ô Cape mới; rơi ra đất chỉ hiện một mảnh chính; ô trống = da trần.', 'Vũ khí đeo tự khớp lại khi mặc / tháo từng món.'] },
@@ -435,18 +464,18 @@ window.WN = {
   ],
 
   notes: [
-    { title: 'Cần chú ý / cần sửa (03/10)', items: [
-      'Eldmoor vẫn dùng người chơi Sidekick cũ và chưa có giáp module — agent làm Eldmoor sẽ đổi.',
-      'EnemyController.Aggro ném lỗi "Collection was modified" khi quái gọi đồng đội.',
-      '5 component mất script trong prefab của gói ở Crimson Castle (cảnh báo khi nạp scene).',
-      'DualWield 22/23 (tỉ lệ sát thương song kiếm dao động giữa các lần đo).',
+    { title: 'Cần chú ý / cần sửa (04/10)', items: [
+      'Willowmere chưa có trong Build Settings / Travel; chưa có đèn ban đêm.',
+      'Terrain Willowmere: nặn độ cao bằng tay thì nhà / cây đặt bằng code không tự dịch theo. "Repaint from code" xoá phần vẽ tay.',
+      'Tóc Crimson Gaze nhô qua vương miện / mũ đội trên tóc.',
+      'Còn 1 cảnh báo "referenced script (Unknown)" mỗi lần hồi sinh trong lâu đài (chưa tìm ra nguồn).',
+      'Đi khi đang đỡ: không làm (đứng yên là tính năng); thương chưa dùng clip đi khi đỡ.',
       'Cung: "vô hạn tên" vẫn bật để test.',
       'Chưa chạy lại trên nhân vật mới: RollIFrameProbe, GreatswordPlayProbe.Strikes, ClimbPlayProbe, SkillLootProbe.',
       'Công tắc test đang bật sẵn: bỏ qua yêu cầu thuộc tính, mở mọi ô skill, biết mọi ấn khắc, trang trại mở từ đầu.',
       'Giáp module: điểm và tier đã chấm theo hình, có thể chỉnh trong ModularGearBuilder.Scores; model giáp Meshy cũ giờ chỉ còn nhẫn / dây chuyền dùng.',
-      'Quái Eldmoor chết không hồi tới khi nạp lại scene (Eldmoor chưa có hệ hồi sinh như lâu đài).',
       'Đồ Magic và ngọc skill rơi im lặng (chỉ Rare trở lên có tiếng) — đổi được ở LootFx.Sounds.',
-      'Bản sao lưu scene đã xoá: C:\\Users\\belik\\WhosnextBackup\\RemovedScenes_2026-10-03.',
+      'Scene đã xoá (Eldmoor, Hearthvale, các arena…) có bản sao lưu ngoài repo.',
     ] },
     { title: 'Khác GDD (đã chốt)', items: ['Giữ 6 màu hạng đồ thay vì 4.', 'Bỏ đai và charm; bỏ ô quần.', 'Chuột phải là đỡ / deflect (không phải đòn nặng).', 'Không có nỏ; không có trọng lượng.', 'Flask vẫn hồi theo animation uống.'] },
     { title: 'Câu hỏi thiết kế còn mở', items: ['Tỉ lệ orb lấy từ PoE quá hiếm với quy mô ~30 quái + 8 boss mỗi lượt (đang ×10).', 'Str / Dex gần như chỉ là yêu cầu so với Vigor.', 'Agility kéo dài i-frame có phá cân bằng lăn / deflect?', 'Phạt kháng theo vùng cần hệ vùng.', 'Trang trại không chống chỉnh giờ tiến lên được (game offline).'] },
@@ -454,6 +483,11 @@ window.WN = {
   ],
 
   gallery: [
+    ['img/willow-village.jpg', 'Willowmere — thị trấn và 7 con đường trên nền Terrain'],
+    ['img/willow-top.jpg', 'Willowmere nhìn từ trên: sông, hồ có đảo, hố sụt, núi bao quanh'],
+    ['img/willow-sinkhole.jpg', 'Hố sụt sâu 14 m ở đồng cỏ cao'],
+    ['img/willow-terrain-road.jpg', 'Đường đất vẽ trên terrain, cỏ mọc hai bên'],
+    ['img/hero-head-crimson-gaze.jpg', 'Đầu Crimson Gaze: không mũ / vương miện / mũ trùm / mũ kín'],
     ['img/castle-great-hall.jpg', 'Great Hall — quái Magic / Rare với tên và mod trên đầu'],
     ['img/castle-gate.jpg', 'Gate Hall — lửa trại đầu tiên'],
     ['img/castle-library.jpg', 'Library'],
@@ -488,8 +522,8 @@ window.WN = {
   tech: [
     ['Engine', 'Unity 6000.6.2f1, URP, Input System, Cinemachine 3'],
     ['Nhân vật', 'POLYGON Modular Fantasy Hero (nữ, Humanoid), giáp ghép từng mảnh, shader Toon tự viết'],
-    ['Animation', 'Gói 9CG (song kiếm, kiếm, katana, cung, phép), Massive GreatSword, Mixamo, clip Neon Valkyrie'],
-    ['Môi trường', 'Synty POLYGON (Dungeon, Fantasy Rivals, Nature…), Craftpix'],
+    ['Animation', 'Gói 9CG (song kiếm, kiếm, katana, thương, cung, phép), Massive GreatSword, Mixamo'],
+    ['Môi trường', 'Synty POLYGON (Dungeon, Fantasy Rivals, Fantasy Kingdom, Nature, Meadow/Forest…), Unity Terrain, Craftpix'],
     ['Hiệu ứng', 'Hovl Studio, POLYGON Particle FX, shader riêng (orb chất lỏng, toon)'],
     ['Nội dung gen AI', 'Model Meshy, icon GPT Image, nhạc Lyria, SFX ElevenLabs'],
     ['Quy trình', 'Builder sinh scene / animator / dữ liệu; probe Play-mode tự kiểm + chụp ảnh; job bridge điều khiển editor'],
