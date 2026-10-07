@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Cân bằng skill · Project K · se77n</title>
+<meta name="description" content="Project K: công thức, biểu đồ và bảng số liệu cân bằng 40 skill, kèm skill nào gắn được ngọc hỗ trợ nào." />
+<meta name="theme-color" content="#0d0a09" />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<script>
+  try { var t = localStorage.getItem('whosnext.theme'); if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t); } catch (e) {}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Be+Vietnam+Pro:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a gem-cutter's ledger - one narrow reading column for the rules, then a wide working table and the support sockets. */
+:root {
+  --bg: #0d0a09; --surface: #14100e; --raise: #1b1613; --ink: #efe6d8; --ink-2: #b3a591; --ink-3: #807262;
+  --line: rgba(230, 196, 140, .16); --line-2: rgba(230, 196, 140, .07); --accent: #e2b15b; --accent-ink: #1a1208; --gem: #e2b15b;
+  --t-cold: #3987e5; --t-fire: #d95926; --t-phys: #199e70; --t-light: #c98500; --t-chaos: #d55181;
+  --display: "Cormorant Garamond", Georgia, serif;
+  --body: "Be Vietnam Pro", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  color-scheme: dark;
+}
+:root[data-theme="light"] {
+  --bg: #f2ece2; --surface: #faf7f1; --raise: #ffffff; --ink: #261d15; --ink-2: #62564a; --ink-3: #8b7e6d;
+  --line: rgba(70, 50, 20, .16); --line-2: rgba(70, 50, 20, .07); --accent: #976514; --accent-ink: #fff8ea; --gem: #976514;
+  --t-cold: #2a78d6; --t-fire: #eb6834; --t-phys: #1baf7a; --t-light: #eda100; --t-chaos: #e87ba4;
+  color-scheme: light;
+}
+body { margin: 0; }
+a { color: var(--accent); text-decoration: none; } a:hover { text-decoration: underline; }
+.back { font: 500 13px var(--mono); letter-spacing: .06em; }
+h1 { font-size: clamp(36px, 6vw, 56px) !important; }
+h2 { font-size: 28px !important; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.6 var(--body); }
+.wrap { max-width: 1180px; margin: 0 auto; padding-inline: 20px; padding-block: 40px 64px; display: grid; gap: 44px; }
+h1, h2 { font-family: var(--display); font-weight: 700; text-wrap: balance; margin: 0; letter-spacing: .01em; }
+h1 { font-size: clamp(30px, 5vw, 46px); line-height: 1.1; }
+h2 { font-size: 24px; line-height: 1.2; }
+p { margin: 0; }
+.lede { max-width: 66ch; color: var(--ink-2); font-size: 16px; }
+.eyebrow { font: 500 12px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--gem); }
+header { display: grid; gap: 14px; }
+.facts { display: flex; flex-wrap: wrap; gap: 8px 22px; font: 13px/1.4 var(--mono); color: var(--ink-3); }
+.facts b { color: var(--ink); font-weight: 500; }
+section { display: grid; gap: 16px; min-width: 0; }
+.sec-head { display: grid; gap: 6px; }
+.sec-head p { color: var(--ink-2); max-width: 70ch; }
+
+/* The rules */
+.rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.rule { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 16px 18px; display: grid; gap: 6px; align-content: start; }
+.rule h3 { margin: 0; font: 600 14px/1.3 var(--body); }
+.rule p { color: var(--ink-2); font-size: 14px; }
+code, .num { font-family: var(--mono); font-size: .92em; }
+code { background: var(--line-2); padding: 1px 5px; border-radius: 3px; }
+
+/* Chart */
+.chart-box { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 16px; display: grid; gap: 12px; min-width: 0; position: relative; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex: none; }
+svg text { fill: var(--ink-3); font: 11px var(--mono); }
+svg .lab { fill: var(--ink); font: 500 11.5px var(--body); }
+svg .axis-title { fill: var(--ink-2); font: 500 12px var(--body); }
+.tip { position: absolute; pointer-events: none; background: var(--raise); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; font-size: 13px; box-shadow: 0 6px 18px rgb(0 0 0 / .12); min-width: 170px; }
+.tip b { display: block; margin-bottom: 2px; }
+.tip .row { display: flex; justify-content: space-between; gap: 14px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+
+/* Table */
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.chip { font: 500 13px/1 var(--body); padding: 8px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink-2); cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.chip:focus-visible, th button:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+#q { margin-left: auto; font: 14px var(--body); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); min-width: 0; width: 220px; max-width: 100%; }
+.table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+th, td { padding: 9px 10px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--line-2); }
+th:first-child, td:first-child, th.l, td.l { text-align: left; }
+thead th { position: sticky; top: 0; background: var(--raise); font-weight: 600; font-size: 12px; color: var(--ink-2); border-bottom: 1px solid var(--line); }
+th button { all: unset; cursor: pointer; display: inline-flex; gap: 4px; align-items: center; }
+th[aria-sort] button::after { content: ""; font-size: 10px; }
+th[aria-sort="ascending"] button::after { content: "▲"; }
+th[aria-sort="descending"] button::after { content: "▼"; }
+tbody tr:hover { background: var(--line-2); }
+td.name { font-weight: 600; }
+td.note { text-align: left; color: var(--ink-2); white-space: normal; min-width: 200px; }
+.type { display: inline-flex; align-items: center; gap: 6px; }
+.form { color: var(--ink-3); font-size: 12px; }
+.muted { color: var(--ink-3); }
+.count { font: 13px var(--mono); color: var(--ink-3); }
+
+/* Supports */
+.supports { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px; }
+details { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; min-width: 0; }
+summary { cursor: pointer; list-style: none; display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; }
+summary::-webkit-details-marker { display: none; }
+summary .sname { font-weight: 600; }
+summary .needs { grid-column: 1; color: var(--ink-2); font-size: 13px; }
+summary .n { grid-row: 1 / span 2; grid-column: 2; align-self: center; font: 500 13px var(--mono); color: var(--gem); }
+.fits { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.fits span { font-size: 12.5px; padding: 3px 8px; border-radius: 4px; background: var(--line-2); color: var(--ink-2); }
+.none { color: var(--ink-3); font-size: 13px; margin-top: 10px; }
+footer { color: var(--ink-3); font-size: 13px; }
+@media (max-width: 640px) { #q { margin-left: 0; width: 100%; } .wrap { padding-block: 28px 48px; gap: 36px; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <a class="back" href="./">← Project K</a>
+    <span class="eyebrow">Project K · sổ cân bằng</span>
+    <h1>Cân bằng skill</h1>
+    <p class="lede">Mana, sát thương, hộ thuẫn và lượng hồi của mọi skill đều tính từ một công thức trong <code>Editor/SkillBalance.cs</code>, áp dụng mỗi lần build. Số dưới đây ở cấp ngọc 1, chưa gắn ngọc hỗ trợ. Mỗi cấp ngọc thêm 12% sát thương và 5% mana.</p>
+    <div class="facts"><span><b id="f-skills">40</b> skill</span><span><b id="f-sup">16</b> ngọc hỗ trợ</span><span>mốc <b>Holy Slash</b> ≈ 40 / kẻ, 12 mana</span><span>cập nhật <b>2026-10-07</b></span></div>
+  </header>
+
+  <section aria-labelledby="h-rules">
+    <div class="sec-head"><h2 id="h-rules">Công thức</h2></div>
+    <div class="rules">
+      <div class="rule"><h3>Mana</h3><p>Không hồi chiêu: <code>8 + 4 × thi triển</code>. Có hồi chiêu: <code>12 + 1.6 × hồi chiêu + 2 × thi triển</code>.</p></div>
+      <div class="rule"><h3>Sát thương mỗi kẻ địch</h3><p><code>4.4 × mana × (1 + 0.06 × hồi chiêu) × (1 + 0.15 × phần thi triển quá 1 s) ÷ số kẻ × cách gây × tune</code>. Mưa và vùng chia đều cho số nhát.</p></div>
+      <div class="rule"><h3>Số kẻ trong vùng</h3><p><code>(diện tích ÷ 16 m²)^0.4</code>, từ 1 đến 3.5. Vùng rộng đánh mỗi con ít hơn nhưng cả bầy nhiều hơn.</p></div>
+      <div class="rule"><h3>Cách gây</h3><p>Vùng kéo dài (quái bước ra được) ×1.25. Đòn có ngòi +12% mỗi giây chờ. Tường nổ khi vỡ ×0.8.</p></div>
+      <div class="rule"><h3>Khiên, tường, hồi máu</h3><p>Hộ thuẫn <code>1.6 × mana × hệ số hồi chiêu × (10 s ÷ thời lượng)^0.3</code>. Tường 120 máu. Ấn hồi máu 0.65% máu tối đa mỗi mana.</p></div>
+      <div class="rule"><h3>Ngoài công thức</h3><p>Twister (đòn vũ khí, 80% mỗi nhát), Elemental Weakness (nguyền), Heart of Battle (hồi thể lực và mana, số đặt tay).</p></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-chart">
+    <div class="sec-head">
+      <h2 id="h-chart">Nhịp đánh đổi lấy hiệu suất</h2>
+      <p>Mỗi chấm là một skill gây sát thương. Skill dùng liên tục nằm bên phải: DPS cao lên một con nhưng ít sát thương cả bầy trên mỗi mana. Skill có hồi chiêu nằm bên trái phía trên: tốn chờ, nhưng mỗi mana đáng giá hơn.</p>
+    </div>
+    <div class="chart-box" id="chart-box">
+      <div class="legend" id="legend"></div>
+      <svg id="chart" role="img" aria-label="Biểu đồ phân tán: DPS lên một kẻ và sát thương cả bầy trên mỗi mana của từng skill" width="100%" viewBox="0 0 900 430" preserveAspectRatio="xMidYMid meet"></svg>
+      <div class="tip" id="tip" hidden></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-table">
+    <div class="sec-head">
+      <h2 id="h-table">Bảng số liệu</h2>
+      <p><b>Mỗi con</b>: tổng sát thương một lần thi triển lên một kẻ đứng trong vùng. <b>Cả bầy</b>: Mỗi con × số kẻ. <b>/mana</b>: Cả bầy ÷ mana. <b>DPS 1 con</b>: Mỗi con ÷ (thi triển + hồi chiêu), nhịp tối đa nếu đủ mana. Bấm tiêu đề cột để sắp xếp.</p>
+    </div>
+    <div class="controls" id="filters" role="group" aria-label="Lọc theo dạng skill"></div>
+    <div class="controls"><span class="count" id="count"></span><input id="q" type="search" placeholder="Tìm skill…" aria-label="Tìm skill"></div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr id="thead"></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-sup">
+    <div class="sec-head">
+      <h2 id="h-sup">Ngọc hỗ trợ gắn được vào đâu</h2>
+      <p>Một ngọc hỗ trợ chỉ gắn được vào skill mà nó thật sự có tác dụng. Gắn sai, game báo lý do, ví dụ “Chain Support không có tác dụng với Ice Rain: cần Đòn đánh một lần”.</p>
+    </div>
+    <div class="supports" id="supports"></div>
+  </section>
+
+  <footer><a href="./">← Về trang thiết kế Project K</a> · Sinh từ <code>Documentation/GDD/SkillBalance.md</code>. Đổi số: sửa hằng số đầu <code>SkillBalance</code> hoặc <code>tune</code> của skill trong <code>SkillBuilder</code>, rồi build lại.</footer>
+</div>
+
+<script>
+const DATA = {"skills": [{"name": "Holy Slash", "shape": "Projectile", "type": "Physical", "cast": 0.99, "cd": 0.0, "mana": 12.0, "r": 1.6, "area": 32.0, "targets": 1.3, "hits": "1", "perHit": "40", "perTarget": 40.0, "pack": 53.0, "perMana": 4.4, "dps": 40.4, "note": ""}, {"name": "Divine Judgment", "shape": "GroundBurst", "type": "Physical", "cast": 1.1, "cd": 10.0, "mana": 30.0, "r": 7.0, "area": 154.0, "targets": 2.5, "hits": "1", "perHit": "97", "perTarget": 97.0, "pack": 240.0, "perMana": 8.0, "dps": 8.7, "note": ""}, {"name": "Hammer Strike", "shape": "GroundBurst", "type": "Physical", "cast": 1.1, "cd": 12.0, "mana": 33.0, "r": 12.0, "area": 452.0, "targets": 3.5, "hits": "1", "perHit": "79", "perTarget": 79.0, "pack": 277.0, "perMana": 8.4, "dps": 6.0, "note": ""}, {"name": "Ion Strike", "shape": "GroundBurst", "type": "Lightning", "cast": 1.1, "cd": 12.0, "mana": 33.0, "r": 12.0, "area": 452.0, "targets": 3.5, "hits": "1", "perHit": "79", "perTarget": 79.0, "pack": 277.0, "perMana": 8.4, "dps": 6.0, "note": "đất điện"}, {"name": "Meteor Strike", "shape": "GroundBurst", "type": "Fire", "cast": 1.1, "cd": 14.0, "mana": 37.0, "r": 9.0, "area": 254.0, "targets": 3.0, "hits": "1", "perHit": "113", "perTarget": 113.0, "pack": 342.0, "perMana": 9.2, "dps": 7.5, "note": "đất cháy"}, {"name": "Molten Pillar", "shape": "GroundBurst", "type": "Fire", "cast": 1.1, "cd": 8.0, "mana": 27.0, "r": 5.0, "area": 79.0, "targets": 1.9, "hits": "1", "perHit": "98", "perTarget": 98.0, "pack": 185.0, "perMana": 6.9, "dps": 10.8, "note": "đất cháy"}, {"name": "Pulse Grenade", "shape": "GroundBurst", "type": "Lightning", "cast": 1.1, "cd": 8.0, "mana": 27.0, "r": 7.0, "area": 154.0, "targets": 2.5, "hits": "1", "perHit": "77", "perTarget": 77.0, "pack": 190.0, "perMana": 7.1, "dps": 8.5, "note": "đất điện"}, {"name": "Spirit Bomb", "shape": "GroundBurst", "type": "Physical", "cast": 1.1, "cd": 16.0, "mana": 40.0, "r": 9.0, "area": 254.0, "targets": 3.0, "hits": "1", "perHit": "144", "perTarget": 144.0, "pack": 435.0, "perMana": 10.9, "dps": 8.4, "note": ""}, {"name": "Holo Shield", "shape": "SelfWard", "type": "Physical", "cast": 0.5, "cd": 14.0, "mana": 35.0, "r": 0.0, "area": 0.0, "targets": 1.0, "hits": "-", "perHit": "-", "perTarget": null, "pack": null, "perMana": null, "dps": null, "note": "hộ thuẫn 98 trong 12 s"}, {"name": "Neural Shield", "shape": "SelfWard", "type": "Lightning", "cast": 0.5, "cd": 12.0, "mana": 32.0, "r": 0.0, "area": 0.0, "targets": 1.0, "hits": "-", "perHit": "-", "perTarget": null, "pack": null, "perMana": null, "dps": null, "note": "hộ thuẫn 113 trong 8 s"}, {"name": "Program Shield", "shape": "SelfWard", "type": "Physical", "cast": 0.5, "cd": 16.0, "mana": 39.0, "r": 0.0, "area": 0.0, "targets": 1.0, "hits": "-", "perHit": "-", "perTarget": null, "pack": null, "perMana": null, "dps": null, "note": "hộ thuẫn 87 trong 15 s"}, {"name": "Source Energy Shield", "shape": "SelfWard", "type": "Physical", "cast": 0.5, "cd": 16.0, "mana": 39.0, "r": 0.0, "area": 0.0, "targets": 1.0, "hits": "-", "perHit": "-", "perTarget": null, "pack": null, "perMana": null, "dps": null, "note": "hộ thuẫn 122 trong 10 s"}, {"name": "Void Shield", "shape": "SelfWard", "type": "Chaos", "cast": 0.5, "cd": 14.0, "mana": 35.0, "r": 0.0, "area": 0.0, "targets": 1.0, "hits": "-", "perHit": "-", "perTarget": null, "pack": null, "perMana": null, "dps": null, "note": "hộ thuẫn 98 trong 12 s"}, {"name": "Conjure Amethyst Sea", "shape": "RainArea", "type": "Physical", "cast": 2.35, "cd": 12.0, "mana": 36.0, "r": 8.0, "area": 201.0, "targets": 2.8, "hits": "24", "perHit": "6", "perTarget": 144.0, "pack": 396.0, "perMana": 11.0, "dps": 10.0, "note": ""}, {"name": "Conjure Lava Pool", "shape": "RainArea", "type": "Fire", "cast": 2.35, "cd": 12.0, "mana": 36.0, "r": 5.5, "area": 95.0, "targets": 2.0, "hits": "24", "perHit": "8", "perTarget": 192.0, "pack": 392.0, "perMana": 10.9, "dps": 13.4, "note": "đất cháy"}, {"name": "Conjure Water Pool", "shape": "RainArea", "type": "Cold", "cast": 2.35, "cd": 12.0, "mana": 36.0, "r": 5.5, "area": 95.0, "targets": 2.0, "hits": "24", "perHit": "8", "perTarget": 192.0, "pack": 392.0, "perMana": 10.9, "dps": 13.4, "note": "đất lạnh"}, {"name": "Essence Harvest", "shape": "RainArea", "type": "Chaos", "cast": 1.18, "cd": 10.0, "mana": 30.0, "r": 7.0, "area": 154.0, "targets": 2.5, "hits": "10", "perHit": "9", "perTarget": 90.0, "pack": 223.0, "perMana": 7.4, "dps": 8.1, "note": "hồi 2% máu mỗi kẻ trúng"}, {"name": "Fusion Core", "shape": "RainArea", "type": "Physical", "cast": 1.18, "cd": 11.0, "mana": 32.0, "r": 7.0, "area": 154.0, "targets": 2.5, "hits": "16", "perHit": "8", "perTarget": 128.0, "pack": 317.0, "perMana": 9.9, "dps": 10.5, "note": ""}, {"name": "Ice Rain", "shape": "RainArea", "type": "Cold", "cast": 2.35, "cd": 8.0, "mana": 29.0, "r": 3.3, "area": 34.0, "targets": 1.4, "hits": "16", "perHit": "12", "perTarget": 192.0, "pack": 260.0, "perMana": 9.0, "dps": 18.6, "note": "đất lạnh"}, {"name": "Ion Marker", "shape": "RainArea", "type": "Lightning", "cast": 1.18, "cd": 10.0, "mana": 30.0, "r": 7.0, "area": 154.0, "targets": 2.5, "hits": "16", "perHit": "7", "perTarget": 112.0, "pack": 277.0, "perMana": 9.2, "dps": 10.0, "note": "đất điện"}, {"name": "Laser Cannon Barrage", "shape": "RainArea", "type": "Lightning", "cast": 2.35, "cd": 12.0, "mana": 36.0, "r": 6.5, "area": 133.0, "targets": 2.3, "hits": "20", "perHit": "9", "perTarget": 180.0, "pack": 420.0, "perMana": 11.7, "dps": 12.5, "note": ""}, {"name": "Lightning Circle", "shape": "RainArea", "type": "Lightning", "cast": 2.35, "cd": 8.0, "mana": 29.0, "r": 17.0, "area": 908.0, "targets": 3.5, "hits": "10", "perHit": "8", "perTarget": 80.0, "pack": 280.0, "perMana": 9.7, "dps": 7.7, "note": "đất điện"}, {"name": "Magic Missile Barrage", "shape": "RainArea", "type": "Physical", "cast": 1.18, "cd": 10.0, "mana": 30.0, "r": 9.0, "area": 254.0, "targets": 3.0, "hits": "20", "perHit": "4", "perTarget": 80.0, "pack": 242.0, "perMana": 8.1, "dps": 7.2, "note": ""}, {"name": "Mine Field", "shape": "RainArea", "type": "Fire", "cast": 1.18, "cd": 12.0, "mana": 34.0, "r": 7.0, "area": 154.0, "targets": 2.5, "hits": "12", "perHit": "11", "perTarget": 132.0, "pack": 326.0, "perMana": 9.6, "dps": 10.0, "note": ""}, {"name": "Rocket Barrage", "shape": "RainArea", "type": "Fire", "cast": 2.35, "cd": 12.0, "mana": 36.0, "r": 6.5, "area": 133.0, "targets": 2.3, "hits": "20", "perHit": "9", "perTarget": 180.0, "pack": 420.0, "perMana": 11.7, "dps": 12.5, "note": ""}, {"name": "Star Rays", "shape": "RainArea", "type": "Physical", "cast": 1.18, "cd": 11.0, "mana": 32.0, "r": 5.5, "area": 95.0, "targets": 2.0, "hits": "20", "perHit": "7", "perTarget": 140.0, "pack": 286.0, "perMana": 8.9, "dps": 11.5, "note": ""}, {"name": "Storm Beacon", "shape": "RainArea", "type": "Lightning", "cast": 1.18, "cd": 10.0, "mana": 30.0, "r": 7.0, "area": 154.0, "targets": 2.5, "hits": "14", "perHit": "7", "perTarget": 98.0, "pack": 242.0, "perMana": 8.1, "dps": 8.8, "note": "đất điện"}, {"name": "Storm Pillar", "shape": "RainArea", "type": "Lightning", "cast": 1.18, "cd": 10.0, "mana": 30.0, "r": 6.0, "area": 113.0, "targets": 2.2, "hits": "16", "perHit": "7", "perTarget": 112.0, "pack": 245.0, "perMana": 8.2, "dps": 10.0, "note": "đất điện"}, {"name": "Summon Storm", "shape": "RainArea", "type": "Lightning", "cast": 2.35, "cd": 11.0, "mana": 34.0, "r": 7.0, "area": 154.0, "targets": 2.5, "hits": "16", "perHit": "9", "perTarget": 144.0, "pack": 356.0, "perMana": 10.5, "dps": 10.8, "note": "đất điện"}, {"name": "Volley", "shape": "RainArea", "type": "Physical", "cast": 1.18, "cd": 9.0, "mana": 29.0, "r": 11.0, "area": 380.0, "targets": 3.5, "hits": "10", "perHit": "7", "perTarget": 70.0, "pack": 245.0, "perMana": 8.4, "dps": 6.9, "note": ""}, {"name": "Fire Barrier", "shape": "Wall", "type": "Fire", "cast": 0.5, "cd": 10.0, "mana": 29.0, "r": 5.0, "area": 79.0, "targets": 1.9, "hits": "1", "perHit": "86", "perTarget": 86.0, "pack": 163.0, "perMana": 5.6, "dps": 8.2, "note": "tường 120 máu, 10 s; số là vụ nổ khi vỡ"}, {"name": "Frost Wall", "shape": "Wall", "type": "Cold", "cast": 0.25, "cd": 6.0, "mana": 22.0, "r": 4.5, "area": 64.0, "targets": 1.7, "hits": "1", "perHit": "61", "perTarget": 61.0, "pack": 106.0, "perMana": 4.8, "dps": 9.8, "note": "tường 120 máu, 4 s; số là vụ nổ khi vỡ"}, {"name": "Plasma Barrier", "shape": "Wall", "type": "Lightning", "cast": 0.5, "cd": 10.0, "mana": 29.0, "r": 5.0, "area": 79.0, "targets": 1.9, "hits": "1", "perHit": "86", "perTarget": 86.0, "pack": 163.0, "perMana": 5.6, "dps": 8.2, "note": "tường 120 máu, 10 s; số là vụ nổ khi vỡ"}, {"name": "Water Barrier", "shape": "Wall", "type": "Cold", "cast": 0.5, "cd": 10.0, "mana": 29.0, "r": 5.0, "area": 79.0, "targets": 1.9, "hits": "1", "perHit": "86", "perTarget": 86.0, "pack": 163.0, "perMana": 5.6, "dps": 8.2, "note": "tường 120 máu, 10 s; số là vụ nổ khi vỡ"}, {"name": "Ice Nova", "shape": "Nova", "type": "Cold", "cast": 1.1, "cd": 0.0, "mana": 12.0, "r": 6.4, "area": 129.0, "targets": 2.3, "hits": "1", "perHit": "21", "perTarget": 21.0, "pack": 48.0, "perMana": 4.0, "dps": 19.1, "note": "đẩy lùi"}, {"name": "Elemental Weakness", "shape": "Curse", "type": "Physical", "cast": 1.18, "cd": 0.0, "mana": 13.0, "r": 6.4, "area": 129.0, "targets": 2.3, "hits": "-", "perHit": "-", "perTarget": null, "pack": null, "perMana": null, "dps": null, "note": "nguyền, không gây sát thương"}, {"name": "Twister", "shape": "Twister", "type": "Attack", "cast": 0.5, "cd": 0.0, "mana": 10.0, "r": 1.0, "area": 3.0, "targets": 1.0, "hits": "mỗi 0.66 s", "perHit": "80% đòn vũ khí", "perTarget": null, "pack": null, "perMana": null, "dps": null, "note": "đòn đánh"}, {"name": "Ice Slash", "shape": "Arc", "type": "Cold", "cast": 0.99, "cd": 0.0, "mana": 12.0, "r": 5.0, "area": 39.0, "targets": 1.4, "hits": "1", "perHit": "37", "perTarget": 37.0, "pack": 53.0, "perMana": 4.4, "dps": 37.4, "note": ""}, {"name": "Healing Seal", "shape": "Aura", "type": "Physical", "cast": 0.5, "cd": 14.0, "mana": 35.0, "r": 6.0, "area": 113.0, "targets": 2.2, "hits": "-", "perHit": "-", "perTarget": null, "pack": null, "perMana": null, "dps": null, "note": "hồi 5.2% máu/s trong 8 s"}, {"name": "Heart of Battle", "shape": "Aura", "type": "Physical", "cast": 0.5, "cd": 16.0, "mana": 14.0, "r": 6.0, "area": 113.0, "targets": 2.2, "hits": "-", "perHit": "-", "perTarget": null, "pack": null, "perMana": null, "dps": null, "note": "hồi 1.5% máu/s, 5% thể lực + mana/s trong 12 s"}], "supports": [{"name": "Chain Support", "needs": "Single hit", "fits": "Divine Judgment, Fire Barrier, Frost Wall, Hammer Strike, Holy Slash, Ice Nova, Ice Slash, Ion Strike, Meteor Strike, Molten Pillar, Plasma Barrier, Pulse Grenade, Spirit Bomb, Water Barrier"}, {"name": "Life Leech Support", "needs": "Damage", "fits": "Conjure Amethyst Sea, Conjure Lava Pool, Conjure Water Pool, Divine Judgment, Essence Harvest, Fire Barrier, Frost Wall, Fusion Core, Hammer Strike, Holy Slash, Ice Nova, Ice Rain, Ice Slash, Ion Marker, Ion Strike, Laser Cannon Barrage, Lightning Circle, Magic Missile Barrage, Meteor Strike, Mine Field, Molten Pillar, Plasma Barrier, Pulse Grenade, Rocket Barrage, Spirit Bomb, Star Rays, Storm Beacon, Storm Pillar, Summon Storm, Twister, Volley, Water Barrier"}, {"name": "Swift Casting Support", "needs": "mọi skill", "fits": "mọi skill"}, {"name": "Efficiency Support", "needs": "mọi skill", "fits": "mọi skill"}, {"name": "Power Support", "needs": "Damage or Ward", "fits": "Conjure Amethyst Sea, Conjure Lava Pool, Conjure Water Pool, Divine Judgment, Essence Harvest, Fire Barrier, Frost Wall, Fusion Core, Hammer Strike, Holo Shield, Holy Slash, Ice Nova, Ice Rain, Ice Slash, Ion Marker, Ion Strike, Laser Cannon Barrage, Lightning Circle, Magic Missile Barrage, Meteor Strike, Mine Field, Molten Pillar, Neural Shield, Plasma Barrier, Program Shield, Pulse Grenade, Rocket Barrage, Source Energy Shield, Spirit Bomb, Star Rays, Storm Beacon, Storm Pillar, Summon Storm, Twister, Void Shield, Volley, Water Barrier"}, {"name": "Wide Area Support", "needs": "Area", "fits": "Conjure Amethyst Sea, Conjure Lava Pool, Conjure Water Pool, Divine Judgment, Elemental Weakness, Essence Harvest, Fire Barrier, Frost Wall, Fusion Core, Hammer Strike, Healing Seal, Heart of Battle, Holy Slash, Ice Nova, Ice Rain, Ice Slash, Ion Marker, Ion Strike, Laser Cannon Barrage, Lightning Circle, Magic Missile Barrage, Meteor Strike, Mine Field, Molten Pillar, Plasma Barrier, Pulse Grenade, Rocket Barrage, Spirit Bomb, Star Rays, Storm Beacon, Storm Pillar, Summon Storm, Twister, Volley, Water Barrier"}, {"name": "Quick Recovery Support", "needs": "Cooldown", "fits": "Conjure Amethyst Sea, Conjure Lava Pool, Conjure Water Pool, Divine Judgment, Essence Harvest, Fire Barrier, Frost Wall, Fusion Core, Hammer Strike, Healing Seal, Heart of Battle, Holo Shield, Ice Rain, Ion Marker, Ion Strike, Laser Cannon Barrage, Lightning Circle, Magic Missile Barrage, Meteor Strike, Mine Field, Molten Pillar, Neural Shield, Plasma Barrier, Program Shield, Pulse Grenade, Rocket Barrage, Source Energy Shield, Spirit Bomb, Star Rays, Storm Beacon, Storm Pillar, Summon Storm, Void Shield, Volley, Water Barrier"}, {"name": "Multiple Projectiles Support", "needs": "Projectile", "fits": "Holy Slash, Twister"}, {"name": "Pierce Support", "needs": "Projectile that stops on a hit", "fits": "chưa skill nào"}, {"name": "Concussion Support", "needs": "Damage", "fits": "Conjure Amethyst Sea, Conjure Lava Pool, Conjure Water Pool, Divine Judgment, Essence Harvest, Fire Barrier, Frost Wall, Fusion Core, Hammer Strike, Holy Slash, Ice Nova, Ice Rain, Ice Slash, Ion Marker, Ion Strike, Laser Cannon Barrage, Lightning Circle, Magic Missile Barrage, Meteor Strike, Mine Field, Molten Pillar, Plasma Barrier, Pulse Grenade, Rocket Barrage, Spirit Bomb, Star Rays, Storm Beacon, Storm Pillar, Summon Storm, Twister, Volley, Water Barrier"}, {"name": "Ignite Support", "needs": "Damage", "fits": "Conjure Amethyst Sea, Conjure Lava Pool, Conjure Water Pool, Divine Judgment, Essence Harvest, Fire Barrier, Frost Wall, Fusion Core, Hammer Strike, Holy Slash, Ice Nova, Ice Rain, Ice Slash, Ion Marker, Ion Strike, Laser Cannon Barrage, Lightning Circle, Magic Missile Barrage, Meteor Strike, Mine Field, Molten Pillar, Plasma Barrier, Pulse Grenade, Rocket Barrage, Spirit Bomb, Star Rays, Storm Beacon, Storm Pillar, Summon Storm, Twister, Volley, Water Barrier"}, {"name": "Cast on Parry Support", "needs": "mọi skill", "fits": "mọi skill"}, {"name": "Duration Support", "needs": "Duration", "fits": "Conjure Amethyst Sea, Conjure Lava Pool, Conjure Water Pool, Elemental Weakness, Essence Harvest, Fire Barrier, Frost Wall, Fusion Core, Healing Seal, Heart of Battle, Holo Shield, Ice Rain, Ion Marker, Laser Cannon Barrage, Lightning Circle, Magic Missile Barrage, Mine Field, Neural Shield, Plasma Barrier, Program Shield, Rocket Barrage, Source Energy Shield, Star Rays, Storm Beacon, Storm Pillar, Summon Storm, Twister, Void Shield, Volley, Water Barrier"}, {"name": "Brutality Support", "needs": "Physical spell damage", "fits": "Conjure Amethyst Sea, Divine Judgment, Fusion Core, Hammer Strike, Holy Slash, Magic Missile Barrage, Spirit Bomb, Star Rays, Volley"}, {"name": "Flame Shift Support", "needs": "Physical damage", "fits": "Conjure Amethyst Sea, Divine Judgment, Fusion Core, Hammer Strike, Holy Slash, Magic Missile Barrage, Spirit Bomb, Star Rays, Twister, Volley"}, {"name": "Empowered Heavy Support", "needs": "Infusion", "fits": "chưa skill nào"}]};
+const FORM = { Projectile: "Đạn", GroundBurst: "Đòn nổ", SelfWard: "Khiên", RainArea: "Vùng", Wall: "Tường", Nova: "Vòng quanh người", Curse: "Nguyền", Twister: "Lốc (đòn đánh)", Arc: "Quét", Aura: "Hồi phục" };
+const TYPES = [ ["Cold", "Băng", "--t-cold"], ["Fire", "Lửa", "--t-fire"], ["Physical", "Vật lý", "--t-phys"], ["Lightning", "Sét", "--t-light"], ["Chaos", "Hỗn mang", "--t-chaos"] ];
+const TYPE = Object.fromEntries(TYPES.map(([k, v, c]) => [k, { vi: v, color: `var(${c})` }]));
+const GROUPS = [ ["all", "Tất cả", () => true], ["spam", "Dùng liên tục", s => s.cd === 0], ["RainArea", "Vùng", s => s.shape === "RainArea"], ["GroundBurst", "Đòn nổ", s => s.shape === "GroundBurst"],
+  ["Wall", "Tường", s => s.shape === "Wall"], ["SelfWard", "Khiên", s => s.shape === "SelfWard"], ["Aura", "Hồi phục", s => s.shape === "Aura"] ];
+const skills = DATA.skills;
+const damaging = s => s.perTarget != null && s.dps != null;
+const fmt = (v, d = 0) => v == null ? "–" : v.toLocaleString("vi-VN", { minimumFractionDigits: d, maximumFractionDigits: d });
+document.getElementById("f-skills").textContent = skills.length;
+document.getElementById("f-sup").textContent = DATA.supports.length;
+
+// ---------- chart
+(function chart() {
+  const svg = document.getElementById("chart"), tip = document.getElementById("tip"), box = document.getElementById("chart-box");
+  const W = 900, H = 430, m = { l: 56, r: 24, t: 16, b: 52 };
+  const pts = skills.filter(damaging);
+  const xMax = Math.ceil(Math.max(...pts.map(p => p.dps)) / 5) * 5, yMax = Math.ceil(Math.max(...pts.map(p => p.perMana)) / 2) * 2;
+  const x = v => m.l + v / xMax * (W - m.l - m.r), y = v => H - m.b - v / yMax * (H - m.t - m.b);
+  const ns = "http://www.w3.org/2000/svg", el = (n, a, p = svg) => { const e = document.createElementNS(ns, n); for (const k in a) e.setAttribute(k, a[k]); p.appendChild(e); return e; };
+  for (let v = 0; v <= xMax; v += 5) { el("line", { x1: x(v), x2: x(v), y1: m.t, y2: H - m.b, stroke: "var(--line-2)", "stroke-width": 1 }); el("text", { x: x(v), y: H - m.b + 18, "text-anchor": "middle" }).textContent = v; }
+  for (let v = 0; v <= yMax; v += 2) { el("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), stroke: "var(--line-2)", "stroke-width": 1 }); el("text", { x: m.l - 8, y: y(v) + 4, "text-anchor": "end" }).textContent = v; }
+  el("line", { x1: m.l, x2: W - m.r, y1: H - m.b, y2: H - m.b, stroke: "var(--line)", "stroke-width": 1 });
+  el("text", { x: (m.l + W - m.r) / 2, y: H - 10, "text-anchor": "middle", class: "axis-title" }).textContent = "DPS lên một kẻ (sát thương / giây, nếu đủ mana)";
+  el("text", { x: 14, y: (m.t + H - m.b) / 2, "text-anchor": "middle", class: "axis-title", transform: `rotate(-90 14 ${(m.t + H - m.b) / 2})` }).textContent = "Sát thương cả bầy / mana";
+  const LABEL = { "Holy Slash": [-8, -12, "end"], "Ice Slash": [10, 16, "start"], "Ice Nova": [10, 4, "start"], "Ice Rain": [10, 4, "start"], "Rocket Barrage": [10, -8, "start"], "Spirit Bomb": [-12, -10, "end"], "Lightning Circle": [10, 14, "start"] };
+  for (const p of pts) {
+    const cx = x(p.dps), cy = y(p.perMana), col = (TYPE[p.type] || TYPE.Physical).color;
+    const g = el("g", { tabindex: 0, role: "img", "aria-label": `${p.name}: DPS ${p.dps}, ${p.perMana} mỗi mana` });
+    el("circle", { cx, cy, r: 6, fill: col, stroke: "var(--surface)", "stroke-width": 2 }, g);
+    el("circle", { cx, cy, r: 14, fill: "transparent" }, g);
+    if (LABEL[p.name]) { const [dx, dy, a] = LABEL[p.name]; el("text", { x: cx + dx, y: cy + dy, "text-anchor": a, class: "lab" }).textContent = p.name; }
+    const show = () => {
+      tip.innerHTML = `<b>${p.name}</b><div class="row"><span>${FORM[p.shape]} · ${(TYPE[p.type] || TYPE.Physical).vi}</span></div>
+        <div class="row"><span>Mỗi con</span><span>${fmt(p.perTarget)}</span></div><div class="row"><span>Cả bầy / mana</span><span>${fmt(p.perMana, 1)}</span></div>
+        <div class="row"><span>DPS 1 con</span><span>${fmt(p.dps, 1)}</span></div><div class="row"><span>Mana · hồi chiêu</span><span>${fmt(p.mana)} · ${fmt(p.cd)} s</span></div>`;
+      tip.hidden = false;
+      const r = svg.getBoundingClientRect(), b = box.getBoundingClientRect(), sx = r.width / W;
+      let left = r.left - b.left + cx * sx + 14, top = r.top - b.top + cy * sx - 20;
+      if (left + 200 > b.width) left -= 228;
+      tip.style.left = left + "px"; tip.style.top = Math.max(8, top) + "px";
+    };
+    g.addEventListener("mouseenter", show); g.addEventListener("focus", show);
+    g.addEventListener("mouseleave", () => tip.hidden = true); g.addEventListener("blur", () => tip.hidden = true);
+  }
+  document.getElementById("legend").innerHTML = TYPES.map(([k, v, c]) => `<span><i class="dot" style="background:var(${c})"></i>${v}</span>`).join("");
+})();
+
+// ---------- table
+const COLS = [
+  ["name", "Skill", "l"], ["shape", "Dạng", "l"], ["type", "Loại", "l"], ["cast", "Thi triển s"], ["cd", "Hồi chiêu s"], ["mana", "Mana"], ["r", "Bán kính m"],
+  ["targets", "Số kẻ"], ["hits", "Nhát"], ["perHit", "Mỗi nhát"], ["perTarget", "Mỗi con"], ["pack", "Cả bầy"], ["perMana", "/mana"], ["dps", "DPS 1 con"], ["note", "Ghi chú", "l"] ];
+let group = "all", sortKey = null, sortDir = 1;
+try { group = localStorage.getItem("sb-group") || "all"; } catch (e) {}
+const numeric = v => { const n = parseFloat(String(v).replace(",", ".")); return isNaN(n) ? null : n; };
+function cell(s, k) {
+  const v = s[k];
+  if (k === "name") return `<td class="name">${v}</td>`;
+  if (k === "shape") return `<td class="l form">${FORM[v] || v}</td>`;
+  if (k === "type") { if (s.shape === "Twister") return `<td class="l">Đòn đánh</td>`; if (!damaging(s) && s.shape !== "Wall") return `<td class="l muted">–</td>`;
+    const t = TYPE[v] || TYPE.Physical; return `<td class="l"><span class="type"><i class="dot" style="background:${t.color}"></i>${t.vi}</span></td>`; }
+  if (k === "note") return `<td class="note">${v || ""}</td>`;
+  if (v === "-" || v === "" || v == null) return `<td class="muted">–</td>`;
+  const d = ["cast", "targets", "perMana", "dps"].includes(k) ? (k === "cast" ? 2 : 1) : 0;
+  return typeof v === "number" ? `<td>${fmt(v, k === "r" && v % 1 ? 1 : d)}</td>` : `<td>${v}</td>`;
+}
+function render() {
+  const f = GROUPS.find(g => g[0] === group)[2], q = document.getElementById("q").value.trim().toLowerCase();
+  let rows = skills.filter(s => f(s) && (!q || s.name.toLowerCase().includes(q)));
+  if (sortKey) rows = [...rows].sort((a, b) => {
+    const x = typeof a[sortKey] === "number" ? a[sortKey] : numeric(a[sortKey]), y = typeof b[sortKey] === "number" ? b[sortKey] : numeric(b[sortKey]);
+    if (x == null && y == null) return String(a[sortKey]).localeCompare(String(b[sortKey])) * sortDir;
+    if (x == null) return 1; if (y == null) return -1; return (x - y) * sortDir; });
+  document.getElementById("tbody").innerHTML = rows.map(s => `<tr>${COLS.map(([k]) => cell(s, k)).join("")}</tr>`).join("");
+  document.getElementById("count").textContent = `${rows.length} / ${skills.length} skill`;
+  document.querySelectorAll("#filters .chip").forEach(b => b.setAttribute("aria-pressed", b.dataset.g === group));
+  document.querySelectorAll("#thead th").forEach(th => th.dataset.k === sortKey ? th.setAttribute("aria-sort", sortDir > 0 ? "ascending" : "descending") : th.removeAttribute("aria-sort"));
+}
+document.getElementById("thead").innerHTML = COLS.map(([k, t, c]) => `<th class="${c || ""}" data-k="${k}" scope="col"><button type="button">${t}</button></th>`).join("");
+document.getElementById("thead").addEventListener("click", e => { const th = e.target.closest("th"); if (!th) return;
+  if (sortKey === th.dataset.k) sortDir = -sortDir; else { sortKey = th.dataset.k; sortDir = ["name", "shape", "type", "note"].includes(sortKey) ? 1 : -1; } render(); });
+document.getElementById("filters").innerHTML = GROUPS.map(([k, t]) => `<button type="button" class="chip" data-g="${k}" aria-pressed="false">${t}</button>`).join("");
+document.getElementById("filters").addEventListener("click", e => { const b = e.target.closest(".chip"); if (!b) return; group = b.dataset.g; try { localStorage.setItem("sb-group", group); } catch (err) {} render(); });
+document.getElementById("q").addEventListener("input", render);
+render();
+
+// ---------- supports
+const NEEDS = { "Single hit": "Đòn đánh một lần", "Damage": "Gây sát thương", "Damage or Ward": "Sát thương hoặc hộ thuẫn", "Area": "Có vùng", "Cooldown": "Có hồi chiêu",
+  "Projectile": "Đạn", "Projectile that stops on a hit": "Đạn dừng khi trúng", "Duration": "Có thời lượng", "Physical spell damage": "Sát thương vật lý của phép",
+  "Physical damage": "Sát thương vật lý", "Infusion": "Cường hoá vũ khí", "mọi skill": "Mọi skill" };
+document.getElementById("supports").innerHTML = DATA.supports.map(s => {
+  const all = s.fits === "mọi skill", none = s.fits === "chưa skill nào", list = all || none ? [] : s.fits.split(", ");
+  const n = all ? skills.length : list.length;
+  return `<details><summary><span class="sname">${s.name.replace(" Support", "")}</span><span class="needs">Cần: ${NEEDS[s.needs] || s.needs}</span><span class="n">${n}/${skills.length}</span></summary>
+    ${all ? `<p class="none">Gắn được vào mọi skill.</p>` : none ? `<p class="none">Chưa skill nào: ${s.name.startsWith("Pierce") ? "Holy Slash và Twister vốn đã xuyên mọi quái." : "chưa có skill cường hoá vũ khí."}</p>` : `<div class="fits">${list.map(x => `<span>${x}</span>`).join("")}</div>`}</details>`;
+}).join("");
+</script>
+
+</body>
+</html>
