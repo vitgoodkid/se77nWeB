@@ -1,7 +1,7 @@
 // Project K — game design data. Everything the page shows comes from here.
 // Updated 2026-10-04 from the project's AGENTS.md and Documentation/GDD.
 window.WN = {
-  updated: '2026-10-07',
+  updated: '2026-10-10',
   meta: {
     title: 'PROJECT K',
     tagline: 'Action RPG góc nhìn thứ ba: chiến đấu kiểu Souls/Sekiro, hệ đồ và build kiểu Path of Exile 2.',
@@ -464,6 +464,7 @@ window.WN = {
 
   // Change notes — newest first. cats tag which systems the note belongs to.
   changelog: [
+    { date: '2026-10-10', cats: ['character'], title: 'Nhân vật Synty Sidekick và bộ trang bị mới', items: ['Nhân vật đổi sang Synty Sidekick: thân, đầu, tóc và giáp là các mảnh gắn lên một bộ xương; chỉnh được dáng người (nam–nữ, gầy–to, cơ bắp), mặt, tóc, râu, màu da và tóc.', 'Xoá toàn bộ giáp cũ; bộ mới 233 món từ bốn gói Knights, Sorcerers, Samurai, Viking: giáp thân, găng (tay + bàn tay), giày (chân + bàn chân), mũ và ô Side thay áo choàng (lưng, mặt, vai, hông, khuỷu, đầu gối).', 'Trang Trang bị & nhân vật: chọn món ở lại, đổi tên, phòng thủ, bậc, che tóc, rồi xuất JSON cho AI.', 'Trang chỉnh nhân vật chỉ có trong editor; bản build mặc theo look mặc định đã lưu.'] },
     { date: '2026-10-07', cats: ['character', 'av'], title: 'Cân bằng 40 skill bằng một công thức', items: ['Mana, sát thương, hộ thuẫn và lượng hồi của mọi skill tính từ một công thức: mốc Holy Slash ≈ 40 sát thương mỗi kẻ cho 12 mana; vùng rộng đánh mỗi con ít hơn nhưng cả bầy nhiều hơn; skill có hồi chiêu đổi thời gian chờ lấy hiệu suất mỗi mana.', 'Ngọc hỗ trợ chỉ gắn được vào skill nó thật sự có tác dụng (Chain chỉ cho đòn đánh một lần, Quick Recovery chỉ cho skill có hồi chiêu, Brutality chỉ cho sát thương vật lý của phép…).', '32 skill mới từ gói Top Down Effects và Lightning Circle; mỗi skill có icon và âm thanh riêng.', 'Bảng số liệu, biểu đồ và danh sách skill hợp từng ngọc hỗ trợ: trang Cân bằng skill (nút ở đầu trang).'] },
     { date: '2026-10-04', cats: ['story'], title: 'Chốt kế hoạch cốt truyện: Burn the World Tree', items: ['Cây Thế Giới Aelvar hút cạn hành tinh Eryth; Kata đốt nó sau 10 chương, mỗi chương một Rift ngẫu nhiên có boss.', 'Phe Seedbound, 3 lựa chọn lớn, 3 kết thúc; hội thoại kiểu Sekiro.', 'Mọi tên riêng bằng tiếng Anh: NPC hoàn điểm đổi tên thành The Unbinder.', '22 mục việc cần làm trong mục Cốt truyện & quest.'] },
     { date: '2026-10-04', cats: ['world'], title: 'Willowmere: nền Terrain vẽ được', items: ['Nền đất sinh bằng code đổi thành Unity Terrain với 7 lớp chất liệu Meadow, tô sẵn theo màu cũ; độ cao giữ nguyên nên mọi vật đứng yên chỗ.', 'Đường, quảng trường, ruộng giờ là sơn trên terrain (bỏ ô đất của gói Kingdom).', 'Cỏ chỉ mọc nơi sơn cỏ; phần vẽ tay được giữ khi dựng lại làng.', 'Thêm đủ gói POLYGON Meadow/Forest (190 prefab, 28 lớp terrain) và chuyển vật liệu gói Nature sang URP.'] },

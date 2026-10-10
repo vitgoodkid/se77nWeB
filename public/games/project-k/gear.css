@@ -1,0 +1,13 @@
+.gear-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 22px; }
+.gear-tabs button { border: 1px solid var(--line2); border-radius: 6px; background: var(--bg2); color: var(--muted); padding: 9px 14px; font-size: 13px; cursor: pointer; }
+.gear-tabs button.on { color: var(--gold); border-color: var(--gold); }
+.gear-tabs small { font: 11px var(--fm); margin-left: 4px; opacity: .8; }
+.no-icon { display: grid; place-items: center; width: 100%; aspect-ratio: 180 / 145; border-radius: 4px; background: var(--bg2); color: var(--muted); font: 12px var(--fm); letter-spacing: .08em; text-transform: uppercase; }
+.rarity.T1 { color: #b9b4a8; }
+.rarity.T2 { color: #6aa0ff; }
+.rarity.T3 { color: #b87cff; }
+.rarity.T4 { color: #ff6a5a; }
+.field-group { display: grid; gap: 6px; font-size: 12px; color: var(--muted); }
+.checks { display: flex; flex-wrap: wrap; gap: 14px; }
+.check { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text); }
+.pick.inline { align-self: end; }

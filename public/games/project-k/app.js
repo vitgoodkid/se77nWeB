@@ -221,7 +221,7 @@
     $('#pillars').innerHTML = D.pillars.map((p, i) => `<div class="pillar reveal" style="--d:${i}"><i>${p.icon}</i><b>${esc(p.title)}</b><p>${esc(p.text)}</p></div>`).join('');
   }
   function buildNav() {
-    $('#nav').innerHTML = '<a href="weapons.html"><i>↗</i>Catalog vũ khí</a><a href="audio.html"><i>↗</i>Âm thanh</a>' + $$('main > section.sec').map((sec, i) =>
+    $('#nav').innerHTML = '<a href="weapons.html"><i>↗</i>Catalog vũ khí</a><a href="gear.html"><i>↗</i>Trang bị &amp; nhân vật</a><a href="audio.html"><i>↗</i>Âm thanh</a>' + $$('main > section.sec').map((sec, i) =>
       `<a href="#${sec.id}"><i>${String(i + 1).padStart(2, '0')}</i>${esc($('h2', sec).textContent)}${sec.id === 'mynotes' ? '<span class="nc"></span>' : ''}</a>`).join('');
   }
   function sectionNotes() {
