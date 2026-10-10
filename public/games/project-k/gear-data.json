@@ -1,9 +1,9 @@
 {
- "generatedAt": "2026-10-10T12:20:57.576415Z",
+ "generatedAt": "2026-10-10T13:05:11.661866Z",
  "source": {
   "asset": "Assets/_Game/Resources/ModularGear.asset",
   "builder": "Assets/_Game/Scripts/Editor/SidekickGearBuilder.cs",
-  "sha256": "9b5ea3ec0c75252304d3047b54d9a06c0a61145f972fdfc0bc98dbf5b91d9308",
+  "sha256": "def18d25b1028d740f32c30ec28154fce47fd9b9b03114ed9becfab0b0e3a297",
   "count": 126
  },
  "kinds": [
