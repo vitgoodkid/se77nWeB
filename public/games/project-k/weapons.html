@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Catalog vũ khí · Project K · se77n</title>
+  <meta name="description" content="Toàn bộ catalog vũ khí Project K: chọn, chỉnh sửa và xuất bản thiết kế cho game.">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="weapons.css">
+  <script>try { document.documentElement.dataset.theme = localStorage.getItem('whosnext.theme') || 'dark'; } catch {}</script>
+</head>
+<body class="armory-page">
+  <header class="armory-top">
+    <a class="brand" href="./">PROJECT K<small>GDD</small></a>
+    <nav aria-label="Trang Project K" class="project-tabs">
+      <a href="./">Thiết kế game</a><a href="skills.html">Cân bằng skill</a><a href="weapons.html" aria-current="page">Catalog vũ khí</a>
+    </nav>
+    <button id="theme-toggle" class="tool" type="button" aria-label="Đổi giao diện sáng tối">Sáng / tối</button>
+  </header>
+  <main class="armory-main">
+    <div class="armory-intro">
+      <div><span class="armory-eyebrow">PROJECT K / ARMORY</span><h1>Chọn những vũ khí<br>được ở lại.</h1>
+        <p>Toàn bộ model từ catalog game. Chọn món, chỉnh tên và sức mạnh, rồi xuất bản thiết kế để áp dụng vào Unity.</p></div>
+      <div class="armory-totals" id="totals" aria-live="polite">Đang đọc catalog…</div>
+    </div>
+    <div class="armory-actions">
+      <div class="action-buttons"><button class="tool primary-action" id="export" disabled>Xuất JSON cho AI</button>
+        <label class="tool import-button">Nhập bản đã xuất<input type="file" id="import" accept=".json,application/json" disabled></label>
+        <button class="tool" id="reset-all" disabled>Khôi phục tất cả</button></div>
+      <span id="save-status" role="status">Bản nháp lưu trên trình duyệt này.</span>
+    </div>
+    <p class="armory-notice">Chỉnh sửa là bản nháp, chưa đổi game. Bỏ chọn = đề xuất loại khỏi danh sách dùng/rơi đồ; file xuất vẫn giữ ID và dữ liệu gốc của mọi món.</p>
+    <p id="message" role="status" hidden></p>
+    <section class="armory-workspace" aria-label="Quản lý vũ khí">
+      <div class="armory-library">
+        <div class="armory-filters">
+          <label class="wide-filter">Tìm vũ khí<input id="search" type="search" placeholder="Tên hoặc ID…" autocomplete="off"></label>
+          <label>Loại<select id="type-filter"><option value="">Tất cả loại</option></select></label>
+          <label>Độ hiếm<select id="rarity-filter"><option value="">Tất cả độ hiếm</option></select></label>
+          <label>Trạng thái<select id="status-filter"><option value="">Tất cả</option><option value="included">Đã chọn</option><option value="excluded">Đã bỏ</option><option value="changed">Đã sửa</option><option value="wieldable">Cầm được</option><option value="unavailable">Chưa có bộ đòn</option></select></label>
+          <label>Sắp xếp<select id="sort"><option value="type">Loại / tên</option><option value="name">Tên A–Z</option><option value="attack">Sát thương giảm dần</option><option value="rarity">Độ hiếm giảm dần</option></select></label>
+        </div>
+        <div class="list-tools"><span id="result-count"></span><button class="text-button" id="select-filtered">Chọn kết quả</button><button class="text-button" id="exclude-filtered">Bỏ kết quả</button></div>
+        <div class="weapon-grid" id="weapon-list" aria-label="Danh sách vũ khí"></div>
+        <p id="empty" hidden>Không có vũ khí khớp bộ lọc.</p>
+        <div class="pagination"><button class="tool" id="prev">Trước</button><span id="page-label"></span><button class="tool" id="next">Sau</button></div>
+      </div>
+      <aside class="weapon-editor" id="editor" aria-label="Chỉnh sửa vũ khí"><p>Chọn một vũ khí để chỉnh sửa.</p></aside>
+    </section>
+    <details class="export-help"><summary>File xuất chứa gì? AI áp lại vào game thế nào?</summary>
+      <p>JSON chứa toàn bộ quyết định chọn/bỏ, ID không đổi, dữ liệu gốc, giá trị yêu cầu và danh sách trường đã sửa. Chỉ số phần trăm xuất theo hệ số (15% = 0.15). Stat Unique là giá trị thiết kế trước khi game roll 80–120%.</p>
+      <p>AI cần sửa builder hoặc dữ liệu override, giữ tương thích save và kiểm tra lại trong Unity. Catalog grade của vũ khí thường hiện là chất lượng base; đổi độ hiếm rơi đồ còn cần điều chỉnh logic tạo vật phẩm. Ghi chú hiệu ứng mới cần được AI triển khai.</p>
+      <p><a href="weapon-review-guide.md">Hướng dẫn định dạng cho AI</a> · <a href="weapons-data.json">Dữ liệu catalog gốc</a> · <span id="source-date"></span></p>
+    </details>
+  </main>
+  <script type="module" src="weapons.js"></script>
+</body>
+</html>
