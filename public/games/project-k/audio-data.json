@@ -1,0 +1,2737 @@
+{
+  "schema": "project-k-audio-catalog/v1",
+  "sources": [
+    {
+      "path": "Assets/_Game/Resources/SoundLevels.asset",
+      "sha256": "e4707dba214cbeeb5606c87321c4c1158dc76408151c1787d5356cecc0b6ac82"
+    },
+    {
+      "path": "Assets/_Game/Resources/CombatSoundLibrary.asset",
+      "sha256": "e8baed1beac16ee4ac351a921c055154e6226464a0347fc5fa3e4f7c08bd2981"
+    },
+    {
+      "path": "Assets/_Game/Scripts/Runtime/Combat/DefenseFeedback.cs",
+      "sha256": "3716d481c2ffa485eb3fa898d1d983f9f894d86261cede852d846a8f0e709572"
+    }
+  ],
+  "clips": [
+    {
+      "id": "d4ff45bfd8dfd894cb8c7624548ef330",
+      "name": "Boss_Arena_Ambience_Loop",
+      "path": "Assets/_Game/Audio/SFX/Boss/Boss_Arena_Ambience_Loop.wav",
+      "category": "Boss",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 1,
+      "balanceNote": "",
+      "cues": [],
+      "duration": 15.0,
+      "preview": "audio-previews/d4ff45bfd8dfd894cb8c7624548ef330.mp3",
+      "sha256": "4eef534da4c9c3141f4953534add76130147a24af5059a593655c8089f982120",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "0e59bd3a3171bfa42a2727a980c8a555",
+      "name": "Boss_Death",
+      "path": "Assets/_Game/Audio/SFX/Boss/Boss_Death.wav",
+      "category": "Boss",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.091,
+      "balanceNote": "boss event: heard 1.2 dB, target -18; then -16.4 dB",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.bossDeath",
+          "volume": 1
+        }
+      ],
+      "duration": 4.0,
+      "preview": "audio-previews/0e59bd3a3171bfa42a2727a980c8a555.mp3",
+      "sha256": "35b469b8047bc68c59bd12d166a44d069a6bf5a3ce72c00bd2b3c1ae9b3ee398",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "52b35d1296e05da40a2ccd950a552fca",
+      "name": "Boss_Intro_Stinger",
+      "path": "Assets/_Game/Audio/SFX/Boss/Boss_Intro_Stinger.wav",
+      "category": "Boss",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.162,
+      "balanceNote": "boss event: heard -2.8 dB, target -18; then -17.4 dB",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.fightStart",
+          "volume": 0.9
+        }
+      ],
+      "duration": 3.0,
+      "preview": "audio-previews/52b35d1296e05da40a2ccd950a552fca.mp3",
+      "sha256": "431bb861fce16e827fb3bd933a57afed7801444e6d1e28fbf94849b6ef858fc6",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "a2824a9fc93d34f4f8f438ecd82be33a",
+      "name": "Boss_Phase2",
+      "path": "Assets/_Game/Audio/SFX/Boss/Boss_Phase2.wav",
+      "category": "Boss",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.245,
+      "balanceNote": "boss event: heard -7.4 dB, target -18; then -16.4 dB",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.phaseShift",
+          "volume": 1
+        }
+      ],
+      "duration": 3.48,
+      "preview": "audio-previews/a2824a9fc93d34f4f8f438ecd82be33a.mp3",
+      "sha256": "efde99fc879a18e6348a8872aff9f8d694a756d5fe33cf17d925344c6e1cbce9",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "665d1a7344392a649929b4f16b381750",
+      "name": "Boss_PostureBreak",
+      "path": "Assets/_Game/Audio/SFX/Boss/Boss_PostureBreak.wav",
+      "category": "Boss",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.121,
+      "balanceNote": "boss event: heard -1.3 dB, target -18; then -16.4 dB",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.postureBreak",
+          "volume": 1
+        }
+      ],
+      "duration": 1.48,
+      "preview": "audio-previews/665d1a7344392a649929b4f16b381750.mp3",
+      "sha256": "b6ebf995f09506155eaf14736cf81888e04ceb8b813863158c0fb4e2119629e0",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "ddc8a512ae419b34f8e6160505cc40ec",
+      "name": "Boss_Slam_Ground",
+      "path": "Assets/_Game/Audio/SFX/Boss/Boss_Slam_Ground.wav",
+      "category": "Boss",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.116,
+      "balanceNote": "boss event: heard -0.9 dB, target -18; then -16.4 dB",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.phaseRelease",
+          "volume": 1
+        },
+        {
+          "cue": "CombatSoundLibrary.bosses.0.slam",
+          "volume": 1
+        },
+        {
+          "cue": "CombatSoundLibrary.bosses.1.slam",
+          "volume": 1
+        },
+        {
+          "cue": "CombatSoundLibrary.bosses.2.slam",
+          "volume": 1
+        },
+        {
+          "cue": "CombatSoundLibrary.bosses.3.slam",
+          "volume": 1
+        }
+      ],
+      "duration": 1.76,
+      "preview": "audio-previews/ddc8a512ae419b34f8e6160505cc40ec.mp3",
+      "sha256": "9335622d28d0ce2faebce0a981a289755c4f56eb7127b7c2d3049b90ea131fa6",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "df3d631fc2b81334fad927f87dd31bc5",
+      "name": "Valkyrie_Plunge_Burst",
+      "path": "Assets/_Game/Audio/SFX/Boss/Valkyrie_Plunge_Burst.wav",
+      "category": "Boss",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.11,
+      "balanceNote": "boss move: heard -4.4 dB, target -22; then -20.4 dB",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.bosses.4.slam",
+          "volume": 1
+        }
+      ],
+      "duration": 1.6,
+      "preview": "audio-previews/df3d631fc2b81334fad927f87dd31bc5.mp3",
+      "sha256": "1d404cd8b58c574e6de10615bc01277b0521a49eeddba451897722c7360d9bf0",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "4814539ba6f0e5142b300d220c09a957",
+      "name": "Valkyrie_Spear_Throw",
+      "path": "Assets/_Game/Audio/SFX/Boss/Valkyrie_Spear_Throw.wav",
+      "category": "Boss",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.099,
+      "balanceNote": "boss move: heard -1.9 dB, target -22",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.bosses.0.projectile",
+          "volume": 0.8
+        },
+        {
+          "cue": "CombatSoundLibrary.bosses.1.projectile",
+          "volume": 0.8
+        },
+        {
+          "cue": "CombatSoundLibrary.bosses.2.projectile",
+          "volume": 0.8
+        },
+        {
+          "cue": "CombatSoundLibrary.bosses.3.projectile",
+          "volume": 0.8
+        },
+        {
+          "cue": "CombatSoundLibrary.bosses.4.projectile",
+          "volume": 0.9
+        }
+      ],
+      "duration": 1.2,
+      "preview": "audio-previews/4814539ba6f0e5142b300d220c09a957.mp3",
+      "sha256": "3705442f426416bcd419dc52e13e51082668cdc6dfa0ebcb7294d155366e6b26",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "90f1d4501d7672d49a01cd953348fe03",
+      "name": "Valkyrie_Spear_Thrust",
+      "path": "Assets/_Game/Audio/SFX/Boss/Valkyrie_Spear_Thrust.wav",
+      "category": "Boss",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 1.429,
+      "balanceNote": "boss move: heard -25.1 dB, target -22",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.bosses.4.swing",
+          "volume": 0.85
+        }
+      ],
+      "duration": 0.88,
+      "preview": "audio-previews/90f1d4501d7672d49a01cd953348fe03.mp3",
+      "sha256": "625ae8a32c507883e046445c39fbedd50c37b18e6fafd9b75ec3b70fca0c1364",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "2f02cdb287a592d428d51babe155dd1b",
+      "name": "Valkyrie_Spear_Twirl",
+      "path": "Assets/_Game/Audio/SFX/Boss/Valkyrie_Spear_Twirl.wav",
+      "category": "Boss",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 1.549,
+      "balanceNote": "boss move: heard -25.8 dB, target -22",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.bosses.4.heavySwing",
+          "volume": 0.95
+        }
+      ],
+      "duration": 1.48,
+      "preview": "audio-previews/2f02cdb287a592d428d51babe155dd1b.mp3",
+      "sha256": "9848a1071a8c7b649aae047cbbe6c0b3ba66c9f71a7f27c991b754aee4a0fff9",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "2484380adb40b5245a6b09170afb681c",
+      "name": "Warden_Footstep",
+      "path": "Assets/_Game/Audio/SFX/Boss/Warden_Footstep.wav",
+      "category": "Boss",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.813,
+      "balanceNote": "footstep: heard -28.2 dB, target -30",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.bosses.0.footstep",
+          "volume": 0.55
+        },
+        {
+          "cue": "CombatSoundLibrary.bosses.1.footstep",
+          "volume": 0.6
+        },
+        {
+          "cue": "CombatSoundLibrary.bosses.2.footstep",
+          "volume": 0.6
+        },
+        {
+          "cue": "CombatSoundLibrary.bosses.3.footstep",
+          "volume": 0.6
+        },
+        {
+          "cue": "CombatSoundLibrary.bosses.4.footstep",
+          "volume": 0.45
+        }
+      ],
+      "duration": 0.68,
+      "preview": "audio-previews/2484380adb40b5245a6b09170afb681c.mp3",
+      "sha256": "f314193ceaf2d02956448e4bdf3685df60be525d3ec17d4e8e81657f41de488f",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "233deb18c394afe448259ffec5b380cf",
+      "name": "Warden_Swing_Heavy",
+      "path": "Assets/_Game/Audio/SFX/Boss/Warden_Swing_Heavy.wav",
+      "category": "Boss",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 1.059,
+      "balanceNote": "boss move: heard -22.5 dB, target -22",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.bosses.0.swing",
+          "volume": 0.85
+        },
+        {
+          "cue": "CombatSoundLibrary.bosses.0.heavySwing",
+          "volume": 1
+        },
+        {
+          "cue": "CombatSoundLibrary.bosses.1.swing",
+          "volume": 0.85
+        },
+        {
+          "cue": "CombatSoundLibrary.bosses.1.heavySwing",
+          "volume": 1
+        },
+        {
+          "cue": "CombatSoundLibrary.bosses.2.swing",
+          "volume": 0.85
+        },
+        {
+          "cue": "CombatSoundLibrary.bosses.2.heavySwing",
+          "volume": 1
+        },
+        {
+          "cue": "CombatSoundLibrary.bosses.3.swing",
+          "volume": 0.85
+        },
+        {
+          "cue": "CombatSoundLibrary.bosses.3.heavySwing",
+          "volume": 1
+        }
+      ],
+      "duration": 1.2,
+      "preview": "audio-previews/233deb18c394afe448259ffec5b380cf.mp3",
+      "sha256": "c3a0cba2b5fe96971e4bf4b14191e79d6c5f65a62b547b812ddadbee3731c3ec",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "81d063a77cecf624281a5bd51ff43e46",
+      "name": "Arrow_Hit_01",
+      "path": "Assets/_Game/Audio/SFX/Player/Arrow_Hit_01.wav",
+      "category": "Player",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 2.483,
+      "balanceNote": "hit: heard -47.9 dB, target -40",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.arrowHit",
+          "volume": 0.7
+        }
+      ],
+      "duration": 0.48,
+      "preview": "audio-previews/81d063a77cecf624281a5bd51ff43e46.mp3",
+      "sha256": "9dc51f52f65dfe08cc4206387795b21c23adcf3d6794dac44a4e703e5b3843f0",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "4513212c11286954cbda6fbf24dd8b71",
+      "name": "Arrow_Hit_02",
+      "path": "Assets/_Game/Audio/SFX/Player/Arrow_Hit_02.wav",
+      "category": "Player",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 3.673,
+      "balanceNote": "hit: heard -51.3 dB, target -40",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.arrowHit",
+          "volume": 0.7
+        }
+      ],
+      "duration": 0.178,
+      "preview": "audio-previews/4513212c11286954cbda6fbf24dd8b71.mp3",
+      "sha256": "1d464263074232ea2ac8e94a9e5640c754aa8b4f6031a08eaf849cd9dd9ac064",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "78d806106cbe50644a69bbbde2b10765",
+      "name": "Arrow_Hit_03",
+      "path": "Assets/_Game/Audio/SFX/Player/Arrow_Hit_03.wav",
+      "category": "Player",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 3.428,
+      "balanceNote": "hit: heard -50.7 dB, target -40",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.arrowHit",
+          "volume": 0.7
+        }
+      ],
+      "duration": 0.25,
+      "preview": "audio-previews/78d806106cbe50644a69bbbde2b10765.mp3",
+      "sha256": "11beae1270a13aaa82f657ef16e0296b99ce6b13936c676d046f029a7d98a393",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "60699a919a934dffb50c66c3ad0e1aff",
+      "name": "Blade_Metal_01",
+      "path": "Assets/_Game/Audio/SFX/Player/Blade_Metal_01.wav",
+      "category": "Player",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.966,
+      "balanceNote": "hit: heard -35.7 dB, target -36",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.bladeMetal",
+          "volume": 0.55
+        }
+      ],
+      "duration": 0.31,
+      "preview": "audio-previews/60699a919a934dffb50c66c3ad0e1aff.mp3",
+      "sha256": "cf9c0dcc63841ec7b44f1cdb965df1c49c66edf3b3c2e1697934bdcba8ba7987",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "7fa32c56e8c54f808f28e9ad0ea5b12e",
+      "name": "Blade_Metal_02",
+      "path": "Assets/_Game/Audio/SFX/Player/Blade_Metal_02.wav",
+      "category": "Player",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 1.245,
+      "balanceNote": "hit: heard -37.9 dB, target -36",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.bladeMetal",
+          "volume": 0.55
+        }
+      ],
+      "duration": 0.245,
+      "preview": "audio-previews/7fa32c56e8c54f808f28e9ad0ea5b12e.mp3",
+      "sha256": "0b8569f368660d228f463bf93d253f5f6d1a37ed958a248a6b8dabf0d6701759",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "ce86f57aed32489c97c7be52577dfdf3",
+      "name": "Blade_Stone_01",
+      "path": "Assets/_Game/Audio/SFX/Player/Blade_Stone_01.wav",
+      "category": "Player",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.977,
+      "balanceNote": "hit: heard -35.8 dB, target -36",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.bladeStone",
+          "volume": 0.6
+        }
+      ],
+      "duration": 0.179,
+      "preview": "audio-previews/ce86f57aed32489c97c7be52577dfdf3.mp3",
+      "sha256": "ffd5ec8a61e83765fe9915e4a715ce18aaf1e8650672edac177e0d73cdc6a280",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "bb5cc284d194436ca071a653f65311ed",
+      "name": "Blade_Stone_02",
+      "path": "Assets/_Game/Audio/SFX/Player/Blade_Stone_02.wav",
+      "category": "Player",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 1.462,
+      "balanceNote": "hit: heard -39.3 dB, target -36",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.bladeStone",
+          "volume": 0.6
+        }
+      ],
+      "duration": 0.334,
+      "preview": "audio-previews/bb5cc284d194436ca071a653f65311ed.mp3",
+      "sha256": "2febe5c5f4b802c1eaa71926e2b31ff20033dbaa19a3fab778057f334a85ef54",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "ce4ad5de084b45ecb74125d7296188ff",
+      "name": "Blade_Wood_01",
+      "path": "Assets/_Game/Audio/SFX/Player/Blade_Wood_01.wav",
+      "category": "Player",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.596,
+      "balanceNote": "hit: heard -31.5 dB, target -36",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.bladeWood",
+          "volume": 0.6
+        }
+      ],
+      "duration": 0.565,
+      "preview": "audio-previews/ce4ad5de084b45ecb74125d7296188ff.mp3",
+      "sha256": "c30b8947180b35d055c697ae14095b7c972d7c2381caacc34c87ec9b8e2aa2cd",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "81679d2d0341423d96ced0ee1b076fd8",
+      "name": "Blade_Wood_02",
+      "path": "Assets/_Game/Audio/SFX/Player/Blade_Wood_02.wav",
+      "category": "Player",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 1.012,
+      "balanceNote": "hit: heard -36.1 dB, target -36",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.bladeWood",
+          "volume": 0.6
+        }
+      ],
+      "duration": 0.221,
+      "preview": "audio-previews/81679d2d0341423d96ced0ee1b076fd8.mp3",
+      "sha256": "c6fcf44d67ce2ecfa2a28aa8939af8168798628a35c2f5cae36e0473793f1fd4",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "f0908cec486b8d14f901e23b425695c1",
+      "name": "Bow_Draw",
+      "path": "Assets/_Game/Audio/SFX/Player/Bow_Draw.wav",
+      "category": "Player",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.923,
+      "balanceNote": "bow: heard -23.3 dB, target -24",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.bowDraw",
+          "volume": 0.5
+        }
+      ],
+      "duration": 0.832,
+      "preview": "audio-previews/f0908cec486b8d14f901e23b425695c1.mp3",
+      "sha256": "0c0d46229dd786401caec8700a9f216c2174b22b8408ef8513195273579eec9c",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "d654f96b853e7a947a666990eb054cb8",
+      "name": "Bow_Release_01",
+      "path": "Assets/_Game/Audio/SFX/Player/Bow_Release_01.wav",
+      "category": "Player",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 1.396,
+      "balanceNote": "bow: heard -26.9 dB, target -24",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.bowRelease",
+          "volume": 0.55
+        }
+      ],
+      "duration": 0.23,
+      "preview": "audio-previews/d654f96b853e7a947a666990eb054cb8.mp3",
+      "sha256": "3fee7cf49b30b868b40ddd350f1fbbd0fd34a1d94d4171d545b5b98b1e16ac36",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "99dffb7a01cd7fa48a30d6334d4cce1e",
+      "name": "Bow_Release_02",
+      "path": "Assets/_Game/Audio/SFX/Player/Bow_Release_02.wav",
+      "category": "Player",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.933,
+      "balanceNote": "bow: heard -23.4 dB, target -24",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.bowRelease",
+          "volume": 0.55
+        }
+      ],
+      "duration": 0.158,
+      "preview": "audio-previews/99dffb7a01cd7fa48a30d6334d4cce1e.mp3",
+      "sha256": "4dddfb437e33588b9d117bf327c796f0b14fde5541c6b82035aa73c204af662a",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "9b3369cd9d8f3764992afe5a9c576378",
+      "name": "Bow_Release_03",
+      "path": "Assets/_Game/Audio/SFX/Player/Bow_Release_03.wav",
+      "category": "Player",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.407,
+      "balanceNote": "bow: heard -16.2 dB, target -24",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.bowRelease",
+          "volume": 0.55
+        }
+      ],
+      "duration": 0.182,
+      "preview": "audio-previews/9b3369cd9d8f3764992afe5a9c576378.mp3",
+      "sha256": "c49631f4273b9b0f59368773b3bd216b114dbc695227064b260cb618d0f4f363",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "9b560044c5ce01841a0bebad4f6d2aec",
+      "name": "Bow_Release_Heavy",
+      "path": "Assets/_Game/Audio/SFX/Player/Bow_Release_Heavy.wav",
+      "category": "Player",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 6.096,
+      "balanceNote": "bow: heard -28.5 dB, target -23; then -28.1 dB; then -28.1 dB",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.bowReleaseHeavy",
+          "volume": 0.8
+        }
+      ],
+      "duration": 0.204,
+      "preview": "audio-previews/9b560044c5ce01841a0bebad4f6d2aec.mp3",
+      "sha256": "1315ed1df9388173f292c260c5ffb7e1a83ce2de99678f627586cdbd1db06528",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "6648dcfb5bf1f4448ab9ac7839738836",
+      "name": "Kata_Block_01",
+      "path": "Assets/_Game/Audio/SFX/Player/Kata_Block_01.wav",
+      "category": "Player",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 1.514,
+      "balanceNote": "block: heard -24.6 dB, target -21",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.block",
+          "volume": 0.95
+        }
+      ],
+      "duration": 0.48,
+      "preview": "audio-previews/6648dcfb5bf1f4448ab9ac7839738836.mp3",
+      "sha256": "bea7c0d931cb91a6b1592936eae1c47e653a1dcdcdf4ed22c30699bf9df01594",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "186da09c588d5bd44b98df97ae7ab1ec",
+      "name": "Kata_Block_02",
+      "path": "Assets/_Game/Audio/SFX/Player/Kata_Block_02.wav",
+      "category": "Player",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 1.122,
+      "balanceNote": "block: heard -22.0 dB, target -21",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.block",
+          "volume": 0.95
+        }
+      ],
+      "duration": 0.425,
+      "preview": "audio-previews/186da09c588d5bd44b98df97ae7ab1ec.mp3",
+      "sha256": "2b234108cc3edf7ddcdcfcf18ef9eac1e47c35ed6cbf52e2a4a4a9198efe1907",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "06f50b7e6c498b64793722fff1feb24f",
+      "name": "Kata_Block_03",
+      "path": "Assets/_Game/Audio/SFX/Player/Kata_Block_03.wav",
+      "category": "Player",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 1.109,
+      "balanceNote": "block: heard -21.9 dB, target -21",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.block",
+          "volume": 0.95
+        }
+      ],
+      "duration": 0.44,
+      "preview": "audio-previews/06f50b7e6c498b64793722fff1feb24f.mp3",
+      "sha256": "80d69ec3fe1fc5a4c3fc9de66ecb8ee1420c2339b2a1f304592c7b51f76cbca9",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "cae6b659080ef3c47827848188b56094",
+      "name": "Kata_Deflect_01",
+      "path": "Assets/_Game/Audio/SFX/Player/Kata_Deflect_01.wav",
+      "category": "Player",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.871,
+      "balanceNote": "block: heard -19.8 dB, target -21",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.deflect",
+          "volume": 0.95
+        }
+      ],
+      "duration": 1.0,
+      "preview": "audio-previews/cae6b659080ef3c47827848188b56094.mp3",
+      "sha256": "156cd510fadba3c3faf2a4e501cfeb6132a4846e82084cf81a740e508b74cfef",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "7a2b443f6b39ae94a8feab25ece678de",
+      "name": "Kata_Deflect_02",
+      "path": "Assets/_Game/Audio/SFX/Player/Kata_Deflect_02.wav",
+      "category": "Player",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.851,
+      "balanceNote": "block: heard -19.6 dB, target -21",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.deflect",
+          "volume": 0.95
+        }
+      ],
+      "duration": 1.0,
+      "preview": "audio-previews/7a2b443f6b39ae94a8feab25ece678de.mp3",
+      "sha256": "e61ddef35d582f6bf10f14b940aec49a8552d25a5d9062cf26653fddf3b218d7",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "a9e83a04a8a4700448c5ccbe1bce10d6",
+      "name": "Kata_Dodge",
+      "path": "Assets/_Game/Audio/SFX/Player/Kata_Dodge.wav",
+      "category": "Player",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.106,
+      "balanceNote": "body: heard -10.5 dB, target -30",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.dodge",
+          "volume": 0.6
+        }
+      ],
+      "duration": 0.315,
+      "preview": "audio-previews/a9e83a04a8a4700448c5ccbe1bce10d6.mp3",
+      "sha256": "fe902cac0a452c983ab2f9a3772ae9471b4ef710b507cdacbed268a104531776",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "d6927f56c94198c47b907ac66aad21a0",
+      "name": "Kata_GuardBreak",
+      "path": "Assets/_Game/Audio/SFX/Player/Kata_GuardBreak.wav",
+      "category": "Player",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.501,
+      "balanceNote": "block: heard -15.0 dB, target -21",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.guardBreak",
+          "volume": 1
+        }
+      ],
+      "duration": 1.2,
+      "preview": "audio-previews/d6927f56c94198c47b907ac66aad21a0.mp3",
+      "sha256": "d24033d133efa1941f224a86aaea30ee161d00ee605bc9a8213aad74672a056e",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "69f1a0886f510824298b4cb89d661c6c",
+      "name": "Kata_Hit_Flesh",
+      "path": "Assets/_Game/Audio/SFX/Player/Kata_Hit_Flesh.wav",
+      "category": "Player",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 1.259,
+      "balanceNote": "hit: heard -42.0 dB, target -40",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.hitLight",
+          "volume": 0.75
+        }
+      ],
+      "duration": 0.48,
+      "preview": "audio-previews/69f1a0886f510824298b4cb89d661c6c.mp3",
+      "sha256": "a76e21da7580598710e7cb008864063e0f524b45b02abc4d3b9627031976e198",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "37ba0c23300771a40be73f25d581af65",
+      "name": "Kata_Hit_Heavy",
+      "path": "Assets/_Game/Audio/SFX/Player/Kata_Hit_Heavy.wav",
+      "category": "Player",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.955,
+      "balanceNote": "hit: heard -39.6 dB, target -40",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.hitHeavy",
+          "volume": 0.9
+        }
+      ],
+      "duration": 0.88,
+      "preview": "audio-previews/37ba0c23300771a40be73f25d581af65.mp3",
+      "sha256": "fad09a3cb19e4dfc2f8b2c864fe454666df544a7efa19df96ea257c5e7e53e35",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "1d8f94097f304ea4fb031b163e82016d",
+      "name": "Kata_Hurt_01",
+      "path": "Assets/_Game/Audio/SFX/Player/Kata_Hurt_01.wav",
+      "category": "Player",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.923,
+      "balanceNote": "hit: heard -26.3 dB, target -27",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.hurt",
+          "volume": 0.8
+        }
+      ],
+      "duration": 0.285,
+      "preview": "audio-previews/1d8f94097f304ea4fb031b163e82016d.mp3",
+      "sha256": "becad28a76d79277b9fd494412f35c926930a5daa2a279ae24d43b816e6e3002",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "4f2c57a9b949e7e46ae282076ab0cb37",
+      "name": "Kata_Hurt_02",
+      "path": "Assets/_Game/Audio/SFX/Player/Kata_Hurt_02.wav",
+      "category": "Player",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 1.109,
+      "balanceNote": "hit: heard -27.9 dB, target -27",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.hurt",
+          "volume": 0.8
+        }
+      ],
+      "duration": 0.199,
+      "preview": "audio-previews/4f2c57a9b949e7e46ae282076ab0cb37.mp3",
+      "sha256": "7b15af582400d8a40c9e5c3a2d2f8e17382b80a1121039c402e3b823393a11dc",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "7b94250fac058f240ad2b74e7f66f198",
+      "name": "Kata_Hurt_Heavy",
+      "path": "Assets/_Game/Audio/SFX/Player/Kata_Hurt_Heavy.wav",
+      "category": "Player",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 1.072,
+      "balanceNote": "hit: heard -27.6 dB, target -27",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.hurtHeavy",
+          "volume": 0.9
+        }
+      ],
+      "duration": 0.286,
+      "preview": "audio-previews/7b94250fac058f240ad2b74e7f66f198.mp3",
+      "sha256": "0664340ee44aa76bedcb58e8080267faddbd3cc5e86ef4aa14bffe9b601c9b9f",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "9cb7f17b98d9391438ce5813c6a186c3",
+      "name": "Kata_Jump",
+      "path": "Assets/_Game/Audio/SFX/Player/Kata_Jump.wav",
+      "category": "Player",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 3.273,
+      "balanceNote": "body: heard -55.3 dB, target -45",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.jump",
+          "volume": 0.3
+        }
+      ],
+      "duration": 0.212,
+      "preview": "audio-previews/9cb7f17b98d9391438ce5813c6a186c3.mp3",
+      "sha256": "3df9cc02ce8dacb72b463fbebe4277e9a26a9dae6b41641020456b939d46acec",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "ad2dc8ee25c2a304eafb0c7d288392b7",
+      "name": "Kata_Land",
+      "path": "Assets/_Game/Audio/SFX/Player/Kata_Land.wav",
+      "category": "Player",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 1.758,
+      "balanceNote": "body: heard -49.9 dB, target -45",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.land",
+          "volume": 0.325
+        }
+      ],
+      "duration": 0.207,
+      "preview": "audio-previews/ad2dc8ee25c2a304eafb0c7d288392b7.mp3",
+      "sha256": "2df176df317422064521c94ac7267476b8c19ee8a582b1641ea3346794a37df2",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "a68e2d45de855ee4db81afa258b61abe",
+      "name": "Kata_Land_Heavy",
+      "path": "Assets/_Game/Audio/SFX/Player/Kata_Land_Heavy.wav",
+      "category": "Player",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 1.259,
+      "balanceNote": "body: heard -43.0 dB, target -41",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.landHeavy",
+          "volume": 0.425
+        }
+      ],
+      "duration": 0.207,
+      "preview": "audio-previews/a68e2d45de855ee4db81afa258b61abe.mp3",
+      "sha256": "e48fcd721dcfb5efcddf53c03162cf93a7c79f4ea95f05b12d5d82dee68acb39",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "8f5394de7e2e4bafbb25ee3412e36b13",
+      "name": "Kata_Roll_02",
+      "path": "Assets/_Game/Audio/SFX/Player/Kata_Roll_02.wav",
+      "category": "Player",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.7,
+      "balanceNote": "body: heard -26.9 dB, target -30",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.roll",
+          "volume": 0.3
+        }
+      ],
+      "duration": 0.663,
+      "preview": "audio-previews/8f5394de7e2e4bafbb25ee3412e36b13.mp3",
+      "sha256": "8a04840847849ff7d5323060b31bb15f2f2519c5bb72609a96dd9d0e9167a63c",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "d3caf1021629b5847b51a486303b3775",
+      "name": "Kata_Slash_01",
+      "path": "Assets/_Game/Audio/SFX/Player/Kata_Slash_01.wav",
+      "category": "Player",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 1.012,
+      "balanceNote": "swing: heard -40.1 dB, target -40",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.swingLight",
+          "volume": 0.35
+        }
+      ],
+      "duration": 0.316,
+      "preview": "audio-previews/d3caf1021629b5847b51a486303b3775.mp3",
+      "sha256": "f5b473a2013c6e307a36629d2078e6d965412a4e8be20d60dfcc39db53835ef5",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "987d3af4d6b1d4e43b97986a08cfa63e",
+      "name": "Kata_Slash_02",
+      "path": "Assets/_Game/Audio/SFX/Player/Kata_Slash_02.wav",
+      "category": "Player",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 1.047,
+      "balanceNote": "swing: heard -40.4 dB, target -40",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.swingLight",
+          "volume": 0.35
+        }
+      ],
+      "duration": 0.389,
+      "preview": "audio-previews/987d3af4d6b1d4e43b97986a08cfa63e.mp3",
+      "sha256": "0cbeb4a4d9019e2a1d6dbcc87341340e0fbe2717c397e21357b56cb627c023e4",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "03eba59f9aec7fe498f66ffe1213f743",
+      "name": "Kata_Slash_03",
+      "path": "Assets/_Game/Audio/SFX/Player/Kata_Slash_03.wav",
+      "category": "Player",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.912,
+      "balanceNote": "swing: heard -39.2 dB, target -40",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.swingLight",
+          "volume": 0.35
+        }
+      ],
+      "duration": 0.489,
+      "preview": "audio-previews/03eba59f9aec7fe498f66ffe1213f743.mp3",
+      "sha256": "9cd58d29bd20346916eea3a07f15a6e4e3a4a506841751520d5c4f1ac5973276",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "8aa2fe20412913744bc21eab45b19441",
+      "name": "Kata_Slash_Finisher",
+      "path": "Assets/_Game/Audio/SFX/Player/Kata_Slash_Finisher.wav",
+      "category": "Player",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.776,
+      "balanceNote": "swing: heard -33.8 dB, target -36",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.swingFinisher",
+          "volume": 0.45
+        }
+      ],
+      "duration": 1.186,
+      "preview": "audio-previews/8aa2fe20412913744bc21eab45b19441.mp3",
+      "sha256": "7e2bc4414fcb123684324c49ff71c4a7566847f6d4339e971a1d38b17a3cce44",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "d041dca7e94ed934cb9e1dfb882c4245",
+      "name": "Kata_Step_Run_01",
+      "path": "Assets/_Game/Audio/SFX/Player/Kata_Step_Run_01.wav",
+      "category": "Player",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.944,
+      "balanceNote": "footstep: heard -51.5 dB, target -52",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.footRun",
+          "volume": 0.3
+        }
+      ],
+      "duration": 0.188,
+      "preview": "audio-previews/d041dca7e94ed934cb9e1dfb882c4245.mp3",
+      "sha256": "457b3120db525697fd1cea2f612e3dd9cb8c1c04abd7172ee3d76409d1e77790",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "a4fc3682804c61944b0f31eab31b7bba",
+      "name": "Kata_Step_Run_02",
+      "path": "Assets/_Game/Audio/SFX/Player/Kata_Step_Run_02.wav",
+      "category": "Player",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 1.035,
+      "balanceNote": "footstep: heard -52.3 dB, target -52",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.footRunStone",
+          "volume": 0.275
+        }
+      ],
+      "duration": 0.243,
+      "preview": "audio-previews/a4fc3682804c61944b0f31eab31b7bba.mp3",
+      "sha256": "edc7d147e456fe8dcf0c1749a2a63c993b3133d2f4eaadbe5372ff4c83c01a7c",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "10be41553b5fe2b47a9808a901c29d9b",
+      "name": "Kata_Step_Run_Stone",
+      "path": "Assets/_Game/Audio/SFX/Player/Kata_Step_Run_Stone.wav",
+      "category": "Player",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.385,
+      "balanceNote": "footstep: heard -43.7 dB, target -52",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.footRunStone",
+          "volume": 0.275
+        }
+      ],
+      "duration": 0.392,
+      "preview": "audio-previews/10be41553b5fe2b47a9808a901c29d9b.mp3",
+      "sha256": "75193d6b12cbc41017fdcb7219fb1a6f7d49a4b9405832dfe752aac7d8d967dc",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "1c48d92ed1473d54297bfc9e0d1a2163",
+      "name": "Kata_Step_Walk_01",
+      "path": "Assets/_Game/Audio/SFX/Player/Kata_Step_Walk_01.wav",
+      "category": "Player",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.977,
+      "balanceNote": "footstep: heard -51.8 dB, target -52",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.footWalk",
+          "volume": 0.275
+        }
+      ],
+      "duration": 0.456,
+      "preview": "audio-previews/1c48d92ed1473d54297bfc9e0d1a2163.mp3",
+      "sha256": "dd4c4bba6ed9150acbffd36ab32ce2fd2b570e8ef5d04037b087e824858321a0",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "56c8eb0e80c5993409d9ba260f780a38",
+      "name": "Kata_Step_Walk_02",
+      "path": "Assets/_Game/Audio/SFX/Player/Kata_Step_Walk_02.wav",
+      "category": "Player",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 1.445,
+      "balanceNote": "footstep: heard -55.2 dB, target -52",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.footWalkStone",
+          "volume": 0.25
+        }
+      ],
+      "duration": 0.184,
+      "preview": "audio-previews/56c8eb0e80c5993409d9ba260f780a38.mp3",
+      "sha256": "5cb23ed2edc48db63dd8a12502eef9fe3234aaa254db0dfa801c2eea589f06cb",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "b778c0f81c282014eaff121f32337f1e",
+      "name": "Kata_Step_Walk_Stone",
+      "path": "Assets/_Game/Audio/SFX/Player/Kata_Step_Walk_Stone.wav",
+      "category": "Player",
+      "usages": [
+        "Assets/_Game/Resources/CombatSoundLibrary.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 1.66,
+      "balanceNote": "footstep: heard -56.4 dB, target -52",
+      "cues": [
+        {
+          "cue": "CombatSoundLibrary.footWalkStone",
+          "volume": 0.25
+        }
+      ],
+      "duration": 0.244,
+      "preview": "audio-previews/b778c0f81c282014eaff121f32337f1e.mp3",
+      "sha256": "7fa69fbf5ac77e5c0d21a10b1140f9e615a685c7a485566450d8aa22e796880a",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "31d243e6fe0749afb18eee3e9067225b",
+      "name": "ArcaneComet_Impact",
+      "path": "Assets/_Game/Audio/SFX/Skills/ArcaneComet_Impact.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/comet.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.367,
+      "balanceNote": "skill: heard -29.9 dB, target -30; then -21.4 dB",
+      "cues": [],
+      "duration": 1.76,
+      "preview": "audio-previews/31d243e6fe0749afb18eee3e9067225b.mp3",
+      "sha256": "276ef317eff658e8d26ff92d579ac2df0ccce97e7cd4babe24d55f0b62b5193f",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "f06444d15e6749f899f14bb858b16e8f",
+      "name": "ArcaneComet_Release",
+      "path": "Assets/_Game/Audio/SFX/Skills/ArcaneComet_Release.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/comet.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.275,
+      "balanceNote": "skill: heard -27.4 dB, target -30; then -21.4 dB",
+      "cues": [],
+      "duration": 1.0,
+      "preview": "audio-previews/f06444d15e6749f899f14bb858b16e8f.mp3",
+      "sha256": "5681c329547c27f5064a29ec3867da8255909cc2991628a7ae79986120d33e97",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "b4438440bc6244afa4b78f3355cad4d5",
+      "name": "DivineJudgment_Impact",
+      "path": "Assets/_Game/Audio/SFX/Skills/DivineJudgment_Impact.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/divine_judgment.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.412,
+      "balanceNote": "skill: heard -31.2 dB, target -30; then -21.6 dB; then -29.5 dB",
+      "cues": [],
+      "duration": 1.6,
+      "preview": "audio-previews/b4438440bc6244afa4b78f3355cad4d5.mp3",
+      "sha256": "fbdd398d425934ca521141c0f6bd002bb20d26996b594590cd645c8da734ae5a",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "2ac652b65672442e809db87c9113e2d3",
+      "name": "DivineJudgment_Release",
+      "path": "Assets/_Game/Audio/SFX/Skills/DivineJudgment_Release.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/divine_judgment.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.417,
+      "balanceNote": "skill: heard -30.8 dB, target -30; then -21.6 dB",
+      "cues": [],
+      "duration": 1.36,
+      "preview": "audio-previews/2ac652b65672442e809db87c9113e2d3.mp3",
+      "sha256": "1d2e8bfd018811c9778ba21a682a8be48971b45c421f7ca015fb7e994d0ec706",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "395b34226c0e47ea97137ef2c9faf5e9",
+      "name": "ElementalWeakness_Impact",
+      "path": "Assets/_Game/Audio/SFX/Skills/ElementalWeakness_Impact.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/elemental_weakness.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.408,
+      "balanceNote": "skill: heard -30.6 dB, target -30; then -21.6 dB",
+      "cues": [],
+      "duration": 1.0,
+      "preview": "audio-previews/395b34226c0e47ea97137ef2c9faf5e9.mp3",
+      "sha256": "39022c1bfb7bc0d9ecaaf1121054164a4e1890215359d09afa645108f0851ca1",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "6256f466af91453bb2dff9334f3db22d",
+      "name": "ElementalWeakness_Release",
+      "path": "Assets/_Game/Audio/SFX/Skills/ElementalWeakness_Release.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/elemental_weakness.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.422,
+      "balanceNote": "skill: heard -30.6 dB, target -30; then -21.9 dB",
+      "cues": [],
+      "duration": 1.6,
+      "preview": "audio-previews/6256f466af91453bb2dff9334f3db22d.mp3",
+      "sha256": "bc9a85c9e7bc81e7d1101f87ce12d4063f55176bbabcf1b6759778385c26611b",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "75ff6f9744474d47862d8fcaefec0097",
+      "name": "Fireball_Impact",
+      "path": "Assets/_Game/Audio/SFX/Skills/Fireball_Impact.wav",
+      "category": "Skills",
+      "usages": [],
+      "status": "unreferenced",
+      "originalGain": 1,
+      "balanceNote": "",
+      "cues": [],
+      "duration": 1.48,
+      "preview": "audio-previews/75ff6f9744474d47862d8fcaefec0097.mp3",
+      "sha256": "9dc892b254e85c7896b658061db4394e67c4a4a4243e4192129a45c1a175985d",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "92529bd1883948b8aada9d8b3c31146b",
+      "name": "Fireball_Release",
+      "path": "Assets/_Game/Audio/SFX/Skills/Fireball_Release.wav",
+      "category": "Skills",
+      "usages": [],
+      "status": "unreferenced",
+      "originalGain": 1,
+      "balanceNote": "",
+      "cues": [],
+      "duration": 1.2,
+      "preview": "audio-previews/92529bd1883948b8aada9d8b3c31146b.mp3",
+      "sha256": "9c510a72c8c8b1472eba05a1612e02d12c605b069cba587a481527e5016e9c09",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "3b7083e871b34200a2423646d84c7d4e",
+      "name": "FireComet_Impact",
+      "path": "Assets/_Game/Audio/SFX/Skills/FireComet_Impact.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/comet.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.219,
+      "balanceNote": "skill: heard -25.4 dB, target -30; then -21.4 dB",
+      "cues": [],
+      "duration": 1.76,
+      "preview": "audio-previews/3b7083e871b34200a2423646d84c7d4e.mp3",
+      "sha256": "a30f0bf00eae59d18a72f03bdd7b3268cb379aad9b0676a5f953e49937f150b1",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "668944bf7015438b93bd0bac2f9753cf",
+      "name": "FireComet_Release",
+      "path": "Assets/_Game/Audio/SFX/Skills/FireComet_Release.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/comet.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.32,
+      "balanceNote": "skill: heard -28.6 dB, target -30; then -21.5 dB",
+      "cues": [],
+      "duration": 1.0,
+      "preview": "audio-previews/668944bf7015438b93bd0bac2f9753cf.mp3",
+      "sha256": "2469d5fa488370835fc2d400528f4b1823050b3e2f24e89f15200f60a0aec666",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "3ce4b25f8cc9c0040b566a82ef7581d1",
+      "name": "FireShot_Impact",
+      "path": "Assets/_Game/Audio/SFX/Skills/FireShot_Impact.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/fire_shot.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.285,
+      "balanceNote": "skill: heard -27.7 dB, target -30; then -21.4 dB",
+      "cues": [],
+      "duration": 0.85,
+      "preview": "audio-previews/3ce4b25f8cc9c0040b566a82ef7581d1.mp3",
+      "sha256": "bb95e6468399a2e0681aa0afd3dff31b694cca17120dc88b837416304630a268",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "d6da33d3bd169ed49b1194244027ba13",
+      "name": "FireShot_Release",
+      "path": "Assets/_Game/Audio/SFX/Skills/FireShot_Release.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/fire_shot.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.207,
+      "balanceNote": "skill: heard -24.9 dB, target -30; then -21.4 dB",
+      "cues": [],
+      "duration": 1.25,
+      "preview": "audio-previews/d6da33d3bd169ed49b1194244027ba13.mp3",
+      "sha256": "b6e0881b87b25a70b232bb590cfdf44e6541e428eab3c638d54d68d36aea7a66",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "196d553a723d4e9f9970c48a10ad85d3",
+      "name": "FrostComet_Impact",
+      "path": "Assets/_Game/Audio/SFX/Skills/FrostComet_Impact.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/comet.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.725,
+      "balanceNote": "skill: heard -35.7 dB, target -30; then -21.5 dB",
+      "cues": [],
+      "duration": 1.76,
+      "preview": "audio-previews/196d553a723d4e9f9970c48a10ad85d3.mp3",
+      "sha256": "d407710af8a30c0d30b97f289203e3d804835fdf0a847970cb27d26706d55af0",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "141f75aae2a84cd99852376ed6917f56",
+      "name": "FrostComet_Release",
+      "path": "Assets/_Game/Audio/SFX/Skills/FrostComet_Release.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/comet.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.661,
+      "balanceNote": "skill: heard -34.9 dB, target -30; then -21.5 dB",
+      "cues": [],
+      "duration": 1.0,
+      "preview": "audio-previews/141f75aae2a84cd99852376ed6917f56.mp3",
+      "sha256": "0f2bf47cedd1e22de266f3057750664f3ea68b23f169557212ca12220257c906",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "2d7f23e34c744725a99e77eb6298147b",
+      "name": "FrostWall_Impact",
+      "path": "Assets/_Game/Audio/SFX/Skills/FrostWall_Impact.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/frost_wall.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.912,
+      "balanceNote": "skill: heard -37.3 dB, target -30; then -21.9 dB",
+      "cues": [],
+      "duration": 1.2,
+      "preview": "audio-previews/2d7f23e34c744725a99e77eb6298147b.mp3",
+      "sha256": "adf394ab442f2ed63b429dbfa81db2e18d4cdd290fe4cf0e704b04185a97e143",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "4b67b36309904d91896e3753cda50c17",
+      "name": "FrostWall_Release",
+      "path": "Assets/_Game/Audio/SFX/Skills/FrostWall_Release.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/frost_wall.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.977,
+      "balanceNote": "skill: heard -37.3 dB, target -30; then -22.5 dB",
+      "cues": [],
+      "duration": 1.6,
+      "preview": "audio-previews/4b67b36309904d91896e3753cda50c17.mp3",
+      "sha256": "8921f66e23cb11f70d5b22258afd188ec56d0a2647d8d69a688a72af1cecce66",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "a39c4b62913644598d57c6e474f1b52a",
+      "name": "FusionCore_Impact",
+      "path": "Assets/_Game/Audio/SFX/Skills/FusionCore_Impact.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/fusion_core.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.653,
+      "balanceNote": "skill: heard -34.3 dB, target -30; then -22.0 dB",
+      "cues": [],
+      "duration": 0.68,
+      "preview": "audio-previews/a39c4b62913644598d57c6e474f1b52a.mp3",
+      "sha256": "ebc4ad63d753508a4cc6e148916ce237077324898fbc5262a3efec000b33d712",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "2f9b137f2add4e9f9c7bf848f8ea2faf",
+      "name": "FusionCore_Release",
+      "path": "Assets/_Game/Audio/SFX/Skills/FusionCore_Release.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/fusion_core.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.452,
+      "balanceNote": "skill: heard -31.4 dB, target -30; then -21.7 dB",
+      "cues": [],
+      "duration": 1.76,
+      "preview": "audio-previews/2f9b137f2add4e9f9c7bf848f8ea2faf.mp3",
+      "sha256": "e226686c21c9aae8f08950f029b9045a1f2c5bd8ce7fc1def96f5b9389add438",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "36e3d32ae078f524eb7cd49abb818f9a",
+      "name": "GroundSlash_Impact",
+      "path": "Assets/_Game/Audio/SFX/Skills/GroundSlash_Impact.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/ground_slash.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.371,
+      "balanceNote": "skill: heard -29.8 dB, target -30; then -21.6 dB",
+      "cues": [],
+      "duration": 0.8,
+      "preview": "audio-previews/36e3d32ae078f524eb7cd49abb818f9a.mp3",
+      "sha256": "ab530cc00e874153e62e384ca4e09650c5d3cba42688eb9d332d79f839c05c0a",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "4e2f93613a4e5bb4b838a606b3898016",
+      "name": "GroundSlash_Release",
+      "path": "Assets/_Game/Audio/SFX/Skills/GroundSlash_Release.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/ground_slash.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.248,
+      "balanceNote": "skill: heard -26.4 dB, target -30; then -21.5 dB",
+      "cues": [],
+      "duration": 1.36,
+      "preview": "audio-previews/4e2f93613a4e5bb4b838a606b3898016.mp3",
+      "sha256": "a8e9c5dd2eb0b76674b646c766414d8b31ef16fb7d3aec2c39698cda30933dc4",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "3551e302fc37409eb5d37a46547be655",
+      "name": "HammerStrike_Impact",
+      "path": "Assets/_Game/Audio/SFX/Skills/HammerStrike_Impact.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/hammer_strike.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.367,
+      "balanceNote": "skill: heard -29.8 dB, target -30; then -21.5 dB",
+      "cues": [],
+      "duration": 1.76,
+      "preview": "audio-previews/3551e302fc37409eb5d37a46547be655.mp3",
+      "sha256": "250285897976fea0c22fb59a65c00695fe79f0e0834a1583384eeffd9fd60b47",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "ce34ee3239294b279a05e04f05676a17",
+      "name": "HammerStrike_Release",
+      "path": "Assets/_Game/Audio/SFX/Skills/HammerStrike_Release.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/hammer_strike.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.207,
+      "balanceNote": "skill: heard -24.8 dB, target -30; then -21.5 dB",
+      "cues": [],
+      "duration": 1.2,
+      "preview": "audio-previews/ce34ee3239294b279a05e04f05676a17.mp3",
+      "sha256": "9be12bdc4b49a48d6bbb14f86cf5a006ae21b1e999ebc46c8396b06a5b89f5a8",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "df20eca85339483aa4d70591a3c7897f",
+      "name": "HealingSeal_Release",
+      "path": "Assets/_Game/Audio/SFX/Skills/HealingSeal_Release.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/healing_seal.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.468,
+      "balanceNote": "skill: heard -31.6 dB, target -30; then -21.8 dB",
+      "cues": [],
+      "duration": 2.0,
+      "preview": "audio-previews/df20eca85339483aa4d70591a3c7897f.mp3",
+      "sha256": "56ed27b3e53005599df225ed09d86796e42f1067ab7399ce0cc330a9320a83fb",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "1266c25596a949368fff50fbca65a738",
+      "name": "Holy_Slash_Cast",
+      "path": "Assets/_Game/Audio/SFX/Skills/Holy_Slash_Cast.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/holy_slash.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.724,
+      "balanceNote": "skill: heard -35.0 dB, target -30; then -22.2 dB",
+      "cues": [],
+      "duration": 0.522,
+      "preview": "audio-previews/1266c25596a949368fff50fbca65a738.mp3",
+      "sha256": "f94ae1c879e9f352f6df31344e84e958976e810c7d29cc5a355c6b1303c4c2a7",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "70461315a5344e769e3aa1aa98f4f435",
+      "name": "Holy_Slash_Impact",
+      "path": "Assets/_Game/Audio/SFX/Skills/Holy_Slash_Impact.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/holy_slash.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.75,
+      "balanceNote": "skill: heard -35.4 dB, target -30; then -22.1 dB",
+      "cues": [],
+      "duration": 0.508,
+      "preview": "audio-previews/70461315a5344e769e3aa1aa98f4f435.mp3",
+      "sha256": "2fd1a7129cb4394ea5b166d837be350ea665e4d83925b78a09b113dad8d3dd6f",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "7aba4c66990f4ed3b5df57af7c98215a",
+      "name": "Holy_Slash_Release",
+      "path": "Assets/_Game/Audio/SFX/Skills/Holy_Slash_Release.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/holy_slash.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.49,
+      "balanceNote": "skill: heard -32.1 dB, target -30; then -21.7 dB",
+      "cues": [],
+      "duration": 0.341,
+      "preview": "audio-previews/7aba4c66990f4ed3b5df57af7c98215a.mp3",
+      "sha256": "210c3e1c5eaf1c40d97b694f54c2f28fde7f522d972837f35d58b1dd0829af1d",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "805075cbbf72496c956b32b8c39289a5",
+      "name": "IceNova_Release",
+      "path": "Assets/_Game/Audio/SFX/Skills/IceNova_Release.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/frost_sector.asset",
+        "Assets/_Game/Resources/Skills/ice_nova.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 1.318,
+      "balanceNote": "skill: heard -39.4 dB, target -30; then -24.2 dB; then -28.8 dB",
+      "cues": [],
+      "duration": 1.36,
+      "preview": "audio-previews/805075cbbf72496c956b32b8c39289a5.mp3",
+      "sha256": "95ff1356bf418aba7157f998cd70b2e3fcefe869dc06e7395008f649e666a5e6",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "5cea5af4215843fd9f0fdd57a703f999",
+      "name": "IceRain_Impact",
+      "path": "Assets/_Game/Audio/SFX/Skills/IceRain_Impact.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/ice_rain.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 1.462,
+      "balanceNote": "skill: heard -39.6 dB, target -30; then -25.0 dB; then -28.7 dB",
+      "cues": [],
+      "duration": 0.68,
+      "preview": "audio-previews/5cea5af4215843fd9f0fdd57a703f999.mp3",
+      "sha256": "06f9b7323718b84f3e15cef244d5e75df958966dac16dacac28f0f1ba881f0fe",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "6682fd392a6b44f690efc667311e757e",
+      "name": "IceRain_Release",
+      "path": "Assets/_Game/Audio/SFX/Skills/IceRain_Release.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/ice_rain.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 1.059,
+      "balanceNote": "skill: heard -37.8 dB, target -30; then -22.7 dB",
+      "cues": [],
+      "duration": 1.76,
+      "preview": "audio-previews/6682fd392a6b44f690efc667311e757e.mp3",
+      "sha256": "9a819e8900a33ea4300d1151d7176448971c75b6ed8a708953d1f15eb60b92fa",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "853f7a1e1e7741e48845234979b67837",
+      "name": "IceSlash_Impact",
+      "path": "Assets/_Game/Audio/SFX/Skills/IceSlash_Impact.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/frost_sector.asset",
+        "Assets/_Game/Resources/Skills/ice_slash.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 1.349,
+      "balanceNote": "skill: heard -39.4 dB, target -30; then -24.4 dB; then -28.8 dB",
+      "cues": [],
+      "duration": 0.6,
+      "preview": "audio-previews/853f7a1e1e7741e48845234979b67837.mp3",
+      "sha256": "93d200ee82b14c0ddf68d8a2a51ea77068e4f122f0597bdb463b5c2769bf54ac",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "7bc80c9d099e4b9ab190528837bcb895",
+      "name": "IceSlash_Release",
+      "path": "Assets/_Game/Audio/SFX/Skills/IceSlash_Release.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/ice_slash.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.638,
+      "balanceNote": "skill: heard -34.2 dB, target -30; then -21.9 dB",
+      "cues": [],
+      "duration": 1.0,
+      "preview": "audio-previews/7bc80c9d099e4b9ab190528837bcb895.mp3",
+      "sha256": "149569196090f43050ea093f1c22670a5727af31a81f17b3bb81fe533b8b8723",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "97385aa72c7e468e846e2c23b16e6932",
+      "name": "LavaPool_Impact",
+      "path": "Assets/_Game/Audio/SFX/Skills/LavaPool_Impact.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/conjure_lava_pool.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.638,
+      "balanceNote": "skill: heard -34.6 dB, target -30; then -21.5 dB",
+      "cues": [],
+      "duration": 0.6,
+      "preview": "audio-previews/97385aa72c7e468e846e2c23b16e6932.mp3",
+      "sha256": "121cd77d34fb08e559ad9a9a329dfbbaaeb83f31d14929475dad8d1a42114239",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "0db72ef0bc9c457ca4d288fa555c9a9a",
+      "name": "LavaPool_Release",
+      "path": "Assets/_Game/Audio/SFX/Skills/LavaPool_Release.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/conjure_lava_pool.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.442,
+      "balanceNote": "skill: heard -31.4 dB, target -30; then -21.5 dB",
+      "cues": [],
+      "duration": 1.76,
+      "preview": "audio-previews/0db72ef0bc9c457ca4d288fa555c9a9a.mp3",
+      "sha256": "d8e0ec58fd841db91d0825dde3a40bfcb6f50f000311a392796e6f4a36c99817",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "9d628c5149634b07b2676bda43d2506e",
+      "name": "Lightning_Circle_Cast",
+      "path": "Assets/_Game/Audio/SFX/Skills/Lightning_Circle_Cast.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/lightning_circle.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.359,
+      "balanceNote": "skill: heard -29.6 dB, target -30; then -21.5 dB",
+      "cues": [],
+      "duration": 2.48,
+      "preview": "audio-previews/9d628c5149634b07b2676bda43d2506e.mp3",
+      "sha256": "e55f3f0a3276c529f7041166e2ada4f2a7413ad030eae7d15a10bdb0d6b01533",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "4eec75fb524141188bf8083d0f9eafec",
+      "name": "Lightning_Circle_Impact",
+      "path": "Assets/_Game/Audio/SFX/Skills/Lightning_Circle_Impact.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/lightning_circle.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.661,
+      "balanceNote": "skill: heard -34.6 dB, target -30; then -21.8 dB",
+      "cues": [],
+      "duration": 1.2,
+      "preview": "audio-previews/4eec75fb524141188bf8083d0f9eafec.mp3",
+      "sha256": "5e13abc065b52e922a43fe24c7c57d3145812e31b128d8d682fa300c9748283e",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "af8eb71cf8264b69907a3896c415f93d",
+      "name": "MagicMissile_Impact",
+      "path": "Assets/_Game/Audio/SFX/Skills/MagicMissile_Impact.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/magic_missile_barrage.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.7,
+      "balanceNote": "skill: heard -35.4 dB, target -30; then -21.5 dB",
+      "cues": [],
+      "duration": 0.48,
+      "preview": "audio-previews/af8eb71cf8264b69907a3896c415f93d.mp3",
+      "sha256": "6910004fa240034497e0bce7fdc97c9f864a2cfbef0995ae29fd97e3906de1bf",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "94b286155755455b9f6f5ba7725bf9b7",
+      "name": "MagicMissile_Release",
+      "path": "Assets/_Game/Audio/SFX/Skills/MagicMissile_Release.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/magic_missile_barrage.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.624,
+      "balanceNote": "skill: heard -34.0 dB, target -30; then -21.9 dB",
+      "cues": [],
+      "duration": 1.6,
+      "preview": "audio-previews/94b286155755455b9f6f5ba7725bf9b7.mp3",
+      "sha256": "8bca5674f985fda1b158b7419cb0b77301fe1ed588a74decdec5da42381050a5",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "732ac0b6a4fe46d1b478dcb25e00fa8f",
+      "name": "MeteorStrike_Impact",
+      "path": "Assets/_Game/Audio/SFX/Skills/MeteorStrike_Impact.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/meteor_strike.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.295,
+      "balanceNote": "skill: heard -27.9 dB, target -30; then -21.5 dB",
+      "cues": [],
+      "duration": 2.0,
+      "preview": "audio-previews/732ac0b6a4fe46d1b478dcb25e00fa8f.mp3",
+      "sha256": "315c08ab709d07e34c2afecad828b47a129f067898986b049f30d0072d948916",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "0ffbf004176545cc921b23b95b4f2204",
+      "name": "MeteorStrike_Release",
+      "path": "Assets/_Game/Audio/SFX/Skills/MeteorStrike_Release.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/meteor_strike.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.312,
+      "balanceNote": "skill: heard -28.5 dB, target -30; then -21.4 dB",
+      "cues": [],
+      "duration": 1.6,
+      "preview": "audio-previews/0ffbf004176545cc921b23b95b4f2204.mp3",
+      "sha256": "4b627f41e372ac6e5a1dd43a2c47067f9fff3dfc22263cbbe37147f37f2f3a4b",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "f1b933ff5f52f53459ea95388697231a",
+      "name": "RestlessSpirits_Release",
+      "path": "Assets/_Game/Audio/SFX/Skills/RestlessSpirits_Release.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/restless_spirits.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.394,
+      "balanceNote": "skill: heard -30.4 dB, target -30; then -21.5 dB",
+      "cues": [],
+      "duration": 1.36,
+      "preview": "audio-previews/f1b933ff5f52f53459ea95388697231a.mp3",
+      "sha256": "0e6167ca36e237681a4998a8d3a970195a80b2ac13184e418d5d4a3f79703906",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "75f6609f41e85da49b4338facb343fe6",
+      "name": "ShadowDouble_Release",
+      "path": "Assets/_Game/Audio/SFX/Skills/ShadowDouble_Release.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/shadow_double.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.316,
+      "balanceNote": "skill: heard -28.6 dB, target -30; then -21.4 dB",
+      "cues": [],
+      "duration": 1.6,
+      "preview": "audio-previews/75f6609f41e85da49b4338facb343fe6.mp3",
+      "sha256": "f483321a8891071e9f228c12062b437e3f69f71173449eda3bc3b9a3ad4d19e6",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "d522a416b28a654489d962fe41738477",
+      "name": "SoulBind_Impact",
+      "path": "Assets/_Game/Audio/SFX/Skills/SoulBind_Impact.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/soul_bind.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.977,
+      "balanceNote": "skill: heard -37.4 dB, target -30; then -22.4 dB",
+      "cues": [],
+      "duration": 1.28,
+      "preview": "audio-previews/d522a416b28a654489d962fe41738477.mp3",
+      "sha256": "14940b95e01fd8332a29cef028dee8bcfe38a58ea39e2f7abcb9596411e64138",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "708b1ad555606664f9dfa69f32df1737",
+      "name": "Spark_Impact",
+      "path": "Assets/_Game/Audio/SFX/Skills/Spark_Impact.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/spark.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.725,
+      "balanceNote": "skill: heard -34.3 dB, target -30; then -22.9 dB",
+      "cues": [],
+      "duration": 0.48,
+      "preview": "audio-previews/708b1ad555606664f9dfa69f32df1737.mp3",
+      "sha256": "2a7931a119e104c0d7ec1e406679d4d092a3b485e576cb9da6a08d96fed20b24",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "4d869ab22ad47624fb64e658c6b92e45",
+      "name": "Spark_Release",
+      "path": "Assets/_Game/Audio/SFX/Skills/Spark_Release.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/spark.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.851,
+      "balanceNote": "skill: heard -36.1 dB, target -30; then -22.5 dB",
+      "cues": [],
+      "duration": 0.8,
+      "preview": "audio-previews/4d869ab22ad47624fb64e658c6b92e45.mp3",
+      "sha256": "7aa22015654d17e25646ea6045d6f104f9b9ed708519d7bc5914569e723027e8",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "057bcb69825e496b9b107105496438ef",
+      "name": "SpiritBomb_Impact",
+      "path": "Assets/_Game/Audio/SFX/Skills/SpiritBomb_Impact.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/spirit_bomb.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.302,
+      "balanceNote": "skill: heard -28.1 dB, target -30; then -21.5 dB",
+      "cues": [],
+      "duration": 2.0,
+      "preview": "audio-previews/057bcb69825e496b9b107105496438ef.mp3",
+      "sha256": "fdd6c0e6a2e7db35f617b05d43a45cf2d84423e4c489403356e2d8e853eaa03c",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "cec45459bad74d5da4e5a8cad4fadfc5",
+      "name": "SpiritBomb_Release",
+      "path": "Assets/_Game/Audio/SFX/Skills/SpiritBomb_Release.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/spirit_bomb.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.543,
+      "balanceNote": "skill: heard -32.8 dB, target -30; then -21.9 dB",
+      "cues": [],
+      "duration": 1.902,
+      "preview": "audio-previews/cec45459bad74d5da4e5a8cad4fadfc5.mp3",
+      "sha256": "e57d009837c549fc2f9dc19963f2daa661e9607a25cf0a638edcd0d3dda1c647",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "c5ab23e237f74b9bb6c7be672119b9b6",
+      "name": "StarRays_Impact",
+      "path": "Assets/_Game/Audio/SFX/Skills/StarRays_Impact.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/star_rays.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.582,
+      "balanceNote": "skill: heard -33.6 dB, target -30; then -21.7 dB",
+      "cues": [],
+      "duration": 0.6,
+      "preview": "audio-previews/c5ab23e237f74b9bb6c7be672119b9b6.mp3",
+      "sha256": "1d80fb233e0b1d09b4e08c2b410337ce5093348e920272219c0993730b1898ec",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "69be59d6ed824f95adc400b6f5282414",
+      "name": "StarRays_Release",
+      "path": "Assets/_Game/Audio/SFX/Skills/StarRays_Release.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/star_rays.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.733,
+      "balanceNote": "skill: heard -35.3 dB, target -30; then -22.0 dB",
+      "cues": [],
+      "duration": 1.6,
+      "preview": "audio-previews/69be59d6ed824f95adc400b6f5282414.mp3",
+      "sha256": "b391800d2acaf5c8a70400a40ee2f0f7e1adf7062e7783765b780e1050bb6584",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "aee25e0937434b12965c24d7d48dff11",
+      "name": "StormComet_Impact",
+      "path": "Assets/_Game/Audio/SFX/Skills/StormComet_Impact.wav",
+      "category": "Skills",
+      "usages": [],
+      "status": "unreferenced",
+      "originalGain": 1,
+      "balanceNote": "",
+      "cues": [],
+      "duration": 1.76,
+      "preview": "audio-previews/aee25e0937434b12965c24d7d48dff11.mp3",
+      "sha256": "00b5aa15aaefa8e696149df65066837a5409425018b76d849d5e5dce455d1f61",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "091b4f7cbc1a499a84b2d81f30ff73c8",
+      "name": "StormComet_Release",
+      "path": "Assets/_Game/Audio/SFX/Skills/StormComet_Release.wav",
+      "category": "Skills",
+      "usages": [],
+      "status": "unreferenced",
+      "originalGain": 1,
+      "balanceNote": "",
+      "cues": [],
+      "duration": 1.0,
+      "preview": "audio-previews/091b4f7cbc1a499a84b2d81f30ff73c8.mp3",
+      "sha256": "56a548d83eb4c4cf88bf2200d69121db0fdad106942a5d7cc1d2a3ab0048b01d",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "c5084201de7a48f6bdfa8d8bc573bf95",
+      "name": "SummonStorm_Impact",
+      "path": "Assets/_Game/Audio/SFX/Skills/SummonStorm_Impact.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/summon_storm.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.331,
+      "balanceNote": "skill: heard -28.8 dB, target -30; then -21.6 dB",
+      "cues": [],
+      "duration": 0.8,
+      "preview": "audio-previews/c5084201de7a48f6bdfa8d8bc573bf95.mp3",
+      "sha256": "d08209c3dc66c13d75299d6958f8775ee278ae43b9713e889797b3d97f6d13f5",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "5ec588df68d44429999ded620c42225d",
+      "name": "SummonStorm_Release",
+      "path": "Assets/_Game/Audio/SFX/Skills/SummonStorm_Release.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/summon_storm.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.355,
+      "balanceNote": "skill: heard -29.6 dB, target -30; then -21.4 dB",
+      "cues": [],
+      "duration": 2.0,
+      "preview": "audio-previews/5ec588df68d44429999ded620c42225d.mp3",
+      "sha256": "4d6e624018db8e26f918fb49dd3b444fc3b69bda258053e73ebbfa3309fb41f7",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "6e4b359e84df4f3da0c81fea6d48f0ec",
+      "name": "ThunderStrike_Impact",
+      "path": "Assets/_Game/Audio/SFX/Skills/ThunderStrike_Impact.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/lightning_slashes.asset",
+        "Assets/_Game/Resources/Skills/thunder_strike.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.576,
+      "balanceNote": "skill: heard -33.6 dB, target -30; then -21.6 dB",
+      "cues": [],
+      "duration": 1.36,
+      "preview": "audio-previews/6e4b359e84df4f3da0c81fea6d48f0ec.mp3",
+      "sha256": "8d6a33ba521f55805bf97164c6cb7556dab6a643f8e1dd71f5eacf4871318090",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "afae8d19323346758f94e0a6b2f642ba",
+      "name": "ThunderStrike_Release",
+      "path": "Assets/_Game/Audio/SFX/Skills/ThunderStrike_Release.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/thunder_strike.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.692,
+      "balanceNote": "skill: heard -34.9 dB, target -30; then -21.9 dB",
+      "cues": [],
+      "duration": 0.8,
+      "preview": "audio-previews/afae8d19323346758f94e0a6b2f642ba.mp3",
+      "sha256": "62e959755dcf39235e3a5cebc98ba3fb8e79a8ac72de8b65099742009a7993b2",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "1428dab7520c434d86e5fe17dd900460",
+      "name": "Twister_Impact",
+      "path": "Assets/_Game/Audio/SFX/Skills/Twister_Impact.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/twister.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.403,
+      "balanceNote": "skill: heard -30.6 dB, target -30; then -21.5 dB",
+      "cues": [],
+      "duration": 0.6,
+      "preview": "audio-previews/1428dab7520c434d86e5fe17dd900460.mp3",
+      "sha256": "df3f33627184482d003fec5434e767f60fc1570a33786ad028883ac017cbdb3d",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "5140d4037ac94fe788980e842ce4cb15",
+      "name": "Twister_Release",
+      "path": "Assets/_Game/Audio/SFX/Skills/Twister_Release.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/twister.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.367,
+      "balanceNote": "skill: heard -29.8 dB, target -30; then -21.5 dB",
+      "cues": [],
+      "duration": 1.36,
+      "preview": "audio-previews/5140d4037ac94fe788980e842ce4cb15.mp3",
+      "sha256": "652b786d339a1ec6c282b3240fd1a68ba8685b6e2008ab7d0486221f3652414f",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "0364a1b0e72043dfbac63b87ac1b5754",
+      "name": "Volley_Impact",
+      "path": "Assets/_Game/Audio/SFX/Skills/Volley_Impact.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/volley.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.653,
+      "balanceNote": "skill: heard -34.1 dB, target -30; then -22.2 dB",
+      "cues": [],
+      "duration": 0.68,
+      "preview": "audio-previews/0364a1b0e72043dfbac63b87ac1b5754.mp3",
+      "sha256": "1327f5f99f160daeebee7faccd1a70047db184307469f1c2ae33fd477c2c0779",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "a63fe8bfe61943dd9171f5ab1eacb9a8",
+      "name": "Volley_Release",
+      "path": "Assets/_Game/Audio/SFX/Skills/Volley_Release.wav",
+      "category": "Skills",
+      "usages": [
+        "Assets/_Game/Resources/Skills/volley.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.359,
+      "balanceNote": "skill: heard -29.6 dB, target -30; then -21.5 dB",
+      "cues": [],
+      "duration": 1.6,
+      "preview": "audio-previews/a63fe8bfe61943dd9171f5ab1eacb9a8.mp3",
+      "sha256": "5ab95ad15eabf62c634be3196fbdb5238ea6f96f0ae0f4d38eff974ca8fda043",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "3963e02f44b04ab4b7368c5622c839b5",
+      "name": "drop_best",
+      "path": "Assets/_Game/Resources/LootSounds/drop_best.wav",
+      "category": "Loot",
+      "usages": [
+        "Resources.Load: LootSounds/drop_best"
+      ],
+      "status": "referenced",
+      "originalGain": 0.61,
+      "balanceNote": "drop: heard -16.7 dB, target -21",
+      "cues": [],
+      "duration": 1.578,
+      "preview": "audio-previews/3963e02f44b04ab4b7368c5622c839b5.mp3",
+      "sha256": "ef42a59ad5e29d818941d225a4cbd38779bdb5b7027ad76ea5fef0daecb26ec7",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "e9c541d89a186ea4a9a303632a612629",
+      "name": "drop_coin",
+      "path": "Assets/_Game/Resources/LootSounds/drop_coin.wav",
+      "category": "Loot",
+      "usages": [
+        "Resources.Load: LootSounds/drop_coin"
+      ],
+      "status": "referenced",
+      "originalGain": 2.213,
+      "balanceNote": "drop: heard -36.9 dB, target -30",
+      "cues": [],
+      "duration": 0.454,
+      "preview": "audio-previews/e9c541d89a186ea4a9a303632a612629.mp3",
+      "sha256": "b3ded866b76245088faaf637479c2bc0d66dd94328f240bd636f00e26a88c50c",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "415175529a4e9064e9bfead8959a15a9",
+      "name": "drop_gem",
+      "path": "Assets/_Game/Resources/LootSounds/drop_gem.wav",
+      "category": "Loot",
+      "usages": [
+        "Resources.Load: LootSounds/drop_gem"
+      ],
+      "status": "referenced",
+      "originalGain": 0.537,
+      "balanceNote": "drop: heard -21.6 dB, target -27",
+      "cues": [],
+      "duration": 1.586,
+      "preview": "audio-previews/415175529a4e9064e9bfead8959a15a9.mp3",
+      "sha256": "1f82b3c5a220acfb5b6ee713de6d7cbaba4dc2004030a1b645942517a8325049",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "2140a6a89c9d6aa41b2378f46aff1091",
+      "name": "drop_magic",
+      "path": "Assets/_Game/Resources/LootSounds/drop_magic.wav",
+      "category": "Loot",
+      "usages": [
+        "Resources.Load: LootSounds/drop_magic"
+      ],
+      "status": "referenced",
+      "originalGain": 0.881,
+      "balanceNote": "drop: heard -23.9 dB, target -25",
+      "cues": [],
+      "duration": 1.04,
+      "preview": "audio-previews/2140a6a89c9d6aa41b2378f46aff1091.mp3",
+      "sha256": "ad3c1cb623a2fec29fa1b5209f99d38b3231b44653f2d3aab25017177a3734a8",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "d52844329b19fba44970d4d06c523303",
+      "name": "drop_rare",
+      "path": "Assets/_Game/Resources/LootSounds/drop_rare.wav",
+      "category": "Loot",
+      "usages": [
+        "Resources.Load: LootSounds/drop_rare"
+      ],
+      "status": "referenced",
+      "originalGain": 1.23,
+      "balanceNote": "drop: heard -25.8 dB, target -24",
+      "cues": [],
+      "duration": 1.747,
+      "preview": "audio-previews/d52844329b19fba44970d4d06c523303.mp3",
+      "sha256": "eefac17ac35efe365788b4db99eba538d84b4b7942a304a6b251f36386a6b6ae",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "34d54108f737efb4dbbb02b96306142e",
+      "name": "drop_unique",
+      "path": "Assets/_Game/Resources/LootSounds/drop_unique.wav",
+      "category": "Loot",
+      "usages": [
+        "Resources.Load: LootSounds/drop_unique"
+      ],
+      "status": "referenced",
+      "originalGain": 0.525,
+      "balanceNote": "drop: heard -16.4 dB, target -22",
+      "cues": [],
+      "duration": 1.659,
+      "preview": "audio-previews/34d54108f737efb4dbbb02b96306142e.mp3",
+      "sha256": "ff26ddab88c4357a4a817430f02588c692b205045cb8e84dad9f084cf61307af",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "d9ea1c916fd74b599dbc9e0e54f4e39c",
+      "name": "quest_complete",
+      "path": "Assets/_Game/Resources/UiSounds/quest_complete.wav",
+      "category": "UI",
+      "usages": [
+        "Resources.Load: UiSounds/quest_complete"
+      ],
+      "status": "referenced",
+      "originalGain": 0.977,
+      "balanceNote": "ui: heard -24.8 dB, target -25",
+      "cues": [],
+      "duration": 3.0,
+      "preview": "audio-previews/d9ea1c916fd74b599dbc9e0e54f4e39c.mp3",
+      "sha256": "4987f58b0aa455930ce7c2fd3d77085029064a6a34c179e3b04791184d47f54d",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "15ec577988cb0aa4790f98cca70e353d",
+      "name": "bonfire_kindle",
+      "path": "Assets/_Game/Resources/WorldSounds/bonfire_kindle.wav",
+      "category": "World",
+      "usages": [
+        "Resources.Load: WorldSounds/bonfire_kindle"
+      ],
+      "status": "referenced",
+      "originalGain": 0.14,
+      "balanceNote": "world: heard -24.8 dB, target -28; then -14.1 dB",
+      "cues": [],
+      "duration": 2.48,
+      "preview": "audio-previews/15ec577988cb0aa4790f98cca70e353d.mp3",
+      "sha256": "0ecfa172ceed9b19dff108f61cb04bdb40cc998fda16ee7bf3094ad9325f51d1",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "4006db4b703da9e4b813be92a82bb8df",
+      "name": "door_close",
+      "path": "Assets/_Game/Resources/WorldSounds/door_close.wav",
+      "category": "World",
+      "usages": [
+        "Resources.Load: WorldSounds/door_close"
+      ],
+      "status": "referenced",
+      "originalGain": 0.266,
+      "balanceNote": "world: heard -28.6 dB, target -28; then -15.9 dB",
+      "cues": [],
+      "duration": 1.226,
+      "preview": "audio-previews/4006db4b703da9e4b813be92a82bb8df.mp3",
+      "sha256": "cc85a57e4b22f6a26f23087d125174d170b6a2a97fba35924673b42eef001146",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "26435936abd8ec9469ae0717e25a56ce",
+      "name": "door_open",
+      "path": "Assets/_Game/Resources/WorldSounds/door_open.wav",
+      "category": "World",
+      "usages": [
+        "Resources.Load: WorldSounds/door_open"
+      ],
+      "status": "referenced",
+      "originalGain": 0.457,
+      "balanceNote": "world: heard -33.2 dB, target -28; then -20.8 dB; then -23.2 dB",
+      "cues": [],
+      "duration": 1.6,
+      "preview": "audio-previews/26435936abd8ec9469ae0717e25a56ce.mp3",
+      "sha256": "1cacf8a613ee51d548e52926963149166bc858a7a9f95fdda220ee2d594afd3b",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "2f25feedadf81a546bd1ba882d2d425a",
+      "name": "Acid zone ",
+      "path": "Assets/Hovl Studio/Black mage spells/Sounds/Acid zone .wav",
+      "category": "Effects",
+      "usages": [
+        "Assets/Hovl Studio/Black mage spells/Prefabs/Acid zone/Acid zone.prefab"
+      ],
+      "status": "referenced",
+      "originalGain": 8,
+      "balanceNote": "monster: heard -39.8 dB, target -33; then -40.7 dB; then -39.1 dB",
+      "cues": [],
+      "duration": 5.0,
+      "preview": "audio-previews/2f25feedadf81a546bd1ba882d2d425a.mp3",
+      "sha256": "10b45a801b5f7b250fbb114c1758565379f48a3c66cfd78a833e08ecb7d8ac99",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "47b5b4fad932d84418ea956995ff8729",
+      "name": "Black hole",
+      "path": "Assets/Hovl Studio/Black mage spells/Sounds/Black hole.wav",
+      "category": "Effects",
+      "usages": [
+        "Assets/_Game/Resources/Skills/black_hole.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.155,
+      "balanceNote": "skill: heard -21.7 dB, target -30; then -22.1 dB",
+      "cues": [],
+      "duration": 3.062,
+      "preview": "audio-previews/47b5b4fad932d84418ea956995ff8729.mp3",
+      "sha256": "0f8b989b1e43bb2691cea30b9d9c1fc3ca58f82a94cc9546adf174373b9f8c92",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "c4c3c1829a2d3a142b8c6b857759d228",
+      "name": "Dark debuff",
+      "path": "Assets/Hovl Studio/Black mage spells/Sounds/Dark debuff.wav",
+      "category": "Effects",
+      "usages": [
+        "Assets/Hovl Studio/Black mage spells/Prefabs/Dark debuff/Dark debuff.prefab",
+        "Assets/_Game/Resources/Skills/dark_miasma.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.153,
+      "balanceNote": "skill: heard -21.8 dB, target -30; then -21.9 dB",
+      "cues": [],
+      "duration": 3.098,
+      "preview": "audio-previews/c4c3c1829a2d3a142b8c6b857759d228.mp3",
+      "sha256": "bfdc7e971bc0d1e8a90027a3742298f05fd614d173b03c0cde84a5312ea8f9f2",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "38051827629eeb141875d17ea713c0d3",
+      "name": "Dark hit",
+      "path": "Assets/Hovl Studio/Black mage spells/Sounds/Dark hit.wav",
+      "category": "Effects",
+      "usages": [
+        "Assets/Hovl Studio/Black mage spells/Prefabs/Projectiles/Dark hit.prefab",
+        "Assets/_Game/Resources/Skills/dark_miasma.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.266,
+      "balanceNote": "skill: heard -26.4 dB, target -30; then -22.1 dB",
+      "cues": [],
+      "duration": 1.688,
+      "preview": "audio-previews/38051827629eeb141875d17ea713c0d3.mp3",
+      "sha256": "84f2c1274af3aec00c98ab2b1e32a8c6f70e3b56e4cb0db96bde4f1195e4df60",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "35fe297d64d6a8b4b8483d4afb5ac536",
+      "name": "Dark magic rain hit",
+      "path": "Assets/Hovl Studio/Black mage spells/Sounds/Dark magic rain hit.wav",
+      "category": "Effects",
+      "usages": [
+        "Assets/Hovl Studio/Black mage spells/Prefabs/Dark signet/Darkness signet.prefab"
+      ],
+      "status": "referenced",
+      "originalGain": 1,
+      "balanceNote": "",
+      "cues": [],
+      "duration": 2.0,
+      "preview": "audio-previews/35fe297d64d6a8b4b8483d4afb5ac536.mp3",
+      "sha256": "16a80b311ae54fc005addd80dfc632699e3770341a581fe761816995ab4f595b",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "ecde478538a120546afeb286569ecb35",
+      "name": "Dark signet hit",
+      "path": "Assets/Hovl Studio/Black mage spells/Sounds/Dark signet hit.wav",
+      "category": "Effects",
+      "usages": [
+        "Assets/Hovl Studio/Black mage spells/Prefabs/Dark signet/Darkness signet.prefab"
+      ],
+      "status": "referenced",
+      "originalGain": 1,
+      "balanceNote": "",
+      "cues": [],
+      "duration": 1.635,
+      "preview": "audio-previews/ecde478538a120546afeb286569ecb35.mp3",
+      "sha256": "09c09ee6aaba7c5c905c393822e83bccf618dddba2a3454e6b47c5dffde30a3c",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "7ffd4c89eb7497049a817261b522442f",
+      "name": "Lava eruption",
+      "path": "Assets/Hovl Studio/Black mage spells/Sounds/Lava eruption.wav",
+      "category": "Effects",
+      "usages": [
+        "Assets/Hovl Studio/Black mage spells/Prefabs/Lava eruption/Lava eruption.prefab"
+      ],
+      "status": "referenced",
+      "originalGain": 8,
+      "balanceNote": "monster: heard -41.4 dB, target -33; then -40.9 dB; then -39.4 dB",
+      "cues": [],
+      "duration": 4.5,
+      "preview": "audio-previews/7ffd4c89eb7497049a817261b522442f.mp3",
+      "sha256": "5f0dc66817ec8d6d333bde75949373e6c51ad1633e5d0411fdbb1087f73e2b0b",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "4c70a1f22616a6b4ab1581db2a6d279e",
+      "name": "Projectiles cast",
+      "path": "Assets/Hovl Studio/Black mage spells/Sounds/Projectiles cast.wav",
+      "category": "Effects",
+      "usages": [
+        "Assets/Hovl Studio/Black mage spells/Prefabs/Projectiles/Dark flash.prefab"
+      ],
+      "status": "referenced",
+      "originalGain": 8,
+      "balanceNote": "skill: heard -41.7 dB, target -30; then -41.0 dB; then -41.4 dB",
+      "cues": [],
+      "duration": 1.134,
+      "preview": "audio-previews/4c70a1f22616a6b4ab1581db2a6d279e.mp3",
+      "sha256": "086796fb456c59e7058b771a37c67bcd88f05c09dfb7afae9cbf48206792bef1",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "640497f2589cc26499ee347fa4ec86ca",
+      "name": "Skill 11",
+      "path": "Assets/Hovl Studio/HSFiles/Sounds/Skill 11.wav",
+      "category": "Effects",
+      "usages": [
+        "Assets/Hovl Studio/AOE Magic spells Vol.1/Prefabs/Meteor.prefab"
+      ],
+      "status": "referenced",
+      "originalGain": 8,
+      "balanceNote": "monster: heard -39.5 dB, target -33; then -40.9 dB; then -39.4 dB",
+      "cues": [],
+      "duration": 2.76,
+      "preview": "audio-previews/640497f2589cc26499ee347fa4ec86ca.mp3",
+      "sha256": "54d7cfb130aa1a9ee28d6411c27675cea6d81a30ad7f886745bb0971e707435c",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "c54d31c7df8cb7d4e80622a6f62f4507",
+      "name": "Skill 8",
+      "path": "Assets/Hovl Studio/HSFiles/Sounds/Skill 8.wav",
+      "category": "Effects",
+      "usages": [
+        "Assets/Hovl Studio/AOE Magic spells Vol.1/Prefabs/Ise attack.prefab"
+      ],
+      "status": "referenced",
+      "originalGain": 8,
+      "balanceNote": "monster: heard -43.4 dB, target -33; then -39.9 dB; then -38.4 dB",
+      "cues": [],
+      "duration": 3.0,
+      "preview": "audio-previews/c54d31c7df8cb7d4e80622a6f62f4507.mp3",
+      "sha256": "1d70ef1be8e4bb89072a7a1253c79d8b78702c145b1fae7a7328404dd0dab967",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "f2e58036cd78a674e994db153e191210",
+      "name": "S_Skill_2",
+      "path": "Assets/Hovl Studio/HSFiles/Sounds/Spell sounds/S_Skill_2.wav",
+      "category": "Effects",
+      "usages": [
+        "Assets/Hovl Studio/AOE Magic spells Vol.1/Prefabs/Lightning strike.prefab"
+      ],
+      "status": "referenced",
+      "originalGain": 8,
+      "balanceNote": "monster: heard -41.2 dB, target -33; then -41.1 dB; then -39.5 dB",
+      "cues": [],
+      "duration": 4.036,
+      "preview": "audio-previews/f2e58036cd78a674e994db153e191210.mp3",
+      "sha256": "f0bb8e3298f13d670837601386304d1a6fe959ec0c6ff5b781f11361cb5286ef",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "1bc0b0c6dd3a1be47ad6c0345568844b",
+      "name": "Energy Strike",
+      "path": "Assets/Hovl Studio/White mage spells/Sounds/Energy Strike.wav",
+      "category": "Effects",
+      "usages": [
+        "Assets/_Game/Resources/Skills/lightning_slashes.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.178,
+      "balanceNote": "skill: heard -22.9 dB, target -30; then -22.1 dB",
+      "cues": [],
+      "duration": 1.724,
+      "preview": "audio-previews/1bc0b0c6dd3a1be47ad6c0345568844b.mp3",
+      "sha256": "107a898d262e36eedeaaafbb97af48ae4e25a83d303e41eb4e13ab8c47f6accd",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "4b118d6d0b1a31d42802ec214e870a28",
+      "name": "Glowing  Orb",
+      "path": "Assets/Hovl Studio/White mage spells/Sounds/Glowing  Orb.wav",
+      "category": "Effects",
+      "usages": [
+        "Assets/_Game/Resources/Skills/nova_orbs.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.127,
+      "balanceNote": "skill: heard -20.1 dB, target -30; then -22.0 dB",
+      "cues": [],
+      "duration": 0.871,
+      "preview": "audio-previews/4b118d6d0b1a31d42802ec214e870a28.mp3",
+      "sha256": "96ac30c6b2d9959cdb9a1bb4f2b16d7d1c355fe184d02a72004428e2a15e829f",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "fedb8a273c092ee4ebcca0345b094473",
+      "name": "Light buff",
+      "path": "Assets/Hovl Studio/White mage spells/Sounds/Light buff.wav",
+      "category": "Effects",
+      "usages": [
+        "Assets/Hovl Studio/White mage spells/Prefabs/Light buff/Light buff.prefab",
+        "Assets/_Game/Resources/Skills/radiant_blessing.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 8,
+      "balanceNote": "skill: heard -41.8 dB, target -30; then -40.6 dB; then -38.5 dB",
+      "cues": [],
+      "duration": 2.813,
+      "preview": "audio-previews/fedb8a273c092ee4ebcca0345b094473.mp3",
+      "sha256": "d09136e136f1ecfb6ef2f1b4a0d8f27bc6ae761a77bf5ab4a1594dd4a9a2accd",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "2f989b102a7abc2458925f37807c6ef9",
+      "name": "Light flash",
+      "path": "Assets/Hovl Studio/White mage spells/Sounds/Light flash.wav",
+      "category": "Effects",
+      "usages": [
+        "Assets/_Game/Resources/Skills/blink.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.562,
+      "balanceNote": "skill: heard -32.8 dB, target -30; then -22.2 dB",
+      "cues": [],
+      "duration": 0.85,
+      "preview": "audio-previews/2f989b102a7abc2458925f37807c6ef9.mp3",
+      "sha256": "bf1661344b8d729e4afb501de8ba85fea97a0903282253c5ee49b9d365538030",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "f282ab803318fe345946d96b0c66a8d1",
+      "name": "Light hit",
+      "path": "Assets/Hovl Studio/White mage spells/Sounds/Light hit.wav",
+      "category": "Effects",
+      "usages": [
+        "Assets/_Game/Resources/Skills/nova_orbs.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.095,
+      "balanceNote": "skill: heard -17.5 dB, target -30; then -22.1 dB",
+      "cues": [],
+      "duration": 0.85,
+      "preview": "audio-previews/f282ab803318fe345946d96b0c66a8d1.mp3",
+      "sha256": "a06e89d21204632bc08d5b4763aa043663f866213562279433deab0f8fb033c9",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "b5eda70d29ce0f2409863ce3ab8dbc8b",
+      "name": "Magic rain cast",
+      "path": "Assets/Hovl Studio/White mage spells/Sounds/Magic rain cast.wav",
+      "category": "Effects",
+      "usages": [
+        "Assets/Hovl Studio/White mage spells/Prefabs/Magic rain/Magic rain cast.prefab",
+        "Assets/_Game/Resources/Skills/magic_rain.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 8,
+      "balanceNote": "skill: heard -43.0 dB, target -30; then -39.5 dB; then -38.0 dB",
+      "cues": [],
+      "duration": 2.375,
+      "preview": "audio-previews/b5eda70d29ce0f2409863ce3ab8dbc8b.mp3",
+      "sha256": "08a092d0f65eb43e0528cedd15529460dc1c600366fa00a67e9b930859b3d795",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "6c5b7388d9f357c4db5e73fb50b880fc",
+      "name": "Magic rain",
+      "path": "Assets/Hovl Studio/White mage spells/Sounds/Magic rain.wav",
+      "category": "Effects",
+      "usages": [
+        "Assets/Hovl Studio/White mage spells/Prefabs/Magic rain/Magic rain.prefab",
+        "Assets/_Game/Resources/Skills/magic_rain.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 8,
+      "balanceNote": "skill: heard -40.1 dB, target -30; then -41.8 dB; then -40.3 dB",
+      "cues": [],
+      "duration": 3.384,
+      "preview": "audio-previews/6c5b7388d9f357c4db5e73fb50b880fc.mp3",
+      "sha256": "a07877d8fd3e662ce40154ad9dbb8efa8ff938886416f4368aeca63d2af74f3a",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "60994f2cd8f185145ac428692c3da9d4",
+      "name": "Nature buff",
+      "path": "Assets/Hovl Studio/White mage spells/Sounds/Nature buff.wav",
+      "category": "Effects",
+      "usages": [
+        "Assets/_Game/Resources/Skills/flower_buff.asset"
+      ],
+      "status": "referenced",
+      "originalGain": 0.182,
+      "balanceNote": "skill: heard -23.0 dB, target -30; then -22.2 dB",
+      "cues": [],
+      "duration": 2.5,
+      "preview": "audio-previews/60994f2cd8f185145ac428692c3da9d4.mp3",
+      "sha256": "55a0715a7ed14490aee8ba7ee3e9bb39c1bb2687a51f29902bf2fc085408a822",
+      "applyMode": "SoundLevels.clip-name"
+    },
+    {
+      "id": "procedural-guard-pulse",
+      "name": "Guard pulse",
+      "path": "Assets/_Game/Scripts/Runtime/Combat/DefenseFeedback.cs",
+      "category": "Fallback",
+      "usages": [
+        "DefenseFeedback.OnResolved: only when CombatAudio.Active is false"
+      ],
+      "status": "fallback",
+      "originalGain": 1,
+      "balanceNote": "Procedural fallback; playback pitch varies by hit result.",
+      "cues": [],
+      "duration": 0.1,
+      "preview": "audio-previews/procedural-guard-pulse.mp3",
+      "sha256": "3716d481c2ffa485eb3fa898d1d983f9f894d86261cede852d846a8f0e709572",
+      "applyMode": "requires-runtime-gain-hook"
+    }
+  ],
+  "fingerprint": "4e734af64e0ba14cf4ab14b1d00ed7e4682080e016fa8ae66c26865d644dcd43",
+  "generatedAt": "2026-10-10T04:46:50.392226+00:00",
+  "coverage": {
+    "gameSfxAndReferencedEffects": 140,
+    "serializedAssetsScanned": 3248,
+    "scope": "All non-music audio owned by _Game, audio in transitive serialized dependencies, SFX named in SoundLevels, plus procedural Guard pulse. Unused third-party pack files excluded."
+  }
+}

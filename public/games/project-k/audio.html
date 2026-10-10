@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="dark">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Âm thanh · Project K · se77n</title>
+  <meta name="description" content="Nghe thử toàn bộ SFX Project K, chỉnh âm lượng từng clip và xuất JSON cho AI áp dụng vào game.">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="weapons.css"><link rel="stylesheet" href="audio.css">
+  <script>try { document.documentElement.dataset.theme = localStorage.getItem('whosnext.theme') || 'dark'; } catch {}</script>
+</head>
+<body class="armory-page audio-page">
+  <header class="armory-top">
+    <a class="brand" href="./">PROJECT K<small>GDD</small></a>
+    <nav class="project-tabs" aria-label="Trang Project K"><a href="./">Thiết kế game</a><a href="skills.html">Cân bằng skill</a><a href="weapons.html">Catalog vũ khí</a><a href="audio.html" aria-current="page">Âm thanh</a></nav>
+    <button class="tool" id="theme-toggle">Sáng / tối</button>
+  </header>
+  <main class="armory-main">
+    <div class="armory-intro"><div><span class="armory-eyebrow">PROJECT K / SOUND DESK</span><h1>Mỗi âm thanh.<br>Đúng âm lượng.</h1><p>Nghe từng tiếng đánh, bước chân, phép thuật và thế giới. Chỉnh gain riêng cho từng SFX, rồi xuất bản chỉnh sửa cho AI áp vào game.</p></div><div id="totals" class="armory-totals" aria-live="polite">Đang đọc SFX…</div></div>
+    <div class="armory-actions"><div class="action-buttons"><button class="tool primary-action" id="export" disabled>Xuất JSON cho AI</button><label class="tool import-button">Nhập JSON<input type="file" id="import" accept=".json,application/json" disabled></label><button class="tool" id="reset-all" disabled>Khôi phục tất cả</button></div><span id="save-status" role="status">Bản nháp lưu trên trình duyệt này.</span></div>
+    <p class="armory-notice">Chỉnh trên web chưa đổi game. 100% = gain ×1 của file âm thanh; “gốc” là gain hiện tại trong game, có thể lớn hơn 100%. Các clip trùng tên dùng chung gain.</p>
+    <p id="message" role="status" hidden></p>
+    <section class="monitor" aria-label="Nghe thử"><div><span class="armory-eyebrow">ĐANG NGHE</span><strong id="now-playing">Chọn một SFX để nghe thử</strong><span id="play-time">0:00 / 0:00</span></div><div class="monitor-controls"><button class="tool" id="stop">Dừng</button><label class="loop-label"><input type="checkbox" id="loop"> Lặp</label><label>Âm lượng nghe thử <output id="monitor-value">25%</output><input id="monitor" type="range" min="0" max="100" value="25" aria-label="Âm lượng nghe thử"></label></div></section>
+    <p class="preview-note">Nghe file gốc × gain × âm lượng nghe thử; chưa mô phỏng khoảng cách 3D, pitch, volume của cue hoặc mixer trong Unity. Âm lượng nghe thử không được xuất vào JSON.</p>
+    <section aria-label="Danh sách SFX"><div class="audio-filters"><label>Tìm âm thanh<input type="search" id="search" placeholder="Tên, đường dẫn hoặc nơi dùng…"></label><label>Nhóm<select id="category"><option value="">Tất cả nhóm</option></select></label><label>Trạng thái<select id="status"><option value="">Tất cả</option><option value="changed">Đã chỉnh</option><option value="muted">Đã tắt tiếng</option><option value="referenced">Có tham chiếu</option><option value="unreferenced">Chưa thấy tham chiếu</option><option value="fallback">Âm dự phòng</option></select></label></div>
+    <div class="list-tools"><span id="result-count"></span></div><div id="audio-list"></div><div class="pagination"><button class="tool" id="prev">Trước</button><span id="page-label"></span><button class="tool" id="next">Sau</button></div></section>
+    <details class="export-help"><summary>Phạm vi catalog và cách áp lại vào game</summary><p>Bao gồm SFX trong _Game, âm thanh trong các asset/prefab mà game tham chiếu, các SFX trong bảng cân bằng và Guard pulse sinh bằng code. Giữ cả file cũ chưa thấy tham chiếu để rà soát. Không gồm nhạc nền và file trong gói âm thanh bên thứ ba chưa được game dùng.</p><p>JSON luôn chứa toàn bộ catalog với GUID, đường dẫn tương đối, hash nguồn, gain gốc và gain yêu cầu. AI chỉ áp các mục đã đổi, giữ override qua các lần chạy builder. Guard pulse cần thêm hook volume trong code. Nghe thử là bản MP3 không normalize.</p><p><a href="audio-data.json">Catalog gốc</a> · <a href="audio-review-guide.md">Hướng dẫn cho AI</a> · <span id="source-date"></span></p></details>
+  </main><audio id="player" preload="none"></audio><script type="module" src="audio.js"></script>
+</body></html>

@@ -1,0 +1,23 @@
+.audio-page .armory-main { max-width: 1450px; }
+.monitor { display:flex; justify-content:space-between; align-items:center; gap:24px; padding:22px; margin-top:24px; border:1px solid var(--gold); border-radius:8px; background:linear-gradient(110deg,var(--goldbg),var(--bg1)); }
+.monitor strong { display:block; font:600 25px var(--fd); margin:7px 0; overflow-wrap:anywhere; }
+#play-time { font:11px var(--fm); color:var(--muted); }
+.monitor-controls { display:flex; gap:20px; align-items:center; flex-shrink:0; }
+.audio-page .loop-label { display:flex; align-items:center; }
+.audio-page input[type=range] { padding:0; accent-color:var(--gold); cursor:pointer; border:0; height:28px; }
+.preview-note { font-size:11px; color:var(--muted); margin:12px 0 30px; }
+.audio-filters { display:grid; grid-template-columns:2fr 1fr 1fr; gap:14px; }
+.sound-row { display:grid; grid-template-columns:54px minmax(0,1fr) minmax(190px,260px) 120px; align-items:center; gap:20px; padding:20px 12px; border-top:1px solid var(--line2); }
+.sound-row.playing { background:var(--goldbg); border-left:3px solid var(--gold); }
+.sound-row.changed .sound-title::after { content:' •'; color:var(--gold); }
+.sound-title { font-size:14px; font-weight:500; overflow-wrap:anywhere; }
+.sound-meta { display:block; color:var(--muted); font:10px var(--fm); margin-top:6px; }
+.sound-details { color:var(--muted); font-size:10px; margin-top:8px; overflow-wrap:anywhere; }
+.sound-details summary { cursor:pointer; color:var(--gold); }
+.sound-details p { margin:6px 0; }
+.gain-values { display:flex; justify-content:space-between; align-items:center; gap:10px; }
+.audio-page .gain-number { width:85px!important; padding:5px 8px!important; }
+.gain-values span,.gain-original { font:10px var(--fm); color:var(--muted); }
+.row-actions { display:grid; gap:7px; }
+.sound-play { width:44px; height:44px; padding:0!important; }
+@media(max-width:760px) { .monitor { align-items:stretch; flex-direction:column; }.monitor-controls { justify-content:space-between; flex-wrap:wrap; }.audio-filters { grid-template-columns:1fr 1fr; }.audio-filters label:first-child { grid-column:1/-1; }.sound-row { grid-template-columns:44px minmax(0,1fr); gap:12px; }.gain-control { grid-column:2; }.row-actions { grid-column:2; display:flex; }.armory-top { gap:12px; flex-wrap:wrap; }.project-tabs { gap:14px; }.armory-intro { align-items:flex-start; flex-direction:column; } }
