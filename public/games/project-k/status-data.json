@@ -1,0 +1,943 @@
+{
+  "auditedAt": "2026-10-10T08:48:12.601390+00:00",
+  "method": "Read-only source and serialized asset audit; no new Unity playtest.",
+  "counts": {
+    "weapons": 347,
+    "activeWeapons": 73,
+    "gear": 233,
+    "skills": 36,
+    "supports": 33,
+    "quests": 18,
+    "monsterPrefabs": 41,
+    "riftWorlds": 7,
+    "keystoneDefinitions": 19
+  },
+  "scenes": [
+    "Willowmere",
+    "TrainingRoom",
+    "CrimsonCastle",
+    "Rift",
+    "Sunscar"
+  ],
+  "gearByKind": {
+    "1": 25,
+    "2": 21,
+    "3": 20,
+    "0": 40,
+    "6": 127
+  },
+  "skills": [
+    {
+      "id": "black_hole",
+      "displayName": "Black Hole",
+      "description": "Opens a black hole at your target (or the ground ahead, up to 18 m) for 7 seconds. It drags every enemy within 6 m toward its centre and strikes them every half second. Bosses are too heavy to move.",
+      "manaCost": 36,
+      "cooldown": 12,
+      "castDuration": 2.348485,
+      "damage": 12,
+      "radius": 6,
+      "school": "Arcane",
+      "shape": "Vortex"
+    },
+    {
+      "id": "blink",
+      "displayName": "Blink",
+      "description": "Vanish in a flash of light and reappear up to 8 m away in the direction you are moving (ahead, standing still), passing through enemies but not walls.",
+      "manaCost": 17,
+      "cooldown": 3,
+      "castDuration": 0.25000003,
+      "damage": 0,
+      "radius": 0,
+      "school": "Arcane",
+      "shape": "Blink"
+    },
+    {
+      "id": "comet",
+      "displayName": "Comet",
+      "description": "Calls a comet down at a slant onto your target (or the ground ahead, up to 18 m). It strikes everything within 5.5 m for cold damage and leaves the ground chilled for 6 seconds. With Added Fire Damage Support it falls as a fire comet: its extra damage is fire, its hit both burns and chills, and the ground it leaves burns. With Added Lightning Damage Support it falls as a chaos comet: its extra damage is chaos instead of lightning.",
+      "manaCost": 29,
+      "cooldown": 9,
+      "castDuration": 1.0999999,
+      "damage": 102,
+      "radius": 5.5,
+      "school": "Frost",
+      "shape": "GroundBurst"
+    },
+    {
+      "id": "conjure_lava_pool",
+      "displayName": "Conjure Lava Pool",
+      "description": "Conjures a pool of molten lava at your target (or the ground ahead, up to 18 m) for 12 seconds. Everything within 5.5 m is struck every 0.5 seconds for fire damage. It leaves the ground burning while it lasts.",
+      "manaCost": 36,
+      "cooldown": 12,
+      "castDuration": 2.348485,
+      "damage": 8,
+      "radius": 5.5,
+      "school": "Fire",
+      "shape": "RainArea"
+    },
+    {
+      "id": "dark_miasma",
+      "displayName": "Dark Miasma",
+      "description": "Curse. Spreads a dark miasma on the ground at your target (up to 20 m): every enemy within 6 m is slowed by 30% and takes 10% more damage (20% at gem level 20) for 4 seconds (8 at gem level 20). The miasma stays 6 seconds, cursing enemies that walk into it.",
+      "manaCost": 13,
+      "cooldown": 0,
+      "castDuration": 1.1770834,
+      "damage": 0,
+      "radius": 6,
+      "school": "Arcane",
+      "shape": "Curse"
+    },
+    {
+      "id": "divine_judgment",
+      "displayName": "Divine Judgment",
+      "description": "Calls down a holy judgment at your target (or the ground ahead, up to 18 m). After 1 seconds it strikes everything within 7 m for physical damage.",
+      "manaCost": 30,
+      "cooldown": 10,
+      "castDuration": 1.0999999,
+      "damage": 92,
+      "radius": 7,
+      "school": "Holy",
+      "shape": "GroundBurst"
+    },
+    {
+      "id": "elemental_weakness",
+      "displayName": "Elemental Weakness",
+      "description": "Curse. Marks the ground at your target (up to 20 m): 1.5 seconds later every enemy within 6.4 m is cursed for 6.4 seconds, losing 25% fire, cold and lightning resistance (46% at gem level 20). The mark stays 6 seconds, cursing enemies that walk into it. An enemy carries one curse; enemies far above the gem's level shrug it off.",
+      "manaCost": 13,
+      "cooldown": 0,
+      "castDuration": 1.1770834,
+      "damage": 0,
+      "radius": 6.4,
+      "school": "Arcane",
+      "shape": "Curse"
+    },
+    {
+      "id": "fire_shot",
+      "displayName": "Fire Shot",
+      "description": "Shoots a bolt of fire that seeks your target and bursts on the first enemy or wall it meets, striking everything within 1.6 m for fire damage and setting them burning for 4 seconds (40% of the hit again as fire). From gem level 5, a burst that catches an enemy already burning or standing in fire (or a bolt that flew through fire) splits into 4 bolts flying out in a ring, each with half the damage. From gem level 10 any burst on an enemy or a wall splits into 4, and one on a burning enemy into 8. Split bolts fly until they meet something, or for 5 seconds; with Cascade Support each splits again into 2 as it hits.",
+      "manaCost": 12,
+      "cooldown": 0,
+      "castDuration": 1.0714287,
+      "damage": 38,
+      "radius": 1.6,
+      "school": "Fire",
+      "shape": "Projectile"
+    },
+    {
+      "id": "flower_buff",
+      "displayName": "Deathbloom",
+      "description": "Passive - works by itself while its gem is in an open slot. Every enemy that dies within 25 m of you bursts into a bloom of petals that strikes the enemies within 4 m of it.",
+      "manaCost": 0,
+      "cooldown": 0,
+      "castDuration": 0.50000006,
+      "damage": 33,
+      "radius": 4,
+      "school": "Physical",
+      "shape": "Passive"
+    },
+    {
+      "id": "frost_sector",
+      "displayName": "Frost Sector",
+      "description": "Ice bursts from the ground in a cone in front of you, 8 m long and 70 degrees wide: every enemy in it takes cold damage and is chilled 50% harder than other cold does (100% at gem level 20).",
+      "manaCost": 12,
+      "cooldown": 0,
+      "castDuration": 1.0999999,
+      "damage": 37,
+      "radius": 8,
+      "school": "Frost",
+      "shape": "Arc"
+    },
+    {
+      "id": "frost_wall",
+      "displayName": "Frost Wall",
+      "description": "Raises a wall of ice pillars 3.5 m ahead, 7 m wide, striking every enemy where its pillars grow for cold damage. It stands for 7 seconds and has 120 health, and walls already standing stay when you raise another: your blows and spells wear it down. When it breaks or its time is up it bursts for cold damage in 4.5 m. Multiple Projectiles branches more walls out to the sides; Encircle raises it as a ring round you.",
+      "manaCost": 26,
+      "cooldown": 7,
+      "castDuration": 1.5000001,
+      "damage": 50,
+      "radius": 4.5,
+      "school": "Frost",
+      "shape": "Wall"
+    },
+    {
+      "id": "fusion_core",
+      "displayName": "Fusion Core",
+      "description": "Drops an unstable fusion core at your target (or the ground ahead, up to 18 m) for 8 seconds. Everything within 7 m is struck every 0.5 seconds for physical damage.",
+      "manaCost": 32,
+      "cooldown": 11,
+      "castDuration": 1.1770834,
+      "damage": 8,
+      "radius": 7,
+      "school": "Arcane",
+      "shape": "RainArea"
+    },
+    {
+      "id": "ground_slash",
+      "displayName": "Ground Slash",
+      "description": "Attack - needs a greatsword. Brings your blade down and sends a slash tearing along the ground straight ahead, 26 m. It passes through every enemy on its way, striking each once with 41% of your weapon's hit, and sets them burning (40% of the hit again as fire over 4 seconds). With Multiple Projectiles Support, the extra slashes curve away right and left, each into a full circle back to where you stand. Faster with attack speed and cast speed.",
+      "manaCost": 12,
+      "cooldown": 0,
+      "castDuration": 1.0952382,
+      "damage": 41,
+      "radius": 2.4,
+      "school": "Physical",
+      "shape": "Projectile"
+    },
+    {
+      "id": "hammer_strike",
+      "displayName": "Hammer Strike",
+      "description": "Slams down a colossal hammer at your target (or the ground ahead, up to 18 m). After 0.8 seconds it strikes everything within 12 m for physical damage.",
+      "manaCost": 33,
+      "cooldown": 12,
+      "castDuration": 1.0999999,
+      "damage": 84,
+      "radius": 12,
+      "school": "Physical",
+      "shape": "GroundBurst"
+    },
+    {
+      "id": "healing_seal",
+      "displayName": "Healing Seal",
+      "description": "Seals the ground under you with healing light. For 8 seconds, while you stand within 6 m of it you regain Life every second.",
+      "manaCost": 35,
+      "cooldown": 14,
+      "castDuration": 0.50000006,
+      "damage": 0,
+      "radius": 6,
+      "school": "Holy",
+      "shape": "Aura"
+    },
+    {
+      "id": "holy_slash",
+      "displayName": "Holy Slash",
+      "description": "Sends a wave of holy light flying straight ahead, 20 m. It cuts through every enemy in its path, striking each once.",
+      "manaCost": 12,
+      "cooldown": 0,
+      "castDuration": 0.9895834,
+      "damage": 40,
+      "radius": 1.6,
+      "school": "Holy",
+      "shape": "Projectile"
+    },
+    {
+      "id": "ice_nova",
+      "displayName": "Ice Nova",
+      "description": "A ring of ice bursts out from you, 6.4 m. Every enemy in it takes cold damage and is knocked back. Its cold chills twice as hard and builds up freeze twice as fast as other cold (157% more at gem level 20): enough of it and the enemy freezes solid for 4 seconds.",
+      "manaCost": 12,
+      "cooldown": 0,
+      "castDuration": 1.0999999,
+      "damage": 21,
+      "radius": 6.4,
+      "school": "Frost",
+      "shape": "Nova"
+    },
+    {
+      "id": "ice_rain",
+      "displayName": "Ice Rain",
+      "description": "Brings icicles down on your target (or the ground ahead, up to 18 m) for 8 seconds: a 3.3 m circle struck every half second, chilling what stands in it. The ground stays chilled while it falls.",
+      "manaCost": 29,
+      "cooldown": 8,
+      "castDuration": 2.348485,
+      "damage": 12,
+      "radius": 3.3,
+      "school": "Frost",
+      "shape": "RainArea"
+    },
+    {
+      "id": "ice_slash",
+      "displayName": "Ice Slash",
+      "description": "Sweeps a ring of ice blades around you: everything within 5 m is struck once, chilled by the cold.",
+      "manaCost": 12,
+      "cooldown": 0,
+      "castDuration": 0.9895834,
+      "damage": 28,
+      "radius": 5,
+      "school": "Frost",
+      "shape": "Arc"
+    },
+    {
+      "id": "lightning_circle",
+      "displayName": "Storm Sigil",
+      "description": "Marks a huge circle of ground at your target (or ahead, up to 18 m) and calls lightning down inside it for 5 seconds: a 17 m radius struck every half second for lightning damage. The ground stays shocked while it lasts.",
+      "manaCost": 29,
+      "cooldown": 8,
+      "castDuration": 2.348485,
+      "damage": 11,
+      "radius": 17,
+      "school": "Lightning",
+      "shape": "RainArea"
+    },
+    {
+      "id": "lightning_slashes",
+      "displayName": "Lightning Slashes",
+      "description": "Unleashes a flurry of crackling slashes in front of you: four quick hits of lightning damage on every enemy within 3.5 m of a spot 2.5 m ahead.",
+      "manaCost": 12,
+      "cooldown": 0,
+      "castDuration": 0.9895834,
+      "damage": 9,
+      "radius": 3.5,
+      "school": "Lightning",
+      "shape": "RainArea"
+    },
+    {
+      "id": "magic_missile_barrage",
+      "displayName": "Magic Missile Barrage",
+      "description": "Showers the target with magic missiles at your target (or the ground ahead, up to 18 m) for 10 seconds. Everything within 9 m is struck every 0.5 seconds for physical damage.",
+      "manaCost": 30,
+      "cooldown": 10,
+      "castDuration": 1.1770834,
+      "damage": 4,
+      "radius": 9,
+      "school": "Arcane",
+      "shape": "RainArea"
+    },
+    {
+      "id": "magic_rain",
+      "displayName": "Magic Rain",
+      "description": "Brings a rain of light down on your target (or the ground ahead, up to 18 m) for 6 seconds: everything within 4 m is struck every half second.",
+      "manaCost": 29,
+      "cooldown": 8,
+      "castDuration": 2.348485,
+      "damage": 14,
+      "radius": 4,
+      "school": "Holy",
+      "shape": "RainArea"
+    },
+    {
+      "id": "meteor_strike",
+      "displayName": "Meteor Strike",
+      "description": "Calls a meteor down from the sky at your target (or the ground ahead, up to 18 m). After 1.5 seconds it strikes everything within 9 m for fire damage. It leaves the ground burning for 8 seconds.",
+      "manaCost": 37,
+      "cooldown": 14,
+      "castDuration": 1.0999999,
+      "damage": 86,
+      "radius": 9,
+      "school": "Fire",
+      "shape": "GroundBurst"
+    },
+    {
+      "id": "nova_orbs",
+      "displayName": "Nova Orbs",
+      "description": "Hurls three violet orbs straight ahead in a triangle. Each bursts on the first enemy it meets, striking everything within 1.6 m.",
+      "manaCost": 12,
+      "cooldown": 0,
+      "castDuration": 1.0714287,
+      "damage": 13,
+      "radius": 1.6,
+      "school": "Arcane",
+      "shape": "Projectile"
+    },
+    {
+      "id": "radiant_blessing",
+      "displayName": "Radiant Blessing",
+      "description": "Blesses your weapon with light for 10 seconds: every blow gains 15% of its damage as fire, 15% as cold and 15% as lightning (more with the gem's level).",
+      "manaCost": 36,
+      "cooldown": 14,
+      "castDuration": 0.75000006,
+      "damage": 15,
+      "radius": 0,
+      "school": "Holy",
+      "shape": "WeaponInfusion"
+    },
+    {
+      "id": "restless_spirits",
+      "displayName": "Restless Spirits",
+      "description": "Works by itself while it sits in a skill slot. A monster that dies within 25 m of you rises as your ghost - a Wailing Ghost on your side - for 4% of your maximum Life. You can have 3 at once (more from minion passives). Ghosts fly to the nearest enemy and cast cold bolts at it; monsters fight them too. They stay until they are killed, and are left behind when you change map or enter a Rift. A boss raises nothing. Their Life and damage grow with the gem's level and your minion passives, not with your own stats.",
+      "manaCost": 0,
+      "cooldown": 0,
+      "castDuration": 0.93750006,
+      "damage": 0,
+      "radius": 0,
+      "school": "Frost",
+      "shape": "Ghosts"
+    },
+    {
+      "id": "shadow_double",
+      "displayName": "Shadow Double",
+      "description": "Calls a Shadow Double: a dark, see-through copy of you - your gear, your weapon, your stats - for 20 seconds. It runs at the nearest enemy and fights with your weapon, and when you cast one of your first two skills it casts the same skill at its own target. It does not copy Blink, wards, auras, weapon infusions, passive skills or this skill. Monsters fight it too. It has 30% of your Life and deals 30% of your damage; what it leeches heals it, and its kills count as yours. Costs 50% of your maximum Life and 30% of your maximum Mana. The Mimic passives let it copy more of your skills.",
+      "manaCost": 0,
+      "cooldown": 30,
+      "castDuration": 0.93750006,
+      "damage": 0,
+      "radius": 0,
+      "school": "Arcane",
+      "shape": "Mimic"
+    },
+    {
+      "id": "soul_bind",
+      "displayName": "Soul Bind",
+      "description": "Binds a monster below 30% of its Life to your side - your lock-on target, or the nearest within 10 m. It always takes; a boss cannot be bound. The bound monster keeps everything it had (its level, its moves, its rarity) but deals half its damage and has half its Life, and fights for you with all its moves until it is killed or you leave the map. You can hold one: binding another lets the first go. Monsters fight it too. Costs 20% of your maximum Mana.",
+      "manaCost": 0,
+      "cooldown": 5,
+      "castDuration": 1.1770834,
+      "damage": 0,
+      "radius": 0,
+      "school": "Arcane",
+      "shape": "Bind"
+    },
+    {
+      "id": "spark",
+      "displayName": "Spark",
+      "description": "Launches a spray of 6 sparks that crawl erratically along the ground for 2 seconds, bouncing off walls. Each spark passes through enemies, striking every one it touches once for lightning damage; several sparks can strike the same enemy. A spark that crosses fire (burning ground, a lit bonfire, a burning enemy) gains 50% of its damage as fire and sets enemies burning; one that crosses cold (chilled ground, water, a chilled enemy) gains 50% as cold and builds freeze. It can carry both.",
+      "manaCost": 12,
+      "cooldown": 0,
+      "castDuration": 1.0000001,
+      "damage": 26,
+      "radius": 0.6,
+      "school": "Lightning",
+      "shape": "Projectile"
+    },
+    {
+      "id": "spirit_bomb",
+      "displayName": "Spirit Bomb",
+      "description": "Gathers spirit energy into a bomb at your target (or the ground ahead, up to 18 m). After 2 seconds it strikes everything within 9 m for physical damage.",
+      "manaCost": 40,
+      "cooldown": 16,
+      "castDuration": 1.0999999,
+      "damage": 144,
+      "radius": 9,
+      "school": "Holy",
+      "shape": "GroundBurst"
+    },
+    {
+      "id": "star_rays",
+      "displayName": "Star Rays",
+      "description": "Sends down rays of starlight at your target (or the ground ahead, up to 18 m) for 10 seconds. Everything within 5.5 m is struck every 0.5 seconds for physical damage.",
+      "manaCost": 32,
+      "cooldown": 11,
+      "castDuration": 1.1770834,
+      "damage": 9,
+      "radius": 5.5,
+      "school": "Holy",
+      "shape": "RainArea"
+    },
+    {
+      "id": "summon_storm",
+      "displayName": "Summon Storm",
+      "description": "Summons a thunderstorm at your target (or the ground ahead, up to 18 m) for 8 seconds. Everything within 7 m is struck every 0.5 seconds for lightning damage. It leaves the ground shocked while it lasts.",
+      "manaCost": 34,
+      "cooldown": 11,
+      "castDuration": 2.348485,
+      "damage": 9,
+      "radius": 7,
+      "school": "Lightning",
+      "shape": "RainArea"
+    },
+    {
+      "id": "thunder_strike",
+      "displayName": "Thunder Strike",
+      "description": "Strikes the ground with a bolt of lightning at your target (or the ground ahead, up to 18 m). It lands at once and strikes everything within 4.5 m for lightning damage. It leaves the ground shocked for 3 seconds.",
+      "manaCost": 13,
+      "cooldown": 0,
+      "castDuration": 1.1770834,
+      "damage": 34,
+      "radius": 4.5,
+      "school": "Lightning",
+      "shape": "GroundBurst"
+    },
+    {
+      "id": "twister",
+      "displayName": "Twister",
+      "description": "Attack - needs a spear. Whirls your spear and sends a twister wandering forward for 5 seconds, twice its size. It bounces off up to 3 walls, lasting 7 seconds once it has bounced. It passes through enemies, striking each with 46% of your weapon's hit at most every 0.66 s, and blinds them. Crossing fire, water or ice it takes on that element and gains half its damage as fire or cold. Crossing shocked ground it turns to lightning and gains half its damage as lightning. A fire twister sets enemies burning, a cold one chills them and freezes them after enough hits, a lightning one shocks them (20% more damage taken for 4 seconds).",
+      "manaCost": 10,
+      "cooldown": 0,
+      "castDuration": 0.5022831,
+      "damage": 46,
+      "radius": 1,
+      "school": "Physical",
+      "shape": "Twister"
+    },
+    {
+      "id": "volley",
+      "displayName": "Volley",
+      "description": "Looses a volley of arrows at your target (or the ground ahead, up to 18 m) for 5 seconds. Everything within 11 m is struck every 0.5 seconds for physical damage.",
+      "manaCost": 29,
+      "cooldown": 9,
+      "castDuration": 1.1770834,
+      "damage": 7,
+      "radius": 11,
+      "school": "Physical",
+      "shape": "RainArea"
+    }
+  ],
+  "supports": [
+    {
+      "id": "rune_chain",
+      "title": "Chain Support",
+      "needs": "Single hit",
+      "description": "Every enemy the skill strikes sends the spell on to 2 more enemies nearby (up to 8 m), each at 70% damage.",
+      "tier": 3
+    },
+    {
+      "id": "rune_life_steal",
+      "title": "Life Leech Support",
+      "needs": "Damage",
+      "description": "5% of the damage the skill deals is leeched back as Life, over a second.",
+      "tier": 3
+    },
+    {
+      "id": "rune_cast_speed",
+      "title": "Swift Casting Support",
+      "needs": "A cast",
+      "description": "The skill is cast 25% faster, and deals 10% less damage.",
+      "tier": 1
+    },
+    {
+      "id": "rune_efficiency",
+      "title": "Efficiency Support",
+      "needs": "Mana cost",
+      "description": "The skill costs 25% less mana.",
+      "tier": 1
+    },
+    {
+      "id": "rune_power",
+      "title": "Power Support",
+      "needs": "Damage or Ward",
+      "description": "The skill deals 30% more damage, and costs 20% more mana.",
+      "tier": 1
+    },
+    {
+      "id": "rune_wide_area",
+      "title": "Wide Area Support",
+      "needs": "Area",
+      "description": "The skill's area of effect is 30% wider (bursts, waves, rain and bolt explosions), and it deals 12% less damage.",
+      "tier": 1
+    },
+    {
+      "id": "rune_quick_recovery",
+      "title": "Quick Recovery Support",
+      "needs": "Cooldown",
+      "description": "The skill's cooldown is 30% shorter (only spells that have one).",
+      "tier": 1
+    },
+    {
+      "id": "rune_multiple_projectiles",
+      "title": "Multiple Projectiles Support",
+      "description": "The skill fires 2 more projectiles in a fan, and deals 25% less damage.",
+      "tier": 2
+    },
+    {
+      "id": "rune_pierce",
+      "title": "Pierce Support",
+      "needs": "Projectile that stops on a hit",
+      "description": "The skill's projectiles pass through 2 enemies before they burst.",
+      "tier": 2
+    },
+    {
+      "id": "rune_concussion",
+      "title": "Concussion Support",
+      "needs": "Damage",
+      "description": "The skill breaks stance 50% faster.",
+      "tier": 2
+    },
+    {
+      "id": "rune_ignite",
+      "title": "Ignite Support",
+      "needs": "Damage",
+      "description": "Hits set the enemy ablaze: 30% of the hit again as Fire damage, spread over 3 seconds. Works with any spell.",
+      "tier": 2
+    },
+    {
+      "id": "rune_cast_on_parry",
+      "title": "Cast on Parry Support",
+      "needs": "A cast aimed at an enemy",
+      "description": "A perfect parry casts the skill at the attacker at once, without its motion (it still costs mana and starts its cooldown).",
+      "tier": 5
+    },
+    {
+      "id": "rune_duration",
+      "title": "Duration Support",
+      "description": "The skill's effects last 40% longer (wards, walls, rains).",
+      "tier": 2
+    },
+    {
+      "id": "rune_brutality",
+      "title": "Brutality Support",
+      "needs": "Physical spell damage",
+      "description": "The skill deals 35% more physical damage, and no elemental damage at all.",
+      "tier": 5
+    },
+    {
+      "id": "rune_fire_conversion",
+      "title": "Flame Shift Support",
+      "needs": "Physical damage",
+      "description": "All of the skill's physical damage is dealt as Fire instead.",
+      "tier": 4
+    },
+    {
+      "id": "rune_empowered_heavy",
+      "title": "Empowered Heavy Support",
+      "description": "A weapon infusion's effect is doubled on heavy blows, and does nothing on light ones.",
+      "tier": 6
+    },
+    {
+      "id": "rune_encircle",
+      "title": "Encircle Support",
+      "needs": "Wall",
+      "description": "The wall rises as a ring all round you instead of a line ahead, twice as many ice pillars.",
+      "tier": 3
+    },
+    {
+      "id": "rune_cascade",
+      "title": "Cascade Support",
+      "needs": "A projectile that splits, or a one-off area strike",
+      "description": "On a projectile that splits: each bolt it splits into bursts again when it hits an enemy or the ground, into 2 more bolts with half its damage. On a one-off area strike (a burst, a nova, a sweep): it strikes again at 2 points one after another ahead, each with 35% less damage.",
+      "tier": 4
+    },
+    {
+      "id": "rune_brittle",
+      "title": "Brittle Construct Support",
+      "needs": "Wall",
+      "description": "The wall has 50% less health, but its burst when broken deals 50% more damage over a 30% wider area.",
+      "tier": 3
+    },
+    {
+      "id": "rune_fork",
+      "title": "Fork Support",
+      "needs": "Projectile that stops on a hit",
+      "description": "When the skill's bolt bursts on an enemy, it forks: 2 bolts fly on from there at an angle, each with 55% of its damage. They do not fork again.",
+      "tier": 3
+    },
+    {
+      "id": "rune_narrow_focus",
+      "title": "Narrow Focus Support",
+      "needs": "Damaging area",
+      "description": "The skill's area is 30% smaller, and it deals 40% more damage. Cannot share a gem with Wide Area Support.",
+      "tier": 3
+    },
+    {
+      "id": "rune_frostbite",
+      "title": "Frostbite Support",
+      "needs": "Damage",
+      "description": "The skill's hits frostbite enemies for 2 seconds: they are slowed by 30% and take 15% more cold damage.",
+      "tier": 3
+    },
+    {
+      "id": "rune_penetration",
+      "title": "Penetration Support",
+      "needs": "Elemental damage",
+      "description": "The skill's damage ignores 20% of enemies' fire, cold, lightning and chaos resistance. Not their Armour.",
+      "tier": 4
+    },
+    {
+      "id": "rune_static_mark",
+      "title": "Static Mark Support",
+      "needs": "Damage",
+      "description": "The skill's hits shock enemies: they take 20% more damage for 4 seconds.",
+      "tier": 4
+    },
+    {
+      "id": "rune_echo",
+      "title": "Echo Support",
+      "needs": "Damaging spell",
+      "description": "The spell goes off a second time 0.2 seconds after it is cast, with 20% less damage, at no cost and without its motion. Cannot share a gem with Gathering Storm Support.",
+      "tier": 4
+    },
+    {
+      "id": "rune_blood_price",
+      "title": "Blood Price Support",
+      "needs": "Mana cost",
+      "description": "The skill costs 12% of your maximum Life instead of mana, and deals 30% more damage. It cannot be cast when that would kill you.",
+      "tier": 5
+    },
+    {
+      "id": "rune_executioner",
+      "title": "Executioner Support",
+      "needs": "Damage",
+      "description": "A hit from the skill that leaves an enemy below 10% of its Life kills it outright. Bosses are immune; burns do not execute.",
+      "tier": 5
+    },
+    {
+      "id": "rune_rend",
+      "title": "Rend Support",
+      "needs": "Damage",
+      "description": "The skill's hits expose enemies for 4 seconds: 15% less fire, cold and lightning resistance. With a curse, at most 50% less in all.",
+      "tier": 5
+    },
+    {
+      "id": "rune_gathering_storm",
+      "title": "Gathering Storm Support",
+      "needs": "Damaging spell",
+      "description": "The spell gathers a charge every 3 seconds, up to 2. Each charge makes the next cast go off once more, 0.2 seconds apart, with 25% less damage. Cannot share a gem with Echo Support.",
+      "tier": 6
+    },
+    {
+      "id": "rune_cast_when_hit",
+      "title": "Cast When Hit Support",
+      "needs": "A cast aimed at an enemy",
+      "description": "Each time blows take a quarter of your Poise, the skill is cast at the one who struck you, without its motion (it still costs mana and starts its cooldown). At most once every 4 seconds.",
+      "tier": 6
+    },
+    {
+      "id": "rune_pure_elements",
+      "title": "Pure Elements Support",
+      "needs": "Elemental damage",
+      "description": "The skill's fire, cold, lightning and chaos damage is 40% higher, but its hits no longer burn, chill, freeze or shock. The ground it leaves is still elemental.",
+      "tier": 6
+    },
+    {
+      "id": "rune_added_fire",
+      "title": "Added Fire Damage Support",
+      "needs": "Damage",
+      "description": "The skill gains 25% of its damage as extra fire damage. A Comet falls as a fire comet: its extra damage is fire, and its one hit both burns and chills. Cannot share a gem with Added Lightning Damage Support.",
+      "tier": 2
+    },
+    {
+      "id": "rune_added_lightning",
+      "title": "Added Lightning Damage Support",
+      "needs": "Damage",
+      "description": "The skill gains 25% of its damage as extra lightning damage. A Comet falls as a chaos comet instead: its extra damage is chaos, not lightning. Cannot share a gem with Added Fire Damage Support.",
+      "tier": 2
+    }
+  ],
+  "quests": [
+    "green_procession",
+    "lantern_bearer",
+    "orchard_of_ash",
+    "first_rift",
+    "sunscar",
+    "dead_from_north",
+    "cold_ember",
+    "songs_of_everroot",
+    "tear_in_north",
+    "gem_lesson",
+    "withering_edge",
+    "pot_for_the_hearth",
+    "wilting_herbs",
+    "root_sickness",
+    "warm_meal",
+    "lost_delivery",
+    "cold_iron",
+    "restless_souls"
+  ],
+  "sources": [
+    {
+      "path": "Assets/_Game/Resources/ModularGear.asset",
+      "sha256": "9139c99d6941a8af30f4323971431c9429ecf91601a624af41e1b67caf7a526e"
+    },
+    {
+      "path": "Assets/_Game/Resources/Skills/black_hole.asset",
+      "sha256": "a4134ae6382e365b94033c240258d299a47e6dfdf441577c031a1d2d3509dd37"
+    },
+    {
+      "path": "Assets/_Game/Resources/Skills/blink.asset",
+      "sha256": "20567da9cb74dc205001e97488346f416f4f13165cc54fa563316075dc1c75c1"
+    },
+    {
+      "path": "Assets/_Game/Resources/Skills/comet.asset",
+      "sha256": "d051bd74e29082b6c6c9b9d921121281e82991601034e878fc19fbf86a22ddc4"
+    },
+    {
+      "path": "Assets/_Game/Resources/Skills/conjure_lava_pool.asset",
+      "sha256": "ef688915813967bb3a5bf21a8cbfc66e001ca6665612376b1776b9356ed39382"
+    },
+    {
+      "path": "Assets/_Game/Resources/Skills/dark_miasma.asset",
+      "sha256": "fdeee43244586691fecc7966619c24d0aee4e083d1d5f38c38f03f205a0ff195"
+    },
+    {
+      "path": "Assets/_Game/Resources/Skills/divine_judgment.asset",
+      "sha256": "11a106278ff3168743595d00052815705710183aeb3b8cf6f0be3ccf1a6e95d3"
+    },
+    {
+      "path": "Assets/_Game/Resources/Skills/elemental_weakness.asset",
+      "sha256": "fceb033f986221ce1a117fc24d3b704ec73e026df8f1b717dc224d924f6bf5f0"
+    },
+    {
+      "path": "Assets/_Game/Resources/Skills/fire_shot.asset",
+      "sha256": "9892f9bc56dd8e1b9c0aa48126eb05bc93f6e7305dde0cbebbb8ec3b5f699525"
+    },
+    {
+      "path": "Assets/_Game/Resources/Skills/flower_buff.asset",
+      "sha256": "e7ff4848c4345478ff561294c5ed742d9fb30a9889ac7b714c85e6bada44dadb"
+    },
+    {
+      "path": "Assets/_Game/Resources/Skills/frost_sector.asset",
+      "sha256": "4384a83a097cda47859f8c8e430699925a5a110cc0a80902be60e57d42293d29"
+    },
+    {
+      "path": "Assets/_Game/Resources/Skills/frost_wall.asset",
+      "sha256": "1fd461fe7fe9ad59ea8329e06476413498d95a774373fe8470f071d4aa819f4f"
+    },
+    {
+      "path": "Assets/_Game/Resources/Skills/fusion_core.asset",
+      "sha256": "645e7fcd0bcd696d1aae5bc9b2354406d45fb48b96fbb57839814675866b8e5a"
+    },
+    {
+      "path": "Assets/_Game/Resources/Skills/ground_slash.asset",
+      "sha256": "be5b5b1d081ab8be00cdbac51dc41aee696a4af49c938d05eef5c3402848268e"
+    },
+    {
+      "path": "Assets/_Game/Resources/Skills/hammer_strike.asset",
+      "sha256": "70693941b80aed856c0eed81b3c96b0f5bd5c1e84ef6169c7c0ed4594804a7f8"
+    },
+    {
+      "path": "Assets/_Game/Resources/Skills/healing_seal.asset",
+      "sha256": "03c4cc642fcd121ed0e838e5b4aa75410b0b76c009868944d2228feffd253f72"
+    },
+    {
+      "path": "Assets/_Game/Resources/Skills/holy_slash.asset",
+      "sha256": "ec5999615c65106a32f0d16c12e82a8ad3305d1ee6f5fea262ba9ace052493a6"
+    },
+    {
+      "path": "Assets/_Game/Resources/Skills/ice_nova.asset",
+      "sha256": "fdabb36025b56309581cd1392d44f25e4e901ed0c4a60a469850f70b37ed367e"
+    },
+    {
+      "path": "Assets/_Game/Resources/Skills/ice_rain.asset",
+      "sha256": "9337cc0065779e9f24857bcb025a5970051b92e5db315b2a5c71abdf88302b2f"
+    },
+    {
+      "path": "Assets/_Game/Resources/Skills/ice_slash.asset",
+      "sha256": "2481bf52131bfd4eb104fadf131b29ed63dae992bf5fcb844cc1d01c65e946e0"
+    },
+    {
+      "path": "Assets/_Game/Resources/Skills/lightning_circle.asset",
+      "sha256": "242955f3e1febd4644c392813fe34281550767795033b3848550c748bf6d0e21"
+    },
+    {
+      "path": "Assets/_Game/Resources/Skills/lightning_slashes.asset",
+      "sha256": "1a88d3ea7a2292af70c096eb862f4f347a28676a125e7e6abd4151e1b8e2e77a"
+    },
+    {
+      "path": "Assets/_Game/Resources/Skills/magic_missile_barrage.asset",
+      "sha256": "de5fd6459f1026bbe695b9c90cbe22252417e135388e49d2752e8a6ebfe0a4ce"
+    },
+    {
+      "path": "Assets/_Game/Resources/Skills/magic_rain.asset",
+      "sha256": "f307b21bd67ae2e58ffad00a9b06798f4ff1c0c501e9d5a1f2f3a1ea88ced3a0"
+    },
+    {
+      "path": "Assets/_Game/Resources/Skills/meteor_strike.asset",
+      "sha256": "7e22c804ed92006af87c9f34ef6b459a1d8d7fb3bdcd24f220504524764da081"
+    },
+    {
+      "path": "Assets/_Game/Resources/Skills/nova_orbs.asset",
+      "sha256": "8685b16bd31119d5b1f69e5f73475a8b11a894cf954b3135ecafb94dc4d7ce89"
+    },
+    {
+      "path": "Assets/_Game/Resources/Skills/radiant_blessing.asset",
+      "sha256": "4d6d471999892e538da27b99411189734612971036cb9d279aea6c28ac97dbb8"
+    },
+    {
+      "path": "Assets/_Game/Resources/Skills/restless_spirits.asset",
+      "sha256": "288c265c6472ad25c7d6ca8b8f3f7e1fd6849619755a9e47d351735d43036784"
+    },
+    {
+      "path": "Assets/_Game/Resources/Skills/shadow_double.asset",
+      "sha256": "71b5205df2d340058044ab43a04a210ddffa98d5797c08866ae54da616a4eeb3"
+    },
+    {
+      "path": "Assets/_Game/Resources/Skills/soul_bind.asset",
+      "sha256": "afeb2b33d6fe85e7342ed33c5ca7687b8a55d7a8f7ea4c7cc1f336f3cb104c80"
+    },
+    {
+      "path": "Assets/_Game/Resources/Skills/spark.asset",
+      "sha256": "7f897de005fa9f4ae498302725f0df80bb1d4311fa9dc2d8bbd0ba8d3db66b6c"
+    },
+    {
+      "path": "Assets/_Game/Resources/Skills/spirit_bomb.asset",
+      "sha256": "710081114e4ec7246353628153bdad9e1973b35b53b6005e4d271138a04d48e4"
+    },
+    {
+      "path": "Assets/_Game/Resources/Skills/star_rays.asset",
+      "sha256": "ae3c35a3b6962b0e3f879d1f54de481f317bee6aa378acdf659dcbd2bdb0c7b1"
+    },
+    {
+      "path": "Assets/_Game/Resources/Skills/summon_storm.asset",
+      "sha256": "530da51b7eb2ce58d0f1eee4611a4e559f919e49ac425cf57ce1b4caecab0891"
+    },
+    {
+      "path": "Assets/_Game/Resources/Skills/thunder_strike.asset",
+      "sha256": "f91a52ac4d9f7b04762226b488145ebfc97eaa5672760d27e672588e28282e33"
+    },
+    {
+      "path": "Assets/_Game/Resources/Skills/twister.asset",
+      "sha256": "d43af02180333332d063168dfa2264b21d3c4418ce01f6801842ad21267daab1"
+    },
+    {
+      "path": "Assets/_Game/Resources/Skills/volley.asset",
+      "sha256": "4f96ff063c68972072862204e1437e2a8b3bb8b2d123e23f60f24ba9adec7bb5"
+    },
+    {
+      "path": "Assets/_Game/Resources/Story/Chapter3.txt",
+      "sha256": "197673a2030cddba16522a2b14fd3af19240821440704ccb174c917443dd0d12"
+    },
+    {
+      "path": "Assets/_Game/Resources/Story/Chapters.txt",
+      "sha256": "5c03477c601b8172bfb2c0faf8e4f25e7575448fc83552cd5b4d17d4832d26e5"
+    },
+    {
+      "path": "Assets/_Game/Resources/Story/Prologue.txt",
+      "sha256": "3af1f1d1f0bc8d7cad82b858251a29be2c28414c92a4abd182828a7cb3a21707"
+    },
+    {
+      "path": "Assets/_Game/Resources/Story/Willowmere.txt",
+      "sha256": "27710cf7e8c0beb3f469609e4461b85e614f7c108c5366ef6fe96be39c9b284f"
+    },
+    {
+      "path": "Assets/_Game/Resources/WeaponCatalog.asset",
+      "sha256": "92ee19b980f03fcd3f92d04007eca9a0d55eadfc95374e5aca8d2b359aab6b9c"
+    },
+    {
+      "path": "Assets/_Game/Scripts/Runtime/Camera/LockOnController.cs",
+      "sha256": "cdfca92453ed67d3c67c9c38d5594c640b45ae78e2552571120a309e486f8e3f"
+    },
+    {
+      "path": "Assets/_Game/Scripts/Runtime/Combat/PlayerDefense.cs",
+      "sha256": "425159fa15d9d203e49ab0f0cdb0a407db92d59411fd71d2ee34a53caadac7c4"
+    },
+    {
+      "path": "Assets/_Game/Scripts/Runtime/Combat/SupportRune.cs",
+      "sha256": "f2617bcd72aa022e6839560b89a09880669ff88cad0e92627bff217c35efb96d"
+    },
+    {
+      "path": "Assets/_Game/Scripts/Runtime/Hub/HubWorld.cs",
+      "sha256": "5c80c871fadaf589b8c99cd4208e13debfd87b6c95d05793a0d497bf46b9b223"
+    },
+    {
+      "path": "Assets/_Game/Scripts/Runtime/Items/Flasks.cs",
+      "sha256": "5b70b57b467080191446a27f7ce9b232e687e6f47cd0c660d310d5e3ed6edd69"
+    },
+    {
+      "path": "Assets/_Game/Scripts/Runtime/Items/GearStats.cs",
+      "sha256": "2d0e27fb791f7329b90ea624697a4fdd97e4be693e83d4c7ac425f43349b209c"
+    },
+    {
+      "path": "Assets/_Game/Scripts/Runtime/Player/CharacterStats.cs",
+      "sha256": "480e2add73ca462a8ed24b0477bbf82a745db18b0245680fbb2933cb4ed9b784"
+    },
+    {
+      "path": "Assets/_Game/Scripts/Runtime/Player/PassiveTree.cs",
+      "sha256": "717e393ea2a21df88b704b4a2fb4462f5682178f52ba513704a6be02e289a60c"
+    },
+    {
+      "path": "Assets/_Game/Scripts/Runtime/Player/SidekickLook.cs",
+      "sha256": "4f7e9f701dd5b4801ecac3e613611faa9395a00d662da4ac7116d31777e6fec2"
+    },
+    {
+      "path": "Assets/_Game/Scripts/Runtime/Story/Dialogue.cs",
+      "sha256": "b23bd537c2c996c2ebeaf926d13999412e67fd469b3714802a7bbae6f95d7b3b"
+    },
+    {
+      "path": "Assets/_Game/Scripts/Runtime/Story/QuestLog.cs",
+      "sha256": "39bb3500f2ee6c91e073dc7af3cf06cb3fb6d49f58e8256418c41bd7095b557f"
+    },
+    {
+      "path": "Assets/_Game/Scripts/Runtime/UI/SettingsWindow.Character.cs",
+      "sha256": "e79c3b3f47249680a84797520bc32fd58ab7f38f85e173b0b6b3a77d8fe81f59"
+    },
+    {
+      "path": "Assets/_Game/Scripts/Runtime/World/AreaLevel.cs",
+      "sha256": "29d38a3ebb4095adbaf08d42ffa93cdaf2f8a299a9ab2a7c3b88df3bc9e6064e"
+    },
+    {
+      "path": "Assets/_Game/Scripts/Runtime/World/Rift/RiftWorlds.cs",
+      "sha256": "20a6afee8c3338c7c0466aaf9f24bcc87c0e02ed2c49279301e5e2301de2face"
+    },
+    {
+      "path": "ProjectSettings/EditorBuildSettings.asset",
+      "sha256": "979d636c070d6c8ac8bfff70a840c34812ee1968971e10b436a003b316025ebd"
+    }
+  ]
+}

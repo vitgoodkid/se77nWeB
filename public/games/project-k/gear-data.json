@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-10-10T06:38:24.830702Z",
+ "generatedAt": "2026-10-10T08:53:24.306292Z",
  "source": {
   "asset": "Assets/_Game/Resources/ModularGear.asset",
   "builder": "Assets/_Game/Scripts/Editor/SidekickGearBuilder.cs",
@@ -5985,7 +5985,7 @@
   },
   {
    "id": "SK_GOBL_FIGT_01_03EBRL_GO01",
-   "icon": null,
+   "icon": "creator-icons/SK_GOBL_FIGT_01_03EBRL_GO01.webp",
    "group": "Eyebrows",
    "species": "GO01",
    "speciesName": "Goblin",
@@ -5998,7 +5998,7 @@
   },
   {
    "id": "SK_GOBL_FIGT_02_03EBRL_GO01",
-   "icon": null,
+   "icon": "creator-icons/SK_GOBL_FIGT_02_03EBRL_GO01.webp",
    "group": "Eyebrows",
    "species": "GO01",
    "speciesName": "Goblin",
@@ -6011,7 +6011,7 @@
   },
   {
    "id": "SK_GOBL_FIGT_03_03EBRL_GO01",
-   "icon": null,
+   "icon": "creator-icons/SK_GOBL_FIGT_03_03EBRL_GO01.webp",
    "group": "Eyebrows",
    "species": "GO01",
    "speciesName": "Goblin",
@@ -6024,7 +6024,7 @@
   },
   {
    "id": "SK_GOBL_FIGT_04_03EBRL_GO01",
-   "icon": null,
+   "icon": "creator-icons/SK_GOBL_FIGT_04_03EBRL_GO01.webp",
    "group": "Eyebrows",
    "species": "GO01",
    "speciesName": "Goblin",
@@ -6037,7 +6037,7 @@
   },
   {
    "id": "SK_GOBL_FIGT_05_03EBRL_GO01",
-   "icon": null,
+   "icon": "creator-icons/SK_GOBL_FIGT_05_03EBRL_GO01.webp",
    "group": "Eyebrows",
    "species": "GO01",
    "speciesName": "Goblin",
@@ -6050,7 +6050,7 @@
   },
   {
    "id": "SK_GOBL_FIGT_06_03EBRL_GO01",
-   "icon": null,
+   "icon": "creator-icons/SK_GOBL_FIGT_06_03EBRL_GO01.webp",
    "group": "Eyebrows",
    "species": "GO01",
    "speciesName": "Goblin",
@@ -6063,7 +6063,7 @@
   },
   {
    "id": "SK_GOBL_FIGT_07_03EBRL_GO01",
-   "icon": null,
+   "icon": "creator-icons/SK_GOBL_FIGT_07_03EBRL_GO01.webp",
    "group": "Eyebrows",
    "species": "GO01",
    "speciesName": "Goblin",
@@ -6076,7 +6076,7 @@
   },
   {
    "id": "SK_GOBL_FIGT_08_03EBRL_GO01",
-   "icon": null,
+   "icon": "creator-icons/SK_GOBL_FIGT_08_03EBRL_GO01.webp",
    "group": "Eyebrows",
    "species": "GO01",
    "speciesName": "Goblin",
@@ -6089,7 +6089,7 @@
   },
   {
    "id": "SK_GOBL_FIGT_09_03EBRL_GO01",
-   "icon": null,
+   "icon": "creator-icons/SK_GOBL_FIGT_09_03EBRL_GO01.webp",
    "group": "Eyebrows",
    "species": "GO01",
    "speciesName": "Goblin",
@@ -6102,7 +6102,7 @@
   },
   {
    "id": "SK_GOBL_FIGT_10_03EBRL_GO01",
-   "icon": null,
+   "icon": "creator-icons/SK_GOBL_FIGT_10_03EBRL_GO01.webp",
    "group": "Eyebrows",
    "species": "GO01",
    "speciesName": "Goblin",
@@ -6258,7 +6258,7 @@
   },
   {
    "id": "SK_GOBL_FIGT_01_09FCHR_GO01",
-   "icon": null,
+   "icon": "creator-icons/SK_GOBL_FIGT_01_09FCHR_GO01.webp",
    "group": "Facial hair",
    "species": "GO01",
    "speciesName": "Goblin",
@@ -6271,7 +6271,7 @@
   },
   {
    "id": "SK_GOBL_FIGT_02_09FCHR_GO01",
-   "icon": null,
+   "icon": "creator-icons/SK_GOBL_FIGT_02_09FCHR_GO01.webp",
    "group": "Facial hair",
    "species": "GO01",
    "speciesName": "Goblin",
@@ -6284,7 +6284,7 @@
   },
   {
    "id": "SK_GOBL_FIGT_03_09FCHR_GO01",
-   "icon": null,
+   "icon": "creator-icons/SK_GOBL_FIGT_03_09FCHR_GO01.webp",
    "group": "Facial hair",
    "species": "GO01",
    "speciesName": "Goblin",
@@ -6297,7 +6297,7 @@
   },
   {
    "id": "SK_GOBL_FIGT_04_09FCHR_GO01",
-   "icon": null,
+   "icon": "creator-icons/SK_GOBL_FIGT_04_09FCHR_GO01.webp",
    "group": "Facial hair",
    "species": "GO01",
    "speciesName": "Goblin",
@@ -6310,7 +6310,7 @@
   },
   {
    "id": "SK_GOBL_FIGT_05_09FCHR_GO01",
-   "icon": null,
+   "icon": "creator-icons/SK_GOBL_FIGT_05_09FCHR_GO01.webp",
    "group": "Facial hair",
    "species": "GO01",
    "speciesName": "Goblin",
@@ -6323,7 +6323,7 @@
   },
   {
    "id": "SK_GOBL_FIGT_06_09FCHR_GO01",
-   "icon": null,
+   "icon": "creator-icons/SK_GOBL_FIGT_06_09FCHR_GO01.webp",
    "group": "Facial hair",
    "species": "GO01",
    "speciesName": "Goblin",
@@ -6336,7 +6336,7 @@
   },
   {
    "id": "SK_GOBL_FIGT_07_09FCHR_GO01",
-   "icon": null,
+   "icon": "creator-icons/SK_GOBL_FIGT_07_09FCHR_GO01.webp",
    "group": "Facial hair",
    "species": "GO01",
    "speciesName": "Goblin",
@@ -6349,7 +6349,7 @@
   },
   {
    "id": "SK_GOBL_FIGT_08_09FCHR_GO01",
-   "icon": null,
+   "icon": "creator-icons/SK_GOBL_FIGT_08_09FCHR_GO01.webp",
    "group": "Facial hair",
    "species": "GO01",
    "speciesName": "Goblin",
@@ -6362,7 +6362,7 @@
   },
   {
    "id": "SK_GOBL_FIGT_09_09FCHR_GO01",
-   "icon": null,
+   "icon": "creator-icons/SK_GOBL_FIGT_09_09FCHR_GO01.webp",
    "group": "Facial hair",
    "species": "GO01",
    "speciesName": "Goblin",
@@ -6375,7 +6375,7 @@
   },
   {
    "id": "SK_GOBL_FIGT_10_09FCHR_GO01",
-   "icon": null,
+   "icon": "creator-icons/SK_GOBL_FIGT_10_09FCHR_GO01.webp",
    "group": "Facial hair",
    "species": "GO01",
    "speciesName": "Goblin",
@@ -6518,7 +6518,7 @@
   },
   {
    "id": "SK_GOBL_FIGT_01_02HAIR_GO01",
-   "icon": null,
+   "icon": "creator-icons/SK_GOBL_FIGT_01_02HAIR_GO01.webp",
    "group": "Hair",
    "species": "GO01",
    "speciesName": "Goblin",
@@ -6531,7 +6531,7 @@
   },
   {
    "id": "SK_GOBL_FIGT_02_02HAIR_GO01",
-   "icon": null,
+   "icon": "creator-icons/SK_GOBL_FIGT_02_02HAIR_GO01.webp",
    "group": "Hair",
    "species": "GO01",
    "speciesName": "Goblin",
@@ -6544,7 +6544,7 @@
   },
   {
    "id": "SK_GOBL_FIGT_03_02HAIR_GO01",
-   "icon": null,
+   "icon": "creator-icons/SK_GOBL_FIGT_03_02HAIR_GO01.webp",
    "group": "Hair",
    "species": "GO01",
    "speciesName": "Goblin",
@@ -6557,7 +6557,7 @@
   },
   {
    "id": "SK_GOBL_FIGT_04_02HAIR_GO01",
-   "icon": null,
+   "icon": "creator-icons/SK_GOBL_FIGT_04_02HAIR_GO01.webp",
    "group": "Hair",
    "species": "GO01",
    "speciesName": "Goblin",
@@ -6570,7 +6570,7 @@
   },
   {
    "id": "SK_GOBL_FIGT_05_02HAIR_GO01",
-   "icon": null,
+   "icon": "creator-icons/SK_GOBL_FIGT_05_02HAIR_GO01.webp",
    "group": "Hair",
    "species": "GO01",
    "speciesName": "Goblin",
@@ -6583,7 +6583,7 @@
   },
   {
    "id": "SK_GOBL_FIGT_06_02HAIR_GO01",
-   "icon": null,
+   "icon": "creator-icons/SK_GOBL_FIGT_06_02HAIR_GO01.webp",
    "group": "Hair",
    "species": "GO01",
    "speciesName": "Goblin",
@@ -6596,7 +6596,7 @@
   },
   {
    "id": "SK_GOBL_FIGT_07_02HAIR_GO01",
-   "icon": null,
+   "icon": "creator-icons/SK_GOBL_FIGT_07_02HAIR_GO01.webp",
    "group": "Hair",
    "species": "GO01",
    "speciesName": "Goblin",
@@ -6609,7 +6609,7 @@
   },
   {
    "id": "SK_GOBL_FIGT_08_02HAIR_GO01",
-   "icon": null,
+   "icon": "creator-icons/SK_GOBL_FIGT_08_02HAIR_GO01.webp",
    "group": "Hair",
    "species": "GO01",
    "speciesName": "Goblin",
@@ -6622,7 +6622,7 @@
   },
   {
    "id": "SK_GOBL_FIGT_09_02HAIR_GO01",
-   "icon": null,
+   "icon": "creator-icons/SK_GOBL_FIGT_09_02HAIR_GO01.webp",
    "group": "Hair",
    "species": "GO01",
    "speciesName": "Goblin",
@@ -6635,7 +6635,7 @@
   },
   {
    "id": "SK_GOBL_FIGT_10_02HAIR_GO01",
-   "icon": null,
+   "icon": "creator-icons/SK_GOBL_FIGT_10_02HAIR_GO01.webp",
    "group": "Hair",
    "species": "GO01",
    "speciesName": "Goblin",
