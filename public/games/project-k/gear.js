@@ -9,7 +9,7 @@ const TAB_NAMES = { Body: 'Giáp thân', Gloves: 'Găng tay', Boots: 'Giày', He
 const TAB_HELP = {
   Body: 'Giáp thân: thân + hông của một bộ.', Gloves: 'Tay áo giáp nối với bàn tay: tay trên + tay dưới + bàn tay, cả hai bên.',
   Boots: 'Giày: hai chân + hai bàn chân (mảnh LEG và FOT gộp lại).', Helmet: 'Phụ kiện đội đầu. Tóc ẩn hay không do cờ "che tóc".',
-  Side: 'Ô thay cho áo choàng: một phụ kiện của các gói (lưng, mặt, vai, hông, khuỷu, đầu gối).', Creator: 'Các lựa chọn trong màn tạo nhân vật: mặt, tóc, râu, lông mày, mắt, tai, mũi, răng.'
+  Side: 'Ô thay áo choàng. Phụ kiện giờ đi theo giáp của bộ (vai, hông, lưng → giáp thân; khuỷu → găng; đầu gối → giày; mặt nạ → mũ); ở đây chỉ còn món của bộ không có giáp tương ứng, sẽ chọn lại sau.', Creator: 'Các lựa chọn trong màn tạo nhân vật: mặt, tóc, râu, lông mày, mắt, tai, mũi, răng.'
 };
 let data, edits = {}, tab = 'Body', active, page = 0, storageKey, renderTimer, storageBlocked = false;
 const items = new Map();   // id -> { item, creator }

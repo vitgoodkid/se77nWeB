@@ -1,10 +1,10 @@
 {
- "generatedAt": "2026-10-10T08:53:24.306292Z",
+ "generatedAt": "2026-10-10T11:46:50.098278Z",
  "source": {
   "asset": "Assets/_Game/Resources/ModularGear.asset",
   "builder": "Assets/_Game/Scripts/Editor/SidekickGearBuilder.cs",
-  "sha256": "9139c99d6941a8af30f4323971431c9429ecf91601a624af41e1b67caf7a526e",
-  "count": 233
+  "sha256": "9b5ea3ec0c75252304d3047b54d9a06c0a61145f972fdfc0bc98dbf5b91d9308",
+  "count": 126
  },
  "kinds": [
   "Body",
@@ -37,7 +37,14 @@
     "special": false,
     "parts": [
      "01_10TORS_HU01",
-     "01_17HIPS_HU01"
+     "01_17HIPS_HU01",
+     "01_29ASHL_HU01",
+     "01_30ASHR_HU01",
+     "01_25AHPF_HU01",
+     "01_26AHPB_HU01",
+     "01_27AHPL_HU01",
+     "01_28AHPR_HU01",
+     "01_24ABAC_HU01"
     ]
    },
    "icon": "gear-icons/sk_body_knight_01.webp"
@@ -54,8 +61,8 @@
     "defence": [
      "Armour"
     ],
-    "tier": 2,
-    "score": 40,
+    "tier": 3,
+    "score": 55,
     "hidesHair": false,
     "special": false,
     "parts": [
@@ -64,7 +71,9 @@
      "01_13ALWL_HU01",
      "01_14ALWR_HU01",
      "01_15HNDL_HU01",
-     "01_16HNDR_HU01"
+     "01_16HNDR_HU01",
+     "01_31AEBL_HU01",
+     "01_32AEBR_HU01"
     ]
    },
    "icon": "gear-icons/sk_gloves_knight_01.webp"
@@ -82,14 +91,16 @@
      "Armour"
     ],
     "tier": 2,
-    "score": 37,
+    "score": 47,
     "hidesHair": false,
     "special": false,
     "parts": [
      "01_18LEGL_HU01",
      "01_19LEGR_HU01",
      "01_20FOTL_HU01",
-     "01_21FOTR_HU01"
+     "01_21FOTR_HU01",
+     "01_33AKNL_HU01",
+     "01_34AKNR_HU01"
     ]
    },
    "icon": "gear-icons/sk_boots_knight_01.webp"
@@ -106,8 +117,8 @@
     "defence": [
      "Armour"
     ],
-    "tier": 2,
-    "score": 41,
+    "tier": 1,
+    "score": 23,
     "hidesHair": true,
     "special": false,
     "parts": [
@@ -115,122 +126,6 @@
     ]
    },
    "icon": "gear-icons/sk_helm_knight_01.webp"
-  },
-  {
-   "id": "sk_back_knight_01",
-   "kind": "Side",
-   "side": "Back",
-   "pack": "FANT_KNGT",
-   "packName": "Knights",
-   "set": 1,
-   "original": {
-    "name": "Knight's Mantle I",
-    "defence": [
-     "Armour"
-    ],
-    "tier": 1,
-    "score": 5,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "01_24ABAC_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_back_knight_01.webp"
-  },
-  {
-   "id": "sk_shoulders_knight_01",
-   "kind": "Side",
-   "side": "Shoulders",
-   "pack": "FANT_KNGT",
-   "packName": "Knights",
-   "set": 1,
-   "original": {
-    "name": "Knight's Pauldrons I",
-    "defence": [
-     "Armour"
-    ],
-    "tier": 2,
-    "score": 32,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "01_29ASHL_HU01",
-     "01_30ASHR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_shoulders_knight_01.webp"
-  },
-  {
-   "id": "sk_hips_knight_01",
-   "kind": "Side",
-   "side": "Hips",
-   "pack": "FANT_KNGT",
-   "packName": "Knights",
-   "set": 1,
-   "original": {
-    "name": "Knight's Girdle I",
-    "defence": [
-     "Armour"
-    ],
-    "tier": 1,
-    "score": 14,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "01_25AHPF_HU01",
-     "01_26AHPB_HU01",
-     "01_27AHPL_HU01",
-     "01_28AHPR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_hips_knight_01.webp"
-  },
-  {
-   "id": "sk_elbows_knight_01",
-   "kind": "Side",
-   "side": "Elbows",
-   "pack": "FANT_KNGT",
-   "packName": "Knights",
-   "set": 1,
-   "original": {
-    "name": "Knight's Couters I",
-    "defence": [
-     "Armour"
-    ],
-    "tier": 1,
-    "score": 11,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "01_31AEBL_HU01",
-     "01_32AEBR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_elbows_knight_01.webp"
-  },
-  {
-   "id": "sk_knees_knight_01",
-   "kind": "Side",
-   "side": "Knees",
-   "pack": "FANT_KNGT",
-   "packName": "Knights",
-   "set": 1,
-   "original": {
-    "name": "Knight's Poleyns I",
-    "defence": [
-     "Armour"
-    ],
-    "tier": 2,
-    "score": 40,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "01_33AKNL_HU01",
-     "01_34AKNR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_knees_knight_01.webp"
   },
   {
    "id": "sk_body_knight_02",
@@ -244,13 +139,20 @@
     "defence": [
      "Armour"
     ],
-    "tier": 1,
-    "score": 17,
+    "tier": 2,
+    "score": 33,
     "hidesHair": false,
     "special": false,
     "parts": [
      "02_10TORS_HU01",
-     "02_17HIPS_HU01"
+     "02_17HIPS_HU01",
+     "02_29ASHL_HU01",
+     "02_30ASHR_HU01",
+     "02_25AHPF_HU01",
+     "02_26AHPB_HU01",
+     "02_27AHPL_HU01",
+     "02_28AHPR_HU01",
+     "02_24ABAC_HU01"
     ]
    },
    "icon": "gear-icons/sk_body_knight_02.webp"
@@ -268,7 +170,7 @@
      "Armour"
     ],
     "tier": 4,
-    "score": 85,
+    "score": 80,
     "hidesHair": false,
     "special": false,
     "parts": [
@@ -277,7 +179,9 @@
      "02_13ALWL_HU01",
      "02_14ALWR_HU01",
      "02_15HNDL_HU01",
-     "02_16HNDR_HU01"
+     "02_16HNDR_HU01",
+     "02_31AEBL_HU01",
+     "02_32AEBR_HU01"
     ]
    },
    "icon": "gear-icons/sk_gloves_knight_02.webp"
@@ -294,15 +198,17 @@
     "defence": [
      "Armour"
     ],
-    "tier": 4,
-    "score": 79,
+    "tier": 3,
+    "score": 74,
     "hidesHair": false,
     "special": false,
     "parts": [
      "02_18LEGL_HU01",
      "02_19LEGR_HU01",
      "02_20FOTL_HU01",
-     "02_21FOTR_HU01"
+     "02_21FOTR_HU01",
+     "02_33AKNL_HU01",
+     "02_34AKNR_HU01"
     ]
    },
    "icon": "gear-icons/sk_boots_knight_02.webp"
@@ -319,8 +225,8 @@
     "defence": [
      "Armour"
     ],
-    "tier": 3,
-    "score": 64,
+    "tier": 2,
+    "score": 38,
     "hidesHair": true,
     "special": false,
     "parts": [
@@ -328,122 +234,6 @@
     ]
    },
    "icon": "gear-icons/sk_helm_knight_02.webp"
-  },
-  {
-   "id": "sk_back_knight_02",
-   "kind": "Side",
-   "side": "Back",
-   "pack": "FANT_KNGT",
-   "packName": "Knights",
-   "set": 2,
-   "original": {
-    "name": "Knight's Mantle II",
-    "defence": [
-     "Armour"
-    ],
-    "tier": 3,
-    "score": 58,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "02_24ABAC_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_back_knight_02.webp"
-  },
-  {
-   "id": "sk_shoulders_knight_02",
-   "kind": "Side",
-   "side": "Shoulders",
-   "pack": "FANT_KNGT",
-   "packName": "Knights",
-   "set": 2,
-   "original": {
-    "name": "Knight's Pauldrons II",
-    "defence": [
-     "Armour"
-    ],
-    "tier": 1,
-    "score": 21,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "02_29ASHL_HU01",
-     "02_30ASHR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_shoulders_knight_02.webp"
-  },
-  {
-   "id": "sk_hips_knight_02",
-   "kind": "Side",
-   "side": "Hips",
-   "pack": "FANT_KNGT",
-   "packName": "Knights",
-   "set": 2,
-   "original": {
-    "name": "Knight's Girdle II",
-    "defence": [
-     "Armour"
-    ],
-    "tier": 2,
-    "score": 33,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "02_25AHPF_HU01",
-     "02_26AHPB_HU01",
-     "02_27AHPL_HU01",
-     "02_28AHPR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_hips_knight_02.webp"
-  },
-  {
-   "id": "sk_elbows_knight_02",
-   "kind": "Side",
-   "side": "Elbows",
-   "pack": "FANT_KNGT",
-   "packName": "Knights",
-   "set": 2,
-   "original": {
-    "name": "Knight's Couters II",
-    "defence": [
-     "Armour"
-    ],
-    "tier": 2,
-    "score": 33,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "02_31AEBL_HU01",
-     "02_32AEBR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_elbows_knight_02.webp"
-  },
-  {
-   "id": "sk_knees_knight_02",
-   "kind": "Side",
-   "side": "Knees",
-   "pack": "FANT_KNGT",
-   "packName": "Knights",
-   "set": 2,
-   "original": {
-    "name": "Knight's Poleyns II",
-    "defence": [
-     "Armour"
-    ],
-    "tier": 1,
-    "score": 10,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "02_33AKNL_HU01",
-     "02_34AKNR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_knees_knight_02.webp"
   },
   {
    "id": "sk_body_knight_03",
@@ -457,13 +247,19 @@
     "defence": [
      "Armour"
     ],
-    "tier": 2,
-    "score": 33,
+    "tier": 1,
+    "score": 8,
     "hidesHair": false,
     "special": false,
     "parts": [
      "03_10TORS_HU01",
-     "03_17HIPS_HU01"
+     "03_17HIPS_HU01",
+     "03_29ASHL_HU01",
+     "03_30ASHR_HU01",
+     "03_25AHPF_HU01",
+     "03_27AHPL_HU01",
+     "03_28AHPR_HU01",
+     "03_24ABAC_HU01"
     ]
    },
    "icon": "gear-icons/sk_body_knight_03.webp"
@@ -481,7 +277,7 @@
      "Armour"
     ],
     "tier": 3,
-    "score": 55,
+    "score": 65,
     "hidesHair": false,
     "special": false,
     "parts": [
@@ -490,7 +286,9 @@
      "03_13ALWL_HU01",
      "03_14ALWR_HU01",
      "03_15HNDL_HU01",
-     "03_16HNDR_HU01"
+     "03_16HNDR_HU01",
+     "03_31AEBL_HU01",
+     "03_32AEBR_HU01"
     ]
    },
    "icon": "gear-icons/sk_gloves_knight_03.webp"
@@ -507,15 +305,17 @@
     "defence": [
      "Armour"
     ],
-    "tier": 2,
-    "score": 32,
+    "tier": 3,
+    "score": 58,
     "hidesHair": false,
     "special": false,
     "parts": [
      "03_18LEGL_HU01",
      "03_19LEGR_HU01",
      "03_20FOTL_HU01",
-     "03_21FOTR_HU01"
+     "03_21FOTR_HU01",
+     "03_33AKNL_HU01",
+     "03_34AKNR_HU01"
     ]
    },
    "icon": "gear-icons/sk_boots_knight_03.webp"
@@ -532,8 +332,8 @@
     "defence": [
      "Armour"
     ],
-    "tier": 3,
-    "score": 69,
+    "tier": 2,
+    "score": 44,
     "hidesHair": true,
     "special": false,
     "parts": [
@@ -541,121 +341,6 @@
     ]
    },
    "icon": "gear-icons/sk_helm_knight_03.webp"
-  },
-  {
-   "id": "sk_back_knight_03",
-   "kind": "Side",
-   "side": "Back",
-   "pack": "FANT_KNGT",
-   "packName": "Knights",
-   "set": 3,
-   "original": {
-    "name": "Knight's Mantle III",
-    "defence": [
-     "Armour"
-    ],
-    "tier": 1,
-    "score": 9,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "03_24ABAC_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_back_knight_03.webp"
-  },
-  {
-   "id": "sk_shoulders_knight_03",
-   "kind": "Side",
-   "side": "Shoulders",
-   "pack": "FANT_KNGT",
-   "packName": "Knights",
-   "set": 3,
-   "original": {
-    "name": "Knight's Pauldrons III",
-    "defence": [
-     "Armour"
-    ],
-    "tier": 1,
-    "score": 11,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "03_29ASHL_HU01",
-     "03_30ASHR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_shoulders_knight_03.webp"
-  },
-  {
-   "id": "sk_hips_knight_03",
-   "kind": "Side",
-   "side": "Hips",
-   "pack": "FANT_KNGT",
-   "packName": "Knights",
-   "set": 3,
-   "original": {
-    "name": "Knight's Girdle III",
-    "defence": [
-     "Armour"
-    ],
-    "tier": 1,
-    "score": 5,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "03_25AHPF_HU01",
-     "03_27AHPL_HU01",
-     "03_28AHPR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_hips_knight_03.webp"
-  },
-  {
-   "id": "sk_elbows_knight_03",
-   "kind": "Side",
-   "side": "Elbows",
-   "pack": "FANT_KNGT",
-   "packName": "Knights",
-   "set": 3,
-   "original": {
-    "name": "Knight's Couters III",
-    "defence": [
-     "Armour"
-    ],
-    "tier": 1,
-    "score": 0,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "03_31AEBL_HU01",
-     "03_32AEBR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_elbows_knight_03.webp"
-  },
-  {
-   "id": "sk_knees_knight_03",
-   "kind": "Side",
-   "side": "Knees",
-   "pack": "FANT_KNGT",
-   "packName": "Knights",
-   "set": 3,
-   "original": {
-    "name": "Knight's Poleyns III",
-    "defence": [
-     "Armour"
-    ],
-    "tier": 3,
-    "score": 50,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "03_33AKNL_HU01",
-     "03_34AKNR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_knees_knight_03.webp"
   },
   {
    "id": "sk_body_knight_04",
@@ -670,12 +355,18 @@
      "Armour"
     ],
     "tier": 1,
-    "score": 8,
+    "score": 17,
     "hidesHair": false,
     "special": false,
     "parts": [
      "04_10TORS_HU01",
-     "04_17HIPS_HU01"
+     "04_17HIPS_HU01",
+     "04_29ASHL_HU01",
+     "04_30ASHR_HU01",
+     "04_25AHPF_HU01",
+     "04_27AHPL_HU01",
+     "04_28AHPR_HU01",
+     "04_24ABAC_HU01"
     ]
    },
    "icon": "gear-icons/sk_body_knight_04.webp"
@@ -693,14 +384,16 @@
      "Armour"
     ],
     "tier": 3,
-    "score": 68,
+    "score": 63,
     "hidesHair": false,
     "special": false,
     "parts": [
      "04_18LEGL_HU01",
      "04_19LEGR_HU01",
      "04_20FOTL_HU01",
-     "04_21FOTR_HU01"
+     "04_21FOTR_HU01",
+     "04_33AKNL_HU01",
+     "04_34AKNR_HU01"
     ]
    },
    "icon": "gear-icons/sk_boots_knight_04.webp"
@@ -718,7 +411,7 @@
      "Armour"
     ],
     "tier": 2,
-    "score": 44,
+    "score": 26,
     "hidesHair": true,
     "special": false,
     "parts": [
@@ -726,98 +419,6 @@
     ]
    },
    "icon": "gear-icons/sk_helm_knight_04.webp"
-  },
-  {
-   "id": "sk_back_knight_04",
-   "kind": "Side",
-   "side": "Back",
-   "pack": "FANT_KNGT",
-   "packName": "Knights",
-   "set": 4,
-   "original": {
-    "name": "Knight's Mantle IV",
-    "defence": [
-     "Armour"
-    ],
-    "tier": 2,
-    "score": 40,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "04_24ABAC_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_back_knight_04.webp"
-  },
-  {
-   "id": "sk_shoulders_knight_04",
-   "kind": "Side",
-   "side": "Shoulders",
-   "pack": "FANT_KNGT",
-   "packName": "Knights",
-   "set": 4,
-   "original": {
-    "name": "Knight's Pauldrons IV",
-    "defence": [
-     "Armour"
-    ],
-    "tier": 1,
-    "score": 5,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "04_29ASHL_HU01",
-     "04_30ASHR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_shoulders_knight_04.webp"
-  },
-  {
-   "id": "sk_hips_knight_04",
-   "kind": "Side",
-   "side": "Hips",
-   "pack": "FANT_KNGT",
-   "packName": "Knights",
-   "set": 4,
-   "original": {
-    "name": "Knight's Girdle IV",
-    "defence": [
-     "Armour"
-    ],
-    "tier": 1,
-    "score": 19,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "04_25AHPF_HU01",
-     "04_27AHPL_HU01",
-     "04_28AHPR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_hips_knight_04.webp"
-  },
-  {
-   "id": "sk_knees_knight_04",
-   "kind": "Side",
-   "side": "Knees",
-   "pack": "FANT_KNGT",
-   "packName": "Knights",
-   "set": 4,
-   "original": {
-    "name": "Knight's Poleyns IV",
-    "defence": [
-     "Armour"
-    ],
-    "tier": 1,
-    "score": 0,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "04_33AKNL_HU01",
-     "04_34AKNR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_knees_knight_04.webp"
   },
   {
    "id": "sk_body_knight_05",
@@ -837,7 +438,10 @@
     "special": false,
     "parts": [
      "05_10TORS_HU01",
-     "05_17HIPS_HU01"
+     "05_17HIPS_HU01",
+     "05_29ASHL_HU01",
+     "05_30ASHR_HU01",
+     "05_24ABAC_HU01"
     ]
    },
    "icon": "gear-icons/sk_body_knight_05.webp"
@@ -854,8 +458,8 @@
     "defence": [
      "Armour"
     ],
-    "tier": 3,
-    "score": 74,
+    "tier": 2,
+    "score": 46,
     "hidesHair": true,
     "special": false,
     "parts": [
@@ -863,51 +467,6 @@
     ]
    },
    "icon": "gear-icons/sk_helm_knight_05.webp"
-  },
-  {
-   "id": "sk_back_knight_05",
-   "kind": "Side",
-   "side": "Back",
-   "pack": "FANT_KNGT",
-   "packName": "Knights",
-   "set": 5,
-   "original": {
-    "name": "Knight's Mantle V",
-    "defence": [
-     "Armour"
-    ],
-    "tier": 4,
-    "score": 81,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "05_24ABAC_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_back_knight_05.webp"
-  },
-  {
-   "id": "sk_shoulders_knight_05",
-   "kind": "Side",
-   "side": "Shoulders",
-   "pack": "FANT_KNGT",
-   "packName": "Knights",
-   "set": 5,
-   "original": {
-    "name": "Knight's Pauldrons V",
-    "defence": [
-     "Armour"
-    ],
-    "tier": 2,
-    "score": 42,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "05_29ASHL_HU01",
-     "05_30ASHR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_shoulders_knight_05.webp"
   },
   {
    "id": "sk_body_knight_06",
@@ -922,11 +481,14 @@
      "Armour"
     ],
     "tier": 1,
-    "score": 0,
+    "score": 12,
     "hidesHair": false,
     "special": false,
     "parts": [
-     "06_10TORS_HU01"
+     "06_10TORS_HU01",
+     "06_29ASHL_HU01",
+     "06_30ASHR_HU01",
+     "06_24ABAC_HU01"
     ]
    },
    "icon": "gear-icons/sk_body_knight_06.webp"
@@ -954,51 +516,6 @@
    "icon": "gear-icons/sk_helm_knight_06.webp"
   },
   {
-   "id": "sk_back_knight_06",
-   "kind": "Side",
-   "side": "Back",
-   "pack": "FANT_KNGT",
-   "packName": "Knights",
-   "set": 6,
-   "original": {
-    "name": "Knight's Mantle VI",
-    "defence": [
-     "Armour"
-    ],
-    "tier": 4,
-    "score": 77,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "06_24ABAC_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_back_knight_06.webp"
-  },
-  {
-   "id": "sk_shoulders_knight_06",
-   "kind": "Side",
-   "side": "Shoulders",
-   "pack": "FANT_KNGT",
-   "packName": "Knights",
-   "set": 6,
-   "original": {
-    "name": "Knight's Pauldrons VI",
-    "defence": [
-     "Armour"
-    ],
-    "tier": 3,
-    "score": 68,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "06_29ASHL_HU01",
-     "06_30ASHR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_shoulders_knight_06.webp"
-  },
-  {
    "id": "sk_helm_knight_07",
    "kind": "Helmet",
    "side": null,
@@ -1010,8 +527,8 @@
     "defence": [
      "Armour"
     ],
-    "tier": 3,
-    "score": 67,
+    "tier": 2,
+    "score": 41,
     "hidesHair": true,
     "special": false,
     "parts": [
@@ -1033,7 +550,7 @@
      "Armour"
     ],
     "tier": 4,
-    "score": 84,
+    "score": 83,
     "hidesHair": false,
     "special": false,
     "parts": [
@@ -1077,7 +594,7 @@
      "Armour"
     ],
     "tier": 3,
-    "score": 70,
+    "score": 67,
     "hidesHair": false,
     "special": false,
     "parts": [
@@ -1099,7 +616,7 @@
      "Armour"
     ],
     "tier": 1,
-    "score": 15,
+    "score": 13,
     "hidesHair": true,
     "special": false,
     "parts": [
@@ -1121,7 +638,7 @@
      "Armour"
     ],
     "tier": 2,
-    "score": 30,
+    "score": 33,
     "hidesHair": false,
     "special": false,
     "parts": [
@@ -1142,8 +659,8 @@
     "defence": [
      "Armour"
     ],
-    "tier": 4,
-    "score": 95,
+    "tier": 3,
+    "score": 74,
     "hidesHair": true,
     "special": false,
     "parts": [
@@ -1165,7 +682,7 @@
      "Armour"
     ],
     "tier": 1,
-    "score": 23,
+    "score": 17,
     "hidesHair": false,
     "special": false,
     "parts": [
@@ -1187,7 +704,7 @@
      "Armour"
     ],
     "tier": 4,
-    "score": 100,
+    "score": 90,
     "hidesHair": true,
     "special": false,
     "parts": [
@@ -1209,7 +726,7 @@
      "Armour"
     ],
     "tier": 1,
-    "score": 7,
+    "score": 6,
     "hidesHair": false,
     "special": false,
     "parts": [
@@ -1230,8 +747,8 @@
     "defence": [
      "Armour"
     ],
-    "tier": 4,
-    "score": 77,
+    "tier": 2,
+    "score": 49,
     "hidesHair": true,
     "special": false,
     "parts": [
@@ -1253,7 +770,7 @@
      "Armour"
     ],
     "tier": 4,
-    "score": 91,
+    "score": 89,
     "hidesHair": false,
     "special": false,
     "parts": [
@@ -1274,8 +791,8 @@
     "defence": [
      "Armour"
     ],
-    "tier": 3,
-    "score": 51,
+    "tier": 2,
+    "score": 31,
     "hidesHair": true,
     "special": false,
     "parts": [
@@ -1297,7 +814,7 @@
      "Armour"
     ],
     "tier": 1,
-    "score": 2,
+    "score": 0,
     "hidesHair": false,
     "special": false,
     "parts": [
@@ -1362,13 +879,20 @@
     "defence": [
      "Armour"
     ],
-    "tier": 3,
-    "score": 67,
+    "tier": 4,
+    "score": 75,
     "hidesHair": false,
     "special": false,
     "parts": [
      "17_10TORS_HU01",
-     "17_17HIPS_HU01"
+     "17_17HIPS_HU01",
+     "17_29ASHL_HU01",
+     "17_30ASHR_HU01",
+     "17_25AHPF_HU01",
+     "17_26AHPB_HU01",
+     "17_27AHPL_HU01",
+     "17_28AHPR_HU01",
+     "17_24ABAC_HU01"
     ]
    },
    "icon": "gear-icons/sk_body_knight_17.webp"
@@ -1386,7 +910,7 @@
      "Armour"
     ],
     "tier": 3,
-    "score": 50,
+    "score": 70,
     "hidesHair": false,
     "special": false,
     "parts": [
@@ -1395,7 +919,9 @@
      "17_13ALWL_HU01",
      "17_14ALWR_HU01",
      "17_15HNDL_HU01",
-     "17_16HNDR_HU01"
+     "17_16HNDR_HU01",
+     "17_31AEBL_HU01",
+     "17_32AEBR_HU01"
     ]
    },
    "icon": "gear-icons/sk_gloves_knight_17.webp"
@@ -1412,15 +938,17 @@
     "defence": [
      "Armour"
     ],
-    "tier": 3,
-    "score": 58,
+    "tier": 2,
+    "score": 42,
     "hidesHair": false,
     "special": false,
     "parts": [
      "17_18LEGL_HU01",
      "17_19LEGR_HU01",
      "17_20FOTL_HU01",
-     "17_21FOTR_HU01"
+     "17_21FOTR_HU01",
+     "17_33AKNL_HU01",
+     "17_34AKNR_HU01"
     ]
    },
    "icon": "gear-icons/sk_boots_knight_17.webp"
@@ -1438,152 +966,15 @@
      "Armour"
     ],
     "tier": 4,
-    "score": 90,
+    "score": 79,
     "hidesHair": true,
     "special": false,
     "parts": [
-     "17_22AHED_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_helm_knight_17.webp"
-  },
-  {
-   "id": "sk_back_knight_17",
-   "kind": "Side",
-   "side": "Back",
-   "pack": "FANT_KNGT",
-   "packName": "Knights",
-   "set": 17,
-   "original": {
-    "name": "Knight's Mantle XVII",
-    "defence": [
-     "Armour"
-    ],
-    "tier": 4,
-    "score": 95,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "17_24ABAC_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_back_knight_17.webp"
-  },
-  {
-   "id": "sk_face_knight_17",
-   "kind": "Side",
-   "side": "Face",
-   "pack": "FANT_KNGT",
-   "packName": "Knights",
-   "set": 17,
-   "original": {
-    "name": "Knight's Mask XVII",
-    "defence": [
-     "Armour"
-    ],
-    "tier": 1,
-    "score": 11,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
+     "17_22AHED_HU01",
      "17_23AFAC_HU01"
     ]
    },
-   "icon": "gear-icons/sk_face_knight_17.webp"
-  },
-  {
-   "id": "sk_shoulders_knight_17",
-   "kind": "Side",
-   "side": "Shoulders",
-   "pack": "FANT_KNGT",
-   "packName": "Knights",
-   "set": 17,
-   "original": {
-    "name": "Knight's Pauldrons XVII",
-    "defence": [
-     "Armour"
-    ],
-    "tier": 1,
-    "score": 16,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "17_29ASHL_HU01",
-     "17_30ASHR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_shoulders_knight_17.webp"
-  },
-  {
-   "id": "sk_hips_knight_17",
-   "kind": "Side",
-   "side": "Hips",
-   "pack": "FANT_KNGT",
-   "packName": "Knights",
-   "set": 17,
-   "original": {
-    "name": "Knight's Girdle XVII",
-    "defence": [
-     "Armour"
-    ],
-    "tier": 3,
-    "score": 57,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "17_25AHPF_HU01",
-     "17_26AHPB_HU01",
-     "17_27AHPL_HU01",
-     "17_28AHPR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_hips_knight_17.webp"
-  },
-  {
-   "id": "sk_elbows_knight_17",
-   "kind": "Side",
-   "side": "Elbows",
-   "pack": "FANT_KNGT",
-   "packName": "Knights",
-   "set": 17,
-   "original": {
-    "name": "Knight's Couters XVII",
-    "defence": [
-     "Armour"
-    ],
-    "tier": 1,
-    "score": 22,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "17_31AEBL_HU01",
-     "17_32AEBR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_elbows_knight_17.webp"
-  },
-  {
-   "id": "sk_knees_knight_17",
-   "kind": "Side",
-   "side": "Knees",
-   "pack": "FANT_KNGT",
-   "packName": "Knights",
-   "set": 17,
-   "original": {
-    "name": "Knight's Poleyns XVII",
-    "defence": [
-     "Armour"
-    ],
-    "tier": 1,
-    "score": 20,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "17_33AKNL_HU01",
-     "17_34AKNR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_knees_knight_17.webp"
+   "icon": "gear-icons/sk_helm_knight_17.webp"
   },
   {
    "id": "sk_body_sorcerer_01",
@@ -1598,12 +989,18 @@
      "Spellguard"
     ],
     "tier": 4,
-    "score": 88,
+    "score": 96,
     "hidesHair": false,
     "special": false,
     "parts": [
      "01_10TORS_HU01",
-     "01_17HIPS_HU01"
+     "01_17HIPS_HU01",
+     "01_29ASHL_HU01",
+     "01_30ASHR_HU01",
+     "01_26AHPB_HU01",
+     "01_27AHPL_HU01",
+     "01_28AHPR_HU01",
+     "01_24ABAC_HU01"
     ]
    },
    "icon": "gear-icons/sk_body_sorcerer_01.webp"
@@ -1621,7 +1018,7 @@
      "Spellguard"
     ],
     "tier": 1,
-    "score": 15,
+    "score": 10,
     "hidesHair": false,
     "special": false,
     "parts": [
@@ -1672,106 +1069,16 @@
     "defence": [
      "Spellguard"
     ],
-    "tier": 2,
-    "score": 36,
+    "tier": 3,
+    "score": 56,
     "hidesHair": true,
     "special": false,
     "parts": [
-     "01_22AHED_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_helm_sorcerer_01.webp"
-  },
-  {
-   "id": "sk_back_sorcerer_01",
-   "kind": "Side",
-   "side": "Back",
-   "pack": "FANT_SORC",
-   "packName": "Sorcerers",
-   "set": 1,
-   "original": {
-    "name": "Sorcerer's Mantle I",
-    "defence": [
-     "Spellguard"
-    ],
-    "tier": 3,
-    "score": 63,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "01_24ABAC_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_back_sorcerer_01.webp"
-  },
-  {
-   "id": "sk_face_sorcerer_01",
-   "kind": "Side",
-   "side": "Face",
-   "pack": "FANT_SORC",
-   "packName": "Sorcerers",
-   "set": 1,
-   "original": {
-    "name": "Sorcerer's Mask I",
-    "defence": [
-     "Spellguard"
-    ],
-    "tier": 2,
-    "score": 32,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
+     "01_22AHED_HU01",
      "01_23AFAC_HU01"
     ]
    },
-   "icon": "gear-icons/sk_face_sorcerer_01.webp"
-  },
-  {
-   "id": "sk_shoulders_sorcerer_01",
-   "kind": "Side",
-   "side": "Shoulders",
-   "pack": "FANT_SORC",
-   "packName": "Sorcerers",
-   "set": 1,
-   "original": {
-    "name": "Sorcerer's Pauldrons I",
-    "defence": [
-     "Spellguard"
-    ],
-    "tier": 4,
-    "score": 95,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "01_29ASHL_HU01",
-     "01_30ASHR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_shoulders_sorcerer_01.webp"
-  },
-  {
-   "id": "sk_hips_sorcerer_01",
-   "kind": "Side",
-   "side": "Hips",
-   "pack": "FANT_SORC",
-   "packName": "Sorcerers",
-   "set": 1,
-   "original": {
-    "name": "Sorcerer's Girdle I",
-    "defence": [
-     "Spellguard"
-    ],
-    "tier": 4,
-    "score": 86,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "01_26AHPB_HU01",
-     "01_27AHPL_HU01",
-     "01_28AHPR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_hips_sorcerer_01.webp"
+   "icon": "gear-icons/sk_helm_sorcerer_01.webp"
   },
   {
    "id": "sk_body_sorcerer_02",
@@ -1791,7 +1098,12 @@
     "special": false,
     "parts": [
      "02_10TORS_HU01",
-     "02_17HIPS_HU01"
+     "02_17HIPS_HU01",
+     "02_29ASHL_HU01",
+     "02_30ASHR_HU01",
+     "02_27AHPL_HU01",
+     "02_28AHPR_HU01",
+     "02_24ABAC_HU01"
     ]
    },
    "icon": "gear-icons/sk_body_sorcerer_02.webp"
@@ -1808,8 +1120,8 @@
     "defence": [
      "Spellguard"
     ],
-    "tier": 3,
-    "score": 60,
+    "tier": 2,
+    "score": 45,
     "hidesHair": false,
     "special": false,
     "parts": [
@@ -1835,8 +1147,8 @@
     "defence": [
      "Spellguard"
     ],
-    "tier": 3,
-    "score": 53,
+    "tier": 2,
+    "score": 32,
     "hidesHair": false,
     "special": false,
     "parts": [
@@ -1861,104 +1173,15 @@
      "Spellguard"
     ],
     "tier": 1,
-    "score": 13,
+    "score": 21,
     "hidesHair": true,
     "special": false,
     "parts": [
-     "02_22AHED_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_helm_sorcerer_02.webp"
-  },
-  {
-   "id": "sk_back_sorcerer_02",
-   "kind": "Side",
-   "side": "Back",
-   "pack": "FANT_SORC",
-   "packName": "Sorcerers",
-   "set": 2,
-   "original": {
-    "name": "Sorcerer's Mantle II",
-    "defence": [
-     "Spellguard"
-    ],
-    "tier": 4,
-    "score": 88,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "02_24ABAC_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_back_sorcerer_02.webp"
-  },
-  {
-   "id": "sk_face_sorcerer_02",
-   "kind": "Side",
-   "side": "Face",
-   "pack": "FANT_SORC",
-   "packName": "Sorcerers",
-   "set": 2,
-   "original": {
-    "name": "Sorcerer's Mask II",
-    "defence": [
-     "Spellguard"
-    ],
-    "tier": 1,
-    "score": 21,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
+     "02_22AHED_HU01",
      "02_23AFAC_HU01"
     ]
    },
-   "icon": "gear-icons/sk_face_sorcerer_02.webp"
-  },
-  {
-   "id": "sk_shoulders_sorcerer_02",
-   "kind": "Side",
-   "side": "Shoulders",
-   "pack": "FANT_SORC",
-   "packName": "Sorcerers",
-   "set": 2,
-   "original": {
-    "name": "Sorcerer's Pauldrons II",
-    "defence": [
-     "Spellguard"
-    ],
-    "tier": 1,
-    "score": 0,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "02_29ASHL_HU01",
-     "02_30ASHR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_shoulders_sorcerer_02.webp"
-  },
-  {
-   "id": "sk_hips_sorcerer_02",
-   "kind": "Side",
-   "side": "Hips",
-   "pack": "FANT_SORC",
-   "packName": "Sorcerers",
-   "set": 2,
-   "original": {
-    "name": "Sorcerer's Girdle II",
-    "defence": [
-     "Spellguard"
-    ],
-    "tier": 1,
-    "score": 10,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "02_27AHPL_HU01",
-     "02_28AHPR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_hips_sorcerer_02.webp"
+   "icon": "gear-icons/sk_helm_sorcerer_02.webp"
   },
   {
    "id": "sk_body_sorcerer_03",
@@ -1972,13 +1195,18 @@
     "defence": [
      "Spellguard"
     ],
-    "tier": 4,
-    "score": 83,
+    "tier": 3,
+    "score": 62,
     "hidesHair": false,
     "special": false,
     "parts": [
      "03_10TORS_HU01",
-     "03_17HIPS_HU01"
+     "03_17HIPS_HU01",
+     "03_29ASHL_HU01",
+     "03_30ASHR_HU01",
+     "03_27AHPL_HU01",
+     "03_28AHPR_HU01",
+     "03_24ABAC_HU01"
     ]
    },
    "icon": "gear-icons/sk_body_sorcerer_03.webp"
@@ -1996,7 +1224,7 @@
      "Spellguard"
     ],
     "tier": 2,
-    "score": 45,
+    "score": 35,
     "hidesHair": false,
     "special": false,
     "parts": [
@@ -2023,7 +1251,7 @@
      "Spellguard"
     ],
     "tier": 1,
-    "score": 21,
+    "score": 16,
     "hidesHair": false,
     "special": false,
     "parts": [
@@ -2048,104 +1276,15 @@
      "Spellguard"
     ],
     "tier": 2,
-    "score": 31,
+    "score": 36,
     "hidesHair": true,
     "special": false,
     "parts": [
-     "03_22AHED_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_helm_sorcerer_03.webp"
-  },
-  {
-   "id": "sk_back_sorcerer_03",
-   "kind": "Side",
-   "side": "Back",
-   "pack": "FANT_SORC",
-   "packName": "Sorcerers",
-   "set": 3,
-   "original": {
-    "name": "Sorcerer's Mantle III",
-    "defence": [
-     "Spellguard"
-    ],
-    "tier": 3,
-    "score": 51,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "03_24ABAC_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_back_sorcerer_03.webp"
-  },
-  {
-   "id": "sk_face_sorcerer_03",
-   "kind": "Side",
-   "side": "Face",
-   "pack": "FANT_SORC",
-   "packName": "Sorcerers",
-   "set": 3,
-   "original": {
-    "name": "Sorcerer's Mask III",
-    "defence": [
-     "Spellguard"
-    ],
-    "tier": 1,
-    "score": 16,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
+     "03_22AHED_HU01",
      "03_23AFAC_HU01"
     ]
    },
-   "icon": "gear-icons/sk_face_sorcerer_03.webp"
-  },
-  {
-   "id": "sk_shoulders_sorcerer_03",
-   "kind": "Side",
-   "side": "Shoulders",
-   "pack": "FANT_SORC",
-   "packName": "Sorcerers",
-   "set": 3,
-   "original": {
-    "name": "Sorcerer's Pauldrons III",
-    "defence": [
-     "Spellguard"
-    ],
-    "tier": 3,
-    "score": 63,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "03_29ASHL_HU01",
-     "03_30ASHR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_shoulders_sorcerer_03.webp"
-  },
-  {
-   "id": "sk_hips_sorcerer_03",
-   "kind": "Side",
-   "side": "Hips",
-   "pack": "FANT_SORC",
-   "packName": "Sorcerers",
-   "set": 3,
-   "original": {
-    "name": "Sorcerer's Girdle III",
-    "defence": [
-     "Spellguard"
-    ],
-    "tier": 1,
-    "score": 0,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "03_27AHPL_HU01",
-     "03_28AHPR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_hips_sorcerer_03.webp"
+   "icon": "gear-icons/sk_helm_sorcerer_03.webp"
   },
   {
    "id": "sk_body_sorcerer_04",
@@ -2160,12 +1299,17 @@
      "Spellguard"
     ],
     "tier": 3,
-    "score": 58,
+    "score": 67,
     "hidesHair": false,
     "special": false,
     "parts": [
      "04_10TORS_HU01",
-     "04_17HIPS_HU01"
+     "04_17HIPS_HU01",
+     "04_29ASHL_HU01",
+     "04_30ASHR_HU01",
+     "04_27AHPL_HU01",
+     "04_28AHPR_HU01",
+     "04_24ABAC_HU01"
     ]
    },
    "icon": "gear-icons/sk_body_sorcerer_04.webp"
@@ -2183,7 +1327,7 @@
      "Spellguard"
     ],
     "tier": 4,
-    "score": 100,
+    "score": 90,
     "hidesHair": false,
     "special": false,
     "parts": [
@@ -2234,8 +1378,8 @@
     "defence": [
      "Spellguard"
     ],
-    "tier": 2,
-    "score": 28,
+    "tier": 1,
+    "score": 18,
     "hidesHair": true,
     "special": false,
     "parts": [
@@ -2243,74 +1387,6 @@
     ]
    },
    "icon": "gear-icons/sk_helm_sorcerer_04.webp"
-  },
-  {
-   "id": "sk_back_sorcerer_04",
-   "kind": "Side",
-   "side": "Back",
-   "pack": "FANT_SORC",
-   "packName": "Sorcerers",
-   "set": 4,
-   "original": {
-    "name": "Sorcerer's Mantle IV",
-    "defence": [
-     "Spellguard"
-    ],
-    "tier": 1,
-    "score": 21,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "04_24ABAC_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_back_sorcerer_04.webp"
-  },
-  {
-   "id": "sk_shoulders_sorcerer_04",
-   "kind": "Side",
-   "side": "Shoulders",
-   "pack": "FANT_SORC",
-   "packName": "Sorcerers",
-   "set": 4,
-   "original": {
-    "name": "Sorcerer's Pauldrons IV",
-    "defence": [
-     "Spellguard"
-    ],
-    "tier": 4,
-    "score": 100,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "04_29ASHL_HU01",
-     "04_30ASHR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_shoulders_sorcerer_04.webp"
-  },
-  {
-   "id": "sk_hips_sorcerer_04",
-   "kind": "Side",
-   "side": "Hips",
-   "pack": "FANT_SORC",
-   "packName": "Sorcerers",
-   "set": 4,
-   "original": {
-    "name": "Sorcerer's Girdle IV",
-    "defence": [
-     "Spellguard"
-    ],
-    "tier": 2,
-    "score": 29,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "04_27AHPL_HU01",
-     "04_28AHPR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_hips_sorcerer_04.webp"
   },
   {
    "id": "sk_body_sorcerer_05",
@@ -2324,13 +1400,16 @@
     "defence": [
      "Spellguard"
     ],
-    "tier": 3,
-    "score": 71,
+    "tier": 2,
+    "score": 25,
     "hidesHair": false,
     "special": false,
     "parts": [
      "05_10TORS_HU01",
-     "05_17HIPS_HU01"
+     "05_17HIPS_HU01",
+     "05_27AHPL_HU01",
+     "05_28AHPR_HU01",
+     "05_24ABAC_HU01"
     ]
    },
    "icon": "gear-icons/sk_body_sorcerer_05.webp"
@@ -2348,7 +1427,7 @@
      "Spellguard"
     ],
     "tier": 2,
-    "score": 35,
+    "score": 30,
     "hidesHair": false,
     "special": false,
     "parts": [
@@ -2400,7 +1479,7 @@
      "Spellguard"
     ],
     "tier": 2,
-    "score": 49,
+    "score": 28,
     "hidesHair": true,
     "special": false,
     "parts": [
@@ -2408,51 +1487,6 @@
     ]
    },
    "icon": "gear-icons/sk_helm_sorcerer_05.webp"
-  },
-  {
-   "id": "sk_back_sorcerer_05",
-   "kind": "Side",
-   "side": "Back",
-   "pack": "FANT_SORC",
-   "packName": "Sorcerers",
-   "set": 5,
-   "original": {
-    "name": "Sorcerer's Mantle V",
-    "defence": [
-     "Spellguard"
-    ],
-    "tier": 1,
-    "score": 14,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "05_24ABAC_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_back_sorcerer_05.webp"
-  },
-  {
-   "id": "sk_hips_sorcerer_05",
-   "kind": "Side",
-   "side": "Hips",
-   "pack": "FANT_SORC",
-   "packName": "Sorcerers",
-   "set": 5,
-   "original": {
-    "name": "Sorcerer's Girdle V",
-    "defence": [
-     "Spellguard"
-    ],
-    "tier": 1,
-    "score": 24,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "05_27AHPL_HU01",
-     "05_28AHPR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_hips_sorcerer_05.webp"
   },
   {
    "id": "sk_body_sorcerer_06",
@@ -2466,13 +1500,16 @@
     "defence": [
      "Spellguard"
     ],
-    "tier": 4,
-    "score": 79,
+    "tier": 2,
+    "score": 42,
     "hidesHair": false,
     "special": false,
     "parts": [
      "06_10TORS_HU01",
-     "06_17HIPS_HU01"
+     "06_17HIPS_HU01",
+     "06_27AHPL_HU01",
+     "06_28AHPR_HU01",
+     "06_24ABAC_HU01"
     ]
    },
    "icon": "gear-icons/sk_body_sorcerer_06.webp"
@@ -2490,7 +1527,7 @@
      "Spellguard"
     ],
     "tier": 2,
-    "score": 30,
+    "score": 25,
     "hidesHair": false,
     "special": false,
     "parts": [
@@ -2517,7 +1554,7 @@
      "Spellguard"
     ],
     "tier": 2,
-    "score": 47,
+    "score": 26,
     "hidesHair": false,
     "special": false,
     "parts": [
@@ -2550,51 +1587,6 @@
     ]
    },
    "icon": "gear-icons/sk_helm_sorcerer_06.webp"
-  },
-  {
-   "id": "sk_back_sorcerer_06",
-   "kind": "Side",
-   "side": "Back",
-   "pack": "FANT_SORC",
-   "packName": "Sorcerers",
-   "set": 6,
-   "original": {
-    "name": "Sorcerer's Mantle VI",
-    "defence": [
-     "Spellguard"
-    ],
-    "tier": 2,
-    "score": 35,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "06_24ABAC_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_back_sorcerer_06.webp"
-  },
-  {
-   "id": "sk_hips_sorcerer_06",
-   "kind": "Side",
-   "side": "Hips",
-   "pack": "FANT_SORC",
-   "packName": "Sorcerers",
-   "set": 6,
-   "original": {
-    "name": "Sorcerer's Girdle VI",
-    "defence": [
-     "Spellguard"
-    ],
-    "tier": 2,
-    "score": 43,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "06_27AHPL_HU01",
-     "06_28AHPR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_hips_sorcerer_06.webp"
   },
   {
    "id": "sk_gloves_sorcerer_07",
@@ -2632,7 +1624,7 @@
      "Spellguard"
     ],
     "tier": 1,
-    "score": 18,
+    "score": 15,
     "hidesHair": true,
     "special": false,
     "parts": [
@@ -2654,7 +1646,7 @@
      "Spellguard"
     ],
     "tier": 3,
-    "score": 65,
+    "score": 56,
     "hidesHair": false,
     "special": false,
     "parts": [
@@ -2676,7 +1668,7 @@
      "Spellguard"
     ],
     "tier": 3,
-    "score": 71,
+    "score": 50,
     "hidesHair": false,
     "special": false,
     "parts": [
@@ -2698,8 +1690,8 @@
     "defence": [
      "Spellguard"
     ],
-    "tier": 3,
-    "score": 59,
+    "tier": 2,
+    "score": 33,
     "hidesHair": true,
     "special": false,
     "parts": [
@@ -2721,7 +1713,7 @@
      "Spellguard"
     ],
     "tier": 1,
-    "score": 19,
+    "score": 11,
     "hidesHair": false,
     "special": false,
     "parts": [
@@ -2743,7 +1735,7 @@
      "Spellguard"
     ],
     "tier": 2,
-    "score": 37,
+    "score": 44,
     "hidesHair": false,
     "special": false,
     "parts": [
@@ -2792,7 +1784,14 @@
     "special": false,
     "parts": [
      "01_10TORS_HU01",
-     "01_17HIPS_HU01"
+     "01_17HIPS_HU01",
+     "01_29ASHL_HU01",
+     "01_30ASHR_HU01",
+     "01_25AHPF_HU01",
+     "01_26AHPB_HU01",
+     "01_27AHPL_HU01",
+     "01_28AHPR_HU01",
+     "01_24ABAC_HU01"
     ]
    },
    "icon": "gear-icons/sk_body_samurai_01.webp"
@@ -2810,7 +1809,7 @@
      "Agility"
     ],
     "tier": 3,
-    "score": 65,
+    "score": 50,
     "hidesHair": false,
     "special": false,
     "parts": [
@@ -2836,8 +1835,8 @@
     "defence": [
      "Agility"
     ],
-    "tier": 4,
-    "score": 89,
+    "tier": 3,
+    "score": 68,
     "hidesHair": false,
     "special": false,
     "parts": [
@@ -2862,106 +1861,15 @@
      "Agility"
     ],
     "tier": 4,
-    "score": 92,
+    "score": 95,
     "hidesHair": true,
     "special": false,
     "parts": [
-     "01_22AHED_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_helm_samurai_01.webp"
-  },
-  {
-   "id": "sk_back_samurai_01",
-   "kind": "Side",
-   "side": "Back",
-   "pack": "SAMR_WARR",
-   "packName": "Samurai",
-   "set": 1,
-   "original": {
-    "name": "Samurai Mantle I",
-    "defence": [
-     "Agility"
-    ],
-    "tier": 2,
-    "score": 42,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "01_24ABAC_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_back_samurai_01.webp"
-  },
-  {
-   "id": "sk_face_samurai_01",
-   "kind": "Side",
-   "side": "Face",
-   "pack": "SAMR_WARR",
-   "packName": "Samurai",
-   "set": 1,
-   "original": {
-    "name": "Samurai Mask I",
-    "defence": [
-     "Agility"
-    ],
-    "tier": 2,
-    "score": 47,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
+     "01_22AHED_HU01",
      "01_23AFAC_HU01"
     ]
    },
-   "icon": "gear-icons/sk_face_samurai_01.webp"
-  },
-  {
-   "id": "sk_shoulders_samurai_01",
-   "kind": "Side",
-   "side": "Shoulders",
-   "pack": "SAMR_WARR",
-   "packName": "Samurai",
-   "set": 1,
-   "original": {
-    "name": "Samurai Pauldrons I",
-    "defence": [
-     "Agility"
-    ],
-    "tier": 3,
-    "score": 53,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "01_29ASHL_HU01",
-     "01_30ASHR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_shoulders_samurai_01.webp"
-  },
-  {
-   "id": "sk_hips_samurai_01",
-   "kind": "Side",
-   "side": "Hips",
-   "pack": "SAMR_WARR",
-   "packName": "Samurai",
-   "set": 1,
-   "original": {
-    "name": "Samurai Girdle I",
-    "defence": [
-     "Agility"
-    ],
-    "tier": 4,
-    "score": 100,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "01_25AHPF_HU01",
-     "01_26AHPB_HU01",
-     "01_27AHPL_HU01",
-     "01_28AHPR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_hips_samurai_01.webp"
+   "icon": "gear-icons/sk_helm_samurai_01.webp"
   },
   {
    "id": "sk_body_samurai_02",
@@ -2981,7 +1889,14 @@
     "special": false,
     "parts": [
      "02_10TORS_HU01",
-     "02_17HIPS_HU01"
+     "02_17HIPS_HU01",
+     "02_29ASHL_HU01",
+     "02_30ASHR_HU01",
+     "02_25AHPF_HU01",
+     "02_26AHPB_HU01",
+     "02_27AHPL_HU01",
+     "02_28AHPR_HU01",
+     "02_24ABAC_HU01"
     ]
    },
    "icon": "gear-icons/sk_body_samurai_02.webp"
@@ -2999,7 +1914,7 @@
      "Agility"
     ],
     "tier": 1,
-    "score": 20,
+    "score": 15,
     "hidesHair": false,
     "special": false,
     "parts": [
@@ -3025,8 +1940,8 @@
     "defence": [
      "Agility"
     ],
-    "tier": 4,
-    "score": 84,
+    "tier": 3,
+    "score": 53,
     "hidesHair": false,
     "special": false,
     "parts": [
@@ -3051,106 +1966,15 @@
      "Agility"
     ],
     "tier": 4,
-    "score": 97,
+    "score": 100,
     "hidesHair": true,
     "special": false,
     "parts": [
-     "02_22AHED_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_helm_samurai_02.webp"
-  },
-  {
-   "id": "sk_back_samurai_02",
-   "kind": "Side",
-   "side": "Back",
-   "pack": "SAMR_WARR",
-   "packName": "Samurai",
-   "set": 2,
-   "original": {
-    "name": "Samurai Mantle II",
-    "defence": [
-     "Agility"
-    ],
-    "tier": 2,
-    "score": 47,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "02_24ABAC_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_back_samurai_02.webp"
-  },
-  {
-   "id": "sk_face_samurai_02",
-   "kind": "Side",
-   "side": "Face",
-   "pack": "SAMR_WARR",
-   "packName": "Samurai",
-   "set": 2,
-   "original": {
-    "name": "Samurai Mask II",
-    "defence": [
-     "Agility"
-    ],
-    "tier": 4,
-    "score": 100,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
+     "02_22AHED_HU01",
      "02_23AFAC_HU01"
     ]
    },
-   "icon": "gear-icons/sk_face_samurai_02.webp"
-  },
-  {
-   "id": "sk_shoulders_samurai_02",
-   "kind": "Side",
-   "side": "Shoulders",
-   "pack": "SAMR_WARR",
-   "packName": "Samurai",
-   "set": 2,
-   "original": {
-    "name": "Samurai Pauldrons II",
-    "defence": [
-     "Agility"
-    ],
-    "tier": 4,
-    "score": 84,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "02_29ASHL_HU01",
-     "02_30ASHR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_shoulders_samurai_02.webp"
-  },
-  {
-   "id": "sk_hips_samurai_02",
-   "kind": "Side",
-   "side": "Hips",
-   "pack": "SAMR_WARR",
-   "packName": "Samurai",
-   "set": 2,
-   "original": {
-    "name": "Samurai Girdle II",
-    "defence": [
-     "Agility"
-    ],
-    "tier": 4,
-    "score": 95,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "02_25AHPF_HU01",
-     "02_26AHPB_HU01",
-     "02_27AHPL_HU01",
-     "02_28AHPR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_hips_samurai_02.webp"
+   "icon": "gear-icons/sk_helm_samurai_02.webp"
   },
   {
    "id": "sk_body_samurai_03",
@@ -3164,13 +1988,19 @@
     "defence": [
      "Agility"
     ],
-    "tier": 2,
-    "score": 42,
+    "tier": 4,
+    "score": 83,
     "hidesHair": false,
     "special": false,
     "parts": [
      "03_10TORS_HU01",
-     "03_17HIPS_HU01"
+     "03_17HIPS_HU01",
+     "03_29ASHL_HU01",
+     "03_30ASHR_HU01",
+     "03_25AHPF_HU01",
+     "03_27AHPL_HU01",
+     "03_28AHPR_HU01",
+     "03_24ABAC_HU01"
     ]
    },
    "icon": "gear-icons/sk_body_samurai_03.webp"
@@ -3188,7 +2018,7 @@
      "Agility"
     ],
     "tier": 3,
-    "score": 70,
+    "score": 60,
     "hidesHair": false,
     "special": false,
     "parts": [
@@ -3214,8 +2044,8 @@
     "defence": [
      "Agility"
     ],
-    "tier": 2,
-    "score": 42,
+    "tier": 1,
+    "score": 21,
     "hidesHair": false,
     "special": false,
     "parts": [
@@ -3240,105 +2070,15 @@
      "Agility"
     ],
     "tier": 4,
-    "score": 82,
+    "score": 87,
     "hidesHair": true,
     "special": false,
     "parts": [
-     "03_22AHED_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_helm_samurai_03.webp"
-  },
-  {
-   "id": "sk_back_samurai_03",
-   "kind": "Side",
-   "side": "Back",
-   "pack": "SAMR_WARR",
-   "packName": "Samurai",
-   "set": 3,
-   "original": {
-    "name": "Samurai Mantle III",
-    "defence": [
-     "Agility"
-    ],
-    "tier": 4,
-    "score": 86,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "03_24ABAC_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_back_samurai_03.webp"
-  },
-  {
-   "id": "sk_face_samurai_03",
-   "kind": "Side",
-   "side": "Face",
-   "pack": "SAMR_WARR",
-   "packName": "Samurai",
-   "set": 3,
-   "original": {
-    "name": "Samurai Mask III",
-    "defence": [
-     "Agility"
-    ],
-    "tier": 3,
-    "score": 53,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
+     "03_22AHED_HU01",
      "03_23AFAC_HU01"
     ]
    },
-   "icon": "gear-icons/sk_face_samurai_03.webp"
-  },
-  {
-   "id": "sk_shoulders_samurai_03",
-   "kind": "Side",
-   "side": "Shoulders",
-   "pack": "SAMR_WARR",
-   "packName": "Samurai",
-   "set": 3,
-   "original": {
-    "name": "Samurai Pauldrons III",
-    "defence": [
-     "Agility"
-    ],
-    "tier": 4,
-    "score": 89,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "03_29ASHL_HU01",
-     "03_30ASHR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_shoulders_samurai_03.webp"
-  },
-  {
-   "id": "sk_hips_samurai_03",
-   "kind": "Side",
-   "side": "Hips",
-   "pack": "SAMR_WARR",
-   "packName": "Samurai",
-   "set": 3,
-   "original": {
-    "name": "Samurai Girdle III",
-    "defence": [
-     "Agility"
-    ],
-    "tier": 3,
-    "score": 67,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "03_25AHPF_HU01",
-     "03_27AHPL_HU01",
-     "03_28AHPR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_hips_samurai_03.webp"
+   "icon": "gear-icons/sk_helm_samurai_03.webp"
   },
   {
    "id": "sk_body_samurai_04",
@@ -3354,12 +2094,16 @@
      "Agility"
     ],
     "tier": 4,
-    "score": 96,
+    "score": 79,
     "hidesHair": false,
     "special": false,
     "parts": [
      "04_10TORS_HU01",
-     "04_17HIPS_HU01"
+     "04_17HIPS_HU01",
+     "04_25AHPF_HU01",
+     "04_27AHPL_HU01",
+     "04_28AHPR_HU01",
+     "04_24ABAC_HU01"
     ]
    },
    "icon": "gear-icons/sk_body_samurai_04.webp"
@@ -3378,85 +2122,15 @@
      "Agility"
     ],
     "tier": 4,
-    "score": 87,
+    "score": 97,
     "hidesHair": true,
     "special": false,
     "parts": [
-     "04_22AHED_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_helm_samurai_04.webp"
-  },
-  {
-   "id": "sk_back_samurai_04",
-   "kind": "Side",
-   "side": "Back",
-   "pack": "SAMR_WARR",
-   "packName": "Samurai",
-   "set": 4,
-   "original": {
-    "name": "Samurai Mantle IV",
-    "defence": [
-     "Armour",
-     "Agility"
-    ],
-    "tier": 3,
-    "score": 56,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "04_24ABAC_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_back_samurai_04.webp"
-  },
-  {
-   "id": "sk_face_samurai_04",
-   "kind": "Side",
-   "side": "Face",
-   "pack": "SAMR_WARR",
-   "packName": "Samurai",
-   "set": 4,
-   "original": {
-    "name": "Samurai Mask IV",
-    "defence": [
-     "Armour",
-     "Agility"
-    ],
-    "tier": 4,
-    "score": 89,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
+     "04_22AHED_HU01",
      "04_23AFAC_HU01"
     ]
    },
-   "icon": "gear-icons/sk_face_samurai_04.webp"
-  },
-  {
-   "id": "sk_hips_samurai_04",
-   "kind": "Side",
-   "side": "Hips",
-   "pack": "SAMR_WARR",
-   "packName": "Samurai",
-   "set": 4,
-   "original": {
-    "name": "Samurai Girdle IV",
-    "defence": [
-     "Armour",
-     "Agility"
-    ],
-    "tier": 4,
-    "score": 81,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "04_25AHPF_HU01",
-     "04_27AHPL_HU01",
-     "04_28AHPR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_hips_samurai_04.webp"
+   "icon": "gear-icons/sk_helm_samurai_04.webp"
   },
   {
    "id": "sk_body_samurai_05",
@@ -3471,13 +2145,14 @@
      "Armour",
      "Agility"
     ],
-    "tier": 4,
-    "score": 75,
+    "tier": 1,
+    "score": 21,
     "hidesHair": false,
     "special": false,
     "parts": [
      "05_10TORS_HU01",
-     "05_17HIPS_HU01"
+     "05_17HIPS_HU01",
+     "05_24ABAC_HU01"
     ]
    },
    "icon": "gear-icons/sk_body_samurai_05.webp"
@@ -3496,60 +2171,15 @@
      "Agility"
     ],
     "tier": 3,
-    "score": 56,
+    "score": 69,
     "hidesHair": true,
     "special": false,
     "parts": [
-     "05_22AHED_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_helm_samurai_05.webp"
-  },
-  {
-   "id": "sk_back_samurai_05",
-   "kind": "Side",
-   "side": "Back",
-   "pack": "SAMR_WARR",
-   "packName": "Samurai",
-   "set": 5,
-   "original": {
-    "name": "Samurai Mantle V",
-    "defence": [
-     "Armour",
-     "Agility"
-    ],
-    "tier": 3,
-    "score": 53,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "05_24ABAC_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_back_samurai_05.webp"
-  },
-  {
-   "id": "sk_face_samurai_05",
-   "kind": "Side",
-   "side": "Face",
-   "pack": "SAMR_WARR",
-   "packName": "Samurai",
-   "set": 5,
-   "original": {
-    "name": "Samurai Mask V",
-    "defence": [
-     "Armour",
-     "Agility"
-    ],
-    "tier": 2,
-    "score": 37,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
+     "05_22AHED_HU01",
      "05_23AFAC_HU01"
     ]
    },
-   "icon": "gear-icons/sk_face_samurai_05.webp"
+   "icon": "gear-icons/sk_helm_samurai_05.webp"
   },
   {
    "id": "sk_body_samurai_06",
@@ -3564,13 +2194,14 @@
      "Armour",
      "Agility"
     ],
-    "tier": 2,
-    "score": 38,
+    "tier": 1,
+    "score": 0,
     "hidesHair": false,
     "special": false,
     "parts": [
      "06_10TORS_HU01",
-     "06_17HIPS_HU01"
+     "06_17HIPS_HU01",
+     "06_24ABAC_HU01"
     ]
    },
    "icon": "gear-icons/sk_body_samurai_06.webp"
@@ -3588,61 +2219,16 @@
      "Armour",
      "Agility"
     ],
-    "tier": 1,
-    "score": 21,
+    "tier": 3,
+    "score": 62,
     "hidesHair": true,
     "special": false,
     "parts": [
-     "06_22AHED_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_helm_samurai_06.webp"
-  },
-  {
-   "id": "sk_back_samurai_06",
-   "kind": "Side",
-   "side": "Back",
-   "pack": "SAMR_WARR",
-   "packName": "Samurai",
-   "set": 6,
-   "original": {
-    "name": "Samurai Mantle VI",
-    "defence": [
-     "Armour",
-     "Agility"
-    ],
-    "tier": 2,
-    "score": 49,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "06_24ABAC_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_back_samurai_06.webp"
-  },
-  {
-   "id": "sk_face_samurai_06",
-   "kind": "Side",
-   "side": "Face",
-   "pack": "SAMR_WARR",
-   "packName": "Samurai",
-   "set": 6,
-   "original": {
-    "name": "Samurai Mask VI",
-    "defence": [
-     "Armour",
-     "Agility"
-    ],
-    "tier": 4,
-    "score": 79,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
+     "06_22AHED_HU01",
      "06_23AFAC_HU01"
     ]
    },
-   "icon": "gear-icons/sk_face_samurai_06.webp"
+   "icon": "gear-icons/sk_helm_samurai_06.webp"
   },
   {
    "id": "sk_helm_samurai_07",
@@ -3680,8 +2266,8 @@
      "Armour",
      "Agility"
     ],
-    "tier": 2,
-    "score": 26,
+    "tier": 1,
+    "score": 22,
     "hidesHair": false,
     "special": false,
     "parts": [
@@ -3727,7 +2313,7 @@
      "Agility"
     ],
     "tier": 3,
-    "score": 67,
+    "score": 61,
     "hidesHair": false,
     "special": false,
     "parts": [
@@ -3748,13 +2334,20 @@
     "defence": [
      "Armour"
     ],
-    "tier": 1,
-    "score": 12,
+    "tier": 3,
+    "score": 50,
     "hidesHair": false,
     "special": false,
     "parts": [
      "01_10TORS_HU01",
-     "01_17HIPS_HU01"
+     "01_17HIPS_HU01",
+     "01_29ASHL_HU01",
+     "01_30ASHR_HU01",
+     "01_25AHPF_HU01",
+     "01_26AHPB_HU01",
+     "01_27AHPL_HU01",
+     "01_28AHPR_HU01",
+     "01_24ABAC_HU01"
     ]
    },
    "icon": "gear-icons/sk_body_viking_01.webp"
@@ -3772,7 +2365,7 @@
      "Armour"
     ],
     "tier": 1,
-    "score": 10,
+    "score": 20,
     "hidesHair": false,
     "special": false,
     "parts": [
@@ -3781,7 +2374,9 @@
      "01_13ALWL_HU01",
      "01_14ALWR_HU01",
      "01_15HNDL_HU01",
-     "01_16HNDR_HU01"
+     "01_16HNDR_HU01",
+     "01_31AEBL_HU01",
+     "01_32AEBR_HU01"
     ]
    },
    "icon": "gear-icons/sk_gloves_viking_01.webp"
@@ -3798,15 +2393,17 @@
     "defence": [
      "Armour"
     ],
-    "tier": 1,
-    "score": 16,
+    "tier": 2,
+    "score": 37,
     "hidesHair": false,
     "special": false,
     "parts": [
      "01_18LEGL_HU01",
      "01_19LEGR_HU01",
      "01_20FOTL_HU01",
-     "01_21FOTR_HU01"
+     "01_21FOTR_HU01",
+     "01_33AKNL_HU01",
+     "01_34AKNR_HU01"
     ]
    },
    "icon": "gear-icons/sk_boots_viking_01.webp"
@@ -3824,152 +2421,15 @@
      "Armour"
     ],
     "tier": 3,
-    "score": 72,
+    "score": 59,
     "hidesHair": true,
     "special": false,
     "parts": [
-     "01_22AHED_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_helm_viking_01.webp"
-  },
-  {
-   "id": "sk_back_viking_01",
-   "kind": "Side",
-   "side": "Back",
-   "pack": "VIKG_WARR",
-   "packName": "Viking",
-   "set": 1,
-   "original": {
-    "name": "Viking Mantle I",
-    "defence": [
-     "Armour"
-    ],
-    "tier": 3,
-    "score": 60,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "01_24ABAC_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_back_viking_01.webp"
-  },
-  {
-   "id": "sk_face_viking_01",
-   "kind": "Side",
-   "side": "Face",
-   "pack": "VIKG_WARR",
-   "packName": "Viking",
-   "set": 1,
-   "original": {
-    "name": "Viking Mask I",
-    "defence": [
-     "Armour"
-    ],
-    "tier": 1,
-    "score": 0,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
+     "01_22AHED_HU01",
      "01_23AFAC_HU01"
     ]
    },
-   "icon": "gear-icons/sk_face_viking_01.webp"
-  },
-  {
-   "id": "sk_shoulders_viking_01",
-   "kind": "Side",
-   "side": "Shoulders",
-   "pack": "VIKG_WARR",
-   "packName": "Viking",
-   "set": 1,
-   "original": {
-    "name": "Viking Pauldrons I",
-    "defence": [
-     "Armour"
-    ],
-    "tier": 3,
-    "score": 58,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "01_29ASHL_HU01",
-     "01_30ASHR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_shoulders_viking_01.webp"
-  },
-  {
-   "id": "sk_hips_viking_01",
-   "kind": "Side",
-   "side": "Hips",
-   "pack": "VIKG_WARR",
-   "packName": "Viking",
-   "set": 1,
-   "original": {
-    "name": "Viking Girdle I",
-    "defence": [
-     "Armour"
-    ],
-    "tier": 2,
-    "score": 38,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "01_25AHPF_HU01",
-     "01_26AHPB_HU01",
-     "01_27AHPL_HU01",
-     "01_28AHPR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_hips_viking_01.webp"
-  },
-  {
-   "id": "sk_elbows_viking_01",
-   "kind": "Side",
-   "side": "Elbows",
-   "pack": "VIKG_WARR",
-   "packName": "Viking",
-   "set": 1,
-   "original": {
-    "name": "Viking Couters I",
-    "defence": [
-     "Armour"
-    ],
-    "tier": 3,
-    "score": 67,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "01_31AEBL_HU01",
-     "01_32AEBR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_elbows_viking_01.webp"
-  },
-  {
-   "id": "sk_knees_viking_01",
-   "kind": "Side",
-   "side": "Knees",
-   "pack": "VIKG_WARR",
-   "packName": "Viking",
-   "set": 1,
-   "original": {
-    "name": "Viking Poleyns I",
-    "defence": [
-     "Armour"
-    ],
-    "tier": 3,
-    "score": 70,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "01_33AKNL_HU01",
-     "01_34AKNR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_knees_viking_01.webp"
+   "icon": "gear-icons/sk_helm_viking_01.webp"
   },
   {
    "id": "sk_body_viking_02",
@@ -3984,12 +2444,19 @@
      "Armour"
     ],
     "tier": 3,
-    "score": 62,
+    "score": 58,
     "hidesHair": false,
     "special": false,
     "parts": [
      "02_10TORS_HU01",
-     "02_17HIPS_HU01"
+     "02_17HIPS_HU01",
+     "02_29ASHL_HU01",
+     "02_30ASHR_HU01",
+     "02_25AHPF_HU01",
+     "02_26AHPB_HU01",
+     "02_27AHPL_HU01",
+     "02_28AHPR_HU01",
+     "02_24ABAC_HU01"
     ]
    },
    "icon": "gear-icons/sk_body_viking_02.webp"
@@ -4016,7 +2483,9 @@
      "02_13ALWL_HU01",
      "02_14ALWR_HU01",
      "02_15HNDL_HU01",
-     "02_16HNDR_HU01"
+     "02_16HNDR_HU01",
+     "02_31AEBL_HU01",
+     "02_32AEBR_HU01"
     ]
    },
    "icon": "gear-icons/sk_gloves_viking_02.webp"
@@ -4033,15 +2502,17 @@
     "defence": [
      "Armour"
     ],
-    "tier": 3,
-    "score": 74,
+    "tier": 4,
+    "score": 84,
     "hidesHair": false,
     "special": false,
     "parts": [
      "02_18LEGL_HU01",
      "02_19LEGR_HU01",
      "02_20FOTL_HU01",
-     "02_21FOTR_HU01"
+     "02_21FOTR_HU01",
+     "02_33AKNL_HU01",
+     "02_34AKNR_HU01"
     ]
    },
    "icon": "gear-icons/sk_boots_viking_02.webp"
@@ -4059,152 +2530,15 @@
      "Armour"
     ],
     "tier": 3,
-    "score": 54,
+    "score": 51,
     "hidesHair": true,
     "special": false,
     "parts": [
-     "02_22AHED_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_helm_viking_02.webp"
-  },
-  {
-   "id": "sk_back_viking_02",
-   "kind": "Side",
-   "side": "Back",
-   "pack": "VIKG_WARR",
-   "packName": "Viking",
-   "set": 2,
-   "original": {
-    "name": "Viking Mantle II",
-    "defence": [
-     "Armour"
-    ],
-    "tier": 1,
-    "score": 0,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "02_24ABAC_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_back_viking_02.webp"
-  },
-  {
-   "id": "sk_face_viking_02",
-   "kind": "Side",
-   "side": "Face",
-   "pack": "VIKG_WARR",
-   "packName": "Viking",
-   "set": 2,
-   "original": {
-    "name": "Viking Mask II",
-    "defence": [
-     "Armour"
-    ],
-    "tier": 1,
-    "score": 5,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
+     "02_22AHED_HU01",
      "02_23AFAC_HU01"
     ]
    },
-   "icon": "gear-icons/sk_face_viking_02.webp"
-  },
-  {
-   "id": "sk_shoulders_viking_02",
-   "kind": "Side",
-   "side": "Shoulders",
-   "pack": "VIKG_WARR",
-   "packName": "Viking",
-   "set": 2,
-   "original": {
-    "name": "Viking Pauldrons II",
-    "defence": [
-     "Armour"
-    ],
-    "tier": 2,
-    "score": 26,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "02_29ASHL_HU01",
-     "02_30ASHR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_shoulders_viking_02.webp"
-  },
-  {
-   "id": "sk_hips_viking_02",
-   "kind": "Side",
-   "side": "Hips",
-   "pack": "VIKG_WARR",
-   "packName": "Viking",
-   "set": 2,
-   "original": {
-    "name": "Viking Girdle II",
-    "defence": [
-     "Armour"
-    ],
-    "tier": 4,
-    "score": 90,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "02_25AHPF_HU01",
-     "02_26AHPB_HU01",
-     "02_27AHPL_HU01",
-     "02_28AHPR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_hips_viking_02.webp"
-  },
-  {
-   "id": "sk_elbows_viking_02",
-   "kind": "Side",
-   "side": "Elbows",
-   "pack": "VIKG_WARR",
-   "packName": "Viking",
-   "set": 2,
-   "original": {
-    "name": "Viking Couters II",
-    "defence": [
-     "Armour"
-    ],
-    "tier": 3,
-    "score": 56,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "02_31AEBL_HU01",
-     "02_32AEBR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_elbows_viking_02.webp"
-  },
-  {
-   "id": "sk_knees_viking_02",
-   "kind": "Side",
-   "side": "Knees",
-   "pack": "VIKG_WARR",
-   "packName": "Viking",
-   "set": 2,
-   "original": {
-    "name": "Viking Poleyns II",
-    "defence": [
-     "Armour"
-    ],
-    "tier": 2,
-    "score": 30,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "02_33AKNL_HU01",
-     "02_34AKNR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_knees_viking_02.webp"
+   "icon": "gear-icons/sk_helm_viking_02.webp"
   },
   {
    "id": "sk_body_viking_03",
@@ -4218,13 +2552,20 @@
     "defence": [
      "Armour"
     ],
-    "tier": 3,
-    "score": 50,
+    "tier": 4,
+    "score": 88,
     "hidesHair": false,
     "special": false,
     "parts": [
      "03_10TORS_HU01",
-     "03_17HIPS_HU01"
+     "03_17HIPS_HU01",
+     "03_29ASHL_HU01",
+     "03_30ASHR_HU01",
+     "03_25AHPF_HU01",
+     "03_26AHPB_HU01",
+     "03_27AHPL_HU01",
+     "03_28AHPR_HU01",
+     "03_24ABAC_HU01"
     ]
    },
    "icon": "gear-icons/sk_body_viking_03.webp"
@@ -4242,7 +2583,7 @@
      "Armour"
     ],
     "tier": 4,
-    "score": 90,
+    "score": 95,
     "hidesHair": false,
     "special": false,
     "parts": [
@@ -4251,7 +2592,9 @@
      "03_13ALWL_HU01",
      "03_14ALWR_HU01",
      "03_15HNDL_HU01",
-     "03_16HNDR_HU01"
+     "03_16HNDR_HU01",
+     "03_31AEBL_HU01",
+     "03_32AEBR_HU01"
     ]
    },
    "icon": "gear-icons/sk_gloves_viking_03.webp"
@@ -4268,15 +2611,17 @@
     "defence": [
      "Armour"
     ],
-    "tier": 3,
-    "score": 63,
+    "tier": 4,
+    "score": 89,
     "hidesHair": false,
     "special": false,
     "parts": [
      "03_18LEGL_HU01",
      "03_19LEGR_HU01",
      "03_20FOTL_HU01",
-     "03_21FOTR_HU01"
+     "03_21FOTR_HU01",
+     "03_33AKNL_HU01",
+     "03_34AKNR_HU01"
     ]
    },
    "icon": "gear-icons/sk_boots_viking_03.webp"
@@ -4293,153 +2638,16 @@
     "defence": [
      "Armour"
     ],
-    "tier": 2,
-    "score": 26,
+    "tier": 3,
+    "score": 67,
     "hidesHair": true,
     "special": false,
     "parts": [
-     "03_22AHED_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_helm_viking_03.webp"
-  },
-  {
-   "id": "sk_back_viking_03",
-   "kind": "Side",
-   "side": "Back",
-   "pack": "VIKG_WARR",
-   "packName": "Viking",
-   "set": 3,
-   "original": {
-    "name": "Viking Mantle III",
-    "defence": [
-     "Armour"
-    ],
-    "tier": 4,
-    "score": 93,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "03_24ABAC_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_back_viking_03.webp"
-  },
-  {
-   "id": "sk_face_viking_03",
-   "kind": "Side",
-   "side": "Face",
-   "pack": "VIKG_WARR",
-   "packName": "Viking",
-   "set": 3,
-   "original": {
-    "name": "Viking Mask III",
-    "defence": [
-     "Armour"
-    ],
-    "tier": 3,
-    "score": 68,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
+     "03_22AHED_HU01",
      "03_23AFAC_HU01"
     ]
    },
-   "icon": "gear-icons/sk_face_viking_03.webp"
-  },
-  {
-   "id": "sk_shoulders_viking_03",
-   "kind": "Side",
-   "side": "Shoulders",
-   "pack": "VIKG_WARR",
-   "packName": "Viking",
-   "set": 3,
-   "original": {
-    "name": "Viking Pauldrons III",
-    "defence": [
-     "Armour"
-    ],
-    "tier": 3,
-    "score": 74,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "03_29ASHL_HU01",
-     "03_30ASHR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_shoulders_viking_03.webp"
-  },
-  {
-   "id": "sk_hips_viking_03",
-   "kind": "Side",
-   "side": "Hips",
-   "pack": "VIKG_WARR",
-   "packName": "Viking",
-   "set": 3,
-   "original": {
-    "name": "Viking Girdle III",
-    "defence": [
-     "Armour"
-    ],
-    "tier": 4,
-    "score": 76,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "03_25AHPF_HU01",
-     "03_26AHPB_HU01",
-     "03_27AHPL_HU01",
-     "03_28AHPR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_hips_viking_03.webp"
-  },
-  {
-   "id": "sk_elbows_viking_03",
-   "kind": "Side",
-   "side": "Elbows",
-   "pack": "VIKG_WARR",
-   "packName": "Viking",
-   "set": 3,
-   "original": {
-    "name": "Viking Couters III",
-    "defence": [
-     "Armour"
-    ],
-    "tier": 4,
-    "score": 89,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "03_31AEBL_HU01",
-     "03_32AEBR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_elbows_viking_03.webp"
-  },
-  {
-   "id": "sk_knees_viking_03",
-   "kind": "Side",
-   "side": "Knees",
-   "pack": "VIKG_WARR",
-   "packName": "Viking",
-   "set": 3,
-   "original": {
-    "name": "Viking Poleyns III",
-    "defence": [
-     "Armour"
-    ],
-    "tier": 4,
-    "score": 100,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "03_33AKNL_HU01",
-     "03_34AKNR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_knees_viking_03.webp"
+   "icon": "gear-icons/sk_helm_viking_03.webp"
   },
   {
    "id": "sk_body_viking_04",
@@ -4454,13 +2662,20 @@
      "Armour",
      "Agility"
     ],
-    "tier": 2,
-    "score": 25,
+    "tier": 3,
+    "score": 71,
     "hidesHair": false,
     "special": false,
     "parts": [
      "04_10TORS_HU01",
-     "04_17HIPS_HU01"
+     "04_17HIPS_HU01",
+     "04_29ASHL_HU01",
+     "04_30ASHR_HU01",
+     "04_25AHPF_HU01",
+     "04_26AHPB_HU01",
+     "04_27AHPL_HU01",
+     "04_28AHPR_HU01",
+     "04_24ABAC_HU01"
     ]
    },
    "icon": "gear-icons/sk_body_viking_04.webp"
@@ -4479,7 +2694,7 @@
      "Agility"
     ],
     "tier": 4,
-    "score": 80,
+    "score": 85,
     "hidesHair": false,
     "special": false,
     "parts": [
@@ -4488,7 +2703,9 @@
      "04_13ALWL_HU01",
      "04_14ALWR_HU01",
      "04_15HNDL_HU01",
-     "04_16HNDR_HU01"
+     "04_16HNDR_HU01",
+     "04_31AEBL_HU01",
+     "04_32AEBR_HU01"
     ]
    },
    "icon": "gear-icons/sk_gloves_viking_04.webp"
@@ -4506,15 +2723,17 @@
      "Armour",
      "Agility"
     ],
-    "tier": 2,
-    "score": 26,
+    "tier": 4,
+    "score": 79,
     "hidesHair": false,
     "special": false,
     "parts": [
      "04_18LEGL_HU01",
      "04_19LEGR_HU01",
      "04_20FOTL_HU01",
-     "04_21FOTR_HU01"
+     "04_21FOTR_HU01",
+     "04_33AKNL_HU01",
+     "04_34AKNR_HU01"
     ]
    },
    "icon": "gear-icons/sk_boots_viking_04.webp"
@@ -4532,159 +2751,16 @@
      "Armour",
      "Agility"
     ],
-    "tier": 1,
-    "score": 23,
+    "tier": 3,
+    "score": 64,
     "hidesHair": true,
     "special": false,
     "parts": [
-     "04_22AHED_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_helm_viking_04.webp"
-  },
-  {
-   "id": "sk_back_viking_04",
-   "kind": "Side",
-   "side": "Back",
-   "pack": "VIKG_WARR",
-   "packName": "Viking",
-   "set": 4,
-   "original": {
-    "name": "Viking Mantle IV",
-    "defence": [
-     "Armour",
-     "Agility"
-    ],
-    "tier": 3,
-    "score": 74,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "04_24ABAC_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_back_viking_04.webp"
-  },
-  {
-   "id": "sk_face_viking_04",
-   "kind": "Side",
-   "side": "Face",
-   "pack": "VIKG_WARR",
-   "packName": "Viking",
-   "set": 4,
-   "original": {
-    "name": "Viking Mask IV",
-    "defence": [
-     "Armour",
-     "Agility"
-    ],
-    "tier": 3,
-    "score": 74,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
+     "04_22AHED_HU01",
      "04_23AFAC_HU01"
     ]
    },
-   "icon": "gear-icons/sk_face_viking_04.webp"
-  },
-  {
-   "id": "sk_shoulders_viking_04",
-   "kind": "Side",
-   "side": "Shoulders",
-   "pack": "VIKG_WARR",
-   "packName": "Viking",
-   "set": 4,
-   "original": {
-    "name": "Viking Pauldrons IV",
-    "defence": [
-     "Armour",
-     "Agility"
-    ],
-    "tier": 2,
-    "score": 37,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "04_29ASHL_HU01",
-     "04_30ASHR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_shoulders_viking_04.webp"
-  },
-  {
-   "id": "sk_hips_viking_04",
-   "kind": "Side",
-   "side": "Hips",
-   "pack": "VIKG_WARR",
-   "packName": "Viking",
-   "set": 4,
-   "original": {
-    "name": "Viking Girdle IV",
-    "defence": [
-     "Armour",
-     "Agility"
-    ],
-    "tier": 3,
-    "score": 62,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "04_25AHPF_HU01",
-     "04_26AHPB_HU01",
-     "04_27AHPL_HU01",
-     "04_28AHPR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_hips_viking_04.webp"
-  },
-  {
-   "id": "sk_elbows_viking_04",
-   "kind": "Side",
-   "side": "Elbows",
-   "pack": "VIKG_WARR",
-   "packName": "Viking",
-   "set": 4,
-   "original": {
-    "name": "Viking Couters IV",
-    "defence": [
-     "Armour",
-     "Agility"
-    ],
-    "tier": 4,
-    "score": 78,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "04_31AEBL_HU01",
-     "04_32AEBR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_elbows_viking_04.webp"
-  },
-  {
-   "id": "sk_knees_viking_04",
-   "kind": "Side",
-   "side": "Knees",
-   "pack": "VIKG_WARR",
-   "packName": "Viking",
-   "set": 4,
-   "original": {
-    "name": "Viking Poleyns IV",
-    "defence": [
-     "Armour",
-     "Agility"
-    ],
-    "tier": 4,
-    "score": 80,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "04_33AKNL_HU01",
-     "04_34AKNR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_knees_viking_04.webp"
+   "icon": "gear-icons/sk_helm_viking_04.webp"
   },
   {
    "id": "sk_body_viking_05",
@@ -4699,13 +2775,19 @@
      "Armour",
      "Agility"
     ],
-    "tier": 1,
-    "score": 21,
+    "tier": 2,
+    "score": 29,
     "hidesHair": false,
     "special": false,
     "parts": [
      "05_10TORS_HU01",
-     "05_17HIPS_HU01"
+     "05_17HIPS_HU01",
+     "05_29ASHL_HU01",
+     "05_30ASHR_HU01",
+     "05_25AHPF_HU01",
+     "05_27AHPL_HU01",
+     "05_28AHPR_HU01",
+     "05_24ABAC_HU01"
     ]
    },
    "icon": "gear-icons/sk_body_viking_05.webp"
@@ -4724,7 +2806,7 @@
      "Agility"
     ],
     "tier": 4,
-    "score": 95,
+    "score": 100,
     "hidesHair": false,
     "special": false,
     "parts": [
@@ -4733,7 +2815,9 @@
      "05_13ALWL_HU01",
      "05_14ALWR_HU01",
      "05_15HNDL_HU01",
-     "05_16HNDR_HU01"
+     "05_16HNDR_HU01",
+     "05_31AEBL_HU01",
+     "05_32AEBR_HU01"
     ]
    },
    "icon": "gear-icons/sk_gloves_viking_05.webp"
@@ -4759,7 +2843,9 @@
      "05_18LEGL_HU01",
      "05_19LEGR_HU01",
      "05_20FOTL_HU01",
-     "05_21FOTR_HU01"
+     "05_21FOTR_HU01",
+     "05_33AKNL_HU01",
+     "05_34AKNR_HU01"
     ]
    },
    "icon": "gear-icons/sk_boots_viking_05.webp"
@@ -4777,158 +2863,16 @@
      "Armour",
      "Agility"
     ],
-    "tier": 2,
-    "score": 46,
+    "tier": 4,
+    "score": 85,
     "hidesHair": true,
     "special": false,
     "parts": [
-     "05_22AHED_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_helm_viking_05.webp"
-  },
-  {
-   "id": "sk_back_viking_05",
-   "kind": "Side",
-   "side": "Back",
-   "pack": "VIKG_WARR",
-   "packName": "Viking",
-   "set": 5,
-   "original": {
-    "name": "Viking Mantle V",
-    "defence": [
-     "Armour",
-     "Agility"
-    ],
-    "tier": 1,
-    "score": 12,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "05_24ABAC_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_back_viking_05.webp"
-  },
-  {
-   "id": "sk_face_viking_05",
-   "kind": "Side",
-   "side": "Face",
-   "pack": "VIKG_WARR",
-   "packName": "Viking",
-   "set": 5,
-   "original": {
-    "name": "Viking Mask V",
-    "defence": [
-     "Armour",
-     "Agility"
-    ],
-    "tier": 4,
-    "score": 95,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
+     "05_22AHED_HU01",
      "05_23AFAC_HU01"
     ]
    },
-   "icon": "gear-icons/sk_face_viking_05.webp"
-  },
-  {
-   "id": "sk_shoulders_viking_05",
-   "kind": "Side",
-   "side": "Shoulders",
-   "pack": "VIKG_WARR",
-   "packName": "Viking",
-   "set": 5,
-   "original": {
-    "name": "Viking Pauldrons V",
-    "defence": [
-     "Armour",
-     "Agility"
-    ],
-    "tier": 4,
-    "score": 79,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "05_29ASHL_HU01",
-     "05_30ASHR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_shoulders_viking_05.webp"
-  },
-  {
-   "id": "sk_hips_viking_05",
-   "kind": "Side",
-   "side": "Hips",
-   "pack": "VIKG_WARR",
-   "packName": "Viking",
-   "set": 5,
-   "original": {
-    "name": "Viking Girdle V",
-    "defence": [
-     "Armour",
-     "Agility"
-    ],
-    "tier": 2,
-    "score": 48,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "05_25AHPF_HU01",
-     "05_27AHPL_HU01",
-     "05_28AHPR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_hips_viking_05.webp"
-  },
-  {
-   "id": "sk_elbows_viking_05",
-   "kind": "Side",
-   "side": "Elbows",
-   "pack": "VIKG_WARR",
-   "packName": "Viking",
-   "set": 5,
-   "original": {
-    "name": "Viking Couters V",
-    "defence": [
-     "Armour",
-     "Agility"
-    ],
-    "tier": 4,
-    "score": 100,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "05_31AEBL_HU01",
-     "05_32AEBR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_elbows_viking_05.webp"
-  },
-  {
-   "id": "sk_knees_viking_05",
-   "kind": "Side",
-   "side": "Knees",
-   "pack": "VIKG_WARR",
-   "packName": "Viking",
-   "set": 5,
-   "original": {
-    "name": "Viking Poleyns V",
-    "defence": [
-     "Armour",
-     "Agility"
-    ],
-    "tier": 4,
-    "score": 90,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "05_33AKNL_HU01",
-     "05_34AKNR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_knees_viking_05.webp"
+   "icon": "gear-icons/sk_helm_viking_05.webp"
   },
   {
    "id": "sk_body_viking_06",
@@ -4944,12 +2888,18 @@
      "Agility"
     ],
     "tier": 2,
-    "score": 29,
+    "score": 38,
     "hidesHair": false,
     "special": false,
     "parts": [
      "06_10TORS_HU01",
-     "06_17HIPS_HU01"
+     "06_17HIPS_HU01",
+     "06_29ASHL_HU01",
+     "06_30ASHR_HU01",
+     "06_25AHPF_HU01",
+     "06_27AHPL_HU01",
+     "06_28AHPR_HU01",
+     "06_24ABAC_HU01"
     ]
    },
    "icon": "gear-icons/sk_body_viking_06.webp"
@@ -4968,7 +2918,7 @@
      "Agility"
     ],
     "tier": 2,
-    "score": 25,
+    "score": 40,
     "hidesHair": false,
     "special": false,
     "parts": [
@@ -4977,7 +2927,9 @@
      "06_13ALWL_HU01",
      "06_14ALWR_HU01",
      "06_15HNDL_HU01",
-     "06_16HNDR_HU01"
+     "06_16HNDR_HU01",
+     "06_31AEBL_HU01",
+     "06_32AEBR_HU01"
     ]
    },
    "icon": "gear-icons/sk_gloves_viking_06.webp"
@@ -5003,7 +2955,9 @@
      "06_18LEGL_HU01",
      "06_19LEGR_HU01",
      "06_20FOTL_HU01",
-     "06_21FOTR_HU01"
+     "06_21FOTR_HU01",
+     "06_33AKNL_HU01",
+     "06_34AKNR_HU01"
     ]
    },
    "icon": "gear-icons/sk_boots_viking_06.webp"
@@ -5021,158 +2975,16 @@
      "Armour",
      "Agility"
     ],
-    "tier": 2,
-    "score": 33,
+    "tier": 4,
+    "score": 77,
     "hidesHair": true,
     "special": false,
     "parts": [
-     "06_22AHED_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_helm_viking_06.webp"
-  },
-  {
-   "id": "sk_back_viking_06",
-   "kind": "Side",
-   "side": "Back",
-   "pack": "VIKG_WARR",
-   "packName": "Viking",
-   "set": 6,
-   "original": {
-    "name": "Viking Mantle VI",
-    "defence": [
-     "Armour",
-     "Agility"
-    ],
-    "tier": 1,
-    "score": 16,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "06_24ABAC_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_back_viking_06.webp"
-  },
-  {
-   "id": "sk_face_viking_06",
-   "kind": "Side",
-   "side": "Face",
-   "pack": "VIKG_WARR",
-   "packName": "Viking",
-   "set": 6,
-   "original": {
-    "name": "Viking Mask VI",
-    "defence": [
-     "Armour",
-     "Agility"
-    ],
-    "tier": 4,
-    "score": 84,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
+     "06_22AHED_HU01",
      "06_23AFAC_HU01"
     ]
    },
-   "icon": "gear-icons/sk_face_viking_06.webp"
-  },
-  {
-   "id": "sk_shoulders_viking_06",
-   "kind": "Side",
-   "side": "Shoulders",
-   "pack": "VIKG_WARR",
-   "packName": "Viking",
-   "set": 6,
-   "original": {
-    "name": "Viking Pauldrons VI",
-    "defence": [
-     "Armour",
-     "Agility"
-    ],
-    "tier": 2,
-    "score": 47,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "06_29ASHL_HU01",
-     "06_30ASHR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_shoulders_viking_06.webp"
-  },
-  {
-   "id": "sk_hips_viking_06",
-   "kind": "Side",
-   "side": "Hips",
-   "pack": "VIKG_WARR",
-   "packName": "Viking",
-   "set": 6,
-   "original": {
-    "name": "Viking Girdle VI",
-    "defence": [
-     "Armour",
-     "Agility"
-    ],
-    "tier": 3,
-    "score": 52,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "06_25AHPF_HU01",
-     "06_27AHPL_HU01",
-     "06_28AHPR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_hips_viking_06.webp"
-  },
-  {
-   "id": "sk_elbows_viking_06",
-   "kind": "Side",
-   "side": "Elbows",
-   "pack": "VIKG_WARR",
-   "packName": "Viking",
-   "set": 6,
-   "original": {
-    "name": "Viking Couters VI",
-    "defence": [
-     "Armour",
-     "Agility"
-    ],
-    "tier": 2,
-    "score": 44,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "06_31AEBL_HU01",
-     "06_32AEBR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_elbows_viking_06.webp"
-  },
-  {
-   "id": "sk_knees_viking_06",
-   "kind": "Side",
-   "side": "Knees",
-   "pack": "VIKG_WARR",
-   "packName": "Viking",
-   "set": 6,
-   "original": {
-    "name": "Viking Poleyns VI",
-    "defence": [
-     "Armour",
-     "Agility"
-    ],
-    "tier": 3,
-    "score": 60,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "06_33AKNL_HU01",
-     "06_34AKNR_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_knees_viking_06.webp"
+   "icon": "gear-icons/sk_helm_viking_06.webp"
   },
   {
    "id": "sk_gloves_viking_07",
@@ -5211,12 +3023,13 @@
      "Armour",
      "Agility"
     ],
-    "tier": 2,
-    "score": 38,
+    "tier": 3,
+    "score": 54,
     "hidesHair": true,
     "special": false,
     "parts": [
-     "07_22AHED_HU01"
+     "07_22AHED_HU01",
+     "07_23AFAC_HU01"
     ]
    },
    "icon": "gear-icons/sk_helm_viking_07.webp"
@@ -5235,7 +3048,7 @@
      "Agility"
     ],
     "tier": 2,
-    "score": 33,
+    "score": 39,
     "hidesHair": false,
     "special": false,
     "parts": [
@@ -5243,29 +3056,6 @@
     ]
    },
    "icon": "gear-icons/sk_back_viking_07.webp"
-  },
-  {
-   "id": "sk_face_viking_07",
-   "kind": "Side",
-   "side": "Face",
-   "pack": "VIKG_WARR",
-   "packName": "Viking",
-   "set": 7,
-   "original": {
-    "name": "Viking Mask VII",
-    "defence": [
-     "Armour",
-     "Agility"
-    ],
-    "tier": 2,
-    "score": 26,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "07_23AFAC_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_face_viking_07.webp"
   },
   {
    "id": "sk_helm_viking_08",
@@ -5281,11 +3071,12 @@
      "Agility"
     ],
     "tier": 4,
-    "score": 85,
+    "score": 92,
     "hidesHair": true,
     "special": false,
     "parts": [
-     "08_22AHED_HU01"
+     "08_22AHED_HU01",
+     "08_23AFAC_HU01"
     ]
    },
    "icon": "gear-icons/sk_helm_viking_08.webp"
@@ -5303,8 +3094,8 @@
      "Armour",
      "Agility"
     ],
-    "tier": 2,
-    "score": 44,
+    "tier": 3,
+    "score": 50,
     "hidesHair": false,
     "special": false,
     "parts": [
@@ -5312,29 +3103,6 @@
     ]
    },
    "icon": "gear-icons/sk_back_viking_08.webp"
-  },
-  {
-   "id": "sk_face_viking_08",
-   "kind": "Side",
-   "side": "Face",
-   "pack": "VIKG_WARR",
-   "packName": "Viking",
-   "set": 8,
-   "original": {
-    "name": "Viking Mask VIII",
-    "defence": [
-     "Armour",
-     "Agility"
-    ],
-    "tier": 3,
-    "score": 63,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "08_23AFAC_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_face_viking_08.webp"
   },
   {
    "id": "sk_helm_viking_09",
@@ -5350,11 +3118,12 @@
      "Agility"
     ],
     "tier": 4,
-    "score": 79,
+    "score": 82,
     "hidesHair": true,
     "special": false,
     "parts": [
-     "09_22AHED_HU01"
+     "09_22AHED_HU01",
+     "09_23AFAC_HU01"
     ]
    },
    "icon": "gear-icons/sk_helm_viking_09.webp"
@@ -5373,7 +3142,7 @@
      "Agility"
     ],
     "tier": 4,
-    "score": 98,
+    "score": 94,
     "hidesHair": false,
     "special": false,
     "parts": [
@@ -5381,29 +3150,6 @@
     ]
    },
    "icon": "gear-icons/sk_back_viking_09.webp"
-  },
-  {
-   "id": "sk_face_viking_09",
-   "kind": "Side",
-   "side": "Face",
-   "pack": "VIKG_WARR",
-   "packName": "Viking",
-   "set": 9,
-   "original": {
-    "name": "Viking Mask IX",
-    "defence": [
-     "Armour",
-     "Agility"
-    ],
-    "tier": 3,
-    "score": 58,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "09_23AFAC_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_face_viking_09.webp"
   },
   {
    "id": "sk_helm_viking_10",
@@ -5419,11 +3165,12 @@
      "Agility"
     ],
     "tier": 3,
-    "score": 62,
+    "score": 72,
     "hidesHair": true,
     "special": false,
     "parts": [
-     "10_22AHED_HU01"
+     "10_22AHED_HU01",
+     "10_23AFAC_HU01"
     ]
    },
    "icon": "gear-icons/sk_helm_viking_10.webp"
@@ -5442,7 +3189,7 @@
      "Agility"
     ],
     "tier": 4,
-    "score": 79,
+    "score": 78,
     "hidesHair": false,
     "special": false,
     "parts": [
@@ -5450,29 +3197,6 @@
     ]
    },
    "icon": "gear-icons/sk_back_viking_10.webp"
-  },
-  {
-   "id": "sk_face_viking_10",
-   "kind": "Side",
-   "side": "Face",
-   "pack": "VIKG_WARR",
-   "packName": "Viking",
-   "set": 10,
-   "original": {
-    "name": "Viking Mask X",
-    "defence": [
-     "Armour",
-     "Agility"
-    ],
-    "tier": 2,
-    "score": 42,
-    "hidesHair": false,
-    "special": false,
-    "parts": [
-     "10_23AFAC_HU01"
-    ]
-   },
-   "icon": "gear-icons/sk_face_viking_10.webp"
   }
  ],
  "creator": [
@@ -5589,6 +3313,45 @@
    "pack": "ELVN_BASE",
    "packName": "Elf",
    "set": 9,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_ELVN_WARR_01_07EARL_EV01",
+   "icon": "creator-icons/SK_ELVN_WARR_01_07EARL_EV01.webp",
+   "group": "Ears",
+   "species": "EV01",
+   "speciesName": "Elf",
+   "pack": "ELVN_WARR",
+   "packName": "Elven Warriors",
+   "set": 1,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_ELVN_WARR_02_07EARL_EV01",
+   "icon": "creator-icons/SK_ELVN_WARR_02_07EARL_EV01.webp",
+   "group": "Ears",
+   "species": "EV01",
+   "speciesName": "Elf",
+   "pack": "ELVN_WARR",
+   "packName": "Elven Warriors",
+   "set": 2,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_ELVN_WARR_03_07EARL_EV01",
+   "icon": "creator-icons/SK_ELVN_WARR_03_07EARL_EV01.webp",
+   "group": "Ears",
+   "species": "EV01",
+   "speciesName": "Elf",
+   "pack": "ELVN_WARR",
+   "packName": "Elven Warriors",
+   "set": 3,
    "original": {
     "included": true
    }
@@ -5848,6 +3611,136 @@
    "speciesName": "Goblin",
    "pack": "GOBL_BASE",
    "packName": "Goblin",
+   "set": 10,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_GOBL_FIGT_01_07EARL_GO01",
+   "icon": "creator-icons/SK_GOBL_FIGT_01_07EARL_GO01.webp",
+   "group": "Ears",
+   "species": "GO01",
+   "speciesName": "Goblin",
+   "pack": "GOBL_FIGT",
+   "packName": "Goblin Fighters",
+   "set": 1,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_GOBL_FIGT_02_07EARL_GO01",
+   "icon": "creator-icons/SK_GOBL_FIGT_02_07EARL_GO01.webp",
+   "group": "Ears",
+   "species": "GO01",
+   "speciesName": "Goblin",
+   "pack": "GOBL_FIGT",
+   "packName": "Goblin Fighters",
+   "set": 2,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_GOBL_FIGT_03_07EARL_GO01",
+   "icon": "creator-icons/SK_GOBL_FIGT_03_07EARL_GO01.webp",
+   "group": "Ears",
+   "species": "GO01",
+   "speciesName": "Goblin",
+   "pack": "GOBL_FIGT",
+   "packName": "Goblin Fighters",
+   "set": 3,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_GOBL_FIGT_04_07EARL_GO01",
+   "icon": "creator-icons/SK_GOBL_FIGT_04_07EARL_GO01.webp",
+   "group": "Ears",
+   "species": "GO01",
+   "speciesName": "Goblin",
+   "pack": "GOBL_FIGT",
+   "packName": "Goblin Fighters",
+   "set": 4,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_GOBL_FIGT_05_07EARL_GO01",
+   "icon": "creator-icons/SK_GOBL_FIGT_05_07EARL_GO01.webp",
+   "group": "Ears",
+   "species": "GO01",
+   "speciesName": "Goblin",
+   "pack": "GOBL_FIGT",
+   "packName": "Goblin Fighters",
+   "set": 5,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_GOBL_FIGT_06_07EARL_GO01",
+   "icon": "creator-icons/SK_GOBL_FIGT_06_07EARL_GO01.webp",
+   "group": "Ears",
+   "species": "GO01",
+   "speciesName": "Goblin",
+   "pack": "GOBL_FIGT",
+   "packName": "Goblin Fighters",
+   "set": 6,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_GOBL_FIGT_07_07EARL_GO01",
+   "icon": "creator-icons/SK_GOBL_FIGT_07_07EARL_GO01.webp",
+   "group": "Ears",
+   "species": "GO01",
+   "speciesName": "Goblin",
+   "pack": "GOBL_FIGT",
+   "packName": "Goblin Fighters",
+   "set": 7,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_GOBL_FIGT_08_07EARL_GO01",
+   "icon": "creator-icons/SK_GOBL_FIGT_08_07EARL_GO01.webp",
+   "group": "Ears",
+   "species": "GO01",
+   "speciesName": "Goblin",
+   "pack": "GOBL_FIGT",
+   "packName": "Goblin Fighters",
+   "set": 8,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_GOBL_FIGT_09_07EARL_GO01",
+   "icon": "creator-icons/SK_GOBL_FIGT_09_07EARL_GO01.webp",
+   "group": "Ears",
+   "species": "GO01",
+   "speciesName": "Goblin",
+   "pack": "GOBL_FIGT",
+   "packName": "Goblin Fighters",
+   "set": 9,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_GOBL_FIGT_10_07EARL_GO01",
+   "icon": "creator-icons/SK_GOBL_FIGT_10_07EARL_GO01.webp",
+   "group": "Ears",
+   "species": "GO01",
+   "speciesName": "Goblin",
+   "pack": "GOBL_FIGT",
+   "packName": "Goblin Fighters",
    "set": 10,
    "original": {
     "included": true
@@ -6790,6 +4683,136 @@
    }
   },
   {
+   "id": "SK_GOBL_FIGT_01_35NOSE_GO01",
+   "icon": "creator-icons/SK_GOBL_FIGT_01_35NOSE_GO01.webp",
+   "group": "Nose",
+   "species": "GO01",
+   "speciesName": "Goblin",
+   "pack": "GOBL_FIGT",
+   "packName": "Goblin Fighters",
+   "set": 1,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_GOBL_FIGT_02_35NOSE_GO01",
+   "icon": "creator-icons/SK_GOBL_FIGT_02_35NOSE_GO01.webp",
+   "group": "Nose",
+   "species": "GO01",
+   "speciesName": "Goblin",
+   "pack": "GOBL_FIGT",
+   "packName": "Goblin Fighters",
+   "set": 2,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_GOBL_FIGT_03_35NOSE_GO01",
+   "icon": "creator-icons/SK_GOBL_FIGT_03_35NOSE_GO01.webp",
+   "group": "Nose",
+   "species": "GO01",
+   "speciesName": "Goblin",
+   "pack": "GOBL_FIGT",
+   "packName": "Goblin Fighters",
+   "set": 3,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_GOBL_FIGT_04_35NOSE_GO01",
+   "icon": "creator-icons/SK_GOBL_FIGT_04_35NOSE_GO01.webp",
+   "group": "Nose",
+   "species": "GO01",
+   "speciesName": "Goblin",
+   "pack": "GOBL_FIGT",
+   "packName": "Goblin Fighters",
+   "set": 4,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_GOBL_FIGT_05_35NOSE_GO01",
+   "icon": "creator-icons/SK_GOBL_FIGT_05_35NOSE_GO01.webp",
+   "group": "Nose",
+   "species": "GO01",
+   "speciesName": "Goblin",
+   "pack": "GOBL_FIGT",
+   "packName": "Goblin Fighters",
+   "set": 5,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_GOBL_FIGT_06_35NOSE_GO01",
+   "icon": "creator-icons/SK_GOBL_FIGT_06_35NOSE_GO01.webp",
+   "group": "Nose",
+   "species": "GO01",
+   "speciesName": "Goblin",
+   "pack": "GOBL_FIGT",
+   "packName": "Goblin Fighters",
+   "set": 6,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_GOBL_FIGT_07_35NOSE_GO01",
+   "icon": "creator-icons/SK_GOBL_FIGT_07_35NOSE_GO01.webp",
+   "group": "Nose",
+   "species": "GO01",
+   "speciesName": "Goblin",
+   "pack": "GOBL_FIGT",
+   "packName": "Goblin Fighters",
+   "set": 7,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_GOBL_FIGT_08_35NOSE_GO01",
+   "icon": "creator-icons/SK_GOBL_FIGT_08_35NOSE_GO01.webp",
+   "group": "Nose",
+   "species": "GO01",
+   "speciesName": "Goblin",
+   "pack": "GOBL_FIGT",
+   "packName": "Goblin Fighters",
+   "set": 8,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_GOBL_FIGT_09_35NOSE_GO01",
+   "icon": "creator-icons/SK_GOBL_FIGT_09_35NOSE_GO01.webp",
+   "group": "Nose",
+   "species": "GO01",
+   "speciesName": "Goblin",
+   "pack": "GOBL_FIGT",
+   "packName": "Goblin Fighters",
+   "set": 9,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_GOBL_FIGT_10_35NOSE_GO01",
+   "icon": "creator-icons/SK_GOBL_FIGT_10_35NOSE_GO01.webp",
+   "group": "Nose",
+   "species": "GO01",
+   "speciesName": "Goblin",
+   "pack": "GOBL_FIGT",
+   "packName": "Goblin Fighters",
+   "set": 10,
+   "original": {
+    "included": true
+   }
+  },
+  {
    "id": "SK_GOBL_BASE_01_36TETH_GO01",
    "icon": "creator-icons/SK_GOBL_BASE_01_36TETH_GO01.webp",
    "group": "Teeth",
@@ -6914,6 +4937,266 @@
    "speciesName": "Goblin",
    "pack": "GOBL_BASE",
    "packName": "Goblin",
+   "set": 10,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_GOBL_FIGT_01_36TETH_GO01",
+   "icon": "creator-icons/SK_GOBL_FIGT_01_36TETH_GO01.webp",
+   "group": "Teeth",
+   "species": "GO01",
+   "speciesName": "Goblin",
+   "pack": "GOBL_FIGT",
+   "packName": "Goblin Fighters",
+   "set": 1,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_GOBL_FIGT_02_36TETH_GO01",
+   "icon": "creator-icons/SK_GOBL_FIGT_02_36TETH_GO01.webp",
+   "group": "Teeth",
+   "species": "GO01",
+   "speciesName": "Goblin",
+   "pack": "GOBL_FIGT",
+   "packName": "Goblin Fighters",
+   "set": 2,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_GOBL_FIGT_03_36TETH_GO01",
+   "icon": "creator-icons/SK_GOBL_FIGT_03_36TETH_GO01.webp",
+   "group": "Teeth",
+   "species": "GO01",
+   "speciesName": "Goblin",
+   "pack": "GOBL_FIGT",
+   "packName": "Goblin Fighters",
+   "set": 3,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_GOBL_FIGT_04_36TETH_GO01",
+   "icon": "creator-icons/SK_GOBL_FIGT_04_36TETH_GO01.webp",
+   "group": "Teeth",
+   "species": "GO01",
+   "speciesName": "Goblin",
+   "pack": "GOBL_FIGT",
+   "packName": "Goblin Fighters",
+   "set": 4,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_GOBL_FIGT_05_36TETH_GO01",
+   "icon": "creator-icons/SK_GOBL_FIGT_05_36TETH_GO01.webp",
+   "group": "Teeth",
+   "species": "GO01",
+   "speciesName": "Goblin",
+   "pack": "GOBL_FIGT",
+   "packName": "Goblin Fighters",
+   "set": 5,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_GOBL_FIGT_06_36TETH_GO01",
+   "icon": "creator-icons/SK_GOBL_FIGT_06_36TETH_GO01.webp",
+   "group": "Teeth",
+   "species": "GO01",
+   "speciesName": "Goblin",
+   "pack": "GOBL_FIGT",
+   "packName": "Goblin Fighters",
+   "set": 6,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_GOBL_FIGT_07_36TETH_GO01",
+   "icon": "creator-icons/SK_GOBL_FIGT_07_36TETH_GO01.webp",
+   "group": "Teeth",
+   "species": "GO01",
+   "speciesName": "Goblin",
+   "pack": "GOBL_FIGT",
+   "packName": "Goblin Fighters",
+   "set": 7,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_GOBL_FIGT_08_36TETH_GO01",
+   "icon": "creator-icons/SK_GOBL_FIGT_08_36TETH_GO01.webp",
+   "group": "Teeth",
+   "species": "GO01",
+   "speciesName": "Goblin",
+   "pack": "GOBL_FIGT",
+   "packName": "Goblin Fighters",
+   "set": 8,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_GOBL_FIGT_09_36TETH_GO01",
+   "icon": "creator-icons/SK_GOBL_FIGT_09_36TETH_GO01.webp",
+   "group": "Teeth",
+   "species": "GO01",
+   "speciesName": "Goblin",
+   "pack": "GOBL_FIGT",
+   "packName": "Goblin Fighters",
+   "set": 9,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_GOBL_FIGT_10_36TETH_GO01",
+   "icon": "creator-icons/SK_GOBL_FIGT_10_36TETH_GO01.webp",
+   "group": "Teeth",
+   "species": "GO01",
+   "speciesName": "Goblin",
+   "pack": "GOBL_FIGT",
+   "packName": "Goblin Fighters",
+   "set": 10,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_APOC_OUTL_01_07EARL_HU01",
+   "icon": "creator-icons/SK_APOC_OUTL_01_07EARL_HU01.webp",
+   "group": "Ears",
+   "species": "HU01",
+   "speciesName": "Human",
+   "pack": "APOC_OUTL",
+   "packName": "Apocalypse Outlaws",
+   "set": 1,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_APOC_OUTL_02_07EARL_HU01",
+   "icon": "creator-icons/SK_APOC_OUTL_02_07EARL_HU01.webp",
+   "group": "Ears",
+   "species": "HU01",
+   "speciesName": "Human",
+   "pack": "APOC_OUTL",
+   "packName": "Apocalypse Outlaws",
+   "set": 2,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_APOC_OUTL_03_07EARL_HU01",
+   "icon": "creator-icons/SK_APOC_OUTL_03_07EARL_HU01.webp",
+   "group": "Ears",
+   "species": "HU01",
+   "speciesName": "Human",
+   "pack": "APOC_OUTL",
+   "packName": "Apocalypse Outlaws",
+   "set": 3,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_APOC_OUTL_04_07EARL_HU01",
+   "icon": "creator-icons/SK_APOC_OUTL_04_07EARL_HU01.webp",
+   "group": "Ears",
+   "species": "HU01",
+   "speciesName": "Human",
+   "pack": "APOC_OUTL",
+   "packName": "Apocalypse Outlaws",
+   "set": 4,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_APOC_OUTL_05_07EARL_HU01",
+   "icon": "creator-icons/SK_APOC_OUTL_05_07EARL_HU01.webp",
+   "group": "Ears",
+   "species": "HU01",
+   "speciesName": "Human",
+   "pack": "APOC_OUTL",
+   "packName": "Apocalypse Outlaws",
+   "set": 5,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_APOC_OUTL_06_07EARL_HU01",
+   "icon": "creator-icons/SK_APOC_OUTL_06_07EARL_HU01.webp",
+   "group": "Ears",
+   "species": "HU01",
+   "speciesName": "Human",
+   "pack": "APOC_OUTL",
+   "packName": "Apocalypse Outlaws",
+   "set": 6,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_APOC_OUTL_07_07EARL_HU01",
+   "icon": "creator-icons/SK_APOC_OUTL_07_07EARL_HU01.webp",
+   "group": "Ears",
+   "species": "HU01",
+   "speciesName": "Human",
+   "pack": "APOC_OUTL",
+   "packName": "Apocalypse Outlaws",
+   "set": 7,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_APOC_OUTL_08_07EARL_HU01",
+   "icon": "creator-icons/SK_APOC_OUTL_08_07EARL_HU01.webp",
+   "group": "Ears",
+   "species": "HU01",
+   "speciesName": "Human",
+   "pack": "APOC_OUTL",
+   "packName": "Apocalypse Outlaws",
+   "set": 8,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_APOC_OUTL_09_07EARL_HU01",
+   "icon": "creator-icons/SK_APOC_OUTL_09_07EARL_HU01.webp",
+   "group": "Ears",
+   "species": "HU01",
+   "speciesName": "Human",
+   "pack": "APOC_OUTL",
+   "packName": "Apocalypse Outlaws",
+   "set": 9,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_APOC_OUTL_10_07EARL_HU01",
+   "icon": "creator-icons/SK_APOC_OUTL_10_07EARL_HU01.webp",
+   "group": "Ears",
+   "species": "HU01",
+   "speciesName": "Human",
+   "pack": "APOC_OUTL",
+   "packName": "Apocalypse Outlaws",
    "set": 10,
    "original": {
     "included": true
@@ -8116,6 +6399,19 @@
    }
   },
   {
+   "id": "SK_APOC_SURV_01_02HAIR_HU01",
+   "icon": "creator-icons/SK_APOC_SURV_01_02HAIR_HU01.webp",
+   "group": "Hair",
+   "species": "HU01",
+   "speciesName": "Human",
+   "pack": "APOC_SURV",
+   "packName": "Apocalypse Survivors",
+   "set": 1,
+   "original": {
+    "included": true
+   }
+  },
+  {
    "id": "SK_ELVN_WARR_01_02HAIR_HU01",
    "icon": "creator-icons/SK_ELVN_WARR_01_02HAIR_HU01.webp",
    "group": "Hair",
@@ -8753,6 +7049,136 @@
    }
   },
   {
+   "id": "SK_APOC_OUTL_01_35NOSE_HU01",
+   "icon": "creator-icons/SK_APOC_OUTL_01_35NOSE_HU01.webp",
+   "group": "Nose",
+   "species": "HU01",
+   "speciesName": "Human",
+   "pack": "APOC_OUTL",
+   "packName": "Apocalypse Outlaws",
+   "set": 1,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_APOC_OUTL_02_35NOSE_HU01",
+   "icon": "creator-icons/SK_APOC_OUTL_02_35NOSE_HU01.webp",
+   "group": "Nose",
+   "species": "HU01",
+   "speciesName": "Human",
+   "pack": "APOC_OUTL",
+   "packName": "Apocalypse Outlaws",
+   "set": 2,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_APOC_OUTL_03_35NOSE_HU01",
+   "icon": "creator-icons/SK_APOC_OUTL_03_35NOSE_HU01.webp",
+   "group": "Nose",
+   "species": "HU01",
+   "speciesName": "Human",
+   "pack": "APOC_OUTL",
+   "packName": "Apocalypse Outlaws",
+   "set": 3,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_APOC_OUTL_04_35NOSE_HU01",
+   "icon": "creator-icons/SK_APOC_OUTL_04_35NOSE_HU01.webp",
+   "group": "Nose",
+   "species": "HU01",
+   "speciesName": "Human",
+   "pack": "APOC_OUTL",
+   "packName": "Apocalypse Outlaws",
+   "set": 4,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_APOC_OUTL_05_35NOSE_HU01",
+   "icon": "creator-icons/SK_APOC_OUTL_05_35NOSE_HU01.webp",
+   "group": "Nose",
+   "species": "HU01",
+   "speciesName": "Human",
+   "pack": "APOC_OUTL",
+   "packName": "Apocalypse Outlaws",
+   "set": 5,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_APOC_OUTL_06_35NOSE_HU01",
+   "icon": "creator-icons/SK_APOC_OUTL_06_35NOSE_HU01.webp",
+   "group": "Nose",
+   "species": "HU01",
+   "speciesName": "Human",
+   "pack": "APOC_OUTL",
+   "packName": "Apocalypse Outlaws",
+   "set": 6,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_APOC_OUTL_07_35NOSE_HU01",
+   "icon": "creator-icons/SK_APOC_OUTL_07_35NOSE_HU01.webp",
+   "group": "Nose",
+   "species": "HU01",
+   "speciesName": "Human",
+   "pack": "APOC_OUTL",
+   "packName": "Apocalypse Outlaws",
+   "set": 7,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_APOC_OUTL_08_35NOSE_HU01",
+   "icon": "creator-icons/SK_APOC_OUTL_08_35NOSE_HU01.webp",
+   "group": "Nose",
+   "species": "HU01",
+   "speciesName": "Human",
+   "pack": "APOC_OUTL",
+   "packName": "Apocalypse Outlaws",
+   "set": 8,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_APOC_OUTL_09_35NOSE_HU01",
+   "icon": "creator-icons/SK_APOC_OUTL_09_35NOSE_HU01.webp",
+   "group": "Nose",
+   "species": "HU01",
+   "speciesName": "Human",
+   "pack": "APOC_OUTL",
+   "packName": "Apocalypse Outlaws",
+   "set": 9,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_APOC_OUTL_10_35NOSE_HU01",
+   "icon": "creator-icons/SK_APOC_OUTL_10_35NOSE_HU01.webp",
+   "group": "Nose",
+   "species": "HU01",
+   "speciesName": "Human",
+   "pack": "APOC_OUTL",
+   "packName": "Apocalypse Outlaws",
+   "set": 10,
+   "original": {
+    "included": true
+   }
+  },
+  {
    "id": "SK_HUMN_BASE_01_35NOSE_HU01",
    "icon": "creator-icons/SK_HUMN_BASE_01_35NOSE_HU01.webp",
    "group": "Nose",
@@ -8891,6 +7317,136 @@
    "pack": "HUMN_BASE",
    "packName": "Human",
    "set": 11,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_APOC_OUTL_01_36TETH_HU01",
+   "icon": "creator-icons/SK_APOC_OUTL_01_36TETH_HU01.webp",
+   "group": "Teeth",
+   "species": "HU01",
+   "speciesName": "Human",
+   "pack": "APOC_OUTL",
+   "packName": "Apocalypse Outlaws",
+   "set": 1,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_APOC_OUTL_02_36TETH_HU01",
+   "icon": "creator-icons/SK_APOC_OUTL_02_36TETH_HU01.webp",
+   "group": "Teeth",
+   "species": "HU01",
+   "speciesName": "Human",
+   "pack": "APOC_OUTL",
+   "packName": "Apocalypse Outlaws",
+   "set": 2,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_APOC_OUTL_03_36TETH_HU01",
+   "icon": "creator-icons/SK_APOC_OUTL_03_36TETH_HU01.webp",
+   "group": "Teeth",
+   "species": "HU01",
+   "speciesName": "Human",
+   "pack": "APOC_OUTL",
+   "packName": "Apocalypse Outlaws",
+   "set": 3,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_APOC_OUTL_04_36TETH_HU01",
+   "icon": "creator-icons/SK_APOC_OUTL_04_36TETH_HU01.webp",
+   "group": "Teeth",
+   "species": "HU01",
+   "speciesName": "Human",
+   "pack": "APOC_OUTL",
+   "packName": "Apocalypse Outlaws",
+   "set": 4,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_APOC_OUTL_05_36TETH_HU01",
+   "icon": "creator-icons/SK_APOC_OUTL_05_36TETH_HU01.webp",
+   "group": "Teeth",
+   "species": "HU01",
+   "speciesName": "Human",
+   "pack": "APOC_OUTL",
+   "packName": "Apocalypse Outlaws",
+   "set": 5,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_APOC_OUTL_06_36TETH_HU01",
+   "icon": "creator-icons/SK_APOC_OUTL_06_36TETH_HU01.webp",
+   "group": "Teeth",
+   "species": "HU01",
+   "speciesName": "Human",
+   "pack": "APOC_OUTL",
+   "packName": "Apocalypse Outlaws",
+   "set": 6,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_APOC_OUTL_07_36TETH_HU01",
+   "icon": "creator-icons/SK_APOC_OUTL_07_36TETH_HU01.webp",
+   "group": "Teeth",
+   "species": "HU01",
+   "speciesName": "Human",
+   "pack": "APOC_OUTL",
+   "packName": "Apocalypse Outlaws",
+   "set": 7,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_APOC_OUTL_08_36TETH_HU01",
+   "icon": "creator-icons/SK_APOC_OUTL_08_36TETH_HU01.webp",
+   "group": "Teeth",
+   "species": "HU01",
+   "speciesName": "Human",
+   "pack": "APOC_OUTL",
+   "packName": "Apocalypse Outlaws",
+   "set": 8,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_APOC_OUTL_09_36TETH_HU01",
+   "icon": "creator-icons/SK_APOC_OUTL_09_36TETH_HU01.webp",
+   "group": "Teeth",
+   "species": "HU01",
+   "speciesName": "Human",
+   "pack": "APOC_OUTL",
+   "packName": "Apocalypse Outlaws",
+   "set": 9,
+   "original": {
+    "included": true
+   }
+  },
+  {
+   "id": "SK_APOC_OUTL_10_36TETH_HU01",
+   "icon": "creator-icons/SK_APOC_OUTL_10_36TETH_HU01.webp",
+   "group": "Teeth",
+   "species": "HU01",
+   "speciesName": "Human",
+   "pack": "APOC_OUTL",
+   "packName": "Apocalypse Outlaws",
+   "set": 10,
    "original": {
     "included": true
    }
