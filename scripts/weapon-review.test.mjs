@@ -14,24 +14,27 @@ test('all source weapons, modifiers and icons are present', () => {
     assert.deepEqual(validate(baseline(w, data), data), [], w.id);
   }
 });
-test('untouched export keeps every item and preserves serialized originals', () => {
+test('untouched export preserves active and retired selections and serialized originals', () => {
   const out = makeExport(data, {});
   assert.equal(out.summary.changed, 0);
-  assert.equal(out.summary.included, 347);
-  assert.ok(out.weapons.every(w => w.action === 'keep' && w.changedFields.length === 0));
+  assert.equal(out.summary.included, 73);
+  assert.equal(out.summary.excluded, 274);
+  assert.ok(out.weapons.every(w => w.action === (w.originalCatalog.retired ? 'exclude' : 'keep') && w.changedFields.length === 0));
   assert.deepEqual(out.weapons[0].originalCatalog, first.original);
   assert.deepEqual(readImport(out, data), {});
 });
 test('rename, exclusion, rarity and unique values survive JSON round trip', () => {
-  const edit = baseline(first, data);
+  const active = data.weapons.find(w => !w.original.retired);
+  const edit = baseline(active, data);
   Object.assign(edit, { name: 'Test Blade', included: false, rarity: 'Unique', notes: 'Add a frost wave.' });
   edit.uniqueLines = [{ id: 'attack_pct', value: .15 }, { id: 'echo', value: .25 }];
-  const edits = { [first.id]: edit };
+  const edits = { [active.id]: edit };
   const out = makeExport(data, edits);
-  assert.equal(out.summary.excluded, 1);
+  assert.equal(out.summary.excluded, 275);
   assert.equal(out.summary.changed, 1);
-  assert.equal(out.weapons[0].action, 'exclude');
-  assert.deepEqual(out.weapons[0].requested.uniqueLines, edit.uniqueLines);
+  const changed = out.weapons.find(w => w.id === active.id);
+  assert.equal(changed.action, 'exclude');
+  assert.deepEqual(changed.requested.uniqueLines, edit.uniqueLines);
   assert.deepEqual(readImport(JSON.parse(JSON.stringify(out)), data), edits);
 });
 test('legacy elemental values are normalized once; originals and unchanged diff survive', () => {

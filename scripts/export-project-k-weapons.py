@@ -78,6 +78,7 @@ def main():
             'name', 'grade', 'attack', 'attackSpeed', 'critChance', 'guard', 'weight',
             'element', 'uniqueLevel', 'uniqueLines', 'lore')}
         original['lore'] = original['lore'] or ''
+        original['retired'] = bool(weapon.get('retired', False))
         assert all(('shadow_add' if v['id'] == 'holy_add' else v['id']) in known for v in original['uniqueLines']), wid
         entries.append(dict(id=wid, type=types[weapon['type']], family=weapon['family'],
                             canWield=types[weapon['type']] in ['Sword', 'Greatsword', 'Longblade', 'Bow', 'Spear', 'Halberd', 'Glaive'],

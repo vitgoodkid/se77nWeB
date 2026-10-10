@@ -11,7 +11,8 @@ their browser; exporting backs them up. Import replaces a draft after confirmati
 - `source.sha256`: SHA-256 of the source catalog bytes at export time.
 - Every row has the stable catalog `id`, `type`, and `canWield`.
 - `originalCatalog` preserves the serialized editable fields, including old grades.
-- `baseline` is the normalized initial editor state.
+- `baseline` is the normalized initial editor state. `included` is the inverse of
+  `originalCatalog.retired`: already-retired items start excluded, with no changed fields.
 - `requested` is the requested final state; `changedFields` identifies edited fields.
 - `action` is `keep`, `update`, or `exclude`. The complete catalog is exported,
   including excluded, untouched and not-yet-wieldable weapons. Filters never limit export.

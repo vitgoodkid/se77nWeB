@@ -5,7 +5,9 @@
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const CAT = Object.fromEntries(D.categories.map((c) => [c.id, c]));
-  const LANES = [['now', 'Đang làm'], ['next', 'Tiếp theo'], ['later', 'Để sau'], ['idea', 'Ý tưởng']];
+  const LANES = [['now', 'Đang làm'], ['next', 'Tiếp theo'], ['later', 'Để sau'], ['idea', 'Ý tưởng'], ['implemented', 'Đã có triển khai']];
+  const STATUS = { implemented: 'Đã có code / dữ liệu', partial: 'Đã làm một phần', planned: 'Chưa triển khai' };
+  const implementation = item => `<span class="implementation ${esc(item.implementation || 'planned')}">${STATUS[item.implementation] || STATUS.planned}</span>`;
   const fmtDate = (d) => { const [y, m, dd] = d.split('-'); return `${dd}/${m}/${y}`; };
   const fmtStamp = (t) => { const d = new Date(t); const p = (n) => String(n).padStart(2, '0'); return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`; };
   const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -129,12 +131,12 @@
   }
 
   // ================================================================ done / undone
-  // Progress is only what the owner marked Done (default Undone): systems + roadmap items.
+  // Personal Done marks stay separate from the public source audit.
   const DONE_KEY = 'projectk.done.v1';
   const done = { data: {}, timer: 0 };
   const sysId = (s) => 'sys:' + s.id;
   const roadId = (r) => 'road:' + slug(r.title);
-  const TRACK = [...D.systems.map((s) => ({ id: sysId(s), cat: s.cat, kind: 'sys' })), ...D.roadmap.map((r) => ({ id: roadId(r), cat: r.cat, kind: 'road' }))];
+  const TRACK = [...D.systems.map((s) => ({ id: sysId(s), cat: s.cat, kind: 'sys', implementation: s.implementation })), ...D.roadmap.map((r) => ({ id: roadId(r), cat: r.cat, kind: 'road', implementation: r.implementation }))];
   function loadDone() { try { return JSON.parse(localStorage.getItem(DONE_KEY)) || {}; } catch (e) { return {}; } }
   function saveDone() { try { localStorage.setItem(DONE_KEY, JSON.stringify(done.data)); } catch (e) {} }
   const isDone = (id) => !!(done.data[id] && done.data[id].d);
@@ -176,11 +178,11 @@
   }
   function doneBtn(id, size) {
     const on = isDone(id);
-    return `<button class="donebtn ${size || ''} ${on ? 'on' : ''}" data-done="${esc(id)}" aria-pressed="${on}" title="Đánh dấu xong — chỉ mục đã Done mới tính vào tiến độ"><i></i><span>${on ? 'Done' : 'Undone'}</span></button>`;
+    return `<button class="donebtn ${size || ''} ${on ? 'on' : ''}" data-done="${esc(id)}" aria-pressed="${on}" title="Đánh dấu cá nhân; không thay đổi tiến độ theo code"><i></i><span>${on ? 'Đã đánh dấu' : 'Tự đánh dấu'}</span></button>`;
   }
   function doneStats() {
     const mine = (f) => TRACK.filter(f);
-    const d = (list) => list.filter((x) => isDone(x.id)).length;
+    const d = (list) => list.filter((x) => x.implementation === 'implemented').length;
     const all = TRACK, sys = mine((x) => x.kind === 'sys'), road = mine((x) => x.kind === 'road');
     return { total: all.length, done: d(all), pct: all.length ? Math.round(100 * d(all) / all.length) : 0, sysDone: d(sys), sysTotal: sys.length, roadDone: d(road), roadTotal: road.length, d, mine };
   }
@@ -254,16 +256,17 @@
   function progress() {
     const r = 80, c = 2 * Math.PI * r;
     $('#progressTotal').innerHTML = `
-      <h3 class="panel-h">Tổng thể</h3>
+      <h3 class="panel-h">Theo code / dữ liệu</h3>
       <div class="ring"><svg width="190" height="190" viewBox="0 0 190 190">
         <circle cx="95" cy="95" r="${r}" fill="none" stroke="var(--bg3)" stroke-width="10"/>
         <circle id="ringArc" cx="95" cy="95" r="${r}" fill="none" stroke="var(--gold)" stroke-width="10" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${c}" style="transition: stroke-dashoffset 1.4s cubic-bezier(.2,.7,.2,1)"/>
-      </svg><b id="ringNum" data-v="0">0%</b><small>đã Done</small></div>
+      </svg><b id="ringNum" data-v="0">0%</b><small>mục đã có triển khai</small></div>
       <div class="ring-title" id="ringTitle"></div>
-      <div class="legend"><span>✓ Done<b id="lgDone">0</b></span><span>○ Undone<b id="lgUndone">0</b></span>
+      <div class="legend"><span>Có triển khai<b id="lgDone">0</b></span><span>Một phần / kế hoạch<b id="lgUndone">0</b></span>
         <span class="lg-sub">Hệ thống<b id="lgSys"></b></span><span class="lg-sub">Việc sắp tới<b id="lgRoad"></b></span></div>
-      <p class="done-note">Chỉ những mục bạn bấm <b>Done</b> mới được tính. <span class="dsync"></span></p>
-      <button class="tool" id="doneReset">↺ Đặt lại tất cả về Undone</button>`;
+      <p class="done-note">Tỷ lệ số mục trong danh sách có triển khai, không phải % hoàn thiện game. Đối chiếu source ngày ${fmtDate(D.updated)}; chưa chạy lại Unity. <a href="status-data.json">Nguồn & số đếm</a>.</p>
+      <p class="done-note">Dấu cá nhân lưu riêng. <span class="dsync"></span></p>
+      <button class="tool" id="doneReset">↺ Xoá dấu cá nhân</button>`;
     $('#progressTotal').dataset.c = c;
     $('#progressBars').innerHTML = D.categories.map((cat, i) => {
       if (!TRACK.some((x) => x.cat === cat.id)) return '';
@@ -271,26 +274,27 @@
         <div class="track"><div class="fill" style="--i:${i}" data-w="0"></div></div><div class="pct" data-v="0">0%</div></div>`;
     }).join('');
     $$('.pbar').forEach((b) => b.addEventListener('click', () => { state.sysCat = b.dataset.cat; renderSystems(); go('#systems'); }));
-    $('#doneReset').addEventListener('click', () => { if (confirm('Đặt lại mọi mục về Undone?')) resetDone(); });
+    $('#doneReset').addEventListener('click', () => { if (confirm('Xoá dấu cá nhân? Tiến độ theo code giữ nguyên.')) resetDone(); });
     const last = D.changelog[0].date;
     $('#latestDate').textContent = fmtDate(last);
     $('#latestList').innerHTML = D.changelog.filter((l) => l.date === last).map((l) => `<li>${esc(l.title)}</li>`).join('');
     paintNow();
+    paintProgress();
     setDoneSync('local');
   }
   // Items on the "now" lane that are not Done yet.
   function paintNow() {
-    const list = D.roadmap.filter((r) => r.lane === 'now' && !isDone(roadId(r)));
+    const list = D.roadmap.filter((r) => r.lane === 'now' && r.implementation !== 'implemented');
     $('#nowList').innerHTML = list.length ? list.map((r) =>
       `<div class="now-item"><span>${esc(CAT[r.cat].label)}</span><b>${esc(r.title)}</b>${nbtn(roadId(r), r.title, 'Sắp tới · Đang làm')}${doneBtn(roadId(r), 'sm')}</div>`).join('')
-      : '<p class="empty small">Không còn mục nào đang làm — tất cả đã Done.</p>';
+      : '<p class="empty small">Chưa có mục đang làm trong lần đối chiếu này.</p>';
   }
   function paintProgress() {
     const st = doneStats();
     const arc = $('#ringArc');
     if (arc) arc.style.strokeDashoffset = +$('#progressTotal').dataset.c * (1 - st.pct / 100);
     tween($('#ringNum'), st.pct, (n) => n + '%');
-    $('#ringTitle').textContent = `${st.done} / ${st.total} mục đã Done`;
+    $('#ringTitle').textContent = `${st.done} / ${st.total} mục đã có triển khai`;
     $('#lgDone').textContent = st.done; $('#lgUndone').textContent = st.total - st.done;
     $('#lgSys').textContent = `${st.sysDone} / ${st.sysTotal}`; $('#lgRoad').textContent = `${st.roadDone} / ${st.roadTotal}`;
     $$('#progressBars .pbar').forEach((row) => {
@@ -304,10 +308,10 @@
     paintNow();
     $$('[data-done]').forEach((b) => {
       const on = isDone(b.dataset.done);
-      b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); $('span', b).textContent = on ? 'Done' : 'Undone';
+      b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); $('span', b).textContent = on ? 'Đã đánh dấu' : 'Tự đánh dấu';
       const host = b.closest('.card, .ritem'); if (host) host.classList.toggle('is-done', on);
     });
-    $$('[data-hint]').forEach((h) => { h.textContent = isDone(h.dataset.hint) ? 'Đã tính vào tiến độ.' : 'Chưa tính vào tiến độ — bấm Done khi bạn làm xong.'; });
+    $$('[data-hint]').forEach((h) => { h.textContent = 'Dấu cá nhân không thay đổi trạng thái theo code.'; });
     paintProgress();
   }
   function animateProgress() { paintProgress(); }
@@ -327,7 +331,7 @@
     const list = visible.filter((s) => state.sysCat === 'all' || s.cat === state.sysCat);
     $('#sysCards').innerHTML = list.map((s, i) => `
       <article class="card ${isDone(sysId(s)) ? 'is-done' : ''}" tabindex="0" role="button" data-id="${s.id}" style="--i:${i}">
-        <div class="card-top"><span class="cat">${esc(CAT[s.cat].label)}</span></div>
+        <div class="card-top"><span class="cat">${esc(CAT[s.cat].label)}</span>${implementation(s)}</div>
         <h4>${hl(s.name)}</h4><p>${hl(s.summary)}</p>
         <div class="nums">${(s.numbers || []).slice(0, 3).map(([k, v]) => `<span>${esc(k)} <b>${esc(v)}</b></span>`).join('')}</div>
         <span class="arrow">→</span>
@@ -351,7 +355,8 @@
       <span class="cat">${esc(c.label)}</span>
       <h2 id="dTitle">${esc(s.name)}</h2>
       <p class="lead">${esc(s.summary)}</p>
-      <div class="meta-row done-row">${doneBtn(sysId(s), 'lg')}<span class="done-hint" data-hint="${sysId(s)}">${isDone(sysId(s)) ? 'Đã tính vào tiến độ.' : 'Chưa tính vào tiến độ — bấm Done khi bạn làm xong.'}</span></div>
+      <div class="meta-row done-row">${implementation(s)}${doneBtn(sysId(s), 'lg')}<span class="done-hint" data-hint="${sysId(s)}">Dấu cá nhân không thay đổi trạng thái theo code.</span></div>
+      ${(s.evidence || []).length ? `<details class="source-evidence"><summary>Nguồn đối chiếu</summary><ul>${s.evidence.map(p => `<li><code>${esc(p)}</code></li>`).join('')}</ul><p>Đọc source/asset; không phải kết quả chạy thử mới.</p></details>` : ''}
       ${notesBlock(noteId)}
       <h5>Chi tiết</h5><ul class="det">${s.details.map((d) => `<li>${hl(d)}</li>`).join('')}</ul>
       ${s.numbers && s.numbers.length ? `<h5>Số liệu</h5><table class="table">${s.numbers.map(([k, v]) => `<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`).join('')}</table>` : ''}
@@ -399,7 +404,7 @@
     $('#kanban').innerHTML = LANES.map(([lane, label]) => {
       const items = D.roadmap.filter((r) => r.lane === lane && matches(r.title, r.text, CAT[r.cat].label));
       return `<div class="lane" data-lane="${lane}"><div class="lane-h"><b>${label}</b><span>${items.length}</span></div>
-        ${items.map((r, i) => `<div class="ritem ${isDone(roadId(r)) ? 'is-done' : ''}" style="--i:${i}"><div class="ritem-h"><span class="tag">${esc(CAT[r.cat].label)}</span><span class="ritem-act">${doneBtn(roadId(r), 'sm')}${nbtn('road:' + slug(r.title), r.title, 'Sắp tới · ' + label)}</span></div><b>${hl(r.title)}</b><p>${hl(r.text)}</p></div>`).join('') || '<p class="empty">—</p>'}</div>`;
+        ${items.map((r, i) => `<div class="ritem ${isDone(roadId(r)) ? 'is-done' : ''}" style="--i:${i}"><div class="ritem-h"><span class="tag">${esc(CAT[r.cat].label)}</span><span class="ritem-act">${doneBtn(roadId(r), 'sm')}${nbtn('road:' + slug(r.title), r.title, 'Sắp tới · ' + label)}</span></div>${implementation(r)}<b>${hl(r.title)}</b><p>${hl(r.text)}</p></div>`).join('') || '<p class="empty">—</p>'}</div>`;
     }).join('');
   }
   const WD = ['Chủ nhật', 'Thứ hai', 'Thứ ba', 'Thứ tư', 'Thứ năm', 'Thứ sáu', 'Thứ bảy'];

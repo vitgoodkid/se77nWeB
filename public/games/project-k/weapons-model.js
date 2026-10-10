@@ -15,7 +15,7 @@ export function baseline(weapon, catalog) {
       line.value *= original.attack * (1 + .035 * (Math.max(1, original.uniqueLevel) - 1));
     }
   }
-  return { included: true, name: original.name, rarity: rarityOf(original.grade),
+  return { included: !original.retired, name: original.name, rarity: rarityOf(original.grade),
     attack: original.attack, attackSpeed: original.attackSpeed, critChance: original.critChance,
     guard: original.guard, weight: original.weight, element: catalog.elements[original.element],
     uniqueLevel: original.uniqueLevel, uniqueLines: lines, lore: original.lore, notes: '' };

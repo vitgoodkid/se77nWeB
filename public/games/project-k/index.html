@@ -85,7 +85,7 @@
   </section>
 
   <section class="sec" id="progress">
-    <div class="sec-head"><span class="num"></span><div class="sec-t"><h2>Tiến độ</h2><p class="sub">Chỉ tính những mục bạn đã bấm <b>Done</b> (mặc định Undone) — hệ thống và việc sắp tới. Bấm một mảng để lọc hệ thống.</p></div></div>
+    <div class="sec-head"><span class="num"></span><div class="sec-t"><h2>Tiến độ</h2><p class="sub">Đối chiếu code và dữ liệu ngày 10/10/2026. Phân biệt phần đã triển khai, làm một phần và còn trong kế hoạch. Đánh dấu cá nhân không thay đổi tiến độ công khai.</p></div></div>
     <div class="dash">
       <div class="panel ring-panel reveal" id="progressTotal"></div>
       <div class="panel reveal" style="--d:1"><h3 class="panel-h">Theo mảng</h3><div class="pbars" id="progressBars"></div></div>
@@ -116,7 +116,7 @@
 
   <section class="sec" id="weapons">
     <a class="btn" href="weapons.html">Mở catalog · chọn và chỉnh sửa từng vũ khí</a>
-    <div class="sec-head"><span class="num"></span><div class="sec-t"><h2>Vũ khí &amp; bộ đòn</h2><p class="sub">6 bộ đòn hoàn chỉnh, 347 model vũ khí — cầm và đeo tự khớp với nhân vật.</p></div></div>
+    <div class="sec-head"><span class="num"></span><div class="sec-t"><h2>Vũ khí &amp; bộ đòn</h2><p class="sub">6 bộ đòn đã triển khai. Catalog giữ 347 model, trong đó 73 món còn được phát trong game sau đợt chọn lọc. Combat trên Sidekick vẫn cần kiểm tra và tinh chỉnh.</p></div></div>
     <div class="weapons reveal">
       <div class="wtabs" id="wTabs" role="tablist"></div>
       <div class="wview" id="wView"></div>
@@ -144,34 +144,35 @@
     </div>
     <div class="hub">
       <div class="hub-shots reveal">
-        <img class="hs-main" src="img/hub-square.jpg" alt="Hearthvale quảng trường" loading="lazy" data-lightbox />
-        <img src="img/hub-farm.jpg" alt="Trang trại" loading="lazy" data-lightbox />
-        <img src="img/hub-west.jpg" alt="Hearthvale phía tây" loading="lazy" data-lightbox />
+        <img class="hs-main" src="img/willow-village.jpg" alt="Làng Willowmere" loading="lazy" data-lightbox />
+        <img src="img/willow-top.jpg" alt="Willowmere nhìn từ trên" loading="lazy" data-lightbox />
+        <img src="img/willow-sinkhole.jpg" alt="Hố sụt tại Willowmere" loading="lazy" data-lightbox />
       </div>
       <div class="world-text reveal" style="--d:1">
-        <span class="kicker">Hub · scene tạm gỡ 03/10</span>
-        <h3 class="h3 big">Làng Hearthvale</h3>
-        <p>Hub của người chơi: lửa trại, 6 NPC dịch vụ và trang trại chạy theo giờ thật. Scene đã gỡ trong đợt dọn 03/10 — code dịch vụ và trang trại vẫn còn, trạm NPC hiện đặt trong Eldmoor.</p>
+        <span class="kicker">Hub · scene mở đầu bản build</span>
+        <h3 class="h3 big">Làng Willowmere</h3>
+        <p>Làng mở với NPC dịch vụ, hội thoại, quest, lửa trại và quái ngày/đêm. Willowmere đứng đầu Build Settings. Quest dẫn sang Sunscar và các Rift cốt truyện; những chương sau vẫn đang phát triển.</p>
         <ul class="npcs">
           <li><b>Brannoc</b><span>Thợ rèn — gỡ dòng, Khắc Ấn, rune trang bị, phân giải, rèn base</span></li>
           <li><b>Old Mirelle</b><span>Thầy thuốc — 10 thuốc buff</span></li>
           <li><b>Hesta</b><span>Bếp — 5 món + Honey Milk</span></li>
           <li><b>Quill</b><span>Tạp hoá — 14 đồ vui, mua / bán</span></li>
           <li><b>Keeper Aldous</b><span>Điện Ký Ức — đánh lại boss</span></li>
-          <li><b>Tẩy Tủy</b><span>Hoàn điểm passive / thuộc tính</span></li>
+          <li><b>The Unbinder</b><span>Hoàn điểm passive / thuộc tính</span></li>
         </ul>
       </div>
     </div>
     <h3 class="h3 reveal">Các scene khác</h3>
     <div class="scenes">
-      <div class="reveal"><b>Vương quốc Eldmoor</b><span>Thế giới demo POLYGON Fantasy Kingdom, 13 NPC, 4 lửa trại.</span></div>
+      <div class="reveal"><b>Sunscar</b><span>Vùng sa mạc, cấp tối thiểu 8; Travel mở theo cờ cổng phía nam.</span></div>
+      <div class="reveal"><b>Rift</b><span>7 thế giới đã khai báo; mỗi lượt 1 tầng, hạ 75% quái để mở đấu trường boss. Khả năng vào phụ thuộc quest hoặc Rift Stone.</span></div>
       <div class="reveal" style="--d:1"><b>Training Room</b><span>Hình nộm, cột leo, xà chui.</span></div>
       <div class="reveal" style="--d:2"><b>Weapon Tuner</b><span>Scene công cụ chỉnh tư thế vũ khí.</span></div>
     </div>
   </section>
 
   <section class="sec" id="enemies">
-    <div class="sec-head"><span class="num"></span><div class="sec-t"><h2>Kẻ địch</h2><p class="sub">8 boss trong lâu đài, 26 loại quái thường, quái Magic / Rare có mod.</p></div></div>
+    <div class="sec-head"><span class="num"></span><div class="sec-t"><h2>Kẻ địch</h2><p class="sub">8 boss trong lâu đài, 41 prefab trong thư mục Monsters; quái Magic / Rare có mod. Số prefab không đồng nghĩa với 41 bộ AI riêng.</p></div></div>
     <figure class="boss-shot reveal">
       <img src="img/boss-archdemon.jpg" alt="Crimson Archdemon" loading="lazy" data-lightbox />
       <img src="img/boss-archdemon-2.jpg" alt="Archdemon — đòn đập" loading="lazy" data-lightbox />
@@ -186,7 +187,7 @@
   </section>
 
   <section class="sec" id="roadmap">
-    <div class="sec-head"><span class="num"></span><div class="sec-t"><h2>Sắp tới</h2><p class="sub">Đang làm, tiếp theo, để sau và ý tưởng — mỗi mục gắn với một mảng. Bấm <b>Done</b> khi xong để tính vào tiến độ.</p></div></div>
+    <div class="sec-head"><span class="num"></span><div class="sec-t"><h2>Lộ trình</h2><p class="sub">Phần đang làm, kế hoạch và những mục đã có triển khai trong code. Mỗi mục có trạng thái riêng; dấu cá nhân dùng để theo dõi việc của bạn.</p></div></div>
     <div class="kanban" id="kanban"></div>
   </section>
 
@@ -197,7 +198,7 @@
   </section>
 
   <section class="sec" id="gallery">
-    <div class="sec-head"><span class="num"></span><div class="sec-t"><h2>Ảnh trong game</h2></div></div>
+    <div class="sec-head"><span class="num"></span><div class="sec-t"><h2>Ảnh trong game</h2><p class="sub">Ảnh từ các đợt phát triển trước; ảnh lịch sử có thể dùng nhân vật hoặc scene cũ.</p></div></div>
     <div class="gallery" id="galleryBox"></div>
   </section>
 

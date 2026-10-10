@@ -1,5 +1,5 @@
 {
-  "auditedAt": "2026-10-10T08:48:12.601390+00:00",
+  "auditedAt": "2026-10-10T10:02:26.006505+00:00",
   "method": "Read-only source and serialized asset audit; no new Unity playtest.",
   "counts": {
     "weapons": 347,
@@ -925,7 +925,7 @@
     },
     {
       "path": "Assets/_Game/Scripts/Runtime/UI/SettingsWindow.Character.cs",
-      "sha256": "e79c3b3f47249680a84797520bc32fd58ab7f38f85e173b0b6b3a77d8fe81f59"
+      "sha256": "e432bdde02f66c4ea89866084d434bbed3ad40603ce7199b8745451c994b1ea3"
     },
     {
       "path": "Assets/_Game/Scripts/Runtime/World/AreaLevel.cs",

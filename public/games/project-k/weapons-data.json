@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-10T04:33:16.903760+00:00",
+  "generatedAt": "2026-10-10T10:04:45.437172+00:00",
   "source": {
     "asset": "Assets/_Game/Resources/WeaponCatalog.asset",
-    "sha256": "2035f0512c24b48d9781b55d45550f79162814ea3f2b19592f966f3b34f8fcb8",
+    "sha256": "92ee19b980f03fcd3f92d04007eca9a0d55eadfc95374e5aca8d2b359aab6b9c",
     "builder": "Assets/_Game/Scripts/Editor/WeaponCatalogBuilder.cs",
     "count": 347
   },
@@ -919,7 +919,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -939,7 +940,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -961,30 +963,49 @@
         "uniqueLines": [
           {
             "id": "inferno_heart",
-            "value": 1.6
+            "value": 1.6,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "executioner",
-            "value": 0.42772853
+            "value": 0.42772853,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "fire_add",
-            "value": 0.31495953
+            "value": 0.31495953,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "crit_dmg",
-            "value": 0.74328256
+            "value": 0.74328256,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "attack_flat",
-            "value": 17.958525
+            "value": 17.958525,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "attack_pct",
-            "value": 0.30921182
+            "value": 0.30921182,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           }
         ],
-        "lore": "Quenched in a dragon's last breath. It has not cooled since."
+        "lore": "Quenched in a dragon's last breath. It has not cooled since.",
+        "retired": true
       }
     },
     {
@@ -1004,7 +1025,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -1024,7 +1046,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -1044,7 +1067,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -1064,7 +1088,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -1086,26 +1111,42 @@
         "uniqueLines": [
           {
             "id": "giantslayer",
-            "value": 0.316891
+            "value": 0.316891,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "guardian",
-            "value": 0.2696812
+            "value": 0.2696812,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "life_steal",
-            "value": 0.042049356
+            "value": 0.042049356,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "attack_pct",
-            "value": 0.37656796
+            "value": 0.37656796,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "crit_chance",
-            "value": 0.07214282
+            "value": 0.07214282,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           }
         ],
-        "lore": "Priests blessed it. Then they feared it."
+        "lore": "Priests blessed it. Then they feared it.",
+        "retired": true
       }
     },
     {
@@ -1125,7 +1166,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -1147,26 +1189,42 @@
         "uniqueLines": [
           {
             "id": "echo",
-            "value": 0.46576422
+            "value": 0.46576422,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "berserk",
-            "value": 0.40311703
+            "value": 0.40311703,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "life_on_hit",
-            "value": 7.258943
+            "value": 7.258943,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "crit_chance",
-            "value": 0.10333887
+            "value": 0.10333887,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "attack_pct",
-            "value": 0.239635
+            "value": 0.239635,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           }
         ],
-        "lore": "Its maker signed it in blood, as the old smiths did."
+        "lore": "Its maker signed it in blood, as the old smiths did.",
+        "retired": true
       }
     },
     {
@@ -1186,7 +1244,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -1206,7 +1265,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -1228,26 +1288,42 @@
         "uniqueLines": [
           {
             "id": "bleed",
-            "value": 0.07089276
+            "value": 0.07089276,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "vampiric",
-            "value": 0.2405812
+            "value": 0.2405812,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "life_steal",
-            "value": 0.030548522
+            "value": 0.030548522,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "mana_steal",
-            "value": 0.03853453
+            "value": 0.03853453,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "crit_dmg",
-            "value": 0.46745297
+            "value": 0.46745297,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           }
         ],
-        "lore": "A relic of the siege; the castle fell, the blade did not."
+        "lore": "A relic of the siege; the castle fell, the blade did not.",
+        "retired": true
       }
     },
     {
@@ -1267,7 +1343,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -1287,7 +1364,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -1307,7 +1385,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -1327,7 +1406,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -1347,7 +1427,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -1367,7 +1448,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -1387,7 +1469,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -1407,7 +1490,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -1427,7 +1511,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -1447,7 +1532,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -1467,7 +1553,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -1487,7 +1574,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -1507,7 +1595,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -1527,7 +1616,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -1547,7 +1637,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -1569,30 +1660,49 @@
         "uniqueLines": [
           {
             "id": "stormbringer",
-            "value": 0.7
+            "value": 0.7,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "executioner",
-            "value": 0.36001295
+            "value": 0.36001295,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "lightning_add",
-            "value": 0.31817788
+            "value": 0.31817788,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "crit_chance",
-            "value": 0.113454856
+            "value": 0.113454856,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "poise",
-            "value": 0.40404916
+            "value": 0.40404916,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "life_steal",
-            "value": 0.04674233
+            "value": 0.04674233,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           }
         ],
-        "lore": "Every storm owes this steel a debt, and it collects."
+        "lore": "Every storm owes this steel a debt, and it collects.",
+        "retired": true
       }
     },
     {
@@ -1614,26 +1724,42 @@
         "uniqueLines": [
           {
             "id": "vampiric",
-            "value": 0.21652392
+            "value": 0.21652392,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "ignite",
-            "value": 0.25726545
+            "value": 0.25726545,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "poise",
-            "value": 0.26825738
+            "value": 0.26825738,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "life_steal",
-            "value": 0.045392342
+            "value": 0.045392342,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "life_on_hit",
-            "value": 5.670843
+            "value": 5.670843,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           }
         ],
-        "lore": "Found clutched in a hand that had long since turned to bone."
+        "lore": "Found clutched in a hand that had long since turned to bone.",
+        "retired": true
       }
     },
     {
@@ -1653,7 +1779,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -1673,7 +1800,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -1693,7 +1821,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -1713,7 +1842,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -1733,7 +1863,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -1753,7 +1884,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -1773,7 +1905,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -1793,7 +1926,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -1813,7 +1947,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -1835,26 +1970,42 @@
         "uniqueLines": [
           {
             "id": "bleed",
-            "value": 0.06256895
+            "value": 0.06256895,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "siphon",
-            "value": 4.3614206
+            "value": 4.3614206,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "attack_pct",
-            "value": 0.23473881
+            "value": 0.23473881,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "attack_flat",
-            "value": 24.059074
+            "value": 24.059074,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "mana_steal",
-            "value": 0.03348841
+            "value": 0.03348841,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           }
         ],
-        "lore": "Priests blessed it. Then they feared it."
+        "lore": "Priests blessed it. Then they feared it.",
+        "retired": false
       }
     },
     {
@@ -1874,7 +2025,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -1896,26 +2048,42 @@
         "uniqueLines": [
           {
             "id": "siphon",
-            "value": 4.284358
+            "value": 4.284358,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "shockwave",
-            "value": 0.87910134
+            "value": 0.87910134,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "life_steal",
-            "value": 0.036357872
+            "value": 0.036357872,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "crit_chance",
-            "value": 0.09129315
+            "value": 0.09129315,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "stamina",
-            "value": 0.14600241
+            "value": 0.14600241,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           }
         ],
-        "lore": "Priests blessed it. Then they feared it."
+        "lore": "Priests blessed it. Then they feared it.",
+        "retired": false
       }
     },
     {
@@ -1935,7 +2103,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -1955,7 +2124,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -1975,7 +2145,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -1995,7 +2166,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -2017,26 +2189,42 @@
         "uniqueLines": [
           {
             "id": "ignite",
-            "value": 0.2259286
+            "value": 0.2259286,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "vampiric",
-            "value": 0.27359015
+            "value": 0.27359015,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "fire_add",
-            "value": 0.14651205
+            "value": 0.14651205,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "attack_pct",
-            "value": 0.36400425
+            "value": 0.36400425,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "attack_flat",
-            "value": 23.546043
+            "value": 23.546043,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           }
         ],
-        "lore": "Found clutched in a hand that had long since turned to bone."
+        "lore": "Found clutched in a hand that had long since turned to bone.",
+        "retired": true
       }
     },
     {
@@ -2056,7 +2244,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -2076,7 +2265,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -2098,30 +2288,49 @@
         "uniqueLines": [
           {
             "id": "winter_oath",
-            "value": 2
+            "value": 2,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "sunder",
-            "value": 0.4923991
+            "value": 0.4923991,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "frost_add",
-            "value": 0.31578526
+            "value": 0.31578526,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "atk_speed",
-            "value": 0.17840324
+            "value": 0.17840324,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "life_steal",
-            "value": 0.052540634
+            "value": 0.052540634,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "boss",
-            "value": 0.31512406
+            "value": 0.31512406,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           }
         ],
-        "lore": "Sworn on a frozen throne; the cold keeps the promise."
+        "lore": "Sworn on a frozen throne; the cold keeps the promise.",
+        "retired": false
       }
     },
     {
@@ -2141,7 +2350,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -2163,26 +2373,42 @@
         "uniqueLines": [
           {
             "id": "shockwave",
-            "value": 0.9387654
+            "value": 0.9387654,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "echo",
-            "value": 0.49389052
+            "value": 0.49389052,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "atk_speed",
-            "value": 0.14088373
+            "value": 0.14088373,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "crit_chance",
-            "value": 0.084337816
+            "value": 0.084337816,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "poise",
-            "value": 0.31331104
+            "value": 0.31331104,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           }
         ],
-        "lore": "Priests blessed it. Then they feared it."
+        "lore": "Priests blessed it. Then they feared it.",
+        "retired": true
       }
     },
     {
@@ -2204,26 +2430,42 @@
         "uniqueLines": [
           {
             "id": "giantslayer",
-            "value": 0.3107408
+            "value": 0.3107408,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "venom",
-            "value": 0.14905348
+            "value": 0.14905348,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "boss",
-            "value": 0.24897194
+            "value": 0.24897194,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "crit_dmg",
-            "value": 0.40766433
+            "value": 0.40766433,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "stamina",
-            "value": 0.14403445
+            "value": 0.14403445,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           }
         ],
-        "lore": "Priests blessed it. Then they feared it."
+        "lore": "Priests blessed it. Then they feared it.",
+        "retired": false
       }
     },
     {
@@ -2245,26 +2487,42 @@
         "uniqueLines": [
           {
             "id": "sunder",
-            "value": 0.5577379
+            "value": 0.5577379,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "momentum",
-            "value": 0.05546182
+            "value": 0.05546182,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "life_on_hit",
-            "value": 4.432103
+            "value": 4.432103,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "poise",
-            "value": 0.25274494
+            "value": 0.25274494,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "stamina",
-            "value": 0.13434193
+            "value": 0.13434193,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           }
         ],
-        "lore": "Its maker signed it in blood, as the old smiths did."
+        "lore": "Its maker signed it in blood, as the old smiths did.",
+        "retired": true
       }
     },
     {
@@ -2284,7 +2542,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -2306,30 +2565,49 @@
         "uniqueLines": [
           {
             "id": "bloodthirst",
-            "value": 0.15
+            "value": 0.15,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "executioner",
-            "value": 0.33999273
+            "value": 0.33999273,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "life_steal",
-            "value": 0.055311613
+            "value": 0.055311613,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "boss",
-            "value": 0.39271155
+            "value": 0.39271155,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "attack_pct",
-            "value": 0.37502006
+            "value": 0.37502006,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "crit_dmg",
-            "value": 0.54802674
+            "value": 0.54802674,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           }
         ],
-        "lore": "It drinks, and its wielder is never thirsty."
+        "lore": "It drinks, and its wielder is never thirsty.",
+        "retired": true
       }
     },
     {
@@ -2349,7 +2627,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -2369,7 +2648,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -2389,7 +2669,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -2409,7 +2690,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -2429,7 +2711,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -2449,7 +2732,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -2469,7 +2753,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -2489,7 +2774,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -2511,26 +2797,42 @@
         "uniqueLines": [
           {
             "id": "guardian",
-            "value": 0.2814567
+            "value": 0.2814567,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "echo",
-            "value": 0.512595
+            "value": 0.512595,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "holy_add",
-            "value": 0.19692573
+            "value": 0.19692573,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "attack_pct",
-            "value": 0.3250463
+            "value": 0.3250463,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "atk_speed",
-            "value": 0.10705588
+            "value": 0.10705588,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           }
         ],
-        "lore": "A relic of the siege; the castle fell, the blade did not."
+        "lore": "A relic of the siege; the castle fell, the blade did not.",
+        "retired": true
       }
     },
     {
@@ -2550,7 +2852,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -2570,7 +2873,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -2590,7 +2894,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -2610,7 +2915,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -2630,7 +2936,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -2650,7 +2957,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -2670,7 +2978,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -2690,7 +2999,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -2710,7 +3020,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -2730,7 +3041,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -2750,7 +3062,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -2770,7 +3083,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -2790,7 +3104,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -2810,7 +3125,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -2830,7 +3146,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -2850,7 +3167,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -2870,7 +3188,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -2890,7 +3209,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -2912,26 +3232,42 @@
         "uniqueLines": [
           {
             "id": "berserk",
-            "value": 0.34735644
+            "value": 0.34735644,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "giantslayer",
-            "value": 0.3011127
+            "value": 0.3011127,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "crit_chance",
-            "value": 0.08209786
+            "value": 0.08209786,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "life_on_hit",
-            "value": 6.7171474
+            "value": 6.7171474,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "poise",
-            "value": 0.39204127
+            "value": 0.39204127,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           }
         ],
-        "lore": "Found clutched in a hand that had long since turned to bone."
+        "lore": "Found clutched in a hand that had long since turned to bone.",
+        "retired": true
       }
     },
     {
@@ -2951,7 +3287,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -2971,7 +3308,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -2991,7 +3329,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -3011,7 +3350,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -3031,7 +3371,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -3051,7 +3392,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -3071,7 +3413,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -3091,7 +3434,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -3111,7 +3455,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -3131,7 +3476,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -3151,7 +3497,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -3171,7 +3518,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -3191,7 +3539,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -3211,7 +3560,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -3231,7 +3581,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -3251,7 +3602,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -3271,7 +3623,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -3291,7 +3644,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -3311,7 +3665,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -3331,7 +3686,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -3351,7 +3707,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -3373,30 +3730,49 @@
         "uniqueLines": [
           {
             "id": "soul_reaver",
-            "value": 0.8
+            "value": 0.8,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "executioner",
-            "value": 0.33058414
+            "value": 0.33058414,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "shadow_add",
-            "value": 0.21304789
+            "value": 0.21304789,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "poise",
-            "value": 0.49440897
+            "value": 0.49440897,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "life_steal",
-            "value": 0.047770917
+            "value": 0.047770917,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "attack_pct",
-            "value": 0.3890877
+            "value": 0.3890877,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           }
         ],
-        "lore": "The dead it makes do not leave. They serve."
+        "lore": "The dead it makes do not leave. They serve.",
+        "retired": false
       }
     },
     {
@@ -3416,7 +3792,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -3438,26 +3815,42 @@
         "uniqueLines": [
           {
             "id": "siphon",
-            "value": 3.8767428
+            "value": 3.8767428,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "chain",
-            "value": 0.26594734
+            "value": 0.26594734,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "boss",
-            "value": 0.17046814
+            "value": 0.17046814,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "crit_chance",
-            "value": 0.06947568
+            "value": 0.06947568,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "stamina",
-            "value": 0.15792051
+            "value": 0.15792051,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           }
         ],
-        "lore": "Found clutched in a hand that had long since turned to bone."
+        "lore": "Found clutched in a hand that had long since turned to bone.",
+        "retired": true
       }
     },
     {
@@ -3479,26 +3872,42 @@
         "uniqueLines": [
           {
             "id": "momentum",
-            "value": 0.059770714
+            "value": 0.059770714,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "frostbite",
-            "value": 0.23349397
+            "value": 0.23349397,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "boss",
-            "value": 0.18776411
+            "value": 0.18776411,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "poise",
-            "value": 0.3674445
+            "value": 0.3674445,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "mana_steal",
-            "value": 0.041128803
+            "value": 0.041128803,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           }
         ],
-        "lore": "Its maker signed it in blood, as the old smiths did."
+        "lore": "Its maker signed it in blood, as the old smiths did.",
+        "retired": true
       }
     },
     {
@@ -3518,7 +3927,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -3538,7 +3948,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -3558,7 +3969,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -3578,7 +3990,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -3598,7 +4011,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -3618,7 +4032,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -3638,7 +4053,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -3658,7 +4074,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -3680,26 +4097,42 @@
         "uniqueLines": [
           {
             "id": "echo",
-            "value": 0.40805206
+            "value": 0.40805206,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "riposte",
-            "value": 0.8059433
+            "value": 0.8059433,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "life_steal",
-            "value": 0.037765667
+            "value": 0.037765667,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "attack_pct",
-            "value": 0.27585095
+            "value": 0.27585095,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "life_on_hit",
-            "value": 7.5160966
+            "value": 7.5160966,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           }
         ],
-        "lore": "A relic of the siege; the castle fell, the blade did not."
+        "lore": "A relic of the siege; the castle fell, the blade did not.",
+        "retired": false
       }
     },
     {
@@ -3721,26 +4154,42 @@
         "uniqueLines": [
           {
             "id": "siphon",
-            "value": 4.320178
+            "value": 4.320178,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "windstep",
-            "value": 0.3085762
+            "value": 0.3085762,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "stamina",
-            "value": 0.1498798
+            "value": 0.1498798,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "crit_chance",
-            "value": 0.090074256
+            "value": 0.090074256,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "life_steal",
-            "value": 0.03069118
+            "value": 0.03069118,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           }
         ],
-        "lore": "A relic of the siege; the castle fell, the blade did not."
+        "lore": "A relic of the siege; the castle fell, the blade did not.",
+        "retired": true
       }
     },
     {
@@ -3760,7 +4209,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -3780,7 +4230,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -3800,7 +4251,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -3820,7 +4272,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -3840,7 +4293,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -3860,7 +4314,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -3880,7 +4335,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -3900,7 +4356,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -3920,7 +4377,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -3940,7 +4398,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -3960,7 +4419,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -3980,7 +4440,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -4000,7 +4461,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -4020,7 +4482,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -4042,30 +4505,49 @@
         "uniqueLines": [
           {
             "id": "titan_breaker",
-            "value": 0.4
+            "value": 0.4,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "sunder",
-            "value": 0.6167186
+            "value": 0.6167186,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "mana_steal",
-            "value": 0.052417193
+            "value": 0.052417193,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "life_on_hit",
-            "value": 8.64552
+            "value": 8.64552,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "attack_flat",
-            "value": 16.605247
+            "value": 16.605247,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "crit_chance",
-            "value": 0.11832159
+            "value": 0.11832159,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           }
         ],
-        "lore": "Forged to fell things that should not stand."
+        "lore": "Forged to fell things that should not stand.",
+        "retired": true
       }
     },
     {
@@ -4085,7 +4567,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -4105,7 +4588,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -4125,7 +4609,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -4147,26 +4632,42 @@
         "uniqueLines": [
           {
             "id": "precision",
-            "value": 0.13642268
+            "value": 0.13642268,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "vampiric",
-            "value": 0.24091762
+            "value": 0.24091762,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "life_steal",
-            "value": 0.038303647
+            "value": 0.038303647,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "attack_pct",
-            "value": 0.3821679
+            "value": 0.3821679,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "crit_chance",
-            "value": 0.061820354
+            "value": 0.061820354,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           }
         ],
-        "lore": "A relic of the siege; the castle fell, the blade did not."
+        "lore": "A relic of the siege; the castle fell, the blade did not.",
+        "retired": true
       }
     },
     {
@@ -4186,7 +4687,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -4206,7 +4708,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -4228,30 +4731,49 @@
         "uniqueLines": [
           {
             "id": "void_edge",
-            "value": 2.5
+            "value": 2.5,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "executioner",
-            "value": 0.4119611
+            "value": 0.4119611,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "shadow_add",
-            "value": 0.24391451
+            "value": 0.24391451,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "attack_flat",
-            "value": 16.2935
+            "value": 16.2935,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "mana_steal",
-            "value": 0.048314683
+            "value": 0.048314683,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "stamina",
-            "value": 0.2175347
+            "value": 0.2175347,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           }
         ],
-        "lore": "A sliver of the dark between the stars, given a hilt."
+        "lore": "A sliver of the dark between the stars, given a hilt.",
+        "retired": false
       }
     },
     {
@@ -4271,7 +4793,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -4291,7 +4814,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -4311,7 +4835,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -4331,7 +4856,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -4351,7 +4877,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -4371,7 +4898,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -4391,7 +4919,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -4411,7 +4940,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -4431,7 +4961,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -4451,7 +4982,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -4471,7 +5003,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -4491,7 +5024,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -4511,7 +5045,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -4531,7 +5066,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -4551,7 +5087,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -4571,7 +5108,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -4591,7 +5129,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -4611,7 +5150,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -4633,26 +5173,42 @@
         "uniqueLines": [
           {
             "id": "vampiric",
-            "value": 0.27030954
+            "value": 0.27030954,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "windstep",
-            "value": 0.29828095
+            "value": 0.29828095,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "crit_dmg",
-            "value": 0.3234541
+            "value": 0.3234541,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "crit_chance",
-            "value": 0.06692616
+            "value": 0.06692616,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "attack_pct",
-            "value": 0.26046607
+            "value": 0.26046607,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           }
         ],
-        "lore": "Priests blessed it. Then they feared it."
+        "lore": "Priests blessed it. Then they feared it.",
+        "retired": true
       }
     },
     {
@@ -4672,7 +5228,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -4692,7 +5249,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -4712,7 +5270,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -4732,7 +5291,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -4752,7 +5312,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -4772,7 +5333,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -4792,7 +5354,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -4812,7 +5375,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -4832,7 +5396,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -4852,7 +5417,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -4872,7 +5438,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -4892,7 +5459,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -4912,7 +5480,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -4932,7 +5501,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -4952,7 +5522,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -4974,30 +5545,49 @@
         "uniqueLines": [
           {
             "id": "phoenix",
-            "value": 0.4
+            "value": 0.4,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "precision",
-            "value": 0.17146644
+            "value": 0.17146644,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "fire_add",
-            "value": 0.19256711
+            "value": 0.19256711,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "atk_speed",
-            "value": 0.13848013
+            "value": 0.13848013,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "crit_dmg",
-            "value": 0.5207732
+            "value": 0.5207732,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "attack_pct",
-            "value": 0.4442765
+            "value": 0.4442765,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           }
         ],
-        "lore": "Ash to flame, flame to ash - and back again."
+        "lore": "Ash to flame, flame to ash - and back again.",
+        "retired": true
       }
     },
     {
@@ -5017,7 +5607,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -5037,7 +5628,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -5057,7 +5649,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -5077,7 +5670,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -5097,7 +5691,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -5117,7 +5712,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -5139,30 +5735,49 @@
         "uniqueLines": [
           {
             "id": "judgement",
-            "value": 3
+            "value": 3,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "giantslayer",
-            "value": 0.35509688
+            "value": 0.35509688,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "holy_add",
-            "value": 0.24253088
+            "value": 0.24253088,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "mana_steal",
-            "value": 0.035742555
+            "value": 0.035742555,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "attack_flat",
-            "value": 20.933035
+            "value": 20.933035,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "attack_pct",
-            "value": 0.4582866
+            "value": 0.4582866,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           }
         ],
-        "lore": "Those who strike at its bearer are weighed, and found wanting."
+        "lore": "Those who strike at its bearer are weighed, and found wanting.",
+        "retired": true
       }
     },
     {
@@ -5182,7 +5797,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -5202,7 +5818,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -5222,7 +5839,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -5244,26 +5862,42 @@
         "uniqueLines": [
           {
             "id": "berserk",
-            "value": 0.34770566
+            "value": 0.34770566,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "frostbite",
-            "value": 0.22141634
+            "value": 0.22141634,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "life_on_hit",
-            "value": 4.3458467
+            "value": 4.3458467,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "crit_chance",
-            "value": 0.07071182
+            "value": 0.07071182,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "attack_pct",
-            "value": 0.38982895
+            "value": 0.38982895,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           }
         ],
-        "lore": "Priests blessed it. Then they feared it."
+        "lore": "Priests blessed it. Then they feared it.",
+        "retired": true
       }
     },
     {
@@ -5283,7 +5917,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -5303,7 +5938,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -5323,7 +5959,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -5343,7 +5980,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -5363,7 +6001,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -5383,7 +6022,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -5403,7 +6043,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -5423,7 +6064,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -5443,7 +6085,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -5463,7 +6106,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -5483,7 +6127,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -5503,7 +6148,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -5523,7 +6169,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -5543,7 +6190,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -5563,7 +6211,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -5583,7 +6232,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -5603,7 +6253,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -5623,7 +6274,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -5643,7 +6295,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -5663,7 +6316,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -5683,7 +6337,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -5703,7 +6358,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -5723,7 +6379,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -5743,7 +6400,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -5763,7 +6421,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -5783,7 +6442,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -5803,7 +6463,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -5823,7 +6484,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -5843,7 +6505,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -5863,7 +6526,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -5883,7 +6547,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -5903,7 +6568,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -5923,7 +6589,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -5943,7 +6610,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -5963,7 +6631,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -5983,7 +6652,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -6003,7 +6673,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -6023,7 +6694,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -6043,7 +6715,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -6063,7 +6736,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -6083,7 +6757,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -6103,7 +6778,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -6123,7 +6799,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -6143,7 +6820,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -6163,7 +6841,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -6183,7 +6862,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -6203,7 +6883,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -6223,7 +6904,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -6243,7 +6925,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -6263,7 +6946,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -6283,7 +6967,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -6303,7 +6988,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -6323,7 +7009,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -6343,7 +7030,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -6363,7 +7051,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -6383,7 +7072,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -6403,7 +7093,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -6423,7 +7114,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -6443,7 +7135,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -6463,7 +7156,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -6483,7 +7177,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -6503,7 +7198,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -6523,7 +7219,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -6543,7 +7240,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -6563,7 +7261,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -6583,7 +7282,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -6603,7 +7303,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -6623,7 +7324,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -6643,7 +7345,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -6663,7 +7366,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -6683,7 +7387,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -6703,7 +7408,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -6723,7 +7429,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -6743,7 +7450,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -6763,7 +7471,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -6783,7 +7492,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -6803,7 +7513,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -6825,30 +7536,49 @@
         "uniqueLines": [
           {
             "id": "tempest",
-            "value": 0.06
+            "value": 0.06,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "windstep",
-            "value": 0.34995958
+            "value": 0.34995958,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "boss",
-            "value": 0.21961991
+            "value": 0.21961991,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "poise",
-            "value": 0.3851623
+            "value": 0.3851623,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "attack_flat",
-            "value": 31.383904
+            "value": 31.383904,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "attack_pct",
-            "value": 0.51598877
+            "value": 0.51598877,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           }
         ],
-        "lore": "The faster it moves, the less it can be stopped."
+        "lore": "The faster it moves, the less it can be stopped.",
+        "retired": true
       }
     },
     {
@@ -6859,16 +7589,53 @@
       "icon": "weapon-icons/pd_crysta_halberdl_01.webp",
       "original": {
         "name": "Tempered Pike",
-        "grade": 0,
+        "grade": 4,
         "attack": 45,
         "attackSpeed": 0.022127999,
         "critChance": 0.031524,
         "guard": 0,
         "weight": 12.5,
-        "element": 0,
-        "uniqueLevel": 1,
-        "uniqueLines": [],
-        "lore": ""
+        "element": 7,
+        "uniqueLevel": 50,
+        "uniqueLines": [
+          {
+            "id": "berserk",
+            "value": 0.4429428,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
+          },
+          {
+            "id": "sunder",
+            "value": 0.5397383,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
+          },
+          {
+            "id": "flask_saving",
+            "value": 0.19435859,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
+          },
+          {
+            "id": "poise",
+            "value": 0.35187387,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
+          },
+          {
+            "id": "exp_gain",
+            "value": 0.074457645,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
+          }
+        ],
+        "lore": "Its maker signed it in blood, as the old smiths did.",
+        "retired": false
       }
     },
     {
@@ -6888,7 +7655,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -6908,7 +7676,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -6928,7 +7697,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -6948,7 +7718,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -6968,7 +7739,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -6988,7 +7760,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -7008,7 +7781,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -7028,7 +7802,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -7048,7 +7823,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -7068,7 +7844,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -7088,7 +7865,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -7108,7 +7886,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -7128,7 +7907,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -7148,7 +7928,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -7168,7 +7949,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -7188,7 +7970,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -7208,7 +7991,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -7228,7 +8012,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -7248,7 +8033,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -7268,7 +8054,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -7288,7 +8075,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -7308,7 +8096,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -7328,7 +8117,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -7348,7 +8138,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -7368,7 +8159,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -7390,26 +8182,42 @@
         "uniqueLines": [
           {
             "id": "frenzy",
-            "value": 0.25745073
+            "value": 0.25745073,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "precision",
-            "value": 0.15347853
+            "value": 0.15347853,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "crit_chance",
-            "value": 0.093939565
+            "value": 0.093939565,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "attack_flat",
-            "value": 14.907097
+            "value": 14.907097,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "stamina",
-            "value": 0.21938208
+            "value": 0.21938208,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           }
         ],
-        "lore": "A relic of the siege; the castle fell, the blade did not."
+        "lore": "A relic of the siege; the castle fell, the blade did not.",
+        "retired": true
       }
     },
     {
@@ -7429,7 +8237,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -7449,7 +8258,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -7469,7 +8279,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -7489,7 +8300,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -7509,7 +8321,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -7529,7 +8342,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -7549,7 +8363,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": false
       }
     },
     {
@@ -7571,26 +8386,42 @@
         "uniqueLines": [
           {
             "id": "frostbite",
-            "value": 0.18640278
+            "value": 0.18640278,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "ignite",
-            "value": 0.25324085
+            "value": 0.25324085,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "frost_add",
-            "value": 0.20960423
+            "value": 0.20960423,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "life_steal",
-            "value": 0.030151179
+            "value": 0.030151179,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "crit_dmg",
-            "value": 0.3439455
+            "value": 0.3439455,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           }
         ],
-        "lore": "Found clutched in a hand that had long since turned to bone."
+        "lore": "Found clutched in a hand that had long since turned to bone.",
+        "retired": false
       }
     },
     {
@@ -7612,30 +8443,49 @@
         "uniqueLines": [
           {
             "id": "plague_bearer",
-            "value": 0.12
+            "value": 0.12,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "giantslayer",
-            "value": 0.3728086
+            "value": 0.3728086,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "poison_add",
-            "value": 0.22045983
+            "value": 0.22045983,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "poise",
-            "value": 0.33391163
+            "value": 0.33391163,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "attack_pct",
-            "value": 0.50031775
+            "value": 0.50031775,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "mana_steal",
-            "value": 0.036435366
+            "value": 0.036435366,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           }
         ],
-        "lore": "Carried out of a buried city, still weeping green."
+        "lore": "Carried out of a buried city, still weeping green.",
+        "retired": true
       }
     },
     {
@@ -7655,7 +8505,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -7675,7 +8526,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -7695,7 +8547,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -7715,7 +8568,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -7735,7 +8589,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -7755,7 +8610,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -7775,7 +8631,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -7795,7 +8652,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -7815,7 +8673,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -7837,26 +8696,42 @@
         "uniqueLines": [
           {
             "id": "executioner",
-            "value": 0.3617676
+            "value": 0.3617676,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "frostbite",
-            "value": 0.22649486
+            "value": 0.22649486,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "crit_dmg",
-            "value": 0.40362236
+            "value": 0.40362236,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "attack_pct",
-            "value": 0.26800913
+            "value": 0.26800913,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "boss",
-            "value": 0.28367665
+            "value": 0.28367665,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           }
         ],
-        "lore": "Its maker signed it in blood, as the old smiths did."
+        "lore": "Its maker signed it in blood, as the old smiths did.",
+        "retired": true
       }
     },
     {
@@ -7876,7 +8751,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -7896,7 +8772,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -7918,26 +8795,42 @@
         "uniqueLines": [
           {
             "id": "harvest",
-            "value": 15.873181
+            "value": 15.873181,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "venom",
-            "value": 0.12880991
+            "value": 0.12880991,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "shadow_add",
-            "value": 0.24900305
+            "value": 0.24900305,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "crit_chance",
-            "value": 0.063724525
+            "value": 0.063724525,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "mana_steal",
-            "value": 0.028389206
+            "value": 0.028389206,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           }
         ],
-        "lore": "Carried by a captain who never lost a duel, and never won a war."
+        "lore": "Carried by a captain who never lost a duel, and never won a war.",
+        "retired": true
       }
     },
     {
@@ -7957,7 +8850,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -7977,7 +8871,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -7997,7 +8892,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -8017,7 +8913,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -8037,7 +8934,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -8057,7 +8955,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -8079,26 +8978,42 @@
         "uniqueLines": [
           {
             "id": "chain",
-            "value": 0.29305646
+            "value": 0.29305646,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "precision",
-            "value": 0.15672049
+            "value": 0.15672049,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "lightning_add",
-            "value": 0.2800693
+            "value": 0.2800693,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "crit_dmg",
-            "value": 0.43126592
+            "value": 0.43126592,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "boss",
-            "value": 0.16559535
+            "value": 0.16559535,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           }
         ],
-        "lore": "Priests blessed it. Then they feared it."
+        "lore": "Priests blessed it. Then they feared it.",
+        "retired": true
       }
     },
     {
@@ -8118,7 +9033,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -8138,7 +9054,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -8158,7 +9075,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -8178,7 +9096,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -8198,7 +9117,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -8218,7 +9138,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -8238,7 +9159,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -8258,7 +9180,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -8278,7 +9201,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -8300,26 +9224,42 @@
         "uniqueLines": [
           {
             "id": "precision",
-            "value": 0.13402961
+            "value": 0.13402961,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "berserk",
-            "value": 0.36593375
+            "value": 0.36593375,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "life_on_hit",
-            "value": 5.1985564
+            "value": 5.1985564,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "life_steal",
-            "value": 0.046247687
+            "value": 0.046247687,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "boss",
-            "value": 0.27562308
+            "value": 0.27562308,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           }
         ],
-        "lore": "A relic of the siege; the castle fell, the blade did not."
+        "lore": "A relic of the siege; the castle fell, the blade did not.",
+        "retired": true
       }
     },
     {
@@ -8339,7 +9279,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -8359,7 +9300,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -8379,7 +9321,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -8399,7 +9342,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -8419,7 +9363,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -8439,7 +9384,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -8459,7 +9405,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -8479,7 +9426,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -8499,7 +9447,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -8519,7 +9468,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -8541,30 +9491,49 @@
         "uniqueLines": [
           {
             "id": "starfall",
-            "value": 1.2
+            "value": 1.2,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "sunder",
-            "value": 0.61036277
+            "value": 0.61036277,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "mana_steal",
-            "value": 0.047407575
+            "value": 0.047407575,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "atk_speed",
-            "value": 0.18561181
+            "value": 0.18561181,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "attack_flat",
-            "value": 28.550777
+            "value": 28.550777,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "crit_chance",
-            "value": 0.12132698
+            "value": 0.12132698,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           }
         ],
-        "lore": "When its bearer calls on magic, the sky answers."
+        "lore": "When its bearer calls on magic, the sky answers.",
+        "retired": true
       }
     },
     {
@@ -8586,26 +9555,42 @@
         "uniqueLines": [
           {
             "id": "giantslayer",
-            "value": 0.29490066
+            "value": 0.29490066,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "venom",
-            "value": 0.14354797
+            "value": 0.14354797,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "life_on_hit",
-            "value": 5.9557586
+            "value": 5.9557586,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "poise",
-            "value": 0.42388877
+            "value": 0.42388877,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           },
           {
             "id": "boss",
-            "value": 0.2756178
+            "value": 0.2756178,
+            "tier": 0,
+            "carved": 0,
+            "rune": 0
           }
         ],
-        "lore": "A relic of the siege; the castle fell, the blade did not."
+        "lore": "A relic of the siege; the castle fell, the blade did not.",
+        "retired": true
       }
     },
     {
@@ -8625,7 +9610,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -8645,7 +9631,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -8665,7 +9652,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     },
     {
@@ -8685,7 +9673,8 @@
         "element": 0,
         "uniqueLevel": 1,
         "uniqueLines": [],
-        "lore": ""
+        "lore": "",
+        "retired": true
       }
     }
   ]
