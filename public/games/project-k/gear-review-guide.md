@@ -8,7 +8,7 @@ browser; exporting backs them up and import replaces a draft after confirmation.
 
 - `pieces`: every armour piece the game builds from the Synty Sidekick packs
   (Knights, Sorcerers, Samurai, Viking). `kind` is Body, Gloves, Boots, Helmet or Side.
-  - Body = torso + hips of one pack set, with that set's shoulder, hip and back attachments.
+  - Body = torso + hips of one pack set, with that set's shoulder and hip attachments (back pieces are always Side).
   - Gloves = both upper arms, lower arms and hands, with the elbow pads. Boots = both legs + both feet (LEG and FOT together), with the knee pads. Helmet = head attachment + face (mask).
   - Helmet = the head attachment. Side = one other attachment: `side` is Back, Face,
     Shoulders, Hips, Elbows or Knees. Side is the slot where the cape used to be.
