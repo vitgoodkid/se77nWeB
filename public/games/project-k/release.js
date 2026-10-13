@@ -27,12 +27,12 @@ const SHOTS = [
   const main = document.querySelector('[data-dl-main]');
   const meta = document.querySelector('[data-dl-meta]');
   const note = document.querySelector('[data-dl-note]');
-  meta.textContent = `${RELEASE.platform} · ${RELEASE.size}`;
+  meta.textContent = `${RELEASE.platform} · ${RELEASE.size} sau giải nén`;
   if (has) {
     main.href = RELEASE.url;
     main.target = '_blank';
     main.rel = 'noopener';
-    note.textContent = 'Mở Google Drive · tải file nén, giải nén rồi chạy Whosnext.exe';
+    note.textContent = 'Mở Google Drive · tải file .7z, giải nén rồi chạy Whosnext.exe';
   } else {
     main.classList.add('off');
     main.removeAttribute('href');
