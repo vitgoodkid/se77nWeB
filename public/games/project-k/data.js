@@ -1,7 +1,7 @@
 // Project K — game design data. Everything the page shows comes from here.
 // Audited 2026-10-10 from the current Unity source, serialized assets and probes.
 window.WN = {
-  updated: '2026-10-10',
+  updated: '2026-10-14',
   meta: {
     title: 'PROJECT K',
     tagline: 'Action RPG góc nhìn thứ ba: chiến đấu kiểu Souls/Sekiro, hệ đồ và build kiểu Path of Exile 2.',
@@ -1450,6 +1450,22 @@ window.WN = {
 
   // Change notes — newest first. cats tag which systems the note belongs to.
   changelog: [
+    {
+      "date": "2026-10-14",
+      "cats": [
+        "tech",
+        "story",
+        "av"
+      ],
+      "title": "Bản thử nghiệm đầu tiên: màn tiêu đề, đoạn mở đầu, trang tải game",
+      "items": [
+        "Màn tiêu đề: ảnh cây Aelvar lúc rạng sáng chụp từ bờ sông Willowmere, nhạc riêng, ba nút Start, Settings, Exit.",
+        "Đoạn phim mở đầu 30 giây (4 cảnh dựng bằng Seedance từ ảnh chụp trong game, nhạc riêng, phụ đề dịch được). Hết phim, Kata tỉnh dậy ở bờ sông, đứng lên, hiện bảng hướng dẫn phím (bỏ qua được) rồi nhận quest đầu: tìm Keeper Aldous trong làng.",
+        "Dấu quest trên màn hình: hình thoi kèm số mét trên mục tiêu của quest đang theo dõi, nằm ở mép màn hình khi mục tiêu ngoài khung hình hoặc sau lưng.",
+        "Bộ kiếm khiên (gói Grruzam): chuỗi 7 nhát, đòn chạy, phản đòn, thế thủ khiên. Đồng hồ đòn đánh bám theo animator nên cửa sổ chém không còn lệch khi khung đầu bị khựng.",
+        "Trang này thành trang phát hành: nút tải bản build Windows (Google Drive), đoạn mở đầu, ảnh chụp trong game; tài liệu thiết kế chuyển sang trang Thiết kế game."
+      ]
+    },
     {
       "date": "2026-10-13",
       "cats": [

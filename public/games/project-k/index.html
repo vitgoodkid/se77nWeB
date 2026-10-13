@@ -1,235 +1,181 @@
 <!DOCTYPE html>
-<html lang="vi" data-theme="dark">
+<html lang="vi">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Project K — Game Design · se77n</title>
-<meta name="description" content="Project K: tài liệu thiết kế game — action RPG kiểu Souls/Sekiro với hệ đồ kiểu Path of Exile 2." />
-<meta name="theme-color" content="#0d0a09" />
-<meta property="og:title" content="Project K — Game Design" />
-<meta property="og:image" content="/games/project-k/img/castle-great-hall.jpg" />
+<title>Project K — Tải bản thử nghiệm · se77n</title>
+<meta name="description" content="Project K: Burn the World Tree — action RPG góc nhìn thứ ba, chiến đấu kiểu Souls/Sekiro, đồ và build kiểu Path of Exile 2. Tải bản thử nghiệm cho Windows." />
+<meta name="theme-color" content="#0b0908" />
+<meta property="og:title" content="Project K — Burn the World Tree" />
+<meta property="og:description" content="Action RPG góc nhìn thứ ba cho PC. Tải bản thử nghiệm cho Windows." />
+<meta property="og:image" content="/games/project-k/release/title.jpg" />
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-<script>
-  try { var t = localStorage.getItem('whosnext.theme'); if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t); } catch (e) {}
-</script>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="styles.css" />
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:wght@600;700&family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="release.css" />
 </head>
 <body>
-<div class="scroll-line" id="scrollLine"></div>
 
-<header class="topbar">
-  <button class="menu-btn" id="menuBtn" aria-label="Mục lục">☰</button>
-  <a class="brand" href="#hero">PROJECT K<small>GDD</small></a>
-  <button class="icon-btn" id="searchBtn" aria-label="Tìm kiếm">⌕</button>
+<header class="bar">
+  <a class="mark" href="#top">PROJECT K</a>
+  <nav class="links" aria-label="Project K">
+    <a href="#trailer">Mở đầu</a>
+    <a href="#about">Giới thiệu</a>
+    <a href="#shots">Hình ảnh</a>
+    <a href="#install">Cài đặt</a>
+    <a href="gdd.html">Thiết kế game</a>
+  </nav>
+  <a class="bar-dl" href="#download" data-dl>Tải game</a>
 </header>
 
-<aside class="side" id="side">
-  <a class="brand side-brand" href="#hero">PROJECT K<small>GDD</small></a>
-  <label class="search" title="Tìm trong hệ thống, lộ trình, nhật ký (phím /)">
-    <span aria-hidden="true">⌕</span>
-    <input id="q" type="search" placeholder="Tìm… deflect, boss, flask" autocomplete="off" />
-    <kbd>/</kbd>
-  </label>
-  <p class="q-info" id="qInfo" hidden></p>
-  <nav class="nav" id="nav"></nav>
-  <div class="side-foot">
-    <a class="back" href="/#/game">← se77n</a>
-    <button class="theme" id="theme" aria-label="Đổi giao diện sáng / tối"><span class="t-dark">◐ Tối</span><span class="t-light">◑ Sáng</span></button>
-  </div>
-</aside>
-<div class="side-scrim" id="sideScrim"></div>
-
-<main>
-  <section class="hero" id="hero">
-    <div class="hero-bg" id="heroBg"></div>
-    <canvas class="embers" id="embers"></canvas>
+<main id="top">
+  <section class="hero">
+    <div class="hero-bg" style="background-image:url('release/title.jpg')"></div>
     <div class="hero-shade"></div>
     <div class="hero-in">
-      <div class="eyebrow"><span class="dot"></span>Game Design Document · cập nhật <span id="updated"></span></div>
-      <h1 class="logo" id="logo">PROJECT K</h1>
-      <p class="tagline" id="tagline"></p>
-      <div class="chips" id="heroChips"></div>
-      <div class="cta">
-        <a class="btn primary" href="#changelog">Nhật ký thay đổi</a>
-        <a class="btn" href="#progress">Tiến độ</a>
-        <a class="btn" href="#systems">Xem hệ thống</a>
-        <a class="btn" href="skills.html">Cân bằng skill</a>
-        <a class="btn" href="weapons.html">Catalog vũ khí</a>
-        <a class="btn" href="gear.html">Trang bị &amp; nhân vật</a>
-        <a class="btn" href="drops.html">Đồ rơi · chỉnh tỉ lệ</a>
-        <a class="btn" href="audio.html">Âm thanh · chỉnh SFX</a>
+      <p class="eyebrow"><span class="pulse"></span>Bản thử nghiệm · <span data-version></span></p>
+      <h1 class="logo">PROJECT K</h1>
+      <p class="sub">Burn the World Tree</p>
+      <p class="pitch">Action RPG góc nhìn thứ ba cho PC. Chiến đấu đọc nhịp kiểu Souls/Sekiro, đồ và build kiểu Path of Exile 2, trong một thế giới đang bị Cây Thế Giới hút cạn.</p>
+      <div class="cta" id="download">
+        <a class="dl" href="#" data-dl-main>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 19h16" /></svg>
+          <span><b data-dl-label>Tải cho Windows</b><small data-dl-meta></small></span>
+        </a>
+        <a class="ghost" href="#trailer">▶ Xem đoạn mở đầu</a>
       </div>
+      <p class="dl-note" data-dl-note></p>
     </div>
-    <div class="scroll-hint" aria-hidden="true"><span></span></div>
+    <a class="scroll" href="#trailer" aria-label="Cuộn xuống"><span></span></a>
   </section>
 
-  <div class="stats" id="stats"></div>
-
-  <section class="sec sec-log" id="changelog">
-    <div class="sec-head"><span class="num"></span><div class="sec-t"><span class="kicker live"><i></i>Mới cập nhật</span><h2>Nhật ký thay đổi</h2><p class="sub">Mọi thay đổi của project, theo ngày — mới nhất trước. Lọc theo mảng hoặc tìm bằng ô bên trái.</p></div></div>
-    <div class="log-stats" id="logStats"></div>
-    <div class="filters" id="logFilters"></div>
-    <div class="timeline" id="timeline"></div>
-    <div class="log-more"><button class="tool" id="logMore" hidden></button></div>
-    <p class="empty" id="logEmpty" hidden>Không có ghi chú khớp bộ lọc.</p>
+  <section class="sec trailer" id="trailer">
+    <div class="head">
+      <p class="kicker">Mở đầu</p>
+      <h2>Kata tỉnh dậy bên dòng suối</h2>
+      <p class="lead">Đoạn phim mở đầu của game. Hết phim, màn hình tối dần và bạn tỉnh dậy đúng ở bờ sông ấy, cách làng Willowmere không xa.</p>
+    </div>
+    <div class="video">
+      <video controls preload="none" playsinline poster="release/intro-poster.jpg">
+        <source src="release/intro.mp4" type="video/mp4" />
+      </video>
+    </div>
+    <p class="fine">Các cảnh được dựng bằng Seedance từ ảnh chụp trong game.</p>
   </section>
 
-  <section class="sec" id="overview">
-    <div class="sec-head"><span class="num"></span><div class="sec-t"><h2>Tổng quan</h2></div></div>
-    <p class="pitch reveal" id="pitch"></p>
-    <h3 class="h3 reveal">Vòng lặp chính</h3>
-    <ol class="loop reveal" id="loop"></ol>
-    <div class="pillars" id="pillars"></div>
+  <section class="sec about" id="about">
+    <div class="head">
+      <p class="kicker">Giới thiệu</p>
+      <h2>Đốt Cây Thế Giới</h2>
+    </div>
+    <div class="story">
+      <p>Eryth từng xanh tươi. Phía bắc dãy núi là <b>Aelvar, the Everroot</b> — Cây Thế Giới mà dân làng tin là ban mùa màng và sự sống. Nhưng quê nhà của Kata, the Silverfields, đã chết khô chỉ trong một mùa. Lần theo những cánh đồng héo úa về phương bắc, Kata tới Willowmere và bắt đầu nhận ra: cây không ban sự sống, nó đang hút cạn cả thế giới để nuôi chính mình.</p>
+      <p>Phía sau những <b>Rift</b> mở quanh làng là các thế giới cây đã ăn hết. Mỗi thế giới giữ một sợi rễ neo cây vào nó, và mỗi sợi rễ có một kẻ canh giữ.</p>
+    </div>
+    <div class="features">
+      <article>
+        <h3>Chiến đấu đọc nhịp</h3>
+        <p>Lăn né có khung bất tử, đỡ đòn tốn thể lực, gạt đòn hoàn hảo đúng lúc đòn chạm để làm đối thủ khựng. Khoá mục tiêu, chuỗi đòn, đòn chạy, phản đòn và kết liễu. Đang có katana, đại kiếm, kiếm đơn, kiếm khiên.</p>
+      </article>
+      <article>
+        <h3>Ngọc skill kiểu PoE2</h3>
+        <p>Hơn 30 skill trong 6 ô phím. Mỗi skill có lỗ cắm ngọc hỗ trợ — Chain, Fork, Echo, Cascade… — đổi hẳn cách skill hoạt động. Lửa, băng, sét lan sang nhau: lốc xoáy đi qua lửa thành lốc lửa.</p>
+      </article>
+      <article>
+        <h3>Đồ và chế tạo</h3>
+        <p>Đồ Normal, Magic, Rare, Unique với dòng chỉ số theo cấp. Chế tạo bằng ngọc, đục lỗ gắn rune, rèn +10 bằng đá rèn. Đồ rơi hiếm và có giá trị, chủ yếu rơi vàng.</p>
+      </article>
+      <article>
+        <h3>Không có class</h3>
+        <p>Vũ khí quyết định cách đánh, ngọc quyết định phép. 5 thuộc tính, cây nội tại 6 nhánh với ô rune và keystone. Có cả bản sao bóng tối, hồn ma triệu hồi, bắt quái làm đồng minh.</p>
+      </article>
+      <article>
+        <h3>Willowmere và Rift</h3>
+        <p>Làng mở với NPC, quest, cửa hàng, thợ rèn, lửa trại dịch chuyển. Đại trại goblin Ashfang và vua Gruk. Rift sinh ngẫu nhiên qua 7 thế giới, boss ở nơi sâu nhất, Rift Stone để farm. Lâu đài Crimson Castle với 8 boss.</p>
+      </article>
+      <article>
+        <h3>Còn nhiều thứ khác</h3>
+        <p>Nông trại, săn và thuần hoá thú, câu cá. Ngày đêm. Chơi chung qua mạng LAN tối đa 5 người. Tiếng Việt và tiếng Anh. Có các mức đồ hoạ Low, Medium, High, Ultra.</p>
+      </article>
+    </div>
   </section>
 
-  <section class="sec" id="progress">
-    <div class="sec-head"><span class="num"></span><div class="sec-t"><h2>Tiến độ</h2><p class="sub">Đối chiếu code và dữ liệu ngày 10/10/2026. Phân biệt phần đã triển khai, làm một phần và còn trong kế hoạch. Đánh dấu cá nhân không thay đổi tiến độ công khai.</p></div></div>
-    <div class="dash">
-      <div class="panel ring-panel reveal" id="progressTotal"></div>
-      <div class="panel reveal" style="--d:1"><h3 class="panel-h">Theo mảng</h3><div class="pbars" id="progressBars"></div></div>
-      <div class="panel reveal" style="--d:2">
-        <h3 class="panel-h">Đang làm ngay</h3>
-        <div class="now" id="nowList"></div>
-        <h3 class="panel-h" style="margin-top:22px">Cập nhật gần nhất · <span class="mono" id="latestDate"></span></h3>
-        <ul class="latest" id="latestList"></ul>
+  <section class="sec shots" id="shots">
+    <div class="head">
+      <p class="kicker">Hình ảnh</p>
+      <h2>Chụp trong game</h2>
+      <p class="lead">Ảnh chụp từ chính game, mức đồ hoạ Ultra. Bấm vào ảnh để xem lớn.</p>
+    </div>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <section class="sec install" id="install">
+    <div class="head">
+      <p class="kicker">Cài đặt</p>
+      <h2>Chơi thử trong ba bước</h2>
+    </div>
+    <ol class="steps">
+      <li><b>Tải về</b><span>Bấm nút tải để mở Google Drive, tải file nén của game (<span data-size></span>).</span></li>
+      <li><b>Giải nén</b><span>Giải nén ra một thư mục bất kỳ, giữ nguyên các file bên trong.</span></li>
+      <li><b>Chạy Whosnext.exe</b><span>Nếu Windows hiện "Windows protected your PC", chọn <i>More info</i> rồi <i>Run anyway</i> — game chưa được ký số.</span></li>
+    </ol>
+    <div class="req">
+      <div>
+        <h3>Cấu hình</h3>
+        <ul>
+          <li><span>Hệ điều hành</span><b>Windows 10 / 11, 64-bit</b></li>
+          <li><span>Dung lượng</span><b data-size></b></li>
+          <li><span>Đã chạy thử trên</span><b>RTX 4070 Ti Super, 1440p</b></li>
+          <li><span>Máy yếu</span><b>Chọn mức Low hoặc Medium trong Settings → Graphics</b></li>
+        </ul>
       </div>
-    </div>
-  </section>
-
-  <section class="sec" id="mynotes">
-    <div class="sec-head"><span class="num"></span><div class="sec-t"><h2>Ghi chú của bạn</h2><p class="sub"><span id="myNotesCount"></span> · <span class="sync"></span></p></div></div>
-    <div class="note-tools">
-      <button class="tool" id="notesExport">↓ Xuất ghi chú (JSON)</button>
-      <label class="tool">↑ Nhập ghi chú<input type="file" id="notesImport" accept=".json,application/json" hidden /></label>
-    </div>
-    <div class="mynotes" id="myNotes"></div>
-  </section>
-
-  <section class="sec" id="systems">
-    <div class="sec-head"><span class="num"></span><div class="sec-t"><h2>Hệ thống</h2><p class="sub">Bấm một thẻ để xem chi tiết, số liệu, việc sắp tới và nhật ký liên quan.</p></div></div>
-    <div class="filters" id="sysFilters"></div>
-    <div class="cards" id="sysCards"></div>
-    <p class="empty" id="sysEmpty" hidden>Không có hệ thống khớp bộ lọc.</p>
-  </section>
-
-  <section class="sec" id="weapons">
-    <a class="btn" href="weapons.html">Mở catalog · chọn và chỉnh sửa từng vũ khí</a>
-    <div class="sec-head"><span class="num"></span><div class="sec-t"><h2>Vũ khí &amp; bộ đòn</h2><p class="sub">6 bộ đòn đã triển khai. Catalog giữ 347 model, trong đó 73 món còn được phát trong game sau đợt chọn lọc. Combat trên Sidekick vẫn cần kiểm tra và tinh chỉnh.</p></div></div>
-    <div class="weapons reveal">
-      <div class="wtabs" id="wTabs" role="tablist"></div>
-      <div class="wview" id="wView"></div>
-    </div>
-  </section>
-
-  <section class="sec" id="world">
-    <div class="sec-head"><span class="num"></span><div class="sec-t"><h2>Thế giới</h2></div></div>
-    <div class="world">
-      <figure class="plan reveal">
-        <img src="img/castle-plan.jpg" alt="Sơ đồ Crimson Castle" loading="lazy" data-lightbox />
-        <figcaption>Sơ đồ nhìn từ trên (bắc ở trên). Cổng giữa dưới, Cathedral trên cùng.</figcaption>
-      </figure>
-      <div class="world-text reveal" style="--d:1">
-        <span class="kicker">Vùng 1 · Level 6</span>
-        <h3 class="h3 big">Crimson Castle</h3>
-        <p>Lâu đài rẽ nhánh — không đi một đường thẳng, phòng to nhỏ khác nhau. Bố cục khai báo bằng hình chữ nhật trên lưới 1 m; tường, sàn, trần và khung cửa sinh tự động, rồi kiểm tra mọi phòng tới được.</p>
-        <table class="table" id="rooms"></table>
-        <div class="mini-gallery">
-          <img src="img/castle-gate.jpg" alt="Gate Hall" loading="lazy" data-lightbox />
-          <img src="img/castle-library.jpg" alt="Library" loading="lazy" data-lightbox />
-          <img src="img/castle-armory.jpg" alt="Armory" loading="lazy" data-lightbox />
-        </div>
-      </div>
-    </div>
-    <div class="hub">
-      <div class="hub-shots reveal">
-        <img class="hs-main" src="img/willow-village.jpg" alt="Làng Willowmere" loading="lazy" data-lightbox />
-        <img src="img/willow-top.jpg" alt="Willowmere nhìn từ trên" loading="lazy" data-lightbox />
-        <img src="img/willow-sinkhole.jpg" alt="Hố sụt tại Willowmere" loading="lazy" data-lightbox />
-      </div>
-      <div class="world-text reveal" style="--d:1">
-        <span class="kicker">Hub · scene mở đầu bản build</span>
-        <h3 class="h3 big">Làng Willowmere</h3>
-        <p>Làng mở với NPC dịch vụ, hội thoại, quest, lửa trại và quái ngày/đêm. Willowmere đứng đầu Build Settings. Quest dẫn sang Sunscar và các Rift cốt truyện; những chương sau vẫn đang phát triển.</p>
-        <ul class="npcs">
-          <li><b>Brannoc</b><span>Thợ rèn — gỡ dòng, Khắc Ấn, rune trang bị, phân giải, rèn base</span></li>
-          <li><b>Old Mirelle</b><span>Thầy thuốc — 10 thuốc buff</span></li>
-          <li><b>Hesta</b><span>Bếp — 5 món + Honey Milk</span></li>
-          <li><b>Quill</b><span>Tạp hoá — 14 đồ vui, mua / bán</span></li>
-          <li><b>Keeper Aldous</b><span>Điện Ký Ức — đánh lại boss</span></li>
-          <li><b>The Unbinder</b><span>Hoàn điểm passive / thuộc tính</span></li>
+      <div>
+        <h3>Phím cơ bản</h3>
+        <ul class="keys">
+          <li><kbd>W A S D</kbd><span>Di chuyển · <kbd>Shift</kbd> giữ chạy, chạm để lăn</span></li>
+          <li><kbd>Chuột trái</kbd><span>Đánh · <kbd>Shift</kbd> + chuột trái đòn nặng</span></li>
+          <li><kbd>Chuột phải</kbd><span>Đỡ, bấm đúng lúc để gạt đòn</span></li>
+          <li><kbd>Chuột giữa</kbd><span>Khoá mục tiêu</span></li>
+          <li><kbd>Q E R T C X</kbd><span>Skill · <kbd>1</kbd> <kbd>2</kbd> bình máu, mana</span></li>
+          <li><kbd>I G O P J M</kbd><span>Túi đồ, skill, nhân vật, cây nội tại, quest, bản đồ</span></li>
         </ul>
       </div>
     </div>
-    <h3 class="h3 reveal">Các scene khác</h3>
-    <div class="scenes">
-      <div class="reveal"><b>Sunscar</b><span>Vùng sa mạc, cấp tối thiểu 8; Travel mở theo cờ cổng phía nam.</span></div>
-      <div class="reveal"><b>Rift</b><span>7 thế giới đã khai báo; mỗi lượt 1 tầng, hạ 75% quái để mở đấu trường boss. Khả năng vào phụ thuộc quest hoặc Rift Stone.</span></div>
-      <div class="reveal" style="--d:1"><b>Training Room</b><span>Hình nộm, cột leo, xà chui.</span></div>
-      <div class="reveal" style="--d:2"><b>Weapon Tuner</b><span>Scene công cụ chỉnh tư thế vũ khí.</span></div>
+    <div class="known">
+      <h3>Lưu ý bản thử nghiệm</h3>
+      <ul>
+        <li>Game đang phát triển: cân bằng, hiệu ứng và hoạt ảnh còn thay đổi. Song kiếm, thương và cung chưa có hoạt ảnh đánh.</li>
+        <li>Save nằm trong thư mục người dùng của Windows (AppData), mỗi máy một save. Menu Esc có Save và New Game.</li>
+        <li>Lần đầu vào làng có thể nạp lâu vài giây.</li>
+      </ul>
     </div>
   </section>
 
-  <section class="sec" id="enemies">
-    <div class="sec-head"><span class="num"></span><div class="sec-t"><h2>Kẻ địch</h2><p class="sub">8 boss trong lâu đài, 41 prefab trong thư mục Monsters; quái Magic / Rare có mod. Số prefab không đồng nghĩa với 41 bộ AI riêng.</p></div></div>
-    <figure class="boss-shot reveal">
-      <img src="img/boss-archdemon.jpg" alt="Crimson Archdemon" loading="lazy" data-lightbox />
-      <img src="img/boss-archdemon-2.jpg" alt="Archdemon — đòn đập" loading="lazy" data-lightbox />
-      <figcaption><span class="kicker">Boss cuối lâu đài</span><b>Crimson Archdemon</b></figcaption>
-    </figure>
-    <div class="bosses" id="bosses"></div>
+  <section class="sec more">
+    <div class="head">
+      <p class="kicker">Phía sau</p>
+      <h2>Tài liệu thiết kế</h2>
+      <p class="lead">Toàn bộ hệ thống, tiến độ, lộ trình và nhật ký thay đổi của dự án.</p>
+    </div>
+    <div class="cards">
+      <a href="gdd.html"><b>Thiết kế game</b><span>Hệ thống, tiến độ, nhật ký</span></a>
+      <a href="skills.html"><b>Cân bằng skill</b><span>Sát thương, mana, ngọc hỗ trợ</span></a>
+      <a href="weapons.html"><b>Catalog vũ khí</b><span>Vũ khí và bộ đòn</span></a>
+      <a href="gear.html"><b>Trang bị</b><span>Giáp Sidekick, nhân vật</span></a>
+      <a href="drops.html"><b>Đồ rơi</b><span>Bảng rơi đồ kiểu PoE2</span></a>
+      <a href="audio.html"><b>Âm thanh</b><span>Bộ tiếng và mức âm lượng</span></a>
+    </div>
   </section>
-
-  <section class="sec" id="controls">
-    <div class="sec-head"><span class="num"></span><div class="sec-t"><h2>Điều khiển</h2></div></div>
-    <div class="keys" id="keys"></div>
-  </section>
-
-  <section class="sec" id="roadmap">
-    <div class="sec-head"><span class="num"></span><div class="sec-t"><h2>Lộ trình</h2><p class="sub">Phần đang làm, kế hoạch và những mục đã có triển khai trong code. Mỗi mục có trạng thái riêng; dấu cá nhân dùng để theo dõi việc của bạn.</p></div></div>
-    <div class="kanban" id="kanban"></div>
-  </section>
-
-
-  <section class="sec" id="notes">
-    <div class="sec-head"><span class="num"></span><div class="sec-t"><h2>Ghi chú thiết kế</h2></div></div>
-    <div class="dnotes" id="notesBox"></div>
-  </section>
-
-  <section class="sec" id="gallery">
-    <div class="sec-head"><span class="num"></span><div class="sec-t"><h2>Ảnh trong game</h2><p class="sub">Ảnh từ các đợt phát triển trước; ảnh lịch sử có thể dùng nhân vật hoặc scene cũ.</p></div></div>
-    <div class="gallery" id="galleryBox"></div>
-  </section>
-
-  <section class="sec" id="tech">
-    <div class="sec-head"><span class="num"></span><div class="sec-t"><h2>Kỹ thuật</h2></div></div>
-    <table class="table tech reveal" id="techTable"></table>
-  </section>
-
-  <footer class="foot">
-    <span class="brand">PROJECT K<small>GDD</small></span>
-    <span>Cập nhật <b id="updated2"></b> · <a href="/#/game">← Game Hub</a></span>
-  </footer>
 </main>
 
-<div class="drawer" id="drawer" hidden>
-  <div class="drawer-bg" data-close></div>
-  <aside class="drawer-panel" role="dialog" aria-modal="true" aria-labelledby="dTitle">
-    <button class="x" data-close aria-label="Đóng">✕</button>
-    <div id="dBody"></div>
-  </aside>
-</div>
+<footer class="foot">
+  <span>Project K · Unity 6 · <span data-version></span></span>
+  <a href="/#/game">← se77n</a>
+</footer>
 
-<div class="lightbox" id="lightbox" hidden>
-  <button class="x" data-lb-close aria-label="Đóng">✕</button>
-  <button class="lb-nav prev" data-lb="-1" aria-label="Ảnh trước">‹</button>
-  <figure><img id="lbImg" alt="" /><figcaption id="lbCap"></figcaption></figure>
-  <button class="lb-nav next" data-lb="1" aria-label="Ảnh sau">›</button>
-</div>
+<div class="lightbox" id="lightbox" hidden><img alt="" /><p></p><button aria-label="Đóng">×</button></div>
 
-<script src="data.js"></script>
-<script src="app.js"></script>
+<script src="release.js"></script>
 </body>
 </html>
