@@ -1,0 +1,61 @@
+/* The drop review: tables of rates on the left, each value edited in its own cell; the side panel sums up what one kill leaves. */
+.drops-page { --floor: #17140f; --floor-line: #2e291f; --edited: rgba(226, 177, 91, .12); --bad: #e77b69; }
+.drops-workspace { grid-template-columns: minmax(0, 1fr) 360px; }
+.drops-sections { display: grid; gap: 46px; min-width: 0; }
+.drop-group { display: grid; gap: 10px; min-width: 0; scroll-margin-top: 20px; }
+.drop-group > * { min-width: 0; }
+.drop-group h2 { font: 600 30px/1.1 var(--fd); margin: 0; text-wrap: balance; }
+.drop-group > p { margin: 0; max-width: 78ch; color: var(--muted); font-size: 13px; line-height: 1.6; }
+.drops-page .tbl { overflow-x: auto; border: 1px solid var(--line2); border-radius: 8px; background: var(--bg1); }
+.drops-page table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; font-size: 13px; }
+.drops-page th, .drops-page td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.drops-page thead th { font: 500 10px/1.3 var(--fm); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); background: var(--goldbg); white-space: nowrap; }
+.drops-page tbody tr:last-child > * { border-bottom: 0; }
+.drops-page tbody th { font-weight: 500; color: var(--text); min-width: 150px; }
+.drops-page td { min-width: 128px; }
+.drops-page td.none { color: var(--dim); }
+.drops-page td.edited { background: var(--edited); box-shadow: inset 2px 0 0 var(--gold); }
+.drops-page td input[type=number], .drops-page td input[type=text] { width: 92px !important; padding: 6px 8px !important; font: 12px var(--fm) !important; }
+.drops-page td input.bad { border-color: var(--bad) !important; outline: 1px solid var(--bad); }
+.unit, .range, .colour { display: inline-flex; align-items: center; gap: 6px; }
+.unit i, .range i { font-style: normal; color: var(--muted); font: 11px var(--fm); }
+.range input { width: 58px !important; }
+.drops-page .colour input[type=color] { width: 36px !important; height: 30px; padding: 2px !important; border: 1px solid var(--line2); border-radius: 4px; background: var(--bg1); cursor: pointer; flex: none; }
+.drops-page .colour input[type=text] { width: 84px !important; flex: none; }
+.was { display: flex; align-items: center; gap: 6px; margin-top: 4px; font: 10px var(--fm); color: var(--gold); white-space: nowrap; }
+.was.quiet { color: var(--dim); }
+.was button { border: 0; background: none; color: var(--gold); padding: 0 2px; font-size: 13px; line-height: 1; cursor: pointer; }
+.code-ref { margin: 0; font: 10px/1.5 var(--fm); color: var(--dim); overflow-wrap: anywhere; }
+.group-note textarea, .general-note textarea { min-height: 54px !important; }
+.sw { display: inline-block; width: 11px; height: 11px; border-radius: 2px; background: var(--c); margin-right: 8px; vertical-align: -1px; box-shadow: 0 0 0 1px rgba(0, 0, 0, .4); }
+
+/* the drops as they lie on the floor; beams to scale */
+.floor { background: var(--floor); border: 1px solid var(--floor-line); border-radius: 8px; padding: 18px 18px 0; overflow-x: auto; }
+.beams { display: grid; grid-template-columns: repeat(12, minmax(64px, 1fr)); gap: 6px; align-items: end; min-width: 840px; }
+.drop { display: grid; justify-items: center; gap: 7px; padding-bottom: 12px; }
+.shaft { width: calc(3px + var(--h) * 1.4px); height: calc(var(--h) * 16px); background: linear-gradient(to top, var(--c), transparent); border-radius: 2px; opacity: .85; }
+.shaft.none { width: 28px; height: 5px; background: none; border-top: 1px dashed #4b4436; opacity: 1; }
+.label { font: 600 11px/1.25 var(--f); color: var(--c); background: rgba(0, 0, 0, .55); border: 1px solid color-mix(in srgb, var(--c) 40%, transparent); padding: 4px 6px; border-radius: 3px; text-align: center; max-width: 100%; }
+.mval { font: 10px var(--fm); color: #9b927f; }
+.ground { height: 10px; margin: 0 -18px; border-top: 1px solid var(--floor-line); background: linear-gradient(#221e17, var(--floor)); }
+
+/* side panel */
+.drops-side h2 { font: 600 26px/1.1 var(--fd); margin: 0 0 6px; }
+.drops-side h3 { font: 600 21px var(--fd); margin: 22px 0 8px; }
+.expect { display: grid; gap: 6px; }
+.expect .row { display: grid; grid-template-columns: 92px minmax(0, 1fr) 54px; gap: 10px; align-items: center; font-size: 12px; }
+.expect .track { height: 9px; background: var(--goldbg); border-radius: 2px; overflow: hidden; }
+.expect .fill { display: block; height: 100%; background: var(--gold); opacity: .8; }
+.expect .v { font: 11px var(--fm); text-align: right; }
+.expect .gold { padding-bottom: 6px; border-bottom: 1px solid var(--line); margin-bottom: 2px; }
+.warn-list, .changed-list { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 12px; }
+.warn-list li { color: var(--bad); }
+.warn-list li.ok, .changed-list li.quiet { color: var(--muted); list-style: none; margin-left: -18px; }
+.changed-list li { display: grid; gap: 1px; }
+.changed-list a { color: var(--text); }
+.changed-list span { font: 11px var(--fm); color: var(--muted); }
+.changed-list b { color: var(--gold); font-weight: 500; }
+.general-note { margin-top: 20px; }
+
+@media (max-width: 1050px) { .drops-workspace { grid-template-columns: minmax(0, 1fr) 300px; } }
+@media (max-width: 720px) { .drops-workspace { grid-template-columns: minmax(0, 1fr); } .drops-side { position: static; max-height: none; order: -1; min-width: 0; } .drops-page tbody th { min-width: 120px; } }

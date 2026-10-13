@@ -1451,6 +1451,17 @@ window.WN = {
   // Change notes — newest first. cats tag which systems the note belongs to.
   changelog: [
     {
+      "date": "2026-10-13",
+      "cats": [
+        "tech"
+      ],
+      "title": "Trang Đồ rơi: màu và tỉ lệ rơi, chỉnh được",
+      "items": [
+        "Trang mới Đồ rơi: 142 tỉ lệ trong 17 bảng (trang bị, vàng, đá rèn, Flux, gem chế tạo, Lustre, ngọc chưa mài, rune, bình, đồ quest, Rift Stone) và màu nhãn, cột sáng của 12 nhóm đồ nằm dưới đất; số gốc đọc từ code.",
+        "Sửa ngay trong ô, ghi chú từng bảng, xem trung bình mỗi lần giết tính lại theo số đang sửa, cảnh báo các tỉ lệ phải cộng đủ 100%, rồi xuất JSON cho AI áp vào game."
+      ]
+    },
+    {
       "date": "2026-10-10",
       "cats": [
         "tech",

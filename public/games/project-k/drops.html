@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bảng đồ rơi · Project K · se77n</title>
+  <meta name="description" content="Màu đồ rơi và tỉ lệ rơi của mọi món trong Project K: chỉnh từng tỉ lệ rồi xuất JSON để áp dụng vào game.">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="weapons.css">
+  <link rel="stylesheet" href="drops.css">
+  <script>try { document.documentElement.dataset.theme = localStorage.getItem('whosnext.theme') || 'dark'; } catch {}</script>
+</head>
+<body class="armory-page drops-page">
+  <header class="armory-top">
+    <a class="brand" href="./">PROJECT K<small>GDD</small></a>
+    <nav aria-label="Trang Project K" class="project-tabs">
+      <a href="./">Thiết kế game</a><a href="skills.html">Cân bằng skill</a><a href="weapons.html">Catalog vũ khí</a><a href="gear.html">Trang bị &amp; nhân vật</a><a href="drops.html" aria-current="page">Đồ rơi</a><a href="audio.html">Âm thanh</a>
+    </nav>
+    <button id="theme-toggle" class="tool" type="button" aria-label="Đổi giao diện sáng tối">Sáng / tối</button>
+  </header>
+  <main class="armory-main">
+    <div class="armory-intro">
+      <div><span class="armory-eyebrow">PROJECT K / LOOT</span><h1>Thứ gì rơi ra,<br>và bao lâu một lần.</h1>
+        <p>Màu nhãn và tỉ lệ rơi của mọi món: trang bị, vàng, đá rèn, Flux, gem chế tạo, Lustre, ngọc chưa mài, rune, bình, đồ quest, Rift Stone. Số gốc đọc từ code game. Sửa ô nào thì ghi chú lý do bên dưới bảng, rồi xuất JSON cho agent áp vào Unity.</p></div>
+      <div class="armory-totals" id="totals" aria-live="polite">Đang đọc dữ liệu…</div>
+    </div>
+    <div class="armory-actions">
+      <div class="action-buttons"><button class="tool primary-action" id="export" disabled>Xuất JSON cho AI</button>
+        <label class="tool import-button">Nhập bản đã xuất<input type="file" id="import" accept=".json,application/json" disabled></label>
+        <button class="tool" id="reset-all" disabled>Khôi phục tất cả</button></div>
+      <span id="save-status" role="status">Bản nháp lưu trên trình duyệt này.</span>
+    </div>
+    <p class="armory-notice">Chỉnh sửa là bản nháp, chưa đổi game. Mỗi món tung riêng một lần mỗi lần giết. "Elite" gồm cả quái Rare; quái Magic có hàng riêng ở trang bị, Skill Forge và rune, còn lại tính như quái thường.</p>
+    <p id="message" role="status" hidden></p>
+    <section class="armory-workspace drops-workspace" aria-label="Bảng đồ rơi">
+      <div class="drops-sections" id="sections"></div>
+      <aside class="weapon-editor drops-side" aria-label="Tóm tắt">
+        <h2>Mỗi lần giết</h2>
+        <p class="field-help">Trung bình một quái thường cấp 10, không mod, ngoài Rift. Tính lại theo số đang sửa.</p>
+        <div class="expect" id="expected"></div>
+        <h3>Cảnh báo</h3>
+        <ul class="warn-list" id="warnings"></ul>
+        <h3>Đã sửa</h3>
+        <ol class="changed-list" id="changed"></ol>
+        <label class="general-note">Ghi chú chung cho AI<textarea id="general-note" maxlength="8000" placeholder="Ví dụ: muốn quái thường rơi ít đồ Normal hơn để sàn gọn hơn…"></textarea></label>
+      </aside>
+    </section>
+    <details class="export-help"><summary>File xuất chứa gì? AI áp lại vào game thế nào?</summary>
+      <p>JSON chứa mọi mục với id cố định, giá trị gốc, giá trị yêu cầu, chỗ trong code giữ giá trị đó, cờ đã sửa, ghi chú của từng bảng và ghi chú chung. Tỉ lệ xuất theo hệ số (4% = 0.04); khoảng số là [min, max] gồm cả hai đầu.</p>
+      <p>AI chỉ áp các mục đã sửa, sửa đúng hằng số trong code, cập nhật tài liệu Documentation/GDD/DoRoi.md và dữ liệu trang này, rồi kiểm lại trong Unity.</p>
+      <p><a href="drop-review-guide.md">Hướng dẫn định dạng cho AI</a> · <a href="drops-data.json">Dữ liệu gốc</a> · <span id="source-date"></span></p>
+    </details>
+  </main>
+  <script type="module" src="drops.js"></script>
+</body>
+</html>
