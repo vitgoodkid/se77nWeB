@@ -1,1751 +1,3856 @@
 {
- "schemaVersion": 1,
- "generatedAt": "2026-10-13T12:00:00+07:00",
- "source": {
-  "game": "Whosnext (Project K)",
-  "codeDate": "2026-10-13",
-  "document": "Documentation/GDD/DoRoi.md",
-  "sha256": "ee0049d52b1d22455fef24a26503d2e72b2b3d29182b54e008397911ad61c7f2",
-  "count": 142
- },
- "groups": [
-  {
-   "id": "monsters",
-   "title": "Hạng quái",
-   "intro": "Tỉ lệ một quái thường thành Magic (xanh, 1–2 mod) hoặc Rare (vàng, 3–4 mod). Quái Rare rơi đồ như Elite.",
-   "columns": [
-    {
-     "id": "value",
-     "label": "Tỉ lệ"
-    }
-   ],
-   "code": "Assets/_Game/Scripts/Runtime/Enemies/MonsterMods.cs · MagicChance, RareChance",
-   "notes": []
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-13T14:56:51+08:00",
+  "source": {
+    "game": "Whosnext (Project K)",
+    "codeDate": "2026-10-13",
+    "document": "Documentation/GDD/DoRoi.md",
+    "exporter": "Assets/_Game/Scripts/Editor/DropsDataExport.cs",
+    "sha256": "6e126787f2600258844637f8bc5aa9f8b073591d9d4518c092c0283df4101e1e",
+    "count": 197
   },
-  {
-   "id": "mods",
-   "title": "Mod của quái",
-   "intro": "Mỗi mod cộng Item Quantity (nhân tỉ lệ trang bị và Skill Forge) và Item Rarity (nhân phần Rare/Unique).",
-   "columns": [
+  "groups": [
     {
-     "id": "quantity",
-     "label": "Quantity"
+      "id": "rolls",
+      "title": "Số lượt rơi mỗi lần giết",
+      "intro": "Trung bình mỗi lần giết được bấy nhiêu lượt rơi (ngoài vàng); phần lẻ là xác suất thêm một lượt. Item Quantity của mod và Rift nhân số này.",
+      "code": "Assets/_Game/Scripts/Runtime/Items/LootTable.cs · LootTable.Rolls",
+      "notes": [],
+      "columns": [
+        {
+          "id": "value",
+          "label": "Lượt"
+        }
+      ]
     },
     {
-     "id": "rarity",
-     "label": "Rarity"
-    }
-   ],
-   "code": "Assets/_Game/Scripts/Runtime/Enemies/MonsterMods.cs · Loot",
-   "notes": []
-  },
-  {
-   "id": "gear",
-   "title": "Trang bị",
-   "intro": "Vũ khí, giáp, trang sức. Mỗi hạng tung riêng một lần mỗi lần giết. Quantity nhân mọi hạng, Rarity nhân thêm Rare và Unique.",
-   "columns": [
-    {
-     "id": "normal",
-     "label": "Normal"
+      "id": "rank_rarity",
+      "title": "Rarity tự có của loại quái",
+      "intro": "Item Rarity mỗi loại quái tự cộng thêm: nhân trọng số các bậc T3 trở lên (cùng Rarity của mod và Rift).",
+      "code": "Assets/_Game/Scripts/Runtime/Items/LootTable.cs · LootTable.RankRarity",
+      "notes": [],
+      "columns": [
+        {
+          "id": "value",
+          "label": "Rarity"
+        }
+      ]
     },
     {
-     "id": "magic",
-     "label": "Magic"
+      "id": "tiers",
+      "title": "Trọng số các bậc",
+      "intro": "Mỗi lượt rơi chọn một bậc theo trọng số này (T3 trở lên nhân thêm 1 + Rarity), rồi chọn một món trong bậc theo trọng số của món.",
+      "code": "Assets/_Game/Scripts/Runtime/Items/LootTable.cs · LootTable.TierWeight",
+      "notes": [],
+      "columns": [
+        {
+          "id": "value",
+          "label": "Trọng số"
+        }
+      ]
     },
     {
-     "id": "rare",
-     "label": "Rare"
+      "id": "items",
+      "title": "Các món và bậc của chúng",
+      "intro": "Bậc theo tác dụng của món. Trọng số so trong cùng bậc. \"Ai rơi được\" là loại quái thấp nhất có thể rơi món đó. Số viên chỉ áp cho vật liệu.",
+      "code": "Assets/_Game/Scripts/Runtime/Items/LootTable.cs · LootTable.Entries",
+      "notes": [],
+      "columns": [
+        {
+          "id": "tier",
+          "label": "Bậc"
+        },
+        {
+          "id": "weight",
+          "label": "Trọng số"
+        },
+        {
+          "id": "from",
+          "label": "Ai rơi được"
+        },
+        {
+          "id": "count",
+          "label": "Số viên"
+        }
+      ]
     },
     {
-     "id": "unique",
-     "label": "Unique"
-    }
-   ],
-   "code": "Assets/_Game/Scripts/Runtime/Items/WeaponStash.cs · LootDrops.GearChance",
-   "notes": [
-    "Unique từ quái là một vũ khí Legendary; lượt Unique của boss ra đồ riêng của boss nếu có."
-   ]
-  },
-  {
-   "id": "gear_extra",
-   "title": "Trang bị: luật phụ",
-   "intro": "Nhẫn/dây chuyền tung một lượt riêng (không có Unique), mỗi hạng thấp hơn bảng trên đúng số điểm này.",
-   "columns": [
-    {
-     "id": "value",
-     "label": "Giá trị"
-    }
-   ],
-   "code": "Assets/_Game/Scripts/Runtime/Items/WeaponStash.cs · LootDrops.JewelleryLess, Piece, OnBossDied",
-   "notes": []
-  },
-  {
-   "id": "gold",
-   "title": "Vàng",
-   "intro": "Luôn rơi: (min–max) × (1 + cấp × hệ số cấp) × hệ số quái × (1 + vàng của Rift).",
-   "columns": [
-    {
-     "id": "value",
-     "label": "Giá trị"
-    }
-   ],
-   "code": "Assets/_Game/Scripts/Runtime/Items/WeaponStash.cs · LootDrops.Gold, OnEnemyDied, OnBossDied",
-   "notes": []
-  },
-  {
-   "id": "stones_split",
-   "title": "Đá rèn: bậc của đá thấp",
-   "intro": "Mỗi chồng đá thấp chọn một cặp bậc theo tỉ lệ này (tổng phải 100%), rồi 50/50 giữa hai viên của cặp.",
-   "columns": [
-    {
-     "id": "value",
-     "label": "Tỉ lệ"
-    }
-   ],
-   "code": "Assets/_Game/Scripts/Runtime/Items/WeaponStash.cs · LootDrops.Stones (Low)",
-   "notes": []
-  },
-  {
-   "id": "stones",
-   "title": "Đá rèn I–X",
-   "intro": "Mỗi dòng là một lượt: tỉ lệ ra, số chồng, số viên mỗi chồng. Item Quantity không tăng đá rèn.",
-   "columns": [
-    {
-     "id": "chance",
-     "label": "Tỉ lệ"
+      "id": "gear",
+      "title": "Trang bị: luật phụ",
+      "intro": "Món trang bị của một lượt rơi là trang sức theo tỉ lệ này; còn lại là giáp hoặc vũ khí.",
+      "code": "Assets/_Game/Scripts/Runtime/Items/LootTable.cs · LootTable.JewelleryShare; Assets/_Game/Scripts/Runtime/Items/WeaponStash.cs · LootDrops.Piece",
+      "notes": [],
+      "columns": [
+        {
+          "id": "value",
+          "label": "Tỉ lệ"
+        }
+      ]
     },
     {
-     "id": "stacks",
-     "label": "Số chồng"
+      "id": "monsters",
+      "title": "Hạng quái",
+      "intro": "Tỉ lệ một quái thường thành Magic (1–2 mod) hoặc Rare (3–4 mod). Quái Rare rơi đồ như Elite.",
+      "code": "Assets/_Game/Scripts/Runtime/Enemies/MonsterMods.cs · MagicChance, RareChance",
+      "notes": [],
+      "columns": [
+        {
+          "id": "value",
+          "label": "Tỉ lệ"
+        }
+      ]
     },
     {
-     "id": "count",
-     "label": "Viên / chồng"
-    }
-   ],
-   "code": "Assets/_Game/Scripts/Runtime/Items/WeaponStash.cs · LootDrops.Stones; Assets/_Game/Scripts/Runtime/World/DailyCampChest.cs · RollLoot",
-   "notes": []
-  },
-  {
-   "id": "flux",
-   "title": "Flux",
-   "intro": "Phẩm chất vũ khí, giáp, bình. Item Quantity không tăng Flux.",
-   "columns": [
-    {
-     "id": "chance",
-     "label": "Tỉ lệ"
+      "id": "mods",
+      "title": "Mod của quái",
+      "intro": "Quantity nhân số lượt rơi; Rarity cộng vào Item Rarity (nhân trọng số bậc T3 trở lên).",
+      "code": "Assets/_Game/Scripts/Runtime/Enemies/MonsterMods.cs · Loot",
+      "notes": [],
+      "columns": [
+        {
+          "id": "quantity",
+          "label": "Quantity"
+        },
+        {
+          "id": "rarity",
+          "label": "Rarity"
+        }
+      ]
     },
     {
-     "id": "count",
-     "label": "Số viên"
-    }
-   ],
-   "code": "Assets/_Game/Scripts/Runtime/Items/WeaponStash.cs · LootDrops.OnEnemyDied, OnBossDied (PlayerInventory.Flux)",
-   "notes": []
-  },
-  {
-   "id": "gems",
-   "title": "Gem chế tạo, Chisel, Lustre",
-   "intro": "Tỉ lệ của một quái thường; elite và boss nhân với may mắn ở bảng dưới. Item Quantity không tăng.",
-   "columns": [
-    {
-     "id": "value",
-     "label": "Quái thường"
-    }
-   ],
-   "code": "Assets/_Game/Scripts/Runtime/Items/WeaponStash.cs · LootDrops.Gems",
-   "notes": []
-  },
-  {
-   "id": "gems_luck",
-   "title": "Gem: may mắn theo quái",
-   "intro": "Hệ số nhân mọi tỉ lệ ở bảng gem (cả Chisel, Lustre).",
-   "columns": [
-    {
-     "id": "value",
-     "label": "Hệ số"
-    }
-   ],
-   "code": "Assets/_Game/Scripts/Runtime/Items/WeaponStash.cs · LootDrops.Gems(rng, luck)",
-   "notes": []
-  },
-  {
-   "id": "uncut",
-   "title": "Ngọc chưa mài",
-   "intro": "Skill Forge nhân Quantity × (1 + Rarity) của mod quái. Support Seed tính \"elite\" riêng (cao > 3 m hoặc máu tối đa ≥ 180).",
-   "columns": [
-    {
-     "id": "forge",
-     "label": "Skill Forge"
+      "id": "gold",
+      "title": "Vàng",
+      "intro": "Luôn rơi, ngoài các lượt rơi: (min–max) × (1 + cấp × hệ số cấp) × hệ số quái × (1 + vàng của Rift).",
+      "code": "Assets/_Game/Scripts/Runtime/Items/WeaponStash.cs · LootDrops.Gold, OnEnemyDied, OnBossDied",
+      "notes": [],
+      "columns": [
+        {
+          "id": "value",
+          "label": "Giá trị"
+        }
+      ]
     },
     {
-     "id": "seed",
-     "label": "Support Seed"
-    }
-   ],
-   "code": "Assets/_Game/Scripts/Runtime/World/SkillLoot.cs · ForgeChance, DefaultEnemyChance, DefaultEliteChance, BossChance",
-   "notes": []
-  },
-  {
-   "id": "runes",
-   "title": "Rune trang bị",
-   "intro": "Rơi chưa đọc. Item Quantity của Rift nhân tỉ lệ. May mắn nhân hạng gốc ở bảng dưới.",
-   "columns": [
-    {
-     "id": "chance",
-     "label": "Tỉ lệ"
+      "id": "rift",
+      "title": "Rift Stone",
+      "intro": "Ngoài món \"Rift Stone\" trong bảng (chỉ rơi trong Rift), boss của Rift luôn để lại đá cho chuyến sau. Ba hạng đá cộng lại phải 100%.",
+      "code": "Assets/_Game/Scripts/Runtime/Items/WeaponStash.cs · LootDrops.OnBossDied; Assets/_Game/Scripts/Runtime/Items/RiftStones.cs · Drop",
+      "notes": [],
+      "columns": [
+        {
+          "id": "value",
+          "label": "Giá trị"
+        }
+      ]
     },
     {
-     "id": "luck",
-     "label": "May mắn"
-    }
-   ],
-   "code": "Assets/_Game/Scripts/Runtime/Items/GearRunes.cs · NormalChance, MagicChance, EliteChance, Drop; Assets/_Game/Scripts/Runtime/Items/WeaponStash.cs",
-   "notes": []
-  },
-  {
-   "id": "runes_rarity",
-   "title": "Rune: hạng gốc",
-   "intro": "Tỉ lệ hạng ở may mắn 1 (Rare = gốc × may mắn; Magic = (Magic + Rare) × may mắn − Rare; còn lại Normal).",
-   "columns": [
-    {
-     "id": "value",
-     "label": "Tỉ lệ"
-    }
-   ],
-   "code": "GearRunes.Drop (r < .05 * luck -> Rare, r < .30 * luck -> Magic)",
-   "notes": []
-  },
-  {
-   "id": "flasks",
-   "title": "Bình",
-   "intro": "Bậc bình theo cấp quái (bậc 1/2/3/4 từ cấp 1/10/25/45).",
-   "columns": [
-    {
-     "id": "value",
-     "label": "Tỉ lệ"
-    }
-   ],
-   "code": "Assets/_Game/Scripts/Runtime/Items/WeaponStash.cs · LootDrops.OnEnemyDied, OnBossDied; Assets/_Game/Scripts/Runtime/Items/Flasks.cs · Drop",
-   "notes": []
-  },
-  {
-   "id": "quest",
-   "title": "Vật phẩm quest",
-   "intro": "Bước \"collect … drop N\": quái hoang rơi món đó mỗi con khi bước đang mở. Co-op: chỉ host rơi.",
-   "columns": [
-    {
-     "id": "value",
-     "label": "Tỉ lệ"
-    }
-   ],
-   "code": "Assets/_Game/Resources/Story/*.txt · step = collect <item> <count> drop <N>",
-   "notes": []
-  },
-  {
-   "id": "rift",
-   "title": "Rift Stone (chỉ trong Rift)",
-   "intro": "Quái thường và elite: tỉ lệ × Quantity × (1 + \"thêm đá\"). Boss: chắc chắn, thêm 1 theo dòng \"thêm đá\". Ba hạng đá cộng lại phải 100%.",
-   "columns": [
-    {
-     "id": "value",
-     "label": "Giá trị"
-    }
-   ],
-   "code": "Assets/_Game/Scripts/Runtime/Items/WeaponStash.cs · LootDrops.OnEnemyDied, OnBossDied; Assets/_Game/Scripts/Runtime/Items/RiftStones.cs · Drop",
-   "notes": []
-  },
-  {
-   "id": "colours",
-   "title": "Màu đồ rơi",
-   "intro": "Màu nhãn tên và cột sáng, chiều cao cột sáng của từng nhóm đồ nằm dưới đất (0 = không có cột).",
-   "columns": [
-    {
-     "id": "colour",
-     "label": "Màu"
+      "id": "flasks",
+      "title": "Bình",
+      "intro": "Bậc bình theo cấp quái (bậc 1/2/3/4 từ cấp 1/10/25/45). Bình thường và bình Magic là hai món riêng trong bảng.",
+      "code": "Assets/_Game/Scripts/Runtime/Items/Flasks.cs · Drop",
+      "notes": [],
+      "columns": [
+        {
+          "id": "value",
+          "label": "Tỉ lệ"
+        }
+      ]
     },
     {
-     "id": "beam",
-     "label": "Cột sáng (m)"
+      "id": "quest",
+      "title": "Vật phẩm quest",
+      "intro": "Bước \"collect … drop N\": quái hoang rơi món đó mỗi con khi bước đang mở, ngoài bảng. Co-op: chỉ host rơi.",
+      "code": "Assets/_Game/Resources/Story/*.txt · step = collect <item> <count> drop <N>",
+      "notes": [],
+      "columns": [
+        {
+          "id": "value",
+          "label": "Tỉ lệ"
+        }
+      ]
+    },
+    {
+      "id": "colours",
+      "title": "Màu đồ rơi",
+      "intro": "Màu nhãn và cột sáng của từng nhóm đồ nằm dưới đất (0 = không cột). Tiền tệ và vật liệu lấy màu theo bậc tác dụng; trang bị theo độ hiếm.",
+      "code": "Assets/_Game/Scripts/Runtime/World/LootFx.cs · KindOf, ColorOf, BeamOf; Assets/_Game/Scripts/Runtime/Items/WeaponCatalog.cs · RarityInfo.Color",
+      "notes": [],
+      "columns": [
+        {
+          "id": "colour",
+          "label": "Màu"
+        },
+        {
+          "id": "beam",
+          "label": "Cột sáng (m)"
+        }
+      ]
     }
-   ],
-   "code": "Assets/_Game/Scripts/Runtime/World/LootFx.cs · KindOf, ColorOf, BeamOf; Assets/_Game/Scripts/Runtime/Items/WeaponCatalog.cs · RarityInfo.Color",
-   "notes": [
-    "Trang bị lấy màu theo độ hiếm (RarityInfo.Color); món khác lấy màu của nhóm (LootFx.ColorOf)."
-   ]
-  }
- ],
- "entries": [
-  {
-   "id": "monsters.magic.value",
-   "group": "monsters",
-   "row": "magic",
-   "rowLabel": "Magic",
-   "col": "value",
-   "kind": "chance",
-   "value": 0.15,
-   "code": "MonsterMods.MagicChance"
-  },
-  {
-   "id": "monsters.rare.value",
-   "group": "monsters",
-   "row": "rare",
-   "rowLabel": "Rare",
-   "col": "value",
-   "kind": "chance",
-   "value": 0.05,
-   "code": "MonsterMods.RareChance"
-  },
-  {
-   "id": "mods.Reflective.quantity",
-   "group": "mods",
-   "row": "Reflective",
-   "rowLabel": "Reflective",
-   "col": "quantity",
-   "kind": "chance",
-   "value": 0.15,
-   "code": "MonsterMods.Loot[Reflective].quantity"
-  },
-  {
-   "id": "mods.Reflective.rarity",
-   "group": "mods",
-   "row": "Reflective",
-   "rowLabel": "Reflective",
-   "col": "rarity",
-   "kind": "chance",
-   "value": 0.4,
-   "code": "MonsterMods.Loot[Reflective].rarity"
-  },
-  {
-   "id": "mods.Hasted.quantity",
-   "group": "mods",
-   "row": "Hasted",
-   "rowLabel": "Hasted",
-   "col": "quantity",
-   "kind": "chance",
-   "value": 0.12,
-   "code": "MonsterMods.Loot[Hasted].quantity"
-  },
-  {
-   "id": "mods.Hasted.rarity",
-   "group": "mods",
-   "row": "Hasted",
-   "rowLabel": "Hasted",
-   "col": "rarity",
-   "kind": "chance",
-   "value": 0.3,
-   "code": "MonsterMods.Loot[Hasted].rarity"
-  },
-  {
-   "id": "mods.Volatile.quantity",
-   "group": "mods",
-   "row": "Volatile",
-   "rowLabel": "Volatile",
-   "col": "quantity",
-   "kind": "chance",
-   "value": 0.12,
-   "code": "MonsterMods.Loot[Volatile].quantity"
-  },
-  {
-   "id": "mods.Volatile.rarity",
-   "group": "mods",
-   "row": "Volatile",
-   "rowLabel": "Volatile",
-   "col": "rarity",
-   "kind": "chance",
-   "value": 0.3,
-   "code": "MonsterMods.Loot[Volatile].rarity"
-  },
-  {
-   "id": "mods.Regenerating.quantity",
-   "group": "mods",
-   "row": "Regenerating",
-   "rowLabel": "Regenerating",
-   "col": "quantity",
-   "kind": "chance",
-   "value": 0.08,
-   "code": "MonsterMods.Loot[Regenerating].quantity"
-  },
-  {
-   "id": "mods.Regenerating.rarity",
-   "group": "mods",
-   "row": "Regenerating",
-   "rowLabel": "Regenerating",
-   "col": "rarity",
-   "kind": "chance",
-   "value": 0.2,
-   "code": "MonsterMods.Loot[Regenerating].rarity"
-  },
-  {
-   "id": "mods.Summoner.quantity",
-   "group": "mods",
-   "row": "Summoner",
-   "rowLabel": "Summoner",
-   "col": "quantity",
-   "kind": "chance",
-   "value": 0.06,
-   "code": "MonsterMods.Loot[Summoner].quantity"
-  },
-  {
-   "id": "mods.Summoner.rarity",
-   "group": "mods",
-   "row": "Summoner",
-   "rowLabel": "Summoner",
-   "col": "rarity",
-   "kind": "chance",
-   "value": 0.15,
-   "code": "MonsterMods.Loot[Summoner].rarity"
-  },
-  {
-   "id": "mods.FireResistant.quantity",
-   "group": "mods",
-   "row": "FireResistant",
-   "rowLabel": "Fire Resistant",
-   "col": "quantity",
-   "kind": "chance",
-   "value": 0.05,
-   "code": "MonsterMods.Loot[FireResistant].quantity"
-  },
-  {
-   "id": "mods.FireResistant.rarity",
-   "group": "mods",
-   "row": "FireResistant",
-   "rowLabel": "Fire Resistant",
-   "col": "rarity",
-   "kind": "chance",
-   "value": 0.1,
-   "code": "MonsterMods.Loot[FireResistant].rarity"
-  },
-  {
-   "id": "gear.normal.normal",
-   "group": "gear",
-   "row": "normal",
-   "rowLabel": "Thường",
-   "col": "normal",
-   "kind": "chance",
-   "value": 0.04,
-   "code": "LootDrops.GearChance[0,0]"
-  },
-  {
-   "id": "gear.normal.magic",
-   "group": "gear",
-   "row": "normal",
-   "rowLabel": "Thường",
-   "col": "magic",
-   "kind": "chance",
-   "value": 0.04,
-   "code": "LootDrops.GearChance[0,1]"
-  },
-  {
-   "id": "gear.normal.rare",
-   "group": "gear",
-   "row": "normal",
-   "rowLabel": "Thường",
-   "col": "rare",
-   "kind": "chance",
-   "value": 0.02,
-   "code": "LootDrops.GearChance[0,2]"
-  },
-  {
-   "id": "gear.normal.unique",
-   "group": "gear",
-   "row": "normal",
-   "rowLabel": "Thường",
-   "col": "unique",
-   "kind": "chance",
-   "value": 0.0036,
-   "code": "LootDrops.GearChance[0,3]"
-  },
-  {
-   "id": "gear.magic.normal",
-   "group": "gear",
-   "row": "magic",
-   "rowLabel": "Magic",
-   "col": "normal",
-   "kind": "chance",
-   "value": 0.15,
-   "code": "LootDrops.GearChance[1,0]"
-  },
-  {
-   "id": "gear.magic.magic",
-   "group": "gear",
-   "row": "magic",
-   "rowLabel": "Magic",
-   "col": "magic",
-   "kind": "chance",
-   "value": 0.15,
-   "code": "LootDrops.GearChance[1,1]"
-  },
-  {
-   "id": "gear.magic.rare",
-   "group": "gear",
-   "row": "magic",
-   "rowLabel": "Magic",
-   "col": "rare",
-   "kind": "chance",
-   "value": 0.075,
-   "code": "LootDrops.GearChance[1,2]"
-  },
-  {
-   "id": "gear.magic.unique",
-   "group": "gear",
-   "row": "magic",
-   "rowLabel": "Magic",
-   "col": "unique",
-   "kind": "chance",
-   "value": 0.0036,
-   "code": "LootDrops.GearChance[1,3]"
-  },
-  {
-   "id": "gear.elite.normal",
-   "group": "gear",
-   "row": "elite",
-   "rowLabel": "Elite / Rare",
-   "col": "normal",
-   "kind": "chance",
-   "value": 0.3,
-   "code": "LootDrops.GearChance[2,0]"
-  },
-  {
-   "id": "gear.elite.magic",
-   "group": "gear",
-   "row": "elite",
-   "rowLabel": "Elite / Rare",
-   "col": "magic",
-   "kind": "chance",
-   "value": 0.3,
-   "code": "LootDrops.GearChance[2,1]"
-  },
-  {
-   "id": "gear.elite.rare",
-   "group": "gear",
-   "row": "elite",
-   "rowLabel": "Elite / Rare",
-   "col": "rare",
-   "kind": "chance",
-   "value": 0.15,
-   "code": "LootDrops.GearChance[2,2]"
-  },
-  {
-   "id": "gear.elite.unique",
-   "group": "gear",
-   "row": "elite",
-   "rowLabel": "Elite / Rare",
-   "col": "unique",
-   "kind": "chance",
-   "value": 0.0036,
-   "code": "LootDrops.GearChance[2,3]"
-  },
-  {
-   "id": "gear.boss.normal",
-   "group": "gear",
-   "row": "boss",
-   "rowLabel": "Boss",
-   "col": "normal",
-   "kind": "chance",
-   "value": 0.4,
-   "code": "LootDrops.GearChance[3,0]"
-  },
-  {
-   "id": "gear.boss.magic",
-   "group": "gear",
-   "row": "boss",
-   "rowLabel": "Boss",
-   "col": "magic",
-   "kind": "chance",
-   "value": 0.4,
-   "code": "LootDrops.GearChance[3,1]"
-  },
-  {
-   "id": "gear.boss.rare",
-   "group": "gear",
-   "row": "boss",
-   "rowLabel": "Boss",
-   "col": "rare",
-   "kind": "chance",
-   "value": 0.25,
-   "code": "LootDrops.GearChance[3,2]"
-  },
-  {
-   "id": "gear.boss.unique",
-   "group": "gear",
-   "row": "boss",
-   "rowLabel": "Boss",
-   "col": "unique",
-   "kind": "chance",
-   "value": 0.04,
-   "code": "LootDrops.GearChance[3,3]"
-  },
-  {
-   "id": "gear_extra.jewellery_less.value",
-   "group": "gear_extra",
-   "row": "jewellery_less",
-   "rowLabel": "Trang sức thấp hơn (điểm %)",
-   "col": "value",
-   "kind": "chance",
-   "value": 0.02,
-   "code": "LootDrops.JewelleryLess"
-  },
-  {
-   "id": "gear_extra.armour_share.value",
-   "group": "gear_extra",
-   "row": "armour_share",
-   "rowLabel": "Phần giáp trong món không phải trang sức",
-   "col": "value",
-   "kind": "chance",
-   "value": 0.55,
-   "code": "LootDrops.Piece (rng < .55 -> armour)"
-  },
-  {
-   "id": "gear_extra.boss_sure_rare.value",
-   "group": "gear_extra",
-   "row": "boss_sure_rare",
-   "rowLabel": "Boss: số món Rare chắc chắn",
-   "col": "value",
-   "kind": "int",
-   "value": 1,
-   "code": "LootDrops.OnBossDied (Give(Piece(rng, level, 2, false)))"
-  },
-  {
-   "id": "gold.base.value",
-   "group": "gold",
-   "row": "base",
-   "rowLabel": "Gốc (min–max)",
-   "col": "value",
-   "kind": "range",
-   "value": [
-    8,
-    20
-   ],
-   "code": "LootDrops.Gold (rng.Next(8, 21))"
-  },
-  {
-   "id": "gold.per_level.value",
-   "group": "gold",
-   "row": "per_level",
-   "rowLabel": "Hệ số mỗi cấp",
-   "col": "value",
-   "kind": "number",
-   "value": 0.1,
-   "code": "LootDrops.Gold (1f + level / 10f)"
-  },
-  {
-   "id": "gold.normal.value",
-   "group": "gold",
-   "row": "normal",
-   "rowLabel": "Hệ số: Thường",
-   "col": "value",
-   "kind": "number",
-   "value": 1,
-   "code": "LootDrops.OnEnemyDied (elite ? 5f : 1f)"
-  },
-  {
-   "id": "gold.elite.value",
-   "group": "gold",
-   "row": "elite",
-   "rowLabel": "Hệ số: Elite / Rare",
-   "col": "value",
-   "kind": "number",
-   "value": 5,
-   "code": "LootDrops.OnEnemyDied (elite ? 5f : 1f)"
-  },
-  {
-   "id": "gold.boss.value",
-   "group": "gold",
-   "row": "boss",
-   "rowLabel": "Hệ số: Boss",
-   "col": "value",
-   "kind": "number",
-   "value": 40,
-   "code": "LootDrops.OnBossDied (Gold(rng, level, 40f ...))"
-  },
-  {
-   "id": "stones_split.g1.value",
-   "group": "stones_split",
-   "row": "g1",
-   "rowLabel": "Bậc I–II",
-   "col": "value",
-   "kind": "chance",
-   "value": 0.62,
-   "code": "LootDrops.Stones Low() r < .62"
-  },
-  {
-   "id": "stones_split.g2.value",
-   "group": "stones_split",
-   "row": "g2",
-   "rowLabel": "Bậc III–IV",
-   "col": "value",
-   "kind": "chance",
-   "value": 0.28,
-   "code": "LootDrops.Stones Low() r < .9"
-  },
-  {
-   "id": "stones_split.g3.value",
-   "group": "stones_split",
-   "row": "g3",
-   "rowLabel": "Bậc V–VI",
-   "col": "value",
-   "kind": "chance",
-   "value": 0.1,
-   "code": "LootDrops.Stones Low() else"
-  },
-  {
-   "id": "stones.normal_low.chance",
-   "group": "stones",
-   "row": "normal_low",
-   "rowLabel": "Thường: đá thấp I–VI",
-   "col": "chance",
-   "kind": "chance",
-   "value": 0.35,
-   "code": "LootDrops.Stones Rank.Normal"
-  },
-  {
-   "id": "stones.normal_low.stacks",
-   "group": "stones",
-   "row": "normal_low",
-   "rowLabel": "Thường: đá thấp I–VI",
-   "col": "stacks",
-   "kind": "range",
-   "value": [
-    1,
-    1
-   ],
-   "code": "LootDrops.Stones Rank.Normal"
-  },
-  {
-   "id": "stones.normal_low.count",
-   "group": "stones",
-   "row": "normal_low",
-   "rowLabel": "Thường: đá thấp I–VI",
-   "col": "count",
-   "kind": "range",
-   "value": [
-    1,
-    2
-   ],
-   "code": "LootDrops.Stones Rank.Normal"
-  },
-  {
-   "id": "stones.elite_low.chance",
-   "group": "stones",
-   "row": "elite_low",
-   "rowLabel": "Elite: đá thấp I–VI",
-   "col": "chance",
-   "kind": "chance",
-   "value": 1,
-   "code": "LootDrops.Stones Rank.Elite (rng.Next(1, 4) stacks)"
-  },
-  {
-   "id": "stones.elite_low.stacks",
-   "group": "stones",
-   "row": "elite_low",
-   "rowLabel": "Elite: đá thấp I–VI",
-   "col": "stacks",
-   "kind": "range",
-   "value": [
-    1,
-    3
-   ],
-   "code": "LootDrops.Stones Rank.Elite (rng.Next(1, 4) stacks)"
-  },
-  {
-   "id": "stones.elite_low.count",
-   "group": "stones",
-   "row": "elite_low",
-   "rowLabel": "Elite: đá thấp I–VI",
-   "col": "count",
-   "kind": "range",
-   "value": [
-    1,
-    2
-   ],
-   "code": "LootDrops.Stones Rank.Elite (rng.Next(1, 4) stacks)"
-  },
-  {
-   "id": "stones.elite_high.chance",
-   "group": "stones",
-   "row": "elite_high",
-   "rowLabel": "Elite: VII / VIII",
-   "col": "chance",
-   "kind": "chance",
-   "value": 0.05,
-   "code": "LootDrops.Stones Rank.Elite Split(4)"
-  },
-  {
-   "id": "stones.elite_high.count",
-   "group": "stones",
-   "row": "elite_high",
-   "rowLabel": "Elite: VII / VIII",
-   "col": "count",
-   "kind": "range",
-   "value": [
-    1,
-    1
-   ],
-   "code": "LootDrops.Stones Rank.Elite Split(4)"
-  },
-  {
-   "id": "stones.boss_low.chance",
-   "group": "stones",
-   "row": "boss_low",
-   "rowLabel": "Boss: đá thấp I–VI",
-   "col": "chance",
-   "kind": "chance",
-   "value": 1,
-   "code": "LootDrops.Stones default (rng.Next(2, 5) stacks)"
-  },
-  {
-   "id": "stones.boss_low.stacks",
-   "group": "stones",
-   "row": "boss_low",
-   "rowLabel": "Boss: đá thấp I–VI",
-   "col": "stacks",
-   "kind": "range",
-   "value": [
-    2,
-    4
-   ],
-   "code": "LootDrops.Stones default (rng.Next(2, 5) stacks)"
-  },
-  {
-   "id": "stones.boss_low.count",
-   "group": "stones",
-   "row": "boss_low",
-   "rowLabel": "Boss: đá thấp I–VI",
-   "col": "count",
-   "kind": "range",
-   "value": [
-    2,
-    3
-   ],
-   "code": "LootDrops.Stones default (rng.Next(2, 5) stacks)"
-  },
-  {
-   "id": "stones.boss_high.chance",
-   "group": "stones",
-   "row": "boss_high",
-   "rowLabel": "Boss: VII / VIII",
-   "col": "chance",
-   "kind": "chance",
-   "value": 0.5,
-   "code": "LootDrops.Stones default Split(4)"
-  },
-  {
-   "id": "stones.boss_high.count",
-   "group": "stones",
-   "row": "boss_high",
-   "rowLabel": "Boss: VII / VIII",
-   "col": "count",
-   "kind": "range",
-   "value": [
-    1,
-    2
-   ],
-   "code": "LootDrops.Stones default Split(4)"
-  },
-  {
-   "id": "stones.boss_top.chance",
-   "group": "stones",
-   "row": "boss_top",
-   "rowLabel": "Boss: IX / X",
-   "col": "chance",
-   "kind": "chance",
-   "value": 0.25,
-   "code": "LootDrops.Stones default Split(5)"
-  },
-  {
-   "id": "stones.boss_top.count",
-   "group": "stones",
-   "row": "boss_top",
-   "rowLabel": "Boss: IX / X",
-   "col": "count",
-   "kind": "range",
-   "value": [
-    1,
-    1
-   ],
-   "code": "LootDrops.Stones default Split(5)"
-  },
-  {
-   "id": "stones.boss_ancient.chance",
-   "group": "stones",
-   "row": "boss_ancient",
-   "rowLabel": "Boss: Ancient Forge Stone",
-   "col": "chance",
-   "kind": "chance",
-   "value": 0.3,
-   "code": "LootDrops.Stones default AncientStone(1)"
-  },
-  {
-   "id": "stones.boss_ancient.count",
-   "group": "stones",
-   "row": "boss_ancient",
-   "rowLabel": "Boss: Ancient Forge Stone",
-   "col": "count",
-   "kind": "range",
-   "value": [
-    1,
-    1
-   ],
-   "code": "LootDrops.Stones default AncientStone(1)"
-  },
-  {
-   "id": "stones.camp_magic.chance",
-   "group": "stones",
-   "row": "camp_magic",
-   "rowLabel": "Rương trại Goblin Magic: đá I–III",
-   "col": "chance",
-   "kind": "chance",
-   "value": 1,
-   "code": "DailyCampChest.RollLoot (grade Magic -> 1)"
-  },
-  {
-   "id": "stones.camp_magic.count",
-   "group": "stones",
-   "row": "camp_magic",
-   "rowLabel": "Rương trại Goblin Magic: đá I–III",
-   "col": "count",
-   "kind": "range",
-   "value": [
-    1,
-    1
-   ],
-   "code": "DailyCampChest.RollLoot (grade Magic -> 1)"
-  },
-  {
-   "id": "stones.camp_rare.chance",
-   "group": "stones",
-   "row": "camp_rare",
-   "rowLabel": "Rương trại Goblin Rare: đá I–III",
-   "col": "chance",
-   "kind": "chance",
-   "value": 1,
-   "code": "DailyCampChest.RollLoot (grade Rare -> 3)"
-  },
-  {
-   "id": "stones.camp_rare.count",
-   "group": "stones",
-   "row": "camp_rare",
-   "rowLabel": "Rương trại Goblin Rare: đá I–III",
-   "col": "count",
-   "kind": "range",
-   "value": [
-    3,
-    3
-   ],
-   "code": "DailyCampChest.RollLoot (grade Rare -> 3)"
-  },
-  {
-   "id": "flux.normal.chance",
-   "group": "flux",
-   "row": "normal",
-   "rowLabel": "Thường",
-   "col": "chance",
-   "kind": "chance",
-   "value": 0.08,
-   "code": "LootDrops.OnEnemyDied (elite ? .3 : .08)"
-  },
-  {
-   "id": "flux.normal.count",
-   "group": "flux",
-   "row": "normal",
-   "rowLabel": "Thường",
-   "col": "count",
-   "kind": "range",
-   "value": [
-    1,
-    1
-   ],
-   "code": "LootDrops.OnEnemyDied Flux(1)"
-  },
-  {
-   "id": "flux.elite.chance",
-   "group": "flux",
-   "row": "elite",
-   "rowLabel": "Elite / Rare",
-   "col": "chance",
-   "kind": "chance",
-   "value": 0.3,
-   "code": "LootDrops.OnEnemyDied (elite ? .3 : .08)"
-  },
-  {
-   "id": "flux.elite.count",
-   "group": "flux",
-   "row": "elite",
-   "rowLabel": "Elite / Rare",
-   "col": "count",
-   "kind": "range",
-   "value": [
-    1,
-    1
-   ],
-   "code": "LootDrops.OnEnemyDied Flux(1)"
-  },
-  {
-   "id": "flux.boss.chance",
-   "group": "flux",
-   "row": "boss",
-   "rowLabel": "Boss",
-   "col": "chance",
-   "kind": "chance",
-   "value": 0.8,
-   "code": "LootDrops.OnBossDied (rng < .8)"
-  },
-  {
-   "id": "flux.boss.count",
-   "group": "flux",
-   "row": "boss",
-   "rowLabel": "Boss",
-   "col": "count",
-   "kind": "range",
-   "value": [
-    1,
-    3
-   ],
-   "code": "LootDrops.OnBossDied Flux(rng.Next(1, 4))"
-  },
-  {
-   "id": "gems.gem_transmute.value",
-   "group": "gems",
-   "row": "gem_transmute",
-   "rowLabel": "Kindle (gem_transmute)",
-   "col": "value",
-   "kind": "chance",
-   "value": 0.0625,
-   "code": "LootDrops.Gems table (Kindle (gem_transmute))"
-  },
-  {
-   "id": "gems.gem_prism.value",
-   "group": "gems",
-   "row": "gem_prism",
-   "rowLabel": "Twin-Moon Prism",
-   "col": "value",
-   "kind": "chance",
-   "value": 0.041667,
-   "code": "LootDrops.Gems table (Twin-Moon Prism)"
-  },
-  {
-   "id": "gems.gem_regal.value",
-   "group": "gems",
-   "row": "gem_regal",
-   "rowLabel": "Crown (gem_regal)",
-   "col": "value",
-   "kind": "chance",
-   "value": 0.025,
-   "code": "LootDrops.Gems table (Crown (gem_regal))"
-  },
-  {
-   "id": "gems.gem_exalt.value",
-   "group": "gems",
-   "row": "gem_exalt",
-   "rowLabel": "Blaze (gem_exalt)",
-   "col": "value",
-   "kind": "chance",
-   "value": 0.008333,
-   "code": "LootDrops.Gems table (Blaze (gem_exalt))"
-  },
-  {
-   "id": "gems.gem_chaos.value",
-   "group": "gems",
-   "row": "gem_chaos",
-   "rowLabel": "Wildfire (gem_chaos)",
-   "col": "value",
-   "kind": "chance",
-   "value": 0.003571,
-   "code": "LootDrops.Gems table (Wildfire (gem_chaos))"
-  },
-  {
-   "id": "gems.gem_voidpearl.value",
-   "group": "gems",
-   "row": "gem_voidpearl",
-   "rowLabel": "Void Pearl",
-   "col": "value",
-   "kind": "chance",
-   "value": 0.003333,
-   "code": "LootDrops.Gems table (Void Pearl)"
-  },
-  {
-   "id": "gems.gem_starforge.value",
-   "group": "gems",
-   "row": "gem_starforge",
-   "rowLabel": "Star Forge",
-   "col": "value",
-   "kind": "chance",
-   "value": 0.002778,
-   "code": "LootDrops.Gems table (Star Forge)"
-  },
-  {
-   "id": "gems.gem_suntear.value",
-   "group": "gems",
-   "row": "gem_suntear",
-   "rowLabel": "Sun Tear",
-   "col": "value",
-   "kind": "chance",
-   "value": 0.002,
-   "code": "LootDrops.Gems table (Sun Tear)"
-  },
-  {
-   "id": "gems.gem_chisel.value",
-   "group": "gems",
-   "row": "gem_chisel",
-   "rowLabel": "Chisel",
-   "col": "value",
-   "kind": "chance",
-   "value": 0.02,
-   "code": "LootDrops.Gems table (Chisel)"
-  },
-  {
-   "id": "gems.gem_polish.value",
-   "group": "gems",
-   "row": "gem_polish",
-   "rowLabel": "Lustre (gem_polish)",
-   "col": "value",
-   "kind": "chance",
-   "value": 0.033333,
-   "code": "LootDrops.Gems table (Lustre (gem_polish))"
-  },
-  {
-   "id": "gems_luck.normal.value",
-   "group": "gems_luck",
-   "row": "normal",
-   "rowLabel": "Thường",
-   "col": "value",
-   "kind": "number",
-   "value": 1,
-   "code": "LootDrops.OnEnemyDied Gems(rng, elite ? 4f : 1f)"
-  },
-  {
-   "id": "gems_luck.elite.value",
-   "group": "gems_luck",
-   "row": "elite",
-   "rowLabel": "Elite / Rare",
-   "col": "value",
-   "kind": "number",
-   "value": 4,
-   "code": "LootDrops.OnEnemyDied Gems(rng, elite ? 4f : 1f)"
-  },
-  {
-   "id": "gems_luck.boss.value",
-   "group": "gems_luck",
-   "row": "boss",
-   "rowLabel": "Boss",
-   "col": "value",
-   "kind": "number",
-   "value": 10,
-   "code": "LootDrops.OnBossDied Gems(rng, 10f)"
-  },
-  {
-   "id": "gems_luck.chest_lustre.value",
-   "group": "gems_luck",
-   "row": "chest_lustre",
-   "rowLabel": "Rương lâu đài: phần Lustre (còn lại Chisel)",
-   "col": "value",
-   "kind": "chance",
-   "value": 0.5,
-   "code": "Assets/_Game/Scripts/Runtime/World/LootChest.cs (rng < .5 ? Chisel : Lustre)"
-  },
-  {
-   "id": "uncut.normal.forge",
-   "group": "uncut",
-   "row": "normal",
-   "rowLabel": "Thường",
-   "col": "forge",
-   "kind": "chance",
-   "value": 0.02,
-   "code": "SkillLoot.ForgeChance[0]"
-  },
-  {
-   "id": "uncut.normal.seed",
-   "group": "uncut",
-   "row": "normal",
-   "rowLabel": "Thường",
-   "col": "seed",
-   "kind": "chance",
-   "value": 0.003333,
-   "code": "SkillLoot.DefaultEnemyChance"
-  },
-  {
-   "id": "uncut.magic.forge",
-   "group": "uncut",
-   "row": "magic",
-   "rowLabel": "Magic",
-   "col": "forge",
-   "kind": "chance",
-   "value": 0.075,
-   "code": "SkillLoot.ForgeChance[1]"
-  },
-  {
-   "id": "uncut.magic.seed",
-   "group": "uncut",
-   "row": "magic",
-   "rowLabel": "Magic",
-   "col": "seed",
-   "kind": "chance",
-   "value": 0.003333,
-   "code": "SkillLoot.DefaultEnemyChance"
-  },
-  {
-   "id": "uncut.elite.forge",
-   "group": "uncut",
-   "row": "elite",
-   "rowLabel": "Elite / Rare",
-   "col": "forge",
-   "kind": "chance",
-   "value": 0.15,
-   "code": "SkillLoot.ForgeChance[2]"
-  },
-  {
-   "id": "uncut.elite.seed",
-   "group": "uncut",
-   "row": "elite",
-   "rowLabel": "Elite / Rare",
-   "col": "seed",
-   "kind": "chance",
-   "value": 0.033333,
-   "code": "SkillLoot.DefaultEliteChance"
-  },
-  {
-   "id": "uncut.boss.forge",
-   "group": "uncut",
-   "row": "boss",
-   "rowLabel": "Boss",
-   "col": "forge",
-   "kind": "chance",
-   "value": 0.25,
-   "code": "SkillLoot.ForgeChance[3]"
-  },
-  {
-   "id": "uncut.boss.seed",
-   "group": "uncut",
-   "row": "boss",
-   "rowLabel": "Boss",
-   "col": "seed",
-   "kind": "chance",
-   "value": 0.15,
-   "code": "SkillLoot.BossChance * .5"
-  },
-  {
-   "id": "uncut.chest.forge",
-   "group": "uncut",
-   "row": "chest",
-   "rowLabel": "Rương lâu đài (một viên, 50/50)",
-   "col": "forge",
-   "kind": "chance",
-   "value": 0.3,
-   "code": "SkillLoot.BossChance (LootChest: one of either, 50/50)"
-  },
-  {
-   "id": "runes.normal.chance",
-   "group": "runes",
-   "row": "normal",
-   "rowLabel": "Thường",
-   "col": "chance",
-   "kind": "chance",
-   "value": 0.02,
-   "code": "GearRunes.NormalChance"
-  },
-  {
-   "id": "runes.normal.luck",
-   "group": "runes",
-   "row": "normal",
-   "rowLabel": "Thường",
-   "col": "luck",
-   "kind": "number",
-   "value": 1,
-   "code": "LootDrops: GearRunes.Drop(level, rng, luck)"
-  },
-  {
-   "id": "runes.magic.chance",
-   "group": "runes",
-   "row": "magic",
-   "rowLabel": "Magic",
-   "col": "chance",
-   "kind": "chance",
-   "value": 0.06,
-   "code": "GearRunes.MagicChance"
-  },
-  {
-   "id": "runes.magic.luck",
-   "group": "runes",
-   "row": "magic",
-   "rowLabel": "Magic",
-   "col": "luck",
-   "kind": "number",
-   "value": 1,
-   "code": "LootDrops: GearRunes.Drop(level, rng, luck)"
-  },
-  {
-   "id": "runes.elite.chance",
-   "group": "runes",
-   "row": "elite",
-   "rowLabel": "Elite / Rare",
-   "col": "chance",
-   "kind": "chance",
-   "value": 0.1,
-   "code": "GearRunes.EliteChance"
-  },
-  {
-   "id": "runes.elite.luck",
-   "group": "runes",
-   "row": "elite",
-   "rowLabel": "Elite / Rare",
-   "col": "luck",
-   "kind": "number",
-   "value": 2,
-   "code": "LootDrops: GearRunes.Drop(level, rng, luck)"
-  },
-  {
-   "id": "runes.boss.chance",
-   "group": "runes",
-   "row": "boss",
-   "rowLabel": "Boss",
-   "col": "chance",
-   "kind": "chance",
-   "value": 0.1,
-   "code": "GearRunes.EliteChance (OnBossDied, luck 3)"
-  },
-  {
-   "id": "runes.boss.luck",
-   "group": "runes",
-   "row": "boss",
-   "rowLabel": "Boss",
-   "col": "luck",
-   "kind": "number",
-   "value": 3,
-   "code": "LootDrops: GearRunes.Drop(level, rng, luck)"
-  },
-  {
-   "id": "runes_rarity.rare.value",
-   "group": "runes_rarity",
-   "row": "rare",
-   "rowLabel": "Rare",
-   "col": "value",
-   "kind": "chance",
-   "value": 0.05,
-   "code": "GearRunes.Drop (.05 * luck)"
-  },
-  {
-   "id": "runes_rarity.magic.value",
-   "group": "runes_rarity",
-   "row": "magic",
-   "rowLabel": "Magic",
-   "col": "value",
-   "kind": "chance",
-   "value": 0.25,
-   "code": "GearRunes.Drop (.30 * luck - Rare)"
-  },
-  {
-   "id": "flasks.normal.value",
-   "group": "flasks",
-   "row": "normal",
-   "rowLabel": "Thường",
-   "col": "value",
-   "kind": "chance",
-   "value": 0.04,
-   "code": "LootDrops.OnEnemyDied (elite ? .2 : .04)"
-  },
-  {
-   "id": "flasks.elite.value",
-   "group": "flasks",
-   "row": "elite",
-   "rowLabel": "Elite / Rare",
-   "col": "value",
-   "kind": "chance",
-   "value": 0.2,
-   "code": "LootDrops.OnEnemyDied (elite ? .2 : .04)"
-  },
-  {
-   "id": "flasks.boss.value",
-   "group": "flasks",
-   "row": "boss",
-   "rowLabel": "Boss",
-   "col": "value",
-   "kind": "chance",
-   "value": 0.6,
-   "code": "LootDrops.OnBossDied (rng < .6)"
-  },
-  {
-   "id": "flasks.lower_tier.value",
-   "group": "flasks",
-   "row": "lower_tier",
-   "rowLabel": "Thấp hơn một bậc",
-   "col": "value",
-   "kind": "chance",
-   "value": 0.35,
-   "code": "Flasks.Drop (rng < .35 -> one tier lower)"
-  },
-  {
-   "id": "flasks.life_share.value",
-   "group": "flasks",
-   "row": "life_share",
-   "rowLabel": "Phần bình máu (còn lại mana)",
-   "col": "value",
-   "kind": "chance",
-   "value": 0.55,
-   "code": "Flasks.Drop (Make(rng < .55, tier))"
-  },
-  {
-   "id": "flasks.magic.value",
-   "group": "flasks",
-   "row": "magic",
-   "rowLabel": "Bình Magic",
-   "col": "value",
-   "kind": "chance",
-   "value": 0.25,
-   "code": "Flasks.Drop (rng < .25 -> Magic, 1-2 lines)"
-  },
-  {
-   "id": "quest.quest_grey_heartwood.value",
-   "group": "quest",
-   "row": "quest_grey_heartwood",
-   "rowLabel": "Grey Heartwood",
-   "col": "value",
-   "kind": "chance",
-   "value": 0.7,
-   "code": "Resources/Story/Prologue.txt (collect quest_grey_heartwood 4 drop 70)"
-  },
-  {
-   "id": "quest.quest_grey_lichen.value",
-   "group": "quest",
-   "row": "quest_grey_lichen",
-   "rowLabel": "Grey Lichen",
-   "col": "value",
-   "kind": "chance",
-   "value": 0.7,
-   "code": "Resources/Story/Chapters.txt (collect quest_grey_lichen 4 drop 70)"
-  },
-  {
-   "id": "quest.quest_black_chain.value",
-   "group": "quest",
-   "row": "quest_black_chain",
-   "rowLabel": "Link of Black Chain",
-   "col": "value",
-   "kind": "chance",
-   "value": 0.7,
-   "code": "Resources/Story/Chapters.txt (collect quest_black_chain 3 drop 70)"
-  },
-  {
-   "id": "quest.quest_rusted_fittings.value",
-   "group": "quest",
-   "row": "quest_rusted_fittings",
-   "rowLabel": "Rusted Fittings",
-   "col": "value",
-   "kind": "chance",
-   "value": 0.45,
-   "code": "Resources/Story/Farmhands.txt (collect quest_rusted_fittings 3 drop 45)"
-  },
-  {
-   "id": "rift.normal.value",
-   "group": "rift",
-   "row": "normal",
-   "rowLabel": "Thường",
-   "col": "value",
-   "kind": "chance",
-   "value": 0.025,
-   "code": "LootDrops.OnEnemyDied (elite ? .15 : .025)"
-  },
-  {
-   "id": "rift.elite.value",
-   "group": "rift",
-   "row": "elite",
-   "rowLabel": "Elite / Rare",
-   "col": "value",
-   "kind": "chance",
-   "value": 0.15,
-   "code": "LootDrops.OnEnemyDied (elite ? .15 : .025)"
-  },
-  {
-   "id": "rift.boss.value",
-   "group": "rift",
-   "row": "boss",
-   "rowLabel": "Boss: số viên",
-   "col": "value",
-   "kind": "range",
-   "value": [
-    1,
-    2
-   ],
-   "code": "LootDrops.OnBossDied (rng.Next(1, 3))"
-  },
-  {
-   "id": "rift.tier_up.value",
-   "group": "rift",
-   "row": "tier_up",
-   "rowLabel": "Lên thêm một bậc",
-   "col": "value",
-   "kind": "chance",
-   "value": 0.2,
-   "code": "RiftStones.Drop (rng < .2 -> tier + 1)"
-  },
-  {
-   "id": "rift.grade_normal.value",
-   "group": "rift",
-   "row": "grade_normal",
-   "rowLabel": "Hạng Normal",
-   "col": "value",
-   "kind": "chance",
-   "value": 0.55,
-   "code": "RiftStones.Drop (r < .55)"
-  },
-  {
-   "id": "rift.grade_magic.value",
-   "group": "rift",
-   "row": "grade_magic",
-   "rowLabel": "Hạng Magic",
-   "col": "value",
-   "kind": "chance",
-   "value": 0.32,
-   "code": "RiftStones.Drop (r < .87)"
-  },
-  {
-   "id": "rift.grade_rare.value",
-   "group": "rift",
-   "row": "grade_rare",
-   "rowLabel": "Hạng Rare",
-   "col": "value",
-   "kind": "chance",
-   "value": 0.13,
-   "code": "RiftStones.Drop (else)"
-  },
-  {
-   "id": "colours.normal.colour",
-   "group": "colours",
-   "row": "normal",
-   "rowLabel": "Normal (đồ)",
-   "col": "colour",
-   "kind": "color",
-   "value": "#dbdbd6",
-   "code": "RarityInfo.Color(White)"
-  },
-  {
-   "id": "colours.normal.beam",
-   "group": "colours",
-   "row": "normal",
-   "rowLabel": "Normal (đồ)",
-   "col": "beam",
-   "kind": "number",
-   "value": 0,
-   "code": "LootFx.BeamOf"
-  },
-  {
-   "id": "colours.misc.colour",
-   "group": "colours",
-   "row": "misc",
-   "rowLabel": "Món lặt vặt",
-   "col": "colour",
-   "kind": "color",
-   "value": "#ffe6b3",
-   "code": "LootFx.ColorOf default"
-  },
-  {
-   "id": "colours.misc.beam",
-   "group": "colours",
-   "row": "misc",
-   "rowLabel": "Món lặt vặt",
-   "col": "beam",
-   "kind": "number",
-   "value": 0,
-   "code": "LootFx.BeamOf"
-  },
-  {
-   "id": "colours.gold.colour",
-   "group": "colours",
-   "row": "gold",
-   "rowLabel": "Vàng",
-   "col": "colour",
-   "kind": "color",
-   "value": "#ffcc4d",
-   "code": "LootFx.ColorOf(Gold)"
-  },
-  {
-   "id": "colours.gold.beam",
-   "group": "colours",
-   "row": "gold",
-   "rowLabel": "Vàng",
-   "col": "beam",
-   "kind": "number",
-   "value": 0,
-   "code": "LootFx.BeamOf"
-  },
-  {
-   "id": "colours.magic.colour",
-   "group": "colours",
-   "row": "magic",
-   "rowLabel": "Magic",
-   "col": "colour",
-   "kind": "color",
-   "value": "#669eff",
-   "code": "RarityInfo.Color(Blue); LootFx.ColorOf(Magic) is #73a6ff for non-gear"
-  },
-  {
-   "id": "colours.magic.beam",
-   "group": "colours",
-   "row": "magic",
-   "rowLabel": "Magic",
-   "col": "beam",
-   "kind": "number",
-   "value": 1.6,
-   "code": "LootFx.BeamOf"
-  },
-  {
-   "id": "colours.rare.colour",
-   "group": "colours",
-   "row": "rare",
-   "rowLabel": "Rare",
-   "col": "colour",
-   "kind": "color",
-   "value": "#bd73ff",
-   "code": "RarityInfo.Color(Purple)"
-  },
-  {
-   "id": "colours.rare.beam",
-   "group": "colours",
-   "row": "rare",
-   "rowLabel": "Rare",
-   "col": "beam",
-   "kind": "number",
-   "value": 2.4,
-   "code": "LootFx.BeamOf"
-  },
-  {
-   "id": "colours.unique.colour",
-   "group": "colours",
-   "row": "unique",
-   "rowLabel": "Unique",
-   "col": "colour",
-   "kind": "color",
-   "value": "#ff4238",
-   "code": "RarityInfo.Color(Orange/Red); BeamOf(Mythic)"
-  },
-  {
-   "id": "colours.unique.beam",
-   "group": "colours",
-   "row": "unique",
-   "rowLabel": "Unique",
-   "col": "beam",
-   "kind": "number",
-   "value": 6,
-   "code": "LootFx.BeamOf"
-  },
-  {
-   "id": "colours.currency.colour",
-   "group": "colours",
-   "row": "currency",
-   "rowLabel": "Currency",
-   "col": "colour",
-   "kind": "color",
-   "value": "#ffedbf",
-   "code": "LootFx.ColorOf(Currency)"
-  },
-  {
-   "id": "colours.currency.beam",
-   "group": "colours",
-   "row": "currency",
-   "rowLabel": "Currency",
-   "col": "beam",
-   "kind": "number",
-   "value": 1.8,
-   "code": "LootFx.BeamOf"
-  },
-  {
-   "id": "colours.divine.colour",
-   "group": "colours",
-   "row": "divine",
-   "rowLabel": "Divine",
-   "col": "colour",
-   "kind": "color",
-   "value": "#fff5d1",
-   "code": "LootFx.ColorOf(Divine)"
-  },
-  {
-   "id": "colours.divine.beam",
-   "group": "colours",
-   "row": "divine",
-   "rowLabel": "Divine",
-   "col": "beam",
-   "kind": "number",
-   "value": 8,
-   "code": "LootFx.BeamOf"
-  },
-  {
-   "id": "colours.skill.colour",
-   "group": "colours",
-   "row": "skill",
-   "rowLabel": "Skill gem",
-   "col": "colour",
-   "kind": "color",
-   "value": "#8c99ff",
-   "code": "LootFx.ColorOf(SkillGem)"
-  },
-  {
-   "id": "colours.skill.beam",
-   "group": "colours",
-   "row": "skill",
-   "rowLabel": "Skill gem",
-   "col": "beam",
-   "kind": "number",
-   "value": 4.5,
-   "code": "LootFx.BeamOf"
-  },
-  {
-   "id": "colours.support.colour",
-   "group": "colours",
-   "row": "support",
-   "rowLabel": "Support gem",
-   "col": "colour",
-   "kind": "color",
-   "value": "#ff9e40",
-   "code": "LootFx.ColorOf(Support)"
-  },
-  {
-   "id": "colours.support.beam",
-   "group": "colours",
-   "row": "support",
-   "rowLabel": "Support gem",
-   "col": "beam",
-   "kind": "number",
-   "value": 4.5,
-   "code": "LootFx.BeamOf"
-  },
-  {
-   "id": "colours.flask.colour",
-   "group": "colours",
-   "row": "flask",
-   "rowLabel": "Bình / đồ dùng",
-   "col": "colour",
-   "kind": "color",
-   "value": "#80ff99",
-   "code": "LootFx.ColorOf(Flask/Consumable)"
-  },
-  {
-   "id": "colours.flask.beam",
-   "group": "colours",
-   "row": "flask",
-   "rowLabel": "Bình / đồ dùng",
-   "col": "beam",
-   "kind": "number",
-   "value": 0,
-   "code": "LootFx.BeamOf"
-  },
-  {
-   "id": "colours.quest.colour",
-   "group": "colours",
-   "row": "quest",
-   "rowLabel": "Quest",
-   "col": "colour",
-   "kind": "color",
-   "value": "#9eff4d",
-   "code": "LootFx.ColorOf(Quest)"
-  },
-  {
-   "id": "colours.quest.beam",
-   "group": "colours",
-   "row": "quest",
-   "rowLabel": "Quest",
-   "col": "beam",
-   "kind": "number",
-   "value": 4.5,
-   "code": "LootFx.BeamOf"
-  }
- ]
+  ],
+  "entries": [
+    {
+      "id": "rolls.normal.value",
+      "group": "rolls",
+      "row": "normal",
+      "rowLabel": "Thường",
+      "col": "value",
+      "kind": "number",
+      "value": 0.15,
+      "code": "LootTable.Rolls[0]"
+    },
+    {
+      "id": "rolls.magic.value",
+      "group": "rolls",
+      "row": "magic",
+      "rowLabel": "Magic",
+      "col": "value",
+      "kind": "number",
+      "value": 0.4,
+      "code": "LootTable.Rolls[1]"
+    },
+    {
+      "id": "rolls.elite.value",
+      "group": "rolls",
+      "row": "elite",
+      "rowLabel": "Elite / Rare",
+      "col": "value",
+      "kind": "number",
+      "value": 1.2,
+      "code": "LootTable.Rolls[2]"
+    },
+    {
+      "id": "rolls.boss.value",
+      "group": "rolls",
+      "row": "boss",
+      "rowLabel": "Boss",
+      "col": "value",
+      "kind": "number",
+      "value": 5.0,
+      "code": "LootTable.Rolls[3]"
+    },
+    {
+      "id": "rank_rarity.normal.value",
+      "group": "rank_rarity",
+      "row": "normal",
+      "rowLabel": "Thường",
+      "col": "value",
+      "kind": "chance",
+      "value": 0.0,
+      "code": "LootTable.RankRarity[0]"
+    },
+    {
+      "id": "rank_rarity.magic.value",
+      "group": "rank_rarity",
+      "row": "magic",
+      "rowLabel": "Magic",
+      "col": "value",
+      "kind": "chance",
+      "value": 0.25,
+      "code": "LootTable.RankRarity[1]"
+    },
+    {
+      "id": "rank_rarity.elite.value",
+      "group": "rank_rarity",
+      "row": "elite",
+      "rowLabel": "Elite / Rare",
+      "col": "value",
+      "kind": "chance",
+      "value": 0.5,
+      "code": "LootTable.RankRarity[2]"
+    },
+    {
+      "id": "rank_rarity.boss.value",
+      "group": "rank_rarity",
+      "row": "boss",
+      "rowLabel": "Boss",
+      "col": "value",
+      "kind": "chance",
+      "value": 1.0,
+      "code": "LootTable.RankRarity[3]"
+    },
+    {
+      "id": "tiers.t1.value",
+      "group": "tiers",
+      "row": "t1",
+      "rowLabel": "T1 Common",
+      "col": "value",
+      "kind": "number",
+      "value": 1000.0,
+      "code": "LootTable.TierWeight[0]"
+    },
+    {
+      "id": "tiers.t2.value",
+      "group": "tiers",
+      "row": "t2",
+      "rowLabel": "T2 Uncommon",
+      "col": "value",
+      "kind": "number",
+      "value": 300.0,
+      "code": "LootTable.TierWeight[1]"
+    },
+    {
+      "id": "tiers.t3.value",
+      "group": "tiers",
+      "row": "t3",
+      "rowLabel": "T3 Rare",
+      "col": "value",
+      "kind": "number",
+      "value": 80.0,
+      "code": "LootTable.TierWeight[2]"
+    },
+    {
+      "id": "tiers.t4.value",
+      "group": "tiers",
+      "row": "t4",
+      "rowLabel": "T4 Precious",
+      "col": "value",
+      "kind": "number",
+      "value": 20.0,
+      "code": "LootTable.TierWeight[3]"
+    },
+    {
+      "id": "tiers.t5.value",
+      "group": "tiers",
+      "row": "t5",
+      "rowLabel": "T5 Exceptional",
+      "col": "value",
+      "kind": "number",
+      "value": 4.0,
+      "code": "LootTable.TierWeight[4]"
+    },
+    {
+      "id": "tiers.t6.value",
+      "group": "tiers",
+      "row": "t6",
+      "rowLabel": "T6 Mythic",
+      "col": "value",
+      "kind": "number",
+      "value": 1.0,
+      "code": "LootTable.TierWeight[5]"
+    },
+    {
+      "id": "items.gear_normal.tier",
+      "group": "items",
+      "row": "gear_normal",
+      "rowLabel": "Normal gear",
+      "col": "tier",
+      "kind": "choice",
+      "value": "Common",
+      "code": "LootTable.Entries[\"gear_normal\"].tier",
+      "hint": "Vũ khí, giáp hoặc trang sức không có dòng.",
+      "options": [
+        {
+          "value": "Common",
+          "label": "T1 Common"
+        },
+        {
+          "value": "Uncommon",
+          "label": "T2 Uncommon"
+        },
+        {
+          "value": "Rare",
+          "label": "T3 Rare"
+        },
+        {
+          "value": "Precious",
+          "label": "T4 Precious"
+        },
+        {
+          "value": "Exceptional",
+          "label": "T5 Exceptional"
+        },
+        {
+          "value": "Mythic",
+          "label": "T6 Mythic"
+        }
+      ]
+    },
+    {
+      "id": "items.gear_normal.weight",
+      "group": "items",
+      "row": "gear_normal",
+      "rowLabel": "Normal gear",
+      "col": "weight",
+      "kind": "number",
+      "value": 4.0,
+      "code": "LootTable.Entries[\"gear_normal\"].weight",
+      "hint": "Vũ khí, giáp hoặc trang sức không có dòng."
+    },
+    {
+      "id": "items.gear_normal.from",
+      "group": "items",
+      "row": "gear_normal",
+      "rowLabel": "Normal gear",
+      "col": "from",
+      "kind": "choice",
+      "value": "Normal",
+      "code": "LootTable.Entries[\"gear_normal\"].minSource",
+      "hint": "Vũ khí, giáp hoặc trang sức không có dòng.",
+      "options": [
+        {
+          "value": "Normal",
+          "label": "Thường trở lên"
+        },
+        {
+          "value": "Magic",
+          "label": "Magic trở lên"
+        },
+        {
+          "value": "Elite",
+          "label": "Elite / Rare trở lên"
+        },
+        {
+          "value": "Boss",
+          "label": "Boss"
+        }
+      ]
+    },
+    {
+      "id": "items.forge_1.tier",
+      "group": "items",
+      "row": "forge_1",
+      "rowLabel": "Forge Stone I",
+      "col": "tier",
+      "kind": "choice",
+      "value": "Common",
+      "code": "LootTable.Entries[\"forge_1\"].tier",
+      "hint": "Nâng +1 (+6% chỉ số gốc).",
+      "options": [
+        {
+          "value": "Common",
+          "label": "T1 Common"
+        },
+        {
+          "value": "Uncommon",
+          "label": "T2 Uncommon"
+        },
+        {
+          "value": "Rare",
+          "label": "T3 Rare"
+        },
+        {
+          "value": "Precious",
+          "label": "T4 Precious"
+        },
+        {
+          "value": "Exceptional",
+          "label": "T5 Exceptional"
+        },
+        {
+          "value": "Mythic",
+          "label": "T6 Mythic"
+        }
+      ]
+    },
+    {
+      "id": "items.forge_1.weight",
+      "group": "items",
+      "row": "forge_1",
+      "rowLabel": "Forge Stone I",
+      "col": "weight",
+      "kind": "number",
+      "value": 2.0,
+      "code": "LootTable.Entries[\"forge_1\"].weight",
+      "hint": "Nâng +1 (+6% chỉ số gốc)."
+    },
+    {
+      "id": "items.forge_1.from",
+      "group": "items",
+      "row": "forge_1",
+      "rowLabel": "Forge Stone I",
+      "col": "from",
+      "kind": "choice",
+      "value": "Normal",
+      "code": "LootTable.Entries[\"forge_1\"].minSource",
+      "hint": "Nâng +1 (+6% chỉ số gốc).",
+      "options": [
+        {
+          "value": "Normal",
+          "label": "Thường trở lên"
+        },
+        {
+          "value": "Magic",
+          "label": "Magic trở lên"
+        },
+        {
+          "value": "Elite",
+          "label": "Elite / Rare trở lên"
+        },
+        {
+          "value": "Boss",
+          "label": "Boss"
+        }
+      ]
+    },
+    {
+      "id": "items.forge_1.count",
+      "group": "items",
+      "row": "forge_1",
+      "rowLabel": "Forge Stone I",
+      "col": "count",
+      "kind": "range",
+      "value": [
+        1,
+        2
+      ],
+      "code": "LootTable.Entries[\"forge_1\"].countMin/countMax",
+      "hint": "Nâng +1 (+6% chỉ số gốc)."
+    },
+    {
+      "id": "items.forge_2.tier",
+      "group": "items",
+      "row": "forge_2",
+      "rowLabel": "Forge Stone II",
+      "col": "tier",
+      "kind": "choice",
+      "value": "Common",
+      "code": "LootTable.Entries[\"forge_2\"].tier",
+      "hint": "Nâng +2 (+12%).",
+      "options": [
+        {
+          "value": "Common",
+          "label": "T1 Common"
+        },
+        {
+          "value": "Uncommon",
+          "label": "T2 Uncommon"
+        },
+        {
+          "value": "Rare",
+          "label": "T3 Rare"
+        },
+        {
+          "value": "Precious",
+          "label": "T4 Precious"
+        },
+        {
+          "value": "Exceptional",
+          "label": "T5 Exceptional"
+        },
+        {
+          "value": "Mythic",
+          "label": "T6 Mythic"
+        }
+      ]
+    },
+    {
+      "id": "items.forge_2.weight",
+      "group": "items",
+      "row": "forge_2",
+      "rowLabel": "Forge Stone II",
+      "col": "weight",
+      "kind": "number",
+      "value": 1.5,
+      "code": "LootTable.Entries[\"forge_2\"].weight",
+      "hint": "Nâng +2 (+12%)."
+    },
+    {
+      "id": "items.forge_2.from",
+      "group": "items",
+      "row": "forge_2",
+      "rowLabel": "Forge Stone II",
+      "col": "from",
+      "kind": "choice",
+      "value": "Normal",
+      "code": "LootTable.Entries[\"forge_2\"].minSource",
+      "hint": "Nâng +2 (+12%).",
+      "options": [
+        {
+          "value": "Normal",
+          "label": "Thường trở lên"
+        },
+        {
+          "value": "Magic",
+          "label": "Magic trở lên"
+        },
+        {
+          "value": "Elite",
+          "label": "Elite / Rare trở lên"
+        },
+        {
+          "value": "Boss",
+          "label": "Boss"
+        }
+      ]
+    },
+    {
+      "id": "items.forge_2.count",
+      "group": "items",
+      "row": "forge_2",
+      "rowLabel": "Forge Stone II",
+      "col": "count",
+      "kind": "range",
+      "value": [
+        1,
+        2
+      ],
+      "code": "LootTable.Entries[\"forge_2\"].countMin/countMax",
+      "hint": "Nâng +2 (+12%)."
+    },
+    {
+      "id": "items.flux.tier",
+      "group": "items",
+      "row": "flux",
+      "rowLabel": "Flux",
+      "col": "tier",
+      "kind": "choice",
+      "value": "Common",
+      "code": "LootTable.Entries[\"flux\"].tier",
+      "hint": "Phẩm chất +1–5% cho vũ khí, giáp, bình.",
+      "options": [
+        {
+          "value": "Common",
+          "label": "T1 Common"
+        },
+        {
+          "value": "Uncommon",
+          "label": "T2 Uncommon"
+        },
+        {
+          "value": "Rare",
+          "label": "T3 Rare"
+        },
+        {
+          "value": "Precious",
+          "label": "T4 Precious"
+        },
+        {
+          "value": "Exceptional",
+          "label": "T5 Exceptional"
+        },
+        {
+          "value": "Mythic",
+          "label": "T6 Mythic"
+        }
+      ]
+    },
+    {
+      "id": "items.flux.weight",
+      "group": "items",
+      "row": "flux",
+      "rowLabel": "Flux",
+      "col": "weight",
+      "kind": "number",
+      "value": 2.0,
+      "code": "LootTable.Entries[\"flux\"].weight",
+      "hint": "Phẩm chất +1–5% cho vũ khí, giáp, bình."
+    },
+    {
+      "id": "items.flux.from",
+      "group": "items",
+      "row": "flux",
+      "rowLabel": "Flux",
+      "col": "from",
+      "kind": "choice",
+      "value": "Normal",
+      "code": "LootTable.Entries[\"flux\"].minSource",
+      "hint": "Phẩm chất +1–5% cho vũ khí, giáp, bình.",
+      "options": [
+        {
+          "value": "Normal",
+          "label": "Thường trở lên"
+        },
+        {
+          "value": "Magic",
+          "label": "Magic trở lên"
+        },
+        {
+          "value": "Elite",
+          "label": "Elite / Rare trở lên"
+        },
+        {
+          "value": "Boss",
+          "label": "Boss"
+        }
+      ]
+    },
+    {
+      "id": "items.kindle.tier",
+      "group": "items",
+      "row": "kindle",
+      "rowLabel": "Kindle",
+      "col": "tier",
+      "kind": "choice",
+      "value": "Common",
+      "code": "LootTable.Entries[\"kindle\"].tier",
+      "hint": "Đồ Normal thành Magic, 1 dòng ngẫu nhiên.",
+      "options": [
+        {
+          "value": "Common",
+          "label": "T1 Common"
+        },
+        {
+          "value": "Uncommon",
+          "label": "T2 Uncommon"
+        },
+        {
+          "value": "Rare",
+          "label": "T3 Rare"
+        },
+        {
+          "value": "Precious",
+          "label": "T4 Precious"
+        },
+        {
+          "value": "Exceptional",
+          "label": "T5 Exceptional"
+        },
+        {
+          "value": "Mythic",
+          "label": "T6 Mythic"
+        }
+      ]
+    },
+    {
+      "id": "items.kindle.weight",
+      "group": "items",
+      "row": "kindle",
+      "rowLabel": "Kindle",
+      "col": "weight",
+      "kind": "number",
+      "value": 2.0,
+      "code": "LootTable.Entries[\"kindle\"].weight",
+      "hint": "Đồ Normal thành Magic, 1 dòng ngẫu nhiên."
+    },
+    {
+      "id": "items.kindle.from",
+      "group": "items",
+      "row": "kindle",
+      "rowLabel": "Kindle",
+      "col": "from",
+      "kind": "choice",
+      "value": "Normal",
+      "code": "LootTable.Entries[\"kindle\"].minSource",
+      "hint": "Đồ Normal thành Magic, 1 dòng ngẫu nhiên.",
+      "options": [
+        {
+          "value": "Normal",
+          "label": "Thường trở lên"
+        },
+        {
+          "value": "Magic",
+          "label": "Magic trở lên"
+        },
+        {
+          "value": "Elite",
+          "label": "Elite / Rare trở lên"
+        },
+        {
+          "value": "Boss",
+          "label": "Boss"
+        }
+      ]
+    },
+    {
+      "id": "items.flask_normal.tier",
+      "group": "items",
+      "row": "flask_normal",
+      "rowLabel": "Flask",
+      "col": "tier",
+      "kind": "choice",
+      "value": "Common",
+      "code": "LootTable.Entries[\"flask_normal\"].tier",
+      "hint": "Bình máu hoặc mana theo bậc của vùng.",
+      "options": [
+        {
+          "value": "Common",
+          "label": "T1 Common"
+        },
+        {
+          "value": "Uncommon",
+          "label": "T2 Uncommon"
+        },
+        {
+          "value": "Rare",
+          "label": "T3 Rare"
+        },
+        {
+          "value": "Precious",
+          "label": "T4 Precious"
+        },
+        {
+          "value": "Exceptional",
+          "label": "T5 Exceptional"
+        },
+        {
+          "value": "Mythic",
+          "label": "T6 Mythic"
+        }
+      ]
+    },
+    {
+      "id": "items.flask_normal.weight",
+      "group": "items",
+      "row": "flask_normal",
+      "rowLabel": "Flask",
+      "col": "weight",
+      "kind": "number",
+      "value": 1.0,
+      "code": "LootTable.Entries[\"flask_normal\"].weight",
+      "hint": "Bình máu hoặc mana theo bậc của vùng."
+    },
+    {
+      "id": "items.flask_normal.from",
+      "group": "items",
+      "row": "flask_normal",
+      "rowLabel": "Flask",
+      "col": "from",
+      "kind": "choice",
+      "value": "Normal",
+      "code": "LootTable.Entries[\"flask_normal\"].minSource",
+      "hint": "Bình máu hoặc mana theo bậc của vùng.",
+      "options": [
+        {
+          "value": "Normal",
+          "label": "Thường trở lên"
+        },
+        {
+          "value": "Magic",
+          "label": "Magic trở lên"
+        },
+        {
+          "value": "Elite",
+          "label": "Elite / Rare trở lên"
+        },
+        {
+          "value": "Boss",
+          "label": "Boss"
+        }
+      ]
+    },
+    {
+      "id": "items.gear_magic.tier",
+      "group": "items",
+      "row": "gear_magic",
+      "rowLabel": "Magic gear",
+      "col": "tier",
+      "kind": "choice",
+      "value": "Uncommon",
+      "code": "LootTable.Entries[\"gear_magic\"].tier",
+      "hint": "Trang bị có 1–2 dòng ngẫu nhiên.",
+      "options": [
+        {
+          "value": "Common",
+          "label": "T1 Common"
+        },
+        {
+          "value": "Uncommon",
+          "label": "T2 Uncommon"
+        },
+        {
+          "value": "Rare",
+          "label": "T3 Rare"
+        },
+        {
+          "value": "Precious",
+          "label": "T4 Precious"
+        },
+        {
+          "value": "Exceptional",
+          "label": "T5 Exceptional"
+        },
+        {
+          "value": "Mythic",
+          "label": "T6 Mythic"
+        }
+      ]
+    },
+    {
+      "id": "items.gear_magic.weight",
+      "group": "items",
+      "row": "gear_magic",
+      "rowLabel": "Magic gear",
+      "col": "weight",
+      "kind": "number",
+      "value": 4.0,
+      "code": "LootTable.Entries[\"gear_magic\"].weight",
+      "hint": "Trang bị có 1–2 dòng ngẫu nhiên."
+    },
+    {
+      "id": "items.gear_magic.from",
+      "group": "items",
+      "row": "gear_magic",
+      "rowLabel": "Magic gear",
+      "col": "from",
+      "kind": "choice",
+      "value": "Normal",
+      "code": "LootTable.Entries[\"gear_magic\"].minSource",
+      "hint": "Trang bị có 1–2 dòng ngẫu nhiên.",
+      "options": [
+        {
+          "value": "Normal",
+          "label": "Thường trở lên"
+        },
+        {
+          "value": "Magic",
+          "label": "Magic trở lên"
+        },
+        {
+          "value": "Elite",
+          "label": "Elite / Rare trở lên"
+        },
+        {
+          "value": "Boss",
+          "label": "Boss"
+        }
+      ]
+    },
+    {
+      "id": "items.forge_3.tier",
+      "group": "items",
+      "row": "forge_3",
+      "rowLabel": "Forge Stone III",
+      "col": "tier",
+      "kind": "choice",
+      "value": "Uncommon",
+      "code": "LootTable.Entries[\"forge_3\"].tier",
+      "hint": "Nâng +3 (+18%).",
+      "options": [
+        {
+          "value": "Common",
+          "label": "T1 Common"
+        },
+        {
+          "value": "Uncommon",
+          "label": "T2 Uncommon"
+        },
+        {
+          "value": "Rare",
+          "label": "T3 Rare"
+        },
+        {
+          "value": "Precious",
+          "label": "T4 Precious"
+        },
+        {
+          "value": "Exceptional",
+          "label": "T5 Exceptional"
+        },
+        {
+          "value": "Mythic",
+          "label": "T6 Mythic"
+        }
+      ]
+    },
+    {
+      "id": "items.forge_3.weight",
+      "group": "items",
+      "row": "forge_3",
+      "rowLabel": "Forge Stone III",
+      "col": "weight",
+      "kind": "number",
+      "value": 2.0,
+      "code": "LootTable.Entries[\"forge_3\"].weight",
+      "hint": "Nâng +3 (+18%)."
+    },
+    {
+      "id": "items.forge_3.from",
+      "group": "items",
+      "row": "forge_3",
+      "rowLabel": "Forge Stone III",
+      "col": "from",
+      "kind": "choice",
+      "value": "Normal",
+      "code": "LootTable.Entries[\"forge_3\"].minSource",
+      "hint": "Nâng +3 (+18%).",
+      "options": [
+        {
+          "value": "Normal",
+          "label": "Thường trở lên"
+        },
+        {
+          "value": "Magic",
+          "label": "Magic trở lên"
+        },
+        {
+          "value": "Elite",
+          "label": "Elite / Rare trở lên"
+        },
+        {
+          "value": "Boss",
+          "label": "Boss"
+        }
+      ]
+    },
+    {
+      "id": "items.forge_3.count",
+      "group": "items",
+      "row": "forge_3",
+      "rowLabel": "Forge Stone III",
+      "col": "count",
+      "kind": "range",
+      "value": [
+        1,
+        2
+      ],
+      "code": "LootTable.Entries[\"forge_3\"].countMin/countMax",
+      "hint": "Nâng +3 (+18%)."
+    },
+    {
+      "id": "items.forge_4.tier",
+      "group": "items",
+      "row": "forge_4",
+      "rowLabel": "Forge Stone IV",
+      "col": "tier",
+      "kind": "choice",
+      "value": "Uncommon",
+      "code": "LootTable.Entries[\"forge_4\"].tier",
+      "hint": "Nâng +4 (+24%).",
+      "options": [
+        {
+          "value": "Common",
+          "label": "T1 Common"
+        },
+        {
+          "value": "Uncommon",
+          "label": "T2 Uncommon"
+        },
+        {
+          "value": "Rare",
+          "label": "T3 Rare"
+        },
+        {
+          "value": "Precious",
+          "label": "T4 Precious"
+        },
+        {
+          "value": "Exceptional",
+          "label": "T5 Exceptional"
+        },
+        {
+          "value": "Mythic",
+          "label": "T6 Mythic"
+        }
+      ]
+    },
+    {
+      "id": "items.forge_4.weight",
+      "group": "items",
+      "row": "forge_4",
+      "rowLabel": "Forge Stone IV",
+      "col": "weight",
+      "kind": "number",
+      "value": 1.5,
+      "code": "LootTable.Entries[\"forge_4\"].weight",
+      "hint": "Nâng +4 (+24%)."
+    },
+    {
+      "id": "items.forge_4.from",
+      "group": "items",
+      "row": "forge_4",
+      "rowLabel": "Forge Stone IV",
+      "col": "from",
+      "kind": "choice",
+      "value": "Normal",
+      "code": "LootTable.Entries[\"forge_4\"].minSource",
+      "hint": "Nâng +4 (+24%).",
+      "options": [
+        {
+          "value": "Normal",
+          "label": "Thường trở lên"
+        },
+        {
+          "value": "Magic",
+          "label": "Magic trở lên"
+        },
+        {
+          "value": "Elite",
+          "label": "Elite / Rare trở lên"
+        },
+        {
+          "value": "Boss",
+          "label": "Boss"
+        }
+      ]
+    },
+    {
+      "id": "items.forge_4.count",
+      "group": "items",
+      "row": "forge_4",
+      "rowLabel": "Forge Stone IV",
+      "col": "count",
+      "kind": "range",
+      "value": [
+        1,
+        1
+      ],
+      "code": "LootTable.Entries[\"forge_4\"].countMin/countMax",
+      "hint": "Nâng +4 (+24%)."
+    },
+    {
+      "id": "items.prism.tier",
+      "group": "items",
+      "row": "prism",
+      "rowLabel": "Twin-Moon Prism",
+      "col": "tier",
+      "kind": "choice",
+      "value": "Uncommon",
+      "code": "LootTable.Entries[\"prism\"].tier",
+      "hint": "Đồ Magic: chọn 1 trong 3 dòng để thêm.",
+      "options": [
+        {
+          "value": "Common",
+          "label": "T1 Common"
+        },
+        {
+          "value": "Uncommon",
+          "label": "T2 Uncommon"
+        },
+        {
+          "value": "Rare",
+          "label": "T3 Rare"
+        },
+        {
+          "value": "Precious",
+          "label": "T4 Precious"
+        },
+        {
+          "value": "Exceptional",
+          "label": "T5 Exceptional"
+        },
+        {
+          "value": "Mythic",
+          "label": "T6 Mythic"
+        }
+      ]
+    },
+    {
+      "id": "items.prism.weight",
+      "group": "items",
+      "row": "prism",
+      "rowLabel": "Twin-Moon Prism",
+      "col": "weight",
+      "kind": "number",
+      "value": 2.0,
+      "code": "LootTable.Entries[\"prism\"].weight",
+      "hint": "Đồ Magic: chọn 1 trong 3 dòng để thêm."
+    },
+    {
+      "id": "items.prism.from",
+      "group": "items",
+      "row": "prism",
+      "rowLabel": "Twin-Moon Prism",
+      "col": "from",
+      "kind": "choice",
+      "value": "Normal",
+      "code": "LootTable.Entries[\"prism\"].minSource",
+      "hint": "Đồ Magic: chọn 1 trong 3 dòng để thêm.",
+      "options": [
+        {
+          "value": "Normal",
+          "label": "Thường trở lên"
+        },
+        {
+          "value": "Magic",
+          "label": "Magic trở lên"
+        },
+        {
+          "value": "Elite",
+          "label": "Elite / Rare trở lên"
+        },
+        {
+          "value": "Boss",
+          "label": "Boss"
+        }
+      ]
+    },
+    {
+      "id": "items.lustre.tier",
+      "group": "items",
+      "row": "lustre",
+      "rowLabel": "Lustre",
+      "col": "tier",
+      "kind": "choice",
+      "value": "Uncommon",
+      "code": "LootTable.Entries[\"lustre\"].tier",
+      "hint": "Phẩm chất ngọc skill +5% (+5% sát thương).",
+      "options": [
+        {
+          "value": "Common",
+          "label": "T1 Common"
+        },
+        {
+          "value": "Uncommon",
+          "label": "T2 Uncommon"
+        },
+        {
+          "value": "Rare",
+          "label": "T3 Rare"
+        },
+        {
+          "value": "Precious",
+          "label": "T4 Precious"
+        },
+        {
+          "value": "Exceptional",
+          "label": "T5 Exceptional"
+        },
+        {
+          "value": "Mythic",
+          "label": "T6 Mythic"
+        }
+      ]
+    },
+    {
+      "id": "items.lustre.weight",
+      "group": "items",
+      "row": "lustre",
+      "rowLabel": "Lustre",
+      "col": "weight",
+      "kind": "number",
+      "value": 2.0,
+      "code": "LootTable.Entries[\"lustre\"].weight",
+      "hint": "Phẩm chất ngọc skill +5% (+5% sát thương)."
+    },
+    {
+      "id": "items.lustre.from",
+      "group": "items",
+      "row": "lustre",
+      "rowLabel": "Lustre",
+      "col": "from",
+      "kind": "choice",
+      "value": "Normal",
+      "code": "LootTable.Entries[\"lustre\"].minSource",
+      "hint": "Phẩm chất ngọc skill +5% (+5% sát thương).",
+      "options": [
+        {
+          "value": "Normal",
+          "label": "Thường trở lên"
+        },
+        {
+          "value": "Magic",
+          "label": "Magic trở lên"
+        },
+        {
+          "value": "Elite",
+          "label": "Elite / Rare trở lên"
+        },
+        {
+          "value": "Boss",
+          "label": "Boss"
+        }
+      ]
+    },
+    {
+      "id": "items.flask_magic.tier",
+      "group": "items",
+      "row": "flask_magic",
+      "rowLabel": "Magic flask",
+      "col": "tier",
+      "kind": "choice",
+      "value": "Uncommon",
+      "code": "LootTable.Entries[\"flask_magic\"].tier",
+      "hint": "Bình có 1–2 dòng.",
+      "options": [
+        {
+          "value": "Common",
+          "label": "T1 Common"
+        },
+        {
+          "value": "Uncommon",
+          "label": "T2 Uncommon"
+        },
+        {
+          "value": "Rare",
+          "label": "T3 Rare"
+        },
+        {
+          "value": "Precious",
+          "label": "T4 Precious"
+        },
+        {
+          "value": "Exceptional",
+          "label": "T5 Exceptional"
+        },
+        {
+          "value": "Mythic",
+          "label": "T6 Mythic"
+        }
+      ]
+    },
+    {
+      "id": "items.flask_magic.weight",
+      "group": "items",
+      "row": "flask_magic",
+      "rowLabel": "Magic flask",
+      "col": "weight",
+      "kind": "number",
+      "value": 1.0,
+      "code": "LootTable.Entries[\"flask_magic\"].weight",
+      "hint": "Bình có 1–2 dòng."
+    },
+    {
+      "id": "items.flask_magic.from",
+      "group": "items",
+      "row": "flask_magic",
+      "rowLabel": "Magic flask",
+      "col": "from",
+      "kind": "choice",
+      "value": "Normal",
+      "code": "LootTable.Entries[\"flask_magic\"].minSource",
+      "hint": "Bình có 1–2 dòng.",
+      "options": [
+        {
+          "value": "Normal",
+          "label": "Thường trở lên"
+        },
+        {
+          "value": "Magic",
+          "label": "Magic trở lên"
+        },
+        {
+          "value": "Elite",
+          "label": "Elite / Rare trở lên"
+        },
+        {
+          "value": "Boss",
+          "label": "Boss"
+        }
+      ]
+    },
+    {
+      "id": "items.rune_normal.tier",
+      "group": "items",
+      "row": "rune_normal",
+      "rowLabel": "Rune (Normal)",
+      "col": "tier",
+      "kind": "choice",
+      "value": "Uncommon",
+      "code": "LootTable.Entries[\"rune_normal\"].tier",
+      "hint": "Rune 1 dòng, gắn vào lỗ đã đục.",
+      "options": [
+        {
+          "value": "Common",
+          "label": "T1 Common"
+        },
+        {
+          "value": "Uncommon",
+          "label": "T2 Uncommon"
+        },
+        {
+          "value": "Rare",
+          "label": "T3 Rare"
+        },
+        {
+          "value": "Precious",
+          "label": "T4 Precious"
+        },
+        {
+          "value": "Exceptional",
+          "label": "T5 Exceptional"
+        },
+        {
+          "value": "Mythic",
+          "label": "T6 Mythic"
+        }
+      ]
+    },
+    {
+      "id": "items.rune_normal.weight",
+      "group": "items",
+      "row": "rune_normal",
+      "rowLabel": "Rune (Normal)",
+      "col": "weight",
+      "kind": "number",
+      "value": 1.5,
+      "code": "LootTable.Entries[\"rune_normal\"].weight",
+      "hint": "Rune 1 dòng, gắn vào lỗ đã đục."
+    },
+    {
+      "id": "items.rune_normal.from",
+      "group": "items",
+      "row": "rune_normal",
+      "rowLabel": "Rune (Normal)",
+      "col": "from",
+      "kind": "choice",
+      "value": "Normal",
+      "code": "LootTable.Entries[\"rune_normal\"].minSource",
+      "hint": "Rune 1 dòng, gắn vào lỗ đã đục.",
+      "options": [
+        {
+          "value": "Normal",
+          "label": "Thường trở lên"
+        },
+        {
+          "value": "Magic",
+          "label": "Magic trở lên"
+        },
+        {
+          "value": "Elite",
+          "label": "Elite / Rare trở lên"
+        },
+        {
+          "value": "Boss",
+          "label": "Boss"
+        }
+      ]
+    },
+    {
+      "id": "items.rift_stone.tier",
+      "group": "items",
+      "row": "rift_stone",
+      "rowLabel": "Rift Stone (chỉ trong Rift)",
+      "col": "tier",
+      "kind": "choice",
+      "value": "Uncommon",
+      "code": "LootTable.Entries[\"rift_stone\"].tier",
+      "riftOnly": true,
+      "hint": "Mở một chuyến Rift bậc này.",
+      "options": [
+        {
+          "value": "Common",
+          "label": "T1 Common"
+        },
+        {
+          "value": "Uncommon",
+          "label": "T2 Uncommon"
+        },
+        {
+          "value": "Rare",
+          "label": "T3 Rare"
+        },
+        {
+          "value": "Precious",
+          "label": "T4 Precious"
+        },
+        {
+          "value": "Exceptional",
+          "label": "T5 Exceptional"
+        },
+        {
+          "value": "Mythic",
+          "label": "T6 Mythic"
+        }
+      ]
+    },
+    {
+      "id": "items.rift_stone.weight",
+      "group": "items",
+      "row": "rift_stone",
+      "rowLabel": "Rift Stone (chỉ trong Rift)",
+      "col": "weight",
+      "kind": "number",
+      "value": 3.0,
+      "code": "LootTable.Entries[\"rift_stone\"].weight",
+      "riftOnly": true,
+      "hint": "Mở một chuyến Rift bậc này."
+    },
+    {
+      "id": "items.rift_stone.from",
+      "group": "items",
+      "row": "rift_stone",
+      "rowLabel": "Rift Stone (chỉ trong Rift)",
+      "col": "from",
+      "kind": "choice",
+      "value": "Normal",
+      "code": "LootTable.Entries[\"rift_stone\"].minSource",
+      "riftOnly": true,
+      "hint": "Mở một chuyến Rift bậc này.",
+      "options": [
+        {
+          "value": "Normal",
+          "label": "Thường trở lên"
+        },
+        {
+          "value": "Magic",
+          "label": "Magic trở lên"
+        },
+        {
+          "value": "Elite",
+          "label": "Elite / Rare trở lên"
+        },
+        {
+          "value": "Boss",
+          "label": "Boss"
+        }
+      ]
+    },
+    {
+      "id": "items.gear_rare.tier",
+      "group": "items",
+      "row": "gear_rare",
+      "rowLabel": "Rare gear",
+      "col": "tier",
+      "kind": "choice",
+      "value": "Rare",
+      "code": "LootTable.Entries[\"gear_rare\"].tier",
+      "hint": "Trang bị có 3–6 dòng ngẫu nhiên.",
+      "options": [
+        {
+          "value": "Common",
+          "label": "T1 Common"
+        },
+        {
+          "value": "Uncommon",
+          "label": "T2 Uncommon"
+        },
+        {
+          "value": "Rare",
+          "label": "T3 Rare"
+        },
+        {
+          "value": "Precious",
+          "label": "T4 Precious"
+        },
+        {
+          "value": "Exceptional",
+          "label": "T5 Exceptional"
+        },
+        {
+          "value": "Mythic",
+          "label": "T6 Mythic"
+        }
+      ]
+    },
+    {
+      "id": "items.gear_rare.weight",
+      "group": "items",
+      "row": "gear_rare",
+      "rowLabel": "Rare gear",
+      "col": "weight",
+      "kind": "number",
+      "value": 4.0,
+      "code": "LootTable.Entries[\"gear_rare\"].weight",
+      "hint": "Trang bị có 3–6 dòng ngẫu nhiên."
+    },
+    {
+      "id": "items.gear_rare.from",
+      "group": "items",
+      "row": "gear_rare",
+      "rowLabel": "Rare gear",
+      "col": "from",
+      "kind": "choice",
+      "value": "Normal",
+      "code": "LootTable.Entries[\"gear_rare\"].minSource",
+      "hint": "Trang bị có 3–6 dòng ngẫu nhiên.",
+      "options": [
+        {
+          "value": "Normal",
+          "label": "Thường trở lên"
+        },
+        {
+          "value": "Magic",
+          "label": "Magic trở lên"
+        },
+        {
+          "value": "Elite",
+          "label": "Elite / Rare trở lên"
+        },
+        {
+          "value": "Boss",
+          "label": "Boss"
+        }
+      ]
+    },
+    {
+      "id": "items.forge_5.tier",
+      "group": "items",
+      "row": "forge_5",
+      "rowLabel": "Forge Stone V",
+      "col": "tier",
+      "kind": "choice",
+      "value": "Rare",
+      "code": "LootTable.Entries[\"forge_5\"].tier",
+      "hint": "Nâng +5 (+30%).",
+      "options": [
+        {
+          "value": "Common",
+          "label": "T1 Common"
+        },
+        {
+          "value": "Uncommon",
+          "label": "T2 Uncommon"
+        },
+        {
+          "value": "Rare",
+          "label": "T3 Rare"
+        },
+        {
+          "value": "Precious",
+          "label": "T4 Precious"
+        },
+        {
+          "value": "Exceptional",
+          "label": "T5 Exceptional"
+        },
+        {
+          "value": "Mythic",
+          "label": "T6 Mythic"
+        }
+      ]
+    },
+    {
+      "id": "items.forge_5.weight",
+      "group": "items",
+      "row": "forge_5",
+      "rowLabel": "Forge Stone V",
+      "col": "weight",
+      "kind": "number",
+      "value": 2.0,
+      "code": "LootTable.Entries[\"forge_5\"].weight",
+      "hint": "Nâng +5 (+30%)."
+    },
+    {
+      "id": "items.forge_5.from",
+      "group": "items",
+      "row": "forge_5",
+      "rowLabel": "Forge Stone V",
+      "col": "from",
+      "kind": "choice",
+      "value": "Normal",
+      "code": "LootTable.Entries[\"forge_5\"].minSource",
+      "hint": "Nâng +5 (+30%).",
+      "options": [
+        {
+          "value": "Normal",
+          "label": "Thường trở lên"
+        },
+        {
+          "value": "Magic",
+          "label": "Magic trở lên"
+        },
+        {
+          "value": "Elite",
+          "label": "Elite / Rare trở lên"
+        },
+        {
+          "value": "Boss",
+          "label": "Boss"
+        }
+      ]
+    },
+    {
+      "id": "items.forge_5.count",
+      "group": "items",
+      "row": "forge_5",
+      "rowLabel": "Forge Stone V",
+      "col": "count",
+      "kind": "range",
+      "value": [
+        1,
+        1
+      ],
+      "code": "LootTable.Entries[\"forge_5\"].countMin/countMax",
+      "hint": "Nâng +5 (+30%)."
+    },
+    {
+      "id": "items.forge_6.tier",
+      "group": "items",
+      "row": "forge_6",
+      "rowLabel": "Forge Stone VI",
+      "col": "tier",
+      "kind": "choice",
+      "value": "Rare",
+      "code": "LootTable.Entries[\"forge_6\"].tier",
+      "hint": "Nâng +6 (+36%).",
+      "options": [
+        {
+          "value": "Common",
+          "label": "T1 Common"
+        },
+        {
+          "value": "Uncommon",
+          "label": "T2 Uncommon"
+        },
+        {
+          "value": "Rare",
+          "label": "T3 Rare"
+        },
+        {
+          "value": "Precious",
+          "label": "T4 Precious"
+        },
+        {
+          "value": "Exceptional",
+          "label": "T5 Exceptional"
+        },
+        {
+          "value": "Mythic",
+          "label": "T6 Mythic"
+        }
+      ]
+    },
+    {
+      "id": "items.forge_6.weight",
+      "group": "items",
+      "row": "forge_6",
+      "rowLabel": "Forge Stone VI",
+      "col": "weight",
+      "kind": "number",
+      "value": 1.5,
+      "code": "LootTable.Entries[\"forge_6\"].weight",
+      "hint": "Nâng +6 (+36%)."
+    },
+    {
+      "id": "items.forge_6.from",
+      "group": "items",
+      "row": "forge_6",
+      "rowLabel": "Forge Stone VI",
+      "col": "from",
+      "kind": "choice",
+      "value": "Normal",
+      "code": "LootTable.Entries[\"forge_6\"].minSource",
+      "hint": "Nâng +6 (+36%).",
+      "options": [
+        {
+          "value": "Normal",
+          "label": "Thường trở lên"
+        },
+        {
+          "value": "Magic",
+          "label": "Magic trở lên"
+        },
+        {
+          "value": "Elite",
+          "label": "Elite / Rare trở lên"
+        },
+        {
+          "value": "Boss",
+          "label": "Boss"
+        }
+      ]
+    },
+    {
+      "id": "items.forge_6.count",
+      "group": "items",
+      "row": "forge_6",
+      "rowLabel": "Forge Stone VI",
+      "col": "count",
+      "kind": "range",
+      "value": [
+        1,
+        1
+      ],
+      "code": "LootTable.Entries[\"forge_6\"].countMin/countMax",
+      "hint": "Nâng +6 (+36%)."
+    },
+    {
+      "id": "items.crown.tier",
+      "group": "items",
+      "row": "crown",
+      "rowLabel": "Crown",
+      "col": "tier",
+      "kind": "choice",
+      "value": "Rare",
+      "code": "LootTable.Entries[\"crown\"].tier",
+      "hint": "Đồ Magic thành Rare, thêm 1 dòng.",
+      "options": [
+        {
+          "value": "Common",
+          "label": "T1 Common"
+        },
+        {
+          "value": "Uncommon",
+          "label": "T2 Uncommon"
+        },
+        {
+          "value": "Rare",
+          "label": "T3 Rare"
+        },
+        {
+          "value": "Precious",
+          "label": "T4 Precious"
+        },
+        {
+          "value": "Exceptional",
+          "label": "T5 Exceptional"
+        },
+        {
+          "value": "Mythic",
+          "label": "T6 Mythic"
+        }
+      ]
+    },
+    {
+      "id": "items.crown.weight",
+      "group": "items",
+      "row": "crown",
+      "rowLabel": "Crown",
+      "col": "weight",
+      "kind": "number",
+      "value": 2.0,
+      "code": "LootTable.Entries[\"crown\"].weight",
+      "hint": "Đồ Magic thành Rare, thêm 1 dòng."
+    },
+    {
+      "id": "items.crown.from",
+      "group": "items",
+      "row": "crown",
+      "rowLabel": "Crown",
+      "col": "from",
+      "kind": "choice",
+      "value": "Normal",
+      "code": "LootTable.Entries[\"crown\"].minSource",
+      "hint": "Đồ Magic thành Rare, thêm 1 dòng.",
+      "options": [
+        {
+          "value": "Normal",
+          "label": "Thường trở lên"
+        },
+        {
+          "value": "Magic",
+          "label": "Magic trở lên"
+        },
+        {
+          "value": "Elite",
+          "label": "Elite / Rare trở lên"
+        },
+        {
+          "value": "Boss",
+          "label": "Boss"
+        }
+      ]
+    },
+    {
+      "id": "items.wildfire.tier",
+      "group": "items",
+      "row": "wildfire",
+      "rowLabel": "Wildfire",
+      "col": "tier",
+      "kind": "choice",
+      "value": "Rare",
+      "code": "LootTable.Entries[\"wildfire\"].tier",
+      "hint": "Đổi 1 dòng ngẫu nhiên lấy dòng ngẫu nhiên mới.",
+      "options": [
+        {
+          "value": "Common",
+          "label": "T1 Common"
+        },
+        {
+          "value": "Uncommon",
+          "label": "T2 Uncommon"
+        },
+        {
+          "value": "Rare",
+          "label": "T3 Rare"
+        },
+        {
+          "value": "Precious",
+          "label": "T4 Precious"
+        },
+        {
+          "value": "Exceptional",
+          "label": "T5 Exceptional"
+        },
+        {
+          "value": "Mythic",
+          "label": "T6 Mythic"
+        }
+      ]
+    },
+    {
+      "id": "items.wildfire.weight",
+      "group": "items",
+      "row": "wildfire",
+      "rowLabel": "Wildfire",
+      "col": "weight",
+      "kind": "number",
+      "value": 2.0,
+      "code": "LootTable.Entries[\"wildfire\"].weight",
+      "hint": "Đổi 1 dòng ngẫu nhiên lấy dòng ngẫu nhiên mới."
+    },
+    {
+      "id": "items.wildfire.from",
+      "group": "items",
+      "row": "wildfire",
+      "rowLabel": "Wildfire",
+      "col": "from",
+      "kind": "choice",
+      "value": "Normal",
+      "code": "LootTable.Entries[\"wildfire\"].minSource",
+      "hint": "Đổi 1 dòng ngẫu nhiên lấy dòng ngẫu nhiên mới.",
+      "options": [
+        {
+          "value": "Normal",
+          "label": "Thường trở lên"
+        },
+        {
+          "value": "Magic",
+          "label": "Magic trở lên"
+        },
+        {
+          "value": "Elite",
+          "label": "Elite / Rare trở lên"
+        },
+        {
+          "value": "Boss",
+          "label": "Boss"
+        }
+      ]
+    },
+    {
+      "id": "items.skill_forge.tier",
+      "group": "items",
+      "row": "skill_forge",
+      "rowLabel": "Skill Forge",
+      "col": "tier",
+      "kind": "choice",
+      "value": "Rare",
+      "code": "LootTable.Entries[\"skill_forge\"].tier",
+      "hint": "Mài ra một ngọc skill mới theo cấp vùng.",
+      "options": [
+        {
+          "value": "Common",
+          "label": "T1 Common"
+        },
+        {
+          "value": "Uncommon",
+          "label": "T2 Uncommon"
+        },
+        {
+          "value": "Rare",
+          "label": "T3 Rare"
+        },
+        {
+          "value": "Precious",
+          "label": "T4 Precious"
+        },
+        {
+          "value": "Exceptional",
+          "label": "T5 Exceptional"
+        },
+        {
+          "value": "Mythic",
+          "label": "T6 Mythic"
+        }
+      ]
+    },
+    {
+      "id": "items.skill_forge.weight",
+      "group": "items",
+      "row": "skill_forge",
+      "rowLabel": "Skill Forge",
+      "col": "weight",
+      "kind": "number",
+      "value": 2.0,
+      "code": "LootTable.Entries[\"skill_forge\"].weight",
+      "hint": "Mài ra một ngọc skill mới theo cấp vùng."
+    },
+    {
+      "id": "items.skill_forge.from",
+      "group": "items",
+      "row": "skill_forge",
+      "rowLabel": "Skill Forge",
+      "col": "from",
+      "kind": "choice",
+      "value": "Normal",
+      "code": "LootTable.Entries[\"skill_forge\"].minSource",
+      "hint": "Mài ra một ngọc skill mới theo cấp vùng.",
+      "options": [
+        {
+          "value": "Normal",
+          "label": "Thường trở lên"
+        },
+        {
+          "value": "Magic",
+          "label": "Magic trở lên"
+        },
+        {
+          "value": "Elite",
+          "label": "Elite / Rare trở lên"
+        },
+        {
+          "value": "Boss",
+          "label": "Boss"
+        }
+      ]
+    },
+    {
+      "id": "items.rune_magic.tier",
+      "group": "items",
+      "row": "rune_magic",
+      "rowLabel": "Rune (Magic)",
+      "col": "tier",
+      "kind": "choice",
+      "value": "Rare",
+      "code": "LootTable.Entries[\"rune_magic\"].tier",
+      "hint": "Rune 2 dòng.",
+      "options": [
+        {
+          "value": "Common",
+          "label": "T1 Common"
+        },
+        {
+          "value": "Uncommon",
+          "label": "T2 Uncommon"
+        },
+        {
+          "value": "Rare",
+          "label": "T3 Rare"
+        },
+        {
+          "value": "Precious",
+          "label": "T4 Precious"
+        },
+        {
+          "value": "Exceptional",
+          "label": "T5 Exceptional"
+        },
+        {
+          "value": "Mythic",
+          "label": "T6 Mythic"
+        }
+      ]
+    },
+    {
+      "id": "items.rune_magic.weight",
+      "group": "items",
+      "row": "rune_magic",
+      "rowLabel": "Rune (Magic)",
+      "col": "weight",
+      "kind": "number",
+      "value": 1.5,
+      "code": "LootTable.Entries[\"rune_magic\"].weight",
+      "hint": "Rune 2 dòng."
+    },
+    {
+      "id": "items.rune_magic.from",
+      "group": "items",
+      "row": "rune_magic",
+      "rowLabel": "Rune (Magic)",
+      "col": "from",
+      "kind": "choice",
+      "value": "Normal",
+      "code": "LootTable.Entries[\"rune_magic\"].minSource",
+      "hint": "Rune 2 dòng.",
+      "options": [
+        {
+          "value": "Normal",
+          "label": "Thường trở lên"
+        },
+        {
+          "value": "Magic",
+          "label": "Magic trở lên"
+        },
+        {
+          "value": "Elite",
+          "label": "Elite / Rare trở lên"
+        },
+        {
+          "value": "Boss",
+          "label": "Boss"
+        }
+      ]
+    },
+    {
+      "id": "items.forge_7.tier",
+      "group": "items",
+      "row": "forge_7",
+      "rowLabel": "Forge Stone VII",
+      "col": "tier",
+      "kind": "choice",
+      "value": "Precious",
+      "code": "LootTable.Entries[\"forge_7\"].tier",
+      "hint": "Nâng +7 (+44%).",
+      "options": [
+        {
+          "value": "Common",
+          "label": "T1 Common"
+        },
+        {
+          "value": "Uncommon",
+          "label": "T2 Uncommon"
+        },
+        {
+          "value": "Rare",
+          "label": "T3 Rare"
+        },
+        {
+          "value": "Precious",
+          "label": "T4 Precious"
+        },
+        {
+          "value": "Exceptional",
+          "label": "T5 Exceptional"
+        },
+        {
+          "value": "Mythic",
+          "label": "T6 Mythic"
+        }
+      ]
+    },
+    {
+      "id": "items.forge_7.weight",
+      "group": "items",
+      "row": "forge_7",
+      "rowLabel": "Forge Stone VII",
+      "col": "weight",
+      "kind": "number",
+      "value": 2.0,
+      "code": "LootTable.Entries[\"forge_7\"].weight",
+      "hint": "Nâng +7 (+44%)."
+    },
+    {
+      "id": "items.forge_7.from",
+      "group": "items",
+      "row": "forge_7",
+      "rowLabel": "Forge Stone VII",
+      "col": "from",
+      "kind": "choice",
+      "value": "Elite",
+      "code": "LootTable.Entries[\"forge_7\"].minSource",
+      "hint": "Nâng +7 (+44%).",
+      "options": [
+        {
+          "value": "Normal",
+          "label": "Thường trở lên"
+        },
+        {
+          "value": "Magic",
+          "label": "Magic trở lên"
+        },
+        {
+          "value": "Elite",
+          "label": "Elite / Rare trở lên"
+        },
+        {
+          "value": "Boss",
+          "label": "Boss"
+        }
+      ]
+    },
+    {
+      "id": "items.forge_7.count",
+      "group": "items",
+      "row": "forge_7",
+      "rowLabel": "Forge Stone VII",
+      "col": "count",
+      "kind": "range",
+      "value": [
+        1,
+        1
+      ],
+      "code": "LootTable.Entries[\"forge_7\"].countMin/countMax",
+      "hint": "Nâng +7 (+44%)."
+    },
+    {
+      "id": "items.forge_8.tier",
+      "group": "items",
+      "row": "forge_8",
+      "rowLabel": "Forge Stone VIII",
+      "col": "tier",
+      "kind": "choice",
+      "value": "Precious",
+      "code": "LootTable.Entries[\"forge_8\"].tier",
+      "hint": "Nâng +8 (+52%).",
+      "options": [
+        {
+          "value": "Common",
+          "label": "T1 Common"
+        },
+        {
+          "value": "Uncommon",
+          "label": "T2 Uncommon"
+        },
+        {
+          "value": "Rare",
+          "label": "T3 Rare"
+        },
+        {
+          "value": "Precious",
+          "label": "T4 Precious"
+        },
+        {
+          "value": "Exceptional",
+          "label": "T5 Exceptional"
+        },
+        {
+          "value": "Mythic",
+          "label": "T6 Mythic"
+        }
+      ]
+    },
+    {
+      "id": "items.forge_8.weight",
+      "group": "items",
+      "row": "forge_8",
+      "rowLabel": "Forge Stone VIII",
+      "col": "weight",
+      "kind": "number",
+      "value": 1.5,
+      "code": "LootTable.Entries[\"forge_8\"].weight",
+      "hint": "Nâng +8 (+52%)."
+    },
+    {
+      "id": "items.forge_8.from",
+      "group": "items",
+      "row": "forge_8",
+      "rowLabel": "Forge Stone VIII",
+      "col": "from",
+      "kind": "choice",
+      "value": "Elite",
+      "code": "LootTable.Entries[\"forge_8\"].minSource",
+      "hint": "Nâng +8 (+52%).",
+      "options": [
+        {
+          "value": "Normal",
+          "label": "Thường trở lên"
+        },
+        {
+          "value": "Magic",
+          "label": "Magic trở lên"
+        },
+        {
+          "value": "Elite",
+          "label": "Elite / Rare trở lên"
+        },
+        {
+          "value": "Boss",
+          "label": "Boss"
+        }
+      ]
+    },
+    {
+      "id": "items.forge_8.count",
+      "group": "items",
+      "row": "forge_8",
+      "rowLabel": "Forge Stone VIII",
+      "col": "count",
+      "kind": "range",
+      "value": [
+        1,
+        1
+      ],
+      "code": "LootTable.Entries[\"forge_8\"].countMin/countMax",
+      "hint": "Nâng +8 (+52%)."
+    },
+    {
+      "id": "items.blaze.tier",
+      "group": "items",
+      "row": "blaze",
+      "rowLabel": "Blaze",
+      "col": "tier",
+      "kind": "choice",
+      "value": "Precious",
+      "code": "LootTable.Entries[\"blaze\"].tier",
+      "hint": "Thêm 1 dòng vào đồ Rare còn chỗ.",
+      "options": [
+        {
+          "value": "Common",
+          "label": "T1 Common"
+        },
+        {
+          "value": "Uncommon",
+          "label": "T2 Uncommon"
+        },
+        {
+          "value": "Rare",
+          "label": "T3 Rare"
+        },
+        {
+          "value": "Precious",
+          "label": "T4 Precious"
+        },
+        {
+          "value": "Exceptional",
+          "label": "T5 Exceptional"
+        },
+        {
+          "value": "Mythic",
+          "label": "T6 Mythic"
+        }
+      ]
+    },
+    {
+      "id": "items.blaze.weight",
+      "group": "items",
+      "row": "blaze",
+      "rowLabel": "Blaze",
+      "col": "weight",
+      "kind": "number",
+      "value": 2.0,
+      "code": "LootTable.Entries[\"blaze\"].weight",
+      "hint": "Thêm 1 dòng vào đồ Rare còn chỗ."
+    },
+    {
+      "id": "items.blaze.from",
+      "group": "items",
+      "row": "blaze",
+      "rowLabel": "Blaze",
+      "col": "from",
+      "kind": "choice",
+      "value": "Normal",
+      "code": "LootTable.Entries[\"blaze\"].minSource",
+      "hint": "Thêm 1 dòng vào đồ Rare còn chỗ.",
+      "options": [
+        {
+          "value": "Normal",
+          "label": "Thường trở lên"
+        },
+        {
+          "value": "Magic",
+          "label": "Magic trở lên"
+        },
+        {
+          "value": "Elite",
+          "label": "Elite / Rare trở lên"
+        },
+        {
+          "value": "Boss",
+          "label": "Boss"
+        }
+      ]
+    },
+    {
+      "id": "items.void_pearl.tier",
+      "group": "items",
+      "row": "void_pearl",
+      "rowLabel": "Void Pearl",
+      "col": "tier",
+      "kind": "choice",
+      "value": "Precious",
+      "code": "LootTable.Entries[\"void_pearl\"].tier",
+      "hint": "Xoá dòng tự chọn (1/4 lần xoá nhầm dòng khác).",
+      "options": [
+        {
+          "value": "Common",
+          "label": "T1 Common"
+        },
+        {
+          "value": "Uncommon",
+          "label": "T2 Uncommon"
+        },
+        {
+          "value": "Rare",
+          "label": "T3 Rare"
+        },
+        {
+          "value": "Precious",
+          "label": "T4 Precious"
+        },
+        {
+          "value": "Exceptional",
+          "label": "T5 Exceptional"
+        },
+        {
+          "value": "Mythic",
+          "label": "T6 Mythic"
+        }
+      ]
+    },
+    {
+      "id": "items.void_pearl.weight",
+      "group": "items",
+      "row": "void_pearl",
+      "rowLabel": "Void Pearl",
+      "col": "weight",
+      "kind": "number",
+      "value": 2.0,
+      "code": "LootTable.Entries[\"void_pearl\"].weight",
+      "hint": "Xoá dòng tự chọn (1/4 lần xoá nhầm dòng khác)."
+    },
+    {
+      "id": "items.void_pearl.from",
+      "group": "items",
+      "row": "void_pearl",
+      "rowLabel": "Void Pearl",
+      "col": "from",
+      "kind": "choice",
+      "value": "Normal",
+      "code": "LootTable.Entries[\"void_pearl\"].minSource",
+      "hint": "Xoá dòng tự chọn (1/4 lần xoá nhầm dòng khác).",
+      "options": [
+        {
+          "value": "Normal",
+          "label": "Thường trở lên"
+        },
+        {
+          "value": "Magic",
+          "label": "Magic trở lên"
+        },
+        {
+          "value": "Elite",
+          "label": "Elite / Rare trở lên"
+        },
+        {
+          "value": "Boss",
+          "label": "Boss"
+        }
+      ]
+    },
+    {
+      "id": "items.chisel.tier",
+      "group": "items",
+      "row": "chisel",
+      "rowLabel": "Chisel",
+      "col": "tier",
+      "kind": "choice",
+      "value": "Precious",
+      "code": "LootTable.Entries[\"chisel\"].tier",
+      "hint": "Thêm 1 lỗ hỗ trợ cho ngọc skill (2 lên 5).",
+      "options": [
+        {
+          "value": "Common",
+          "label": "T1 Common"
+        },
+        {
+          "value": "Uncommon",
+          "label": "T2 Uncommon"
+        },
+        {
+          "value": "Rare",
+          "label": "T3 Rare"
+        },
+        {
+          "value": "Precious",
+          "label": "T4 Precious"
+        },
+        {
+          "value": "Exceptional",
+          "label": "T5 Exceptional"
+        },
+        {
+          "value": "Mythic",
+          "label": "T6 Mythic"
+        }
+      ]
+    },
+    {
+      "id": "items.chisel.weight",
+      "group": "items",
+      "row": "chisel",
+      "rowLabel": "Chisel",
+      "col": "weight",
+      "kind": "number",
+      "value": 2.0,
+      "code": "LootTable.Entries[\"chisel\"].weight",
+      "hint": "Thêm 1 lỗ hỗ trợ cho ngọc skill (2 lên 5)."
+    },
+    {
+      "id": "items.chisel.from",
+      "group": "items",
+      "row": "chisel",
+      "rowLabel": "Chisel",
+      "col": "from",
+      "kind": "choice",
+      "value": "Normal",
+      "code": "LootTable.Entries[\"chisel\"].minSource",
+      "hint": "Thêm 1 lỗ hỗ trợ cho ngọc skill (2 lên 5).",
+      "options": [
+        {
+          "value": "Normal",
+          "label": "Thường trở lên"
+        },
+        {
+          "value": "Magic",
+          "label": "Magic trở lên"
+        },
+        {
+          "value": "Elite",
+          "label": "Elite / Rare trở lên"
+        },
+        {
+          "value": "Boss",
+          "label": "Boss"
+        }
+      ]
+    },
+    {
+      "id": "items.support_seed.tier",
+      "group": "items",
+      "row": "support_seed",
+      "rowLabel": "Support Seed",
+      "col": "tier",
+      "kind": "choice",
+      "value": "Precious",
+      "code": "LootTable.Entries[\"support_seed\"].tier",
+      "hint": "Mài ra một ngọc hỗ trợ theo bậc vùng.",
+      "options": [
+        {
+          "value": "Common",
+          "label": "T1 Common"
+        },
+        {
+          "value": "Uncommon",
+          "label": "T2 Uncommon"
+        },
+        {
+          "value": "Rare",
+          "label": "T3 Rare"
+        },
+        {
+          "value": "Precious",
+          "label": "T4 Precious"
+        },
+        {
+          "value": "Exceptional",
+          "label": "T5 Exceptional"
+        },
+        {
+          "value": "Mythic",
+          "label": "T6 Mythic"
+        }
+      ]
+    },
+    {
+      "id": "items.support_seed.weight",
+      "group": "items",
+      "row": "support_seed",
+      "rowLabel": "Support Seed",
+      "col": "weight",
+      "kind": "number",
+      "value": 2.0,
+      "code": "LootTable.Entries[\"support_seed\"].weight",
+      "hint": "Mài ra một ngọc hỗ trợ theo bậc vùng."
+    },
+    {
+      "id": "items.support_seed.from",
+      "group": "items",
+      "row": "support_seed",
+      "rowLabel": "Support Seed",
+      "col": "from",
+      "kind": "choice",
+      "value": "Normal",
+      "code": "LootTable.Entries[\"support_seed\"].minSource",
+      "hint": "Mài ra một ngọc hỗ trợ theo bậc vùng.",
+      "options": [
+        {
+          "value": "Normal",
+          "label": "Thường trở lên"
+        },
+        {
+          "value": "Magic",
+          "label": "Magic trở lên"
+        },
+        {
+          "value": "Elite",
+          "label": "Elite / Rare trở lên"
+        },
+        {
+          "value": "Boss",
+          "label": "Boss"
+        }
+      ]
+    },
+    {
+      "id": "items.rune_rare.tier",
+      "group": "items",
+      "row": "rune_rare",
+      "rowLabel": "Rune (Rare)",
+      "col": "tier",
+      "kind": "choice",
+      "value": "Precious",
+      "code": "LootTable.Entries[\"rune_rare\"].tier",
+      "hint": "Rune 3 dòng.",
+      "options": [
+        {
+          "value": "Common",
+          "label": "T1 Common"
+        },
+        {
+          "value": "Uncommon",
+          "label": "T2 Uncommon"
+        },
+        {
+          "value": "Rare",
+          "label": "T3 Rare"
+        },
+        {
+          "value": "Precious",
+          "label": "T4 Precious"
+        },
+        {
+          "value": "Exceptional",
+          "label": "T5 Exceptional"
+        },
+        {
+          "value": "Mythic",
+          "label": "T6 Mythic"
+        }
+      ]
+    },
+    {
+      "id": "items.rune_rare.weight",
+      "group": "items",
+      "row": "rune_rare",
+      "rowLabel": "Rune (Rare)",
+      "col": "weight",
+      "kind": "number",
+      "value": 1.0,
+      "code": "LootTable.Entries[\"rune_rare\"].weight",
+      "hint": "Rune 3 dòng."
+    },
+    {
+      "id": "items.rune_rare.from",
+      "group": "items",
+      "row": "rune_rare",
+      "rowLabel": "Rune (Rare)",
+      "col": "from",
+      "kind": "choice",
+      "value": "Normal",
+      "code": "LootTable.Entries[\"rune_rare\"].minSource",
+      "hint": "Rune 3 dòng.",
+      "options": [
+        {
+          "value": "Normal",
+          "label": "Thường trở lên"
+        },
+        {
+          "value": "Magic",
+          "label": "Magic trở lên"
+        },
+        {
+          "value": "Elite",
+          "label": "Elite / Rare trở lên"
+        },
+        {
+          "value": "Boss",
+          "label": "Boss"
+        }
+      ]
+    },
+    {
+      "id": "items.gear_unique.tier",
+      "group": "items",
+      "row": "gear_unique",
+      "rowLabel": "Unique gear",
+      "col": "tier",
+      "kind": "choice",
+      "value": "Exceptional",
+      "code": "LootTable.Entries[\"gear_unique\"].tier",
+      "hint": "Đồ Unique (của riêng boss nếu boss có).",
+      "options": [
+        {
+          "value": "Common",
+          "label": "T1 Common"
+        },
+        {
+          "value": "Uncommon",
+          "label": "T2 Uncommon"
+        },
+        {
+          "value": "Rare",
+          "label": "T3 Rare"
+        },
+        {
+          "value": "Precious",
+          "label": "T4 Precious"
+        },
+        {
+          "value": "Exceptional",
+          "label": "T5 Exceptional"
+        },
+        {
+          "value": "Mythic",
+          "label": "T6 Mythic"
+        }
+      ]
+    },
+    {
+      "id": "items.gear_unique.weight",
+      "group": "items",
+      "row": "gear_unique",
+      "rowLabel": "Unique gear",
+      "col": "weight",
+      "kind": "number",
+      "value": 3.0,
+      "code": "LootTable.Entries[\"gear_unique\"].weight",
+      "hint": "Đồ Unique (của riêng boss nếu boss có)."
+    },
+    {
+      "id": "items.gear_unique.from",
+      "group": "items",
+      "row": "gear_unique",
+      "rowLabel": "Unique gear",
+      "col": "from",
+      "kind": "choice",
+      "value": "Normal",
+      "code": "LootTable.Entries[\"gear_unique\"].minSource",
+      "hint": "Đồ Unique (của riêng boss nếu boss có).",
+      "options": [
+        {
+          "value": "Normal",
+          "label": "Thường trở lên"
+        },
+        {
+          "value": "Magic",
+          "label": "Magic trở lên"
+        },
+        {
+          "value": "Elite",
+          "label": "Elite / Rare trở lên"
+        },
+        {
+          "value": "Boss",
+          "label": "Boss"
+        }
+      ]
+    },
+    {
+      "id": "items.forge_9.tier",
+      "group": "items",
+      "row": "forge_9",
+      "rowLabel": "Forge Stone IX",
+      "col": "tier",
+      "kind": "choice",
+      "value": "Exceptional",
+      "code": "LootTable.Entries[\"forge_9\"].tier",
+      "hint": "Nâng +9 (+61%).",
+      "options": [
+        {
+          "value": "Common",
+          "label": "T1 Common"
+        },
+        {
+          "value": "Uncommon",
+          "label": "T2 Uncommon"
+        },
+        {
+          "value": "Rare",
+          "label": "T3 Rare"
+        },
+        {
+          "value": "Precious",
+          "label": "T4 Precious"
+        },
+        {
+          "value": "Exceptional",
+          "label": "T5 Exceptional"
+        },
+        {
+          "value": "Mythic",
+          "label": "T6 Mythic"
+        }
+      ]
+    },
+    {
+      "id": "items.forge_9.weight",
+      "group": "items",
+      "row": "forge_9",
+      "rowLabel": "Forge Stone IX",
+      "col": "weight",
+      "kind": "number",
+      "value": 1.5,
+      "code": "LootTable.Entries[\"forge_9\"].weight",
+      "hint": "Nâng +9 (+61%)."
+    },
+    {
+      "id": "items.forge_9.from",
+      "group": "items",
+      "row": "forge_9",
+      "rowLabel": "Forge Stone IX",
+      "col": "from",
+      "kind": "choice",
+      "value": "Boss",
+      "code": "LootTable.Entries[\"forge_9\"].minSource",
+      "hint": "Nâng +9 (+61%).",
+      "options": [
+        {
+          "value": "Normal",
+          "label": "Thường trở lên"
+        },
+        {
+          "value": "Magic",
+          "label": "Magic trở lên"
+        },
+        {
+          "value": "Elite",
+          "label": "Elite / Rare trở lên"
+        },
+        {
+          "value": "Boss",
+          "label": "Boss"
+        }
+      ]
+    },
+    {
+      "id": "items.forge_9.count",
+      "group": "items",
+      "row": "forge_9",
+      "rowLabel": "Forge Stone IX",
+      "col": "count",
+      "kind": "range",
+      "value": [
+        1,
+        1
+      ],
+      "code": "LootTable.Entries[\"forge_9\"].countMin/countMax",
+      "hint": "Nâng +9 (+61%)."
+    },
+    {
+      "id": "items.forge_10.tier",
+      "group": "items",
+      "row": "forge_10",
+      "rowLabel": "Forge Stone X",
+      "col": "tier",
+      "kind": "choice",
+      "value": "Exceptional",
+      "code": "LootTable.Entries[\"forge_10\"].tier",
+      "hint": "Nâng +10 (+70%), cần thêm Ancient Forge Stone.",
+      "options": [
+        {
+          "value": "Common",
+          "label": "T1 Common"
+        },
+        {
+          "value": "Uncommon",
+          "label": "T2 Uncommon"
+        },
+        {
+          "value": "Rare",
+          "label": "T3 Rare"
+        },
+        {
+          "value": "Precious",
+          "label": "T4 Precious"
+        },
+        {
+          "value": "Exceptional",
+          "label": "T5 Exceptional"
+        },
+        {
+          "value": "Mythic",
+          "label": "T6 Mythic"
+        }
+      ]
+    },
+    {
+      "id": "items.forge_10.weight",
+      "group": "items",
+      "row": "forge_10",
+      "rowLabel": "Forge Stone X",
+      "col": "weight",
+      "kind": "number",
+      "value": 1.0,
+      "code": "LootTable.Entries[\"forge_10\"].weight",
+      "hint": "Nâng +10 (+70%), cần thêm Ancient Forge Stone."
+    },
+    {
+      "id": "items.forge_10.from",
+      "group": "items",
+      "row": "forge_10",
+      "rowLabel": "Forge Stone X",
+      "col": "from",
+      "kind": "choice",
+      "value": "Boss",
+      "code": "LootTable.Entries[\"forge_10\"].minSource",
+      "hint": "Nâng +10 (+70%), cần thêm Ancient Forge Stone.",
+      "options": [
+        {
+          "value": "Normal",
+          "label": "Thường trở lên"
+        },
+        {
+          "value": "Magic",
+          "label": "Magic trở lên"
+        },
+        {
+          "value": "Elite",
+          "label": "Elite / Rare trở lên"
+        },
+        {
+          "value": "Boss",
+          "label": "Boss"
+        }
+      ]
+    },
+    {
+      "id": "items.forge_10.count",
+      "group": "items",
+      "row": "forge_10",
+      "rowLabel": "Forge Stone X",
+      "col": "count",
+      "kind": "range",
+      "value": [
+        1,
+        1
+      ],
+      "code": "LootTable.Entries[\"forge_10\"].countMin/countMax",
+      "hint": "Nâng +10 (+70%), cần thêm Ancient Forge Stone."
+    },
+    {
+      "id": "items.star_forge.tier",
+      "group": "items",
+      "row": "star_forge",
+      "rowLabel": "Star Forge",
+      "col": "tier",
+      "kind": "choice",
+      "value": "Exceptional",
+      "code": "LootTable.Entries[\"star_forge\"].tier",
+      "hint": "Đồ Normal thành Rare 3 dòng + 1 dòng tự chọn từ món hy sinh.",
+      "options": [
+        {
+          "value": "Common",
+          "label": "T1 Common"
+        },
+        {
+          "value": "Uncommon",
+          "label": "T2 Uncommon"
+        },
+        {
+          "value": "Rare",
+          "label": "T3 Rare"
+        },
+        {
+          "value": "Precious",
+          "label": "T4 Precious"
+        },
+        {
+          "value": "Exceptional",
+          "label": "T5 Exceptional"
+        },
+        {
+          "value": "Mythic",
+          "label": "T6 Mythic"
+        }
+      ]
+    },
+    {
+      "id": "items.star_forge.weight",
+      "group": "items",
+      "row": "star_forge",
+      "rowLabel": "Star Forge",
+      "col": "weight",
+      "kind": "number",
+      "value": 2.0,
+      "code": "LootTable.Entries[\"star_forge\"].weight",
+      "hint": "Đồ Normal thành Rare 3 dòng + 1 dòng tự chọn từ món hy sinh."
+    },
+    {
+      "id": "items.star_forge.from",
+      "group": "items",
+      "row": "star_forge",
+      "rowLabel": "Star Forge",
+      "col": "from",
+      "kind": "choice",
+      "value": "Normal",
+      "code": "LootTable.Entries[\"star_forge\"].minSource",
+      "hint": "Đồ Normal thành Rare 3 dòng + 1 dòng tự chọn từ món hy sinh.",
+      "options": [
+        {
+          "value": "Normal",
+          "label": "Thường trở lên"
+        },
+        {
+          "value": "Magic",
+          "label": "Magic trở lên"
+        },
+        {
+          "value": "Elite",
+          "label": "Elite / Rare trở lên"
+        },
+        {
+          "value": "Boss",
+          "label": "Boss"
+        }
+      ]
+    },
+    {
+      "id": "items.tear_of_rebirth.tier",
+      "group": "items",
+      "row": "tear_of_rebirth",
+      "rowLabel": "Tear of Rebirth",
+      "col": "tier",
+      "kind": "choice",
+      "value": "Exceptional",
+      "code": "LootTable.Entries[\"tear_of_rebirth\"].tier",
+      "hint": "Hoàn lại mọi điểm thuộc tính.",
+      "options": [
+        {
+          "value": "Common",
+          "label": "T1 Common"
+        },
+        {
+          "value": "Uncommon",
+          "label": "T2 Uncommon"
+        },
+        {
+          "value": "Rare",
+          "label": "T3 Rare"
+        },
+        {
+          "value": "Precious",
+          "label": "T4 Precious"
+        },
+        {
+          "value": "Exceptional",
+          "label": "T5 Exceptional"
+        },
+        {
+          "value": "Mythic",
+          "label": "T6 Mythic"
+        }
+      ]
+    },
+    {
+      "id": "items.tear_of_rebirth.weight",
+      "group": "items",
+      "row": "tear_of_rebirth",
+      "rowLabel": "Tear of Rebirth",
+      "col": "weight",
+      "kind": "number",
+      "value": 1.0,
+      "code": "LootTable.Entries[\"tear_of_rebirth\"].weight",
+      "hint": "Hoàn lại mọi điểm thuộc tính."
+    },
+    {
+      "id": "items.tear_of_rebirth.from",
+      "group": "items",
+      "row": "tear_of_rebirth",
+      "rowLabel": "Tear of Rebirth",
+      "col": "from",
+      "kind": "choice",
+      "value": "Boss",
+      "code": "LootTable.Entries[\"tear_of_rebirth\"].minSource",
+      "hint": "Hoàn lại mọi điểm thuộc tính.",
+      "options": [
+        {
+          "value": "Normal",
+          "label": "Thường trở lên"
+        },
+        {
+          "value": "Magic",
+          "label": "Magic trở lên"
+        },
+        {
+          "value": "Elite",
+          "label": "Elite / Rare trở lên"
+        },
+        {
+          "value": "Boss",
+          "label": "Boss"
+        }
+      ]
+    },
+    {
+      "id": "items.ancient_forge.tier",
+      "group": "items",
+      "row": "ancient_forge",
+      "rowLabel": "Ancient Forge Stone",
+      "col": "tier",
+      "kind": "choice",
+      "value": "Mythic",
+      "code": "LootTable.Entries[\"ancient_forge\"].tier",
+      "hint": "Bước nâng cuối cùng, lên +10.",
+      "options": [
+        {
+          "value": "Common",
+          "label": "T1 Common"
+        },
+        {
+          "value": "Uncommon",
+          "label": "T2 Uncommon"
+        },
+        {
+          "value": "Rare",
+          "label": "T3 Rare"
+        },
+        {
+          "value": "Precious",
+          "label": "T4 Precious"
+        },
+        {
+          "value": "Exceptional",
+          "label": "T5 Exceptional"
+        },
+        {
+          "value": "Mythic",
+          "label": "T6 Mythic"
+        }
+      ]
+    },
+    {
+      "id": "items.ancient_forge.weight",
+      "group": "items",
+      "row": "ancient_forge",
+      "rowLabel": "Ancient Forge Stone",
+      "col": "weight",
+      "kind": "number",
+      "value": 1.0,
+      "code": "LootTable.Entries[\"ancient_forge\"].weight",
+      "hint": "Bước nâng cuối cùng, lên +10."
+    },
+    {
+      "id": "items.ancient_forge.from",
+      "group": "items",
+      "row": "ancient_forge",
+      "rowLabel": "Ancient Forge Stone",
+      "col": "from",
+      "kind": "choice",
+      "value": "Boss",
+      "code": "LootTable.Entries[\"ancient_forge\"].minSource",
+      "hint": "Bước nâng cuối cùng, lên +10.",
+      "options": [
+        {
+          "value": "Normal",
+          "label": "Thường trở lên"
+        },
+        {
+          "value": "Magic",
+          "label": "Magic trở lên"
+        },
+        {
+          "value": "Elite",
+          "label": "Elite / Rare trở lên"
+        },
+        {
+          "value": "Boss",
+          "label": "Boss"
+        }
+      ]
+    },
+    {
+      "id": "items.sun_tear.tier",
+      "group": "items",
+      "row": "sun_tear",
+      "rowLabel": "Sun Tear",
+      "col": "tier",
+      "kind": "choice",
+      "value": "Mythic",
+      "code": "LootTable.Entries[\"sun_tear\"].tier",
+      "hint": "Tung lại số mọi dòng, chỉ giữ khi tăng, không bao giờ giảm.",
+      "options": [
+        {
+          "value": "Common",
+          "label": "T1 Common"
+        },
+        {
+          "value": "Uncommon",
+          "label": "T2 Uncommon"
+        },
+        {
+          "value": "Rare",
+          "label": "T3 Rare"
+        },
+        {
+          "value": "Precious",
+          "label": "T4 Precious"
+        },
+        {
+          "value": "Exceptional",
+          "label": "T5 Exceptional"
+        },
+        {
+          "value": "Mythic",
+          "label": "T6 Mythic"
+        }
+      ]
+    },
+    {
+      "id": "items.sun_tear.weight",
+      "group": "items",
+      "row": "sun_tear",
+      "rowLabel": "Sun Tear",
+      "col": "weight",
+      "kind": "number",
+      "value": 1.0,
+      "code": "LootTable.Entries[\"sun_tear\"].weight",
+      "hint": "Tung lại số mọi dòng, chỉ giữ khi tăng, không bao giờ giảm."
+    },
+    {
+      "id": "items.sun_tear.from",
+      "group": "items",
+      "row": "sun_tear",
+      "rowLabel": "Sun Tear",
+      "col": "from",
+      "kind": "choice",
+      "value": "Normal",
+      "code": "LootTable.Entries[\"sun_tear\"].minSource",
+      "hint": "Tung lại số mọi dòng, chỉ giữ khi tăng, không bao giờ giảm.",
+      "options": [
+        {
+          "value": "Normal",
+          "label": "Thường trở lên"
+        },
+        {
+          "value": "Magic",
+          "label": "Magic trở lên"
+        },
+        {
+          "value": "Elite",
+          "label": "Elite / Rare trở lên"
+        },
+        {
+          "value": "Boss",
+          "label": "Boss"
+        }
+      ]
+    },
+    {
+      "id": "gear.jewellery.value",
+      "group": "gear",
+      "row": "jewellery",
+      "rowLabel": "Trang sức (nhẫn, dây chuyền)",
+      "col": "value",
+      "kind": "chance",
+      "value": 0.3,
+      "code": "LootTable.JewelleryShare"
+    },
+    {
+      "id": "gear.armour.value",
+      "group": "gear",
+      "row": "armour",
+      "rowLabel": "Giáp, trong phần không phải trang sức",
+      "col": "value",
+      "kind": "chance",
+      "value": 0.55,
+      "code": "LootDrops.Piece (rng < .55 -> armour)"
+    },
+    {
+      "id": "monsters.magic.value",
+      "group": "monsters",
+      "row": "magic",
+      "rowLabel": "Magic",
+      "col": "value",
+      "kind": "chance",
+      "value": 0.15,
+      "code": "MonsterMods.MagicChance"
+    },
+    {
+      "id": "monsters.rare.value",
+      "group": "monsters",
+      "row": "rare",
+      "rowLabel": "Rare",
+      "col": "value",
+      "kind": "chance",
+      "value": 0.05,
+      "code": "MonsterMods.RareChance"
+    },
+    {
+      "id": "mods.Reflective.quantity",
+      "group": "mods",
+      "row": "Reflective",
+      "rowLabel": "Reflective",
+      "col": "quantity",
+      "kind": "chance",
+      "value": 0.15,
+      "code": "MonsterMods.Loot[Reflective].quantity"
+    },
+    {
+      "id": "mods.Reflective.rarity",
+      "group": "mods",
+      "row": "Reflective",
+      "rowLabel": "Reflective",
+      "col": "rarity",
+      "kind": "chance",
+      "value": 0.4,
+      "code": "MonsterMods.Loot[Reflective].rarity"
+    },
+    {
+      "id": "mods.Hasted.quantity",
+      "group": "mods",
+      "row": "Hasted",
+      "rowLabel": "Hasted",
+      "col": "quantity",
+      "kind": "chance",
+      "value": 0.12,
+      "code": "MonsterMods.Loot[Hasted].quantity"
+    },
+    {
+      "id": "mods.Hasted.rarity",
+      "group": "mods",
+      "row": "Hasted",
+      "rowLabel": "Hasted",
+      "col": "rarity",
+      "kind": "chance",
+      "value": 0.3,
+      "code": "MonsterMods.Loot[Hasted].rarity"
+    },
+    {
+      "id": "mods.Volatile.quantity",
+      "group": "mods",
+      "row": "Volatile",
+      "rowLabel": "Volatile",
+      "col": "quantity",
+      "kind": "chance",
+      "value": 0.12,
+      "code": "MonsterMods.Loot[Volatile].quantity"
+    },
+    {
+      "id": "mods.Volatile.rarity",
+      "group": "mods",
+      "row": "Volatile",
+      "rowLabel": "Volatile",
+      "col": "rarity",
+      "kind": "chance",
+      "value": 0.3,
+      "code": "MonsterMods.Loot[Volatile].rarity"
+    },
+    {
+      "id": "mods.Regenerating.quantity",
+      "group": "mods",
+      "row": "Regenerating",
+      "rowLabel": "Regenerating",
+      "col": "quantity",
+      "kind": "chance",
+      "value": 0.08,
+      "code": "MonsterMods.Loot[Regenerating].quantity"
+    },
+    {
+      "id": "mods.Regenerating.rarity",
+      "group": "mods",
+      "row": "Regenerating",
+      "rowLabel": "Regenerating",
+      "col": "rarity",
+      "kind": "chance",
+      "value": 0.2,
+      "code": "MonsterMods.Loot[Regenerating].rarity"
+    },
+    {
+      "id": "mods.Summoner.quantity",
+      "group": "mods",
+      "row": "Summoner",
+      "rowLabel": "Summoner",
+      "col": "quantity",
+      "kind": "chance",
+      "value": 0.06,
+      "code": "MonsterMods.Loot[Summoner].quantity"
+    },
+    {
+      "id": "mods.Summoner.rarity",
+      "group": "mods",
+      "row": "Summoner",
+      "rowLabel": "Summoner",
+      "col": "rarity",
+      "kind": "chance",
+      "value": 0.15,
+      "code": "MonsterMods.Loot[Summoner].rarity"
+    },
+    {
+      "id": "mods.FireResistant.quantity",
+      "group": "mods",
+      "row": "FireResistant",
+      "rowLabel": "Fire Resistant",
+      "col": "quantity",
+      "kind": "chance",
+      "value": 0.05,
+      "code": "MonsterMods.Loot[FireResistant].quantity"
+    },
+    {
+      "id": "mods.FireResistant.rarity",
+      "group": "mods",
+      "row": "FireResistant",
+      "rowLabel": "Fire Resistant",
+      "col": "rarity",
+      "kind": "chance",
+      "value": 0.1,
+      "code": "MonsterMods.Loot[FireResistant].rarity"
+    },
+    {
+      "id": "gold.base.value",
+      "group": "gold",
+      "row": "base",
+      "rowLabel": "Gốc (min–max)",
+      "col": "value",
+      "kind": "range",
+      "value": [
+        8,
+        20
+      ],
+      "code": "LootDrops.Gold (rng.Next(8, 21))"
+    },
+    {
+      "id": "gold.per_level.value",
+      "group": "gold",
+      "row": "per_level",
+      "rowLabel": "Hệ số mỗi cấp",
+      "col": "value",
+      "kind": "number",
+      "value": 0.1,
+      "code": "LootDrops.Gold (1f + level / 10f)"
+    },
+    {
+      "id": "gold.normal.value",
+      "group": "gold",
+      "row": "normal",
+      "rowLabel": "Hệ số: Thường, Magic",
+      "col": "value",
+      "kind": "number",
+      "value": 1.0,
+      "code": "LootDrops.OnEnemyDied (elite ? 5f : 1f)"
+    },
+    {
+      "id": "gold.elite.value",
+      "group": "gold",
+      "row": "elite",
+      "rowLabel": "Hệ số: Elite / Rare",
+      "col": "value",
+      "kind": "number",
+      "value": 5.0,
+      "code": "LootDrops.OnEnemyDied (elite ? 5f : 1f)"
+    },
+    {
+      "id": "gold.boss.value",
+      "group": "gold",
+      "row": "boss",
+      "rowLabel": "Hệ số: Boss",
+      "col": "value",
+      "kind": "number",
+      "value": 40.0,
+      "code": "LootDrops.OnBossDied (Gold(rng, level, 40f ...))"
+    },
+    {
+      "id": "rift.boss.value",
+      "group": "rift",
+      "row": "boss",
+      "rowLabel": "Boss của Rift: số viên chắc chắn",
+      "col": "value",
+      "kind": "range",
+      "value": [
+        1,
+        2
+      ],
+      "code": "LootDrops.OnBossDied (rng.Next(1, 3))"
+    },
+    {
+      "id": "rift.tier_up.value",
+      "group": "rift",
+      "row": "tier_up",
+      "rowLabel": "Lên thêm một bậc",
+      "col": "value",
+      "kind": "chance",
+      "value": 0.2,
+      "code": "RiftStones.Drop (rng < .2 -> tier + 1)"
+    },
+    {
+      "id": "rift.grade_normal.value",
+      "group": "rift",
+      "row": "grade_normal",
+      "rowLabel": "Hạng Normal",
+      "col": "value",
+      "kind": "chance",
+      "value": 0.55,
+      "code": "RiftStones.Drop (r < .55)"
+    },
+    {
+      "id": "rift.grade_magic.value",
+      "group": "rift",
+      "row": "grade_magic",
+      "rowLabel": "Hạng Magic",
+      "col": "value",
+      "kind": "chance",
+      "value": 0.32,
+      "code": "RiftStones.Drop (r < .87)"
+    },
+    {
+      "id": "rift.grade_rare.value",
+      "group": "rift",
+      "row": "grade_rare",
+      "rowLabel": "Hạng Rare",
+      "col": "value",
+      "kind": "chance",
+      "value": 0.13,
+      "code": "RiftStones.Drop (else)"
+    },
+    {
+      "id": "flasks.lower_tier.value",
+      "group": "flasks",
+      "row": "lower_tier",
+      "rowLabel": "Thấp hơn một bậc",
+      "col": "value",
+      "kind": "chance",
+      "value": 0.35,
+      "code": "Flasks.Drop (rng < .35 -> one tier lower)"
+    },
+    {
+      "id": "flasks.life_share.value",
+      "group": "flasks",
+      "row": "life_share",
+      "rowLabel": "Phần bình máu (còn lại mana)",
+      "col": "value",
+      "kind": "chance",
+      "value": 0.55,
+      "code": "Flasks.Drop (Make(rng < .55, tier))"
+    },
+    {
+      "id": "quest.quest_grey_lichen.value",
+      "group": "quest",
+      "row": "quest_grey_lichen",
+      "rowLabel": "Grey Lichen",
+      "col": "value",
+      "kind": "chance",
+      "value": 0.7,
+      "code": "Resources/Story/Chapters.txt (collect quest_grey_lichen 4 drop 70)"
+    },
+    {
+      "id": "quest.quest_black_chain.value",
+      "group": "quest",
+      "row": "quest_black_chain",
+      "rowLabel": "Link of Black Chain",
+      "col": "value",
+      "kind": "chance",
+      "value": 0.7,
+      "code": "Resources/Story/Chapters.txt (collect quest_black_chain 3 drop 70)"
+    },
+    {
+      "id": "quest.quest_rusted_fittings.value",
+      "group": "quest",
+      "row": "quest_rusted_fittings",
+      "rowLabel": "Rusted Fittings",
+      "col": "value",
+      "kind": "chance",
+      "value": 0.45,
+      "code": "Resources/Story/Farmhands.txt (collect quest_rusted_fittings 3 drop 45)"
+    },
+    {
+      "id": "quest.quest_grey_heartwood.value",
+      "group": "quest",
+      "row": "quest_grey_heartwood",
+      "rowLabel": "Grey Heartwood",
+      "col": "value",
+      "kind": "chance",
+      "value": 0.7,
+      "code": "Resources/Story/Prologue.txt (collect quest_grey_heartwood 4 drop 70)"
+    },
+    {
+      "id": "quest.quest_withered_root.value",
+      "group": "quest",
+      "row": "quest_withered_root",
+      "rowLabel": "Withered Root",
+      "col": "value",
+      "kind": "chance",
+      "value": 0.7,
+      "code": "Resources/Story/Willowmere.txt (collect quest_withered_root 3 drop 70)"
+    },
+    {
+      "id": "quest.quest_heartmoss.value",
+      "group": "quest",
+      "row": "quest_heartmoss",
+      "rowLabel": "Heartmoss",
+      "col": "value",
+      "kind": "chance",
+      "value": 0.7,
+      "code": "Resources/Story/Willowmere.txt (collect quest_heartmoss 5 drop 70)"
+    },
+    {
+      "id": "quest.quest_grave_salt.value",
+      "group": "quest",
+      "row": "quest_grave_salt",
+      "rowLabel": "Grave Salt",
+      "col": "value",
+      "kind": "chance",
+      "value": 0.7,
+      "code": "Resources/Story/Willowmere.txt (collect quest_grave_salt 3 drop 70)"
+    },
+    {
+      "id": "quest.quest_smoked_ham.value",
+      "group": "quest",
+      "row": "quest_smoked_ham",
+      "rowLabel": "Smoked Ham",
+      "col": "value",
+      "kind": "chance",
+      "value": 0.7,
+      "code": "Resources/Story/Willowmere.txt (collect quest_smoked_ham 4 drop 70)"
+    },
+    {
+      "id": "quest.quest_quill_parcel.value",
+      "group": "quest",
+      "row": "quest_quill_parcel",
+      "rowLabel": "Quill's Parcel",
+      "col": "value",
+      "kind": "chance",
+      "value": 0.7,
+      "code": "Resources/Story/Willowmere.txt (collect quest_quill_parcel 3 drop 70)"
+    },
+    {
+      "id": "quest.quest_cold_iron.value",
+      "group": "quest",
+      "row": "quest_cold_iron",
+      "rowLabel": "Cold Iron",
+      "col": "value",
+      "kind": "chance",
+      "value": 0.7,
+      "code": "Resources/Story/Willowmere.txt (collect quest_cold_iron 6 drop 70)"
+    },
+    {
+      "id": "colours.gear_normal.colour",
+      "group": "colours",
+      "row": "gear_normal",
+      "rowLabel": "Trang bị Normal",
+      "col": "colour",
+      "kind": "color",
+      "value": "#dbdbd6",
+      "code": "RarityInfo.Color(White)"
+    },
+    {
+      "id": "colours.gear_normal.beam",
+      "group": "colours",
+      "row": "gear_normal",
+      "rowLabel": "Trang bị Normal",
+      "col": "beam",
+      "kind": "number",
+      "value": 0.0,
+      "code": "LootFx.BeamOf(Common)"
+    },
+    {
+      "id": "colours.gear_magic.colour",
+      "group": "colours",
+      "row": "gear_magic",
+      "rowLabel": "Trang bị Magic",
+      "col": "colour",
+      "kind": "color",
+      "value": "#669eff",
+      "code": "RarityInfo.Color(Blue)"
+    },
+    {
+      "id": "colours.gear_magic.beam",
+      "group": "colours",
+      "row": "gear_magic",
+      "rowLabel": "Trang bị Magic",
+      "col": "beam",
+      "kind": "number",
+      "value": 1.6,
+      "code": "LootFx.BeamOf(Magic)"
+    },
+    {
+      "id": "colours.gear_rare.colour",
+      "group": "colours",
+      "row": "gear_rare",
+      "rowLabel": "Trang bị Rare",
+      "col": "colour",
+      "kind": "color",
+      "value": "#bd73ff",
+      "code": "RarityInfo.Color(Purple)"
+    },
+    {
+      "id": "colours.gear_rare.beam",
+      "group": "colours",
+      "row": "gear_rare",
+      "rowLabel": "Trang bị Rare",
+      "col": "beam",
+      "kind": "number",
+      "value": 2.4,
+      "code": "LootFx.BeamOf(Rare)"
+    },
+    {
+      "id": "colours.gear_unique.colour",
+      "group": "colours",
+      "row": "gear_unique",
+      "rowLabel": "Trang bị Unique",
+      "col": "colour",
+      "kind": "color",
+      "value": "#ff4238",
+      "code": "RarityInfo.Color(Red)"
+    },
+    {
+      "id": "colours.gear_unique.beam",
+      "group": "colours",
+      "row": "gear_unique",
+      "rowLabel": "Trang bị Unique",
+      "col": "beam",
+      "kind": "number",
+      "value": 6.0,
+      "code": "LootFx.BeamOf(Mythic)"
+    },
+    {
+      "id": "colours.t1.colour",
+      "group": "colours",
+      "row": "t1",
+      "rowLabel": "T1 Common (tiền tệ)",
+      "col": "colour",
+      "kind": "color",
+      "value": "#ffe6b2",
+      "code": "LootFx.ColorOf(Common)"
+    },
+    {
+      "id": "colours.t1.beam",
+      "group": "colours",
+      "row": "t1",
+      "rowLabel": "T1 Common (tiền tệ)",
+      "col": "beam",
+      "kind": "number",
+      "value": 0.0,
+      "code": "LootFx.BeamOf(Common)"
+    },
+    {
+      "id": "colours.t2.colour",
+      "group": "colours",
+      "row": "t2",
+      "rowLabel": "T2 Uncommon",
+      "col": "colour",
+      "kind": "color",
+      "value": "#ffedbf",
+      "code": "LootFx.ColorOf(Currency)"
+    },
+    {
+      "id": "colours.t2.beam",
+      "group": "colours",
+      "row": "t2",
+      "rowLabel": "T2 Uncommon",
+      "col": "beam",
+      "kind": "number",
+      "value": 1.8,
+      "code": "LootFx.BeamOf(Currency)"
+    },
+    {
+      "id": "colours.t3.colour",
+      "group": "colours",
+      "row": "t3",
+      "rowLabel": "T3 Rare",
+      "col": "colour",
+      "kind": "color",
+      "value": "#bf73ff",
+      "code": "LootFx.ColorOf(Rare)"
+    },
+    {
+      "id": "colours.t3.beam",
+      "group": "colours",
+      "row": "t3",
+      "rowLabel": "T3 Rare",
+      "col": "beam",
+      "kind": "number",
+      "value": 2.4,
+      "code": "LootFx.BeamOf(Rare)"
+    },
+    {
+      "id": "colours.t4.colour",
+      "group": "colours",
+      "row": "t4",
+      "rowLabel": "T4 Precious",
+      "col": "colour",
+      "kind": "color",
+      "value": "#ffd14c",
+      "code": "LootFx.ColorOf(Heroic)"
+    },
+    {
+      "id": "colours.t4.beam",
+      "group": "colours",
+      "row": "t4",
+      "rowLabel": "T4 Precious",
+      "col": "beam",
+      "kind": "number",
+      "value": 3.0,
+      "code": "LootFx.BeamOf(Heroic)"
+    },
+    {
+      "id": "colours.t5.colour",
+      "group": "colours",
+      "row": "t5",
+      "rowLabel": "T5 Exceptional",
+      "col": "colour",
+      "kind": "color",
+      "value": "#ff8c26",
+      "code": "LootFx.ColorOf(Unique)"
+    },
+    {
+      "id": "colours.t5.beam",
+      "group": "colours",
+      "row": "t5",
+      "rowLabel": "T5 Exceptional",
+      "col": "beam",
+      "kind": "number",
+      "value": 4.5,
+      "code": "LootFx.BeamOf(Unique)"
+    },
+    {
+      "id": "colours.t6.colour",
+      "group": "colours",
+      "row": "t6",
+      "rowLabel": "T6 Mythic",
+      "col": "colour",
+      "kind": "color",
+      "value": "#fff5d1",
+      "code": "LootFx.ColorOf(Divine)"
+    },
+    {
+      "id": "colours.t6.beam",
+      "group": "colours",
+      "row": "t6",
+      "rowLabel": "T6 Mythic",
+      "col": "beam",
+      "kind": "number",
+      "value": 8.0,
+      "code": "LootFx.BeamOf(Divine)"
+    },
+    {
+      "id": "colours.gold.colour",
+      "group": "colours",
+      "row": "gold",
+      "rowLabel": "Vàng",
+      "col": "colour",
+      "kind": "color",
+      "value": "#ffcc4c",
+      "code": "LootFx.ColorOf(Gold)"
+    },
+    {
+      "id": "colours.gold.beam",
+      "group": "colours",
+      "row": "gold",
+      "rowLabel": "Vàng",
+      "col": "beam",
+      "kind": "number",
+      "value": 0.0,
+      "code": "LootFx.BeamOf(Gold)"
+    },
+    {
+      "id": "colours.flask.colour",
+      "group": "colours",
+      "row": "flask",
+      "rowLabel": "Bình / đồ dùng",
+      "col": "colour",
+      "kind": "color",
+      "value": "#80ff99",
+      "code": "LootFx.ColorOf(Flask)"
+    },
+    {
+      "id": "colours.flask.beam",
+      "group": "colours",
+      "row": "flask",
+      "rowLabel": "Bình / đồ dùng",
+      "col": "beam",
+      "kind": "number",
+      "value": 0.0,
+      "code": "LootFx.BeamOf(Flask)"
+    },
+    {
+      "id": "colours.skill.colour",
+      "group": "colours",
+      "row": "skill",
+      "rowLabel": "Ngọc skill",
+      "col": "colour",
+      "kind": "color",
+      "value": "#8c99ff",
+      "code": "LootFx.ColorOf(SkillGem)"
+    },
+    {
+      "id": "colours.skill.beam",
+      "group": "colours",
+      "row": "skill",
+      "rowLabel": "Ngọc skill",
+      "col": "beam",
+      "kind": "number",
+      "value": 4.5,
+      "code": "LootFx.BeamOf(SkillGem)"
+    },
+    {
+      "id": "colours.support.colour",
+      "group": "colours",
+      "row": "support",
+      "rowLabel": "Ngọc hỗ trợ",
+      "col": "colour",
+      "kind": "color",
+      "value": "#ff9e40",
+      "code": "LootFx.ColorOf(Support)"
+    },
+    {
+      "id": "colours.support.beam",
+      "group": "colours",
+      "row": "support",
+      "rowLabel": "Ngọc hỗ trợ",
+      "col": "beam",
+      "kind": "number",
+      "value": 4.5,
+      "code": "LootFx.BeamOf(Support)"
+    },
+    {
+      "id": "colours.quest.colour",
+      "group": "colours",
+      "row": "quest",
+      "rowLabel": "Quest",
+      "col": "colour",
+      "kind": "color",
+      "value": "#9eff4c",
+      "code": "LootFx.ColorOf(Quest)"
+    },
+    {
+      "id": "colours.quest.beam",
+      "group": "colours",
+      "row": "quest",
+      "rowLabel": "Quest",
+      "col": "beam",
+      "kind": "number",
+      "value": 4.5,
+      "code": "LootFx.BeamOf(Quest)"
+    }
+  ]
 }

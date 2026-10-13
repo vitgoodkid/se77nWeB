@@ -1455,10 +1455,11 @@ window.WN = {
       "cats": [
         "tech"
       ],
-      "title": "Trang Đồ rơi: màu và tỉ lệ rơi, chỉnh được",
+      "title": "Rơi đồ kiểu PoE2 và trang Đồ rơi chỉnh được",
       "items": [
-        "Trang mới Đồ rơi: 142 tỉ lệ trong 17 bảng (trang bị, vàng, đá rèn, Flux, gem chế tạo, Lustre, ngọc chưa mài, rune, bình, đồ quest, Rift Stone) và màu nhãn, cột sáng của 12 nhóm đồ nằm dưới đất; số gốc đọc từ code.",
-        "Sửa ngay trong ô, ghi chú từng bảng, xem trung bình mỗi lần giết tính lại theo số đang sửa, cảnh báo các tỉ lệ phải cộng đủ 100%, rồi xuất JSON cho AI áp vào game."
+        "Rơi đồ đổi sang kiểu PoE2: vàng luôn rơi; ngoài vàng mỗi lần giết chỉ vài lượt rơi (quái thường 0,15, Magic 0,4, Elite 1,2, boss 5), mỗi lượt chọn một bậc T1–T6 rồi một món trong bậc. Quái thường rơi một món mỗi khoảng 7 con.",
+        "Bậc của món theo tác dụng (Kindle T1, Crown T3, Blaze T4, Star Forge T5, Sun Tear và Ancient Forge Stone T6…), quyết định cả độ hiếm lẫn màu nhãn, cột sáng, tiếng khi rơi. Boss không còn chắc chắn ra đồ Rare.",
+        "Trang mới Đồ rơi: sửa số lượt rơi, trọng số bậc, bậc và trọng số từng món, xem mỗi bao nhiêu con thì rơi một lần (quái thường, boss) tính lại ngay, ghi chú từng bảng, rồi xuất JSON cho AI áp vào game. Dữ liệu xuất thẳng từ code."
       ]
     },
     {

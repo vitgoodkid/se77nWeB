@@ -31,7 +31,7 @@
 
 /* the drops as they lie on the floor; beams to scale */
 .floor { background: var(--floor); border: 1px solid var(--floor-line); border-radius: 8px; padding: 18px 18px 0; overflow-x: auto; }
-.beams { display: grid; grid-template-columns: repeat(12, minmax(64px, 1fr)); gap: 6px; align-items: end; min-width: 840px; }
+.beams { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(62px, 1fr); gap: 6px; align-items: end; min-width: 980px; }
 .drop { display: grid; justify-items: center; gap: 7px; padding-bottom: 12px; }
 .shaft { width: calc(3px + var(--h) * 1.4px); height: calc(var(--h) * 16px); background: linear-gradient(to top, var(--c), transparent); border-radius: 2px; opacity: .85; }
 .shaft.none { width: 28px; height: 5px; background: none; border-top: 1px dashed #4b4436; opacity: 1; }
@@ -59,3 +59,17 @@
 
 @media (max-width: 1050px) { .drops-workspace { grid-template-columns: minmax(0, 1fr) 300px; } }
 @media (max-width: 720px) { .drops-workspace { grid-template-columns: minmax(0, 1fr); } .drops-side { position: static; max-height: none; order: -1; min-width: 0; } .drops-page tbody th { min-width: 120px; } }
+
+/* the table of items: their effect under the name, the odds worked out beside */
+.hint { display: block; margin-top: 3px; color: var(--muted); font: 400 11px/1.45 var(--f); max-width: 34ch; }
+.drops-page td select { width: 150px !important; padding: 6px 8px !important; font: 12px var(--f) !important; }
+.drops-page td.odds { font: 11px var(--fm); color: var(--muted); white-space: nowrap; min-width: 96px; }
+.odds-head, .odds-row { display: grid; grid-template-columns: minmax(0, 1fr) 90px 80px; gap: 8px; align-items: center; font-size: 12px; }
+.odds-head { font: 500 10px var(--fm); color: var(--muted); letter-spacing: .06em; text-transform: uppercase; padding-bottom: 4px; }
+.odds-row { padding: 5px 0; border-top: 1px solid var(--line); }
+.odds-row span:not(:first-child) { font: 11px var(--fm); text-align: right; }
+.odds-row.total { font-weight: 600; }
+.odds-row .sw { display: inline-block; }
+.drops-page td .range input[type=number] { width: 50px !important; }
+.drops-page td select { width: 128px !important; }
+.drops-page #g-items td { min-width: 0; }

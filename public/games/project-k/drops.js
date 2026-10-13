@@ -1,4 +1,4 @@
-import { copy, same, valid, warnings, expected, makeExport, readImport } from './drops-model.js';
+import { copy, same, valid, warnings, odds, itemKeys, TIERS, makeExport, readImport } from './drops-model.js';
 
 const $ = selector => document.querySelector(selector);
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -14,6 +14,7 @@ function show(entry, value) {
   if (entry.kind === 'chance') return `${round(value * 100, 3)}%`;
   if (entry.kind === 'range') return value[0] === value[1] ? `${value[0]}` : `${value[0]}–${value[1]}`;
   if (entry.kind === 'color') return value;
+  if (entry.kind === 'choice') return entry.options.find(o => o.value === value)?.label ?? value;
   return `${round(value)}`;
 }
 function oneIn(entry, value) { return entry.kind === 'chance' && value > 0 && value < .2 ? ` · 1/${round(1 / value, 1)}` : ''; }
@@ -29,6 +30,7 @@ function input(entry) {
   switch (entry.kind) {
     case 'chance': return `<span class="unit"><input type="number" data-id="${id}" value="${round(v * 100, 4)}" min="0" max="100" step="any" aria-label="${label} (%)"><i>%</i></span>`;
     case 'range': return `<span class="range"><input type="number" data-id="${id}" data-part="0" value="${v[0]}" min="0" max="1000" step="1" aria-label="${label} tối thiểu"><i>–</i><input type="number" data-id="${id}" data-part="1" value="${v[1]}" min="0" max="1000" step="1" aria-label="${label} tối đa"></span>`;
+    case 'choice': return `<select data-id="${id}" aria-label="${label}">${entry.options.map(o => `<option value="${esc(o.value)}" ${o.value === v ? 'selected' : ''}>${esc(o.label)}</option>`).join('')}</select>`;
     case 'color': return `<span class="colour"><input type="color" data-id="${id}" value="${esc(v)}" aria-label="${label}"><input type="text" data-id="${id}" data-hex="1" value="${esc(v)}" maxlength="7" spellcheck="false" aria-label="${label} mã màu"></span>`;
     default: return `<input type="number" data-id="${id}" value="${round(v)}" min="0" step="${entry.kind === 'int' ? 1 : 'any'}" aria-label="${label}">`;
   }
@@ -52,13 +54,15 @@ function renderSections() {
   $('#sections').innerHTML = data.groups.map(g => {
     const rows = [...new Set(data.entries.filter(e => e.group === g.id).map(e => e.row))];
     const at = (row, col) => data.entries.find(e => e.group === g.id && e.row === row && e.col === col);
-    const head = g.columns.length > 1 || g.columns[0].label !== 'Giá trị' ? `<thead><tr><th></th>${g.columns.map(c => `<th>${esc(c.label)}</th>`).join('')}</tr></thead>` : '';
+    const items = g.id === 'items';
+    const head = g.columns.length > 1 || g.columns[0].label !== 'Giá trị' ? `<thead><tr><th></th>${g.columns.map(c => `<th>${esc(c.label)}</th>`).join('')}${items ? '<th title="Một quái thường rơi món này trung bình mỗi bao nhiêu con">Quái thường</th><th>Boss</th>' : ''}</tr></thead>` : '';
     return `<section class="drop-group" id="g-${esc(g.id)}">
       <h2>${esc(g.title)}</h2><p>${esc(g.intro)}</p>${g.notes.map(n => `<p class="field-help">${esc(n)}</p>`).join('')}
       ${g.id === 'colours' ? `<div id="floor">${floor()}</div>` : ''}
       <div class="tbl"><table>${head}<tbody>${rows.map(row => {
         const first = data.entries.find(e => e.group === g.id && e.row === row);
-        return `<tr><th scope="row">${g.id === 'colours' ? `<span class="sw" style="--c:${esc(get(`colours.${row}.colour`))}"></span>` : ''}${esc(first.rowLabel)}</th>${g.columns.map(c => cell(at(row, c.id))).join('')}</tr>`;
+        const sw = g.id === 'colours' ? get(`colours.${row}.colour`) : items ? tierColour(get(`items.${row}.tier`)) : null;
+        return `<tr><th scope="row">${sw ? `<span class="sw" data-sw="${esc(row)}" style="--c:${esc(sw)}"></span>` : ''}${esc(first.rowLabel)}${first.hint ? `<small class="hint">${esc(first.hint)}</small>` : ''}</th>${g.columns.map(c => cell(at(row, c.id))).join('')}${items ? `<td class="odds" data-odds="${esc(row)}.Normal"></td><td class="odds" data-odds="${esc(row)}.Boss"></td>` : ''}</tr>`;
       }).join('')}</tbody></table></div>
       <p class="code-ref">${esc(g.code)}</p>
       <label class="group-note">Ghi chú cho bảng này<textarea data-note="${esc(g.id)}" maxlength="8000" placeholder="Lý do sửa, hoặc điều muốn đổi mà bảng chưa có ô…">${esc(notes.groups[g.id] || '')}</textarea></label>
@@ -66,15 +70,30 @@ function renderSections() {
   }).join('');
 }
 
+const tierColour = tier => get(`colours.t${TIERS.indexOf(tier) + 1}.colour`);
+const every = perKill => perKill > 0 ? (perKill >= 1 ? `${round(perKill, 2)} / con` : `1 / ${round(1 / perKill, 0).toLocaleString('vi-VN')} con`) : '—';
+
+function renderOdds() {
+  const normal = odds(data, get, 'Normal'), boss = odds(data, get, 'Boss');
+  for (const key of itemKeys(data)) {
+    for (const [src, o] of [['Normal', normal], ['Boss', boss]]) {
+      const td = document.querySelector(`[data-odds="${CSS.escape(key)}.${src}"]`);
+      if (td) td.textContent = every(o.items[key]?.picks || 0);
+    }
+    const sw = document.querySelector(`#g-items [data-sw="${CSS.escape(key)}"]`);
+    if (sw) sw.style.setProperty('--c', tierColour(get(`items.${key}.tier`)));
+  }
+  const rows = [['Món mỗi lần giết', normal.rolls, boss.rolls, true], ...TIERS.map((t, i) => [`T${i + 1} ${t}`, normal.tiers[i + 1], boss.tiers[i + 1]])];
+  $('#expected').innerHTML = `<div class="odds-head"><span></span><span>Quái thường</span><span>Boss</span></div>` + rows.map(([name, n, b, head]) =>
+    `<div class="odds-row ${head ? 'total' : ''}"><span>${head ? '' : `<i class="sw" style="--c:${esc(get(`colours.t${name[1]}.colour`))}"></i>`}${esc(name)}</span><span>${head ? round(n, 2) : esc(every(n))}</span><span>${head ? round(b, 2) : esc(every(b))}</span></div>`).join('');
+}
+
 function renderSide() {
   const changedEntries = data.entries.filter(e => changed(e.id));
   $('#totals').innerHTML = [[data.entries.length, 'TỈ LỆ'], [data.groups.length, 'BẢNG'], [changedEntries.length, 'ĐÃ SỬA']]
     .map(([n, label]) => `<span><b>${n}</b>${label}</span>`).join('');
-  const rows = expected(get), items = rows.filter(r => !r[2]), top = Math.max(...items.map(r => r[1]), 1e-9);
-  $('#expected').innerHTML = rows.map(([name, v, gold]) => gold
-    ? `<div class="row gold"><span>${esc(name)}</span><span></span><span class="v">~${round(v, 0)}</span></div>`
-    : `<div class="row"><span>${esc(name)}</span><span class="track"><span class="fill" style="width:${round(v / top * 100, 2)}%"></span></span><span class="v">${round(v, v < .01 ? 4 : 3)}</span></div>`).join('');
-  const warn = warnings(get);
+  renderOdds();
+  const warn = warnings(data, get);
   $('#warnings').innerHTML = warn.length ? warn.map(w => `<li>${esc(w)}</li>`).join('') : '<li class="ok">Không có. Các tỉ lệ cần cộng đủ 100% đều đúng.</li>';
   $('#changed').innerHTML = changedEntries.length ? changedEntries.map(e => {
     const g = data.groups.find(x => x.id === e.group), col = g.columns.length > 1 ? ` · ${g.columns.find(c => c.id === e.col).label}` : '';
@@ -106,6 +125,7 @@ function read(el) {
   if (entry.kind === 'chance') return el.value === '' ? NaN : Number(el.value) / 100;
   if (entry.kind === 'range') { const v = copy(get(entry.id)); v[Number(el.dataset.part)] = el.value === '' ? NaN : Number(el.value); return v; }
   if (entry.kind === 'color') return el.value.trim().toLowerCase();
+  if (entry.kind === 'choice') return el.value;
   return el.value === '' ? NaN : Number(el.value);
 }
 
@@ -175,7 +195,7 @@ async function start() {
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     data = await response.json();
     byId = new Map(data.entries.map(e => [e.id, e]));
-    storageKey = `project-k.drop-review.v1.${data.source.sha256}`;
+    storageKey = `project-k.drop-review.v2.${data.source.sha256}`;
     try {
       const saved = JSON.parse(localStorage.getItem(storageKey) || 'null');
       if (saved) {
