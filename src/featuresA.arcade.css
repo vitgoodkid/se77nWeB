@@ -1,0 +1,139 @@
+/* ══════════════════════════════════════════════════════════════
+   featuresA — AI Playground · Toolbox · Game hub ("B · Pixel Lobby")
+   Page-level extras on top of arcade.css. Colours come from the theme
+   variables (styles.css); accents arrive per element via --a.
+   Motion is transform/opacity only and stops under .still / reduced motion.
+   ══════════════════════════════════════════════════════════════ */
+
+/* Vietnamese names: Pixelify / Silkscreen lack the diacritics, so names with
+   them switch to the mono face instead of mixing two fonts inside a word. */
+.fa-vi { font-family: 'JetBrains Mono', ui-monospace, monospace !important; letter-spacing: -0.03em !important; }
+
+/* Hide scrollbars on horizontal chip rails (still scrollable). */
+.fa-rail { scrollbar-width: none; }
+.fa-rail::-webkit-scrollbar { display: none; }
+
+/* ── AI Playground ───────────────────────────────────────────── */
+.fa-ai { display: grid; grid-template-columns: minmax(0, 1fr) 236px; gap: 24px; }
+/* Composer is a size container: preset chips drop their icons before wrapping. */
+.fa-cq { container-type: inline-size; }
+@container (max-width: 845px) { .fa-pchip svg { display: none; } }
+@media (max-width: 1180px) {
+  .fa-ai { grid-template-columns: minmax(0, 1fr); }
+  .fa-ai-aside { display: none !important; }
+}
+.fa-ubub { position: relative; max-width: 78%; background: var(--strip); color: #fffaf0; }
+[data-theme="dark"] .fa-ubub { box-shadow: 0 0 0 3px var(--rule); }
+.fa-ubub .fa-tail { position: absolute; right: -12px; bottom: 0; }
+.fa-ubub .fa-tail path { fill: var(--strip); }
+@media (max-width: 760px) { .fa-ubub { max-width: 94%; } }
+
+/* Engine radio rows (side panel + model dropdown) */
+.fa-eng {
+  display: flex; align-items: center; gap: 12px; width: 100%; min-height: 40px; padding: 0 10px;
+  border: 0; cursor: pointer; text-align: left; font-size: 11px; white-space: nowrap;
+  color: var(--text); background: transparent;
+}
+.fa-eng:hover, .fa-eng[aria-checked="true"], .fa-eng[aria-selected="true"] { background: var(--field); }
+.fa-eng .rd { flex-shrink: 0; width: 14px; height: 14px; border: 3px solid var(--text); background: var(--paper); }
+.fa-eng[aria-checked="true"] .rd, .fa-eng[aria-selected="true"] .rd { background: var(--red); }
+
+/* Model dropdown (pixel flip-in) */
+.fa-drop-menu { transform-origin: top left; transition: opacity 120ms steps(3), transform 120ms steps(3); }
+
+/* Segmented control: buttons share one ring, divided by ink rules. */
+.fa-seg { display: inline-flex; flex-wrap: nowrap; }
+.fa-seg > button {
+  border: 0; cursor: pointer; white-space: nowrap;
+  color: var(--text); background: var(--paper);
+  transition: background 80ms steps(2);
+}
+.fa-seg > button + button { border-left: 3px solid var(--ink); }
+.fa-seg > button:hover { background: var(--paper-2); }
+.fa-seg > button[aria-pressed="true"], .fa-seg > button[aria-selected="true"] { color: var(--paper); background: var(--ink); }
+[data-theme="dark"] .fa-seg > button[aria-pressed="true"],
+[data-theme="dark"] .fa-seg > button[aria-selected="true"] { color: #1b1410; background: var(--strip-text); }
+.fa-seg > button:disabled { cursor: not-allowed; opacity: 0.5; }
+
+/* ── Dark "screen" outputs (always ink, paper text) ────────── */
+.fa-screen { color: #fffaf0; background: #1b1410; box-shadow: inset 0 0 0 3px #3a2f27; }
+[data-theme="dark"] .fa-screen { background: #0b0806; box-shadow: inset 0 0 0 3px #2e251d; }
+.fa-scan { background-image: repeating-linear-gradient(0deg, rgba(255, 250, 240, 0.06) 0 2px, transparent 2px 5px); }
+.fa-screen a { color: #7fd18b; }
+
+/* ── Toolbox inventory ─────────────────────────────────────── */
+.fa-inv { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 36px 30px; }
+@media (max-width: 1180px) { .fa-inv { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.fa-inv-m { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 18px; }
+.fa-card { cursor: pointer; }
+.fa-card:hover .fa-ico, .fa-card:focus-visible .fa-ico { animation: px-bob 0.6s steps(2) infinite; }
+.fa-slot {
+  cursor: pointer;
+  box-shadow: 0 -3px 0 0 var(--ink), 0 3px 0 0 var(--ink), -3px 0 0 0 var(--ink), 3px 0 0 0 var(--ink), 5px 6px 0 3px var(--shadow);
+  transition: transform 100ms steps(2);
+}
+.fa-slot:active { transform: translate(2px, 3px); }
+.fa-clamp2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* Wrong PIN: short pixel shake. */
+@keyframes fa-shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+.fa-shake { animation: fa-shake 0.32s steps(4); }
+
+/* ── Tool controls ─────────────────────────────────────────── */
+.fa-range { -webkit-appearance: none; appearance: none; width: 100%; height: 26px; margin: 0; background: transparent; cursor: pointer; }
+.fa-range::-webkit-slider-runnable-track { height: 10px; background: var(--field); box-shadow: 0 0 0 3px var(--ink); }
+.fa-range::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 22px; margin-top: -6px; border: 0; background: var(--a, var(--red)); box-shadow: 0 0 0 3px var(--ink); }
+.fa-range::-moz-range-track { height: 10px; background: var(--field); box-shadow: 0 0 0 3px var(--ink); }
+.fa-range::-moz-range-thumb { width: 14px; height: 22px; border: 0; border-radius: 0; background: var(--a, var(--red)); box-shadow: 0 0 0 3px var(--ink); }
+.fa-range:focus-visible { outline: 3px solid var(--red); outline-offset: 4px; }
+
+.fa-dropzone { border: 3px dashed var(--rule); background: var(--field); cursor: pointer; transition: background 80ms steps(2), border-color 80ms steps(2); }
+.fa-dropzone:hover { border-color: var(--muted); }
+.fa-dropzone.on { border-color: var(--text); background: var(--paper-2); }
+
+.fa-switch { position: relative; flex: none; width: 38px; height: 20px; margin-top: 1px; background: var(--field); box-shadow: 0 0 0 3px var(--ink); }
+.fa-switch > span { position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; background: var(--muted); transition: transform 80ms steps(2); }
+.fa-switch.on { background: var(--a, #7fd18b); }
+.fa-switch.on > span { transform: translateX(18px); background: #1b1410; }
+
+.fa-row-btn { transition: background 80ms steps(2); }
+.fa-row-btn:hover:not(:disabled) { background: var(--paper-2); }
+
+/* ── Game hub ──────────────────────────────────────────────── */
+.fa-hero { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr); gap: 44px; align-items: stretch; }
+@media (max-width: 1180px) { .fa-hero { grid-template-columns: minmax(0, 1fr); } }
+.fa-carts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 60px 30px; }
+@media (max-width: 1320px) { .fa-carts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .fa-carts { grid-template-columns: minmax(0, 1fr); gap: 52px; } }
+.fa-cart {
+  position: relative;
+  box-shadow: 0 -4px 0 0 var(--ink), 0 4px 0 0 var(--ink), -4px 0 0 0 var(--ink), 4px 0 0 0 var(--ink), 8px 10px 0 4px var(--shadow);
+  transition: transform 100ms steps(2), box-shadow 100ms steps(2);
+}
+.fa-cart:hover {
+  transform: translate(-4px, -6px);
+  box-shadow: 0 -4px 0 0 var(--ink), 0 4px 0 0 var(--ink), -4px 0 0 0 var(--ink), 4px 0 0 0 var(--ink), 12px 16px 0 4px var(--shadow);
+}
+.fa-cart:hover .fa-ico { animation: px-bob 0.6s steps(2) infinite; }
+.fa-cart-on, .fa-cart-on:hover {
+  transform: translate(-4px, -6px);
+  box-shadow: 0 -4px 0 0 var(--ink), 0 4px 0 0 var(--ink), -4px 0 0 0 var(--ink), 4px 0 0 0 var(--ink), 12px 16px 0 4px var(--ink);
+}
+[data-theme="dark"] .fa-cart-on, [data-theme="dark"] .fa-cart-on:hover {
+  box-shadow: 0 -4px 0 0 var(--ink), 0 4px 0 0 var(--ink), -4px 0 0 0 var(--ink), 4px 0 0 0 var(--ink), 12px 16px 0 4px rgba(255, 250, 240, 0.32);
+}
+.fa-csel { cursor: pointer; transition: background 80ms steps(2); }
+.fa-csel:hover { background: var(--paper-2) !important; }
+.fa-ribs { background-image: repeating-linear-gradient(90deg, rgba(27, 20, 16, 0.22) 0 4px, transparent 4px 10px); }
+@media (max-width: 760px) {
+  .fa-scr { min-height: 210px !important; }
+  .fa-hero-t { font-size: 34px !important; }
+  .fa-cab-h { font-size: 20px !important; }
+  .fa-hero-p { padding: 26px 20px 22px !important; }
+  .fa-sec-h { font-size: 28px !important; }
+}
+
+/* AI: keyboard hint lives in the control-panel strip on wide screens. */
+@media (max-width: 1320px) { .fa-ai-hint { display: none; } }
+/* File inputs are visually hidden inside their labels — show focus on the label. */
+.fa-dropzone:focus-within, label.sbtn:focus-within { outline: 3px solid var(--red); outline-offset: 3px; }

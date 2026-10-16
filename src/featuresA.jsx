@@ -1,10 +1,46 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import {
-  COLORS, CITIES,
+  COLORS, ACCENTS, CITIES, withAlpha,
   Panel, Btn, Field, Pill, Kicker,
   useSyncedData, usePasteImage, copyText, useLang, useMediaQuery, usePersisted, compressImage,
   buildChatHistory,
 } from './lib.jsx';
+import { PixelArrow, PixelCoin, PixelHeart, IconTile, DialogBox, PxButton, EmptyState } from './ui/arcade.jsx';
+import './featuresA.arcade.css';
+
+// ── Shared pixel bits for this file ────────────────────────────
+// Square-cap stroke icon (24 grid) from one or more path strings.
+function StrokeIcon({ d, size = 20, sw = 2.4, color = 'currentColor', style, children }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={sw}
+      strokeLinecap="square" strokeLinejoin="miter" aria-hidden="true" style={{ flexShrink: 0, ...style }}>
+      {d && <path d={d} />}
+      {children}
+    </svg>
+  );
+}
+
+const ICO = {
+  x: 'M5 5l14 14M19 5L5 19',
+  warn: 'M12 3l10 18H2zM12 10v5M12 18v1',
+  retry: 'M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5',
+  trash: 'M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13',
+  clip: 'M7 9v10h10V4h-7v11h4V8',
+  edit: 'M4 20h4L19 9l-4-4L4 16z',
+  sound: 'M4 9h4l5-4v14l-5-4H4zM17 9v6M20 7v10',
+  copy: 'M8 8h12v12H8zM4 16V4h12',
+  down: 'M12 4v12M6 11l6 6 6-6M4 20h16',
+  open: 'M14 4h6v6M20 4l-9 9M18 14v6H4V6h6',
+  swap: 'M4 8h15M15 4l4 4-4 4M20 16H5M9 12l-4 4 4 4',
+  plus: 'M12 4v16M4 12h16',
+  play: 'M7 4v16l12-8z',
+  pause: 'M6 4h4v16H6zM14 4h4v16h-4z',
+  mic: 'M9 3h6v11H9zM5 11v1a7 7 0 0 0 14 0v-1M12 19v3M8 22h8',
+  search: 'M4 4h11v11H4zM15 15l5 5',
+};
+
+// Names with Vietnamese diacritics fall back to the mono face (see .fa-vi).
+const hasVi = (s) => /[̀-ͯẠ-ỹƠơƯưĐđ]/.test(String(s || '').normalize('NFC'));
 
 // ═════════════════════════════════════════════════════════════
 // 1. AI PLAYGROUND — chat (Gemini via yunwu) + image/video (fal.ai)
@@ -259,182 +295,295 @@ export function AIPlayground() {
 
   const acceptImage = true; // every preset can take an image (chat = vision, others = source)
 
+  const kindLabel = preset.kind === 'bg-remove' ? 'BG REMOVE' : preset.kind.toUpperCase();
+  const engineChip = preset.kind === 'chat' ? 'GEMINI 3.1 · YUNWU'
+    : preset.kind === 'bg-remove' ? 'IDEOGRAM · FAL.AI' : null;
+  const canSend = !busy && (input.trim() || imgRef);
+  const AI_ACCENT = ACCENTS.ai;
+  const panelHead = isMobile ? '12px 14px' : '12px 18px';
+
   return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: isMobile ? '1fr' : '260px 1fr',
-      gridTemplateRows: isMobile ? 'auto 1fr' : 'auto',
-      gap: isMobile ? 12 : 18,
-      height: '100%',
-    }}>
-      {isMobile ? (
-        // Compact horizontal preset chip rail on mobile.
-        <Panel padding={10} style={{ overflow: 'hidden' }}>
+    <div className="fa-ai" style={{ height: '100%', minHeight: 0, padding: '4px 14px 14px 4px', boxSizing: 'border-box' }}>
+      {/* ── Main column: conversation + control panel ── */}
+      {/* If the area is very short the column scrolls instead of crushing the thread. */}
+      <div style={{
+        display: 'flex', flexDirection: 'column', gap: 28, minWidth: 0, minHeight: 0,
+        overflowY: 'auto', padding: '4px 14px 14px 4px', margin: '-4px -14px -14px -4px',
+      }}>
+        <section className="px" aria-label="Conversation" style={{
+          flex: 1, minHeight: 170, display: 'flex', flexDirection: 'column', overflow: 'hidden',
+          background: COLORS.paper,
+        }}>
           <div style={{
-            display: 'flex', gap: 6, overflowX: 'auto', WebkitOverflowScrolling: 'touch',
-            scrollbarWidth: 'none', msOverflowStyle: 'none',
+            display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between',
+            gap: 14, padding: panelHead, borderBottom: '4px solid ' + COLORS.ink,
           }}>
-            {AI_PRESETS.map((p) => {
-              const active = p.id === presetId;
-              const label = t('ai.preset.' + p.id + '.label');
-              return (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, minWidth: 0 }}>
+              <span className="pxs" style={{
+                display: 'grid', placeItems: 'center', flexShrink: 0, width: 42, height: 42,
+                background: AI_ACCENT, color: COLORS.onAccent,
+              }}><PresetIcon id={presetId} size={24} /></span>
+              <div style={{ minWidth: 0 }}>
+                <div className="sk" style={{ fontSize: 11, color: COLORS.muted, marginBottom: 6 }}>SESSION · {presetId.toUpperCase()}</div>
+                <h2 className={'pf' + (hasVi(preset.label) ? ' fa-vi' : '')} style={{ margin: 0, fontSize: 24, lineHeight: 1 }}>{preset.label}</h2>
+              </div>
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 16, padding: '3px 6px 6px 3px' }}>
+              {preset.kind === 'image' && (
+                <ModelSwap label="MODEL" value={imageEngine} onChange={setImageEngine} options={IMAGE_ENGINES} />
+              )}
+              {preset.kind === 'video' && (
+                <ModelSwap label="MODEL" value={videoEngine} onChange={setVideoEngine} options={VIDEO_ENGINES} />
+              )}
+              {engineChip && (
+                <span className="sk pxs" style={{
+                  display: 'inline-flex', alignItems: 'center', height: 36, padding: '0 10px',
+                  fontSize: 11, background: COLORS.field, color: COLORS.text,
+                }}>{engineChip}</span>
+              )}
+              <button type="button" onClick={clearChat} className="sk sbtn" style={{
+                display: 'inline-flex', alignItems: 'center', gap: 8, height: 36, padding: '0 14px',
+                fontSize: 12, color: COLORS.text, background: COLORS.paper, textTransform: 'uppercase',
+              }}>
+                <StrokeIcon d={ICO.trash} size={14} />{t('ai.clear')}
+              </button>
+            </div>
+          </div>
+
+          <div ref={scrollRef} role="log" aria-label="Messages" style={{
+            flex: 1, minHeight: 0, overflowY: 'auto', background: COLORS.cream,
+            padding: isMobile ? '28px 16px 30px' : '34px 30px 36px',
+            display: 'flex', flexDirection: 'column', gap: 26,
+          }}>
+            {messages.length === 0 && (
+              <DialogBox speaker="SE77N SAYS:" style={{ maxWidth: 620, marginTop: 14 }} padding="32px 26px 28px">
+                <p style={{ margin: 0, fontSize: 15, lineHeight: 1.65, color: COLORS.text }}>{preset.seed}</p>
+                <p className="sk" style={{ margin: '16px 0 0', fontSize: 11, color: COLORS.muted }}>
+                  NO SAVE DATA IN THIS PRESET · TYPE BELOW TO START
+                </p>
+              </DialogBox>
+            )}
+            {messages.map((m, i) => (
+              <Message
+                key={i}
+                role={m.role}
+                content={m.content}
+                image={m.image}
+                video={m.video}
+                error={m.error}
+                badge={m.role === 'assistant' && !m.error ? resultBadge(preset.kind, presetId, messages[i - 1]) : null}
+                onReplyImage={
+                  preset.kind === 'image' && m.role === 'assistant' && m.image
+                    ? () => setImgRef({ name: 'reply.jpg', dataUrl: m.image })
+                    : null
+                }
+                onRetry={m.error && m.retry ? () => send(m.retry) : null}
+                retryLabel={t('ai.retry')}
+              />
+            ))}
+            {busy && <Message role="assistant" content="…" typing kind={preset.kind} />}
+          </div>
+        </section>
+
+        {/* ── Composer · control panel ── */}
+        <section className="px" aria-label="Composer" style={{ position: 'relative', zIndex: 2, flexShrink: 0, background: COLORS.paper }}>
+          <div className="sk" style={{
+            display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 10,
+            minHeight: 30, padding: '0 18px', fontSize: 11, color: COLORS.stripText, background: COLORS.strip,
+          }}>
+            <span>CONTROL PANEL · P1</span>
+            <span className="fa-ai-hint" style={{ color: '#c9bca6', fontSize: 10 }}>ENTER · SEND / CTRL+V · PASTE IMAGE</span>
+            <span style={{ color: AI_ACCENT }}>{kindLabel} MODE</span>
+          </div>
+          <div className="fa-cq" style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: '14px 14px 12px' }}>
+            <div>
+              <div role="group" aria-label={t('ai.presets')} className={isMobile ? 'fa-rail' : undefined} style={{
+                display: 'flex', flexWrap: isMobile ? 'nowrap' : 'wrap', gap: '12px 8px', padding: 3,
+                minWidth: 0, overflowX: isMobile ? 'auto' : 'visible',
+              }}>
+                {AI_PRESETS.map((p) => {
+                  const active = p.id === presetId;
+                  const label = t('ai.preset.' + p.id + '.label');
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      aria-pressed={active}
+                      onClick={() => setPresetId(p.id)}
+                      className={'chip-px sk fa-pchip' + (active ? ' on' : '')}
+                      style={{
+                        flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 7,
+                        height: 36, padding: '0 9px', fontSize: 10, whiteSpace: 'nowrap',
+                      }}
+                    >
+                      <PresetIcon id={p.id} size={14} />
+                      <span className={hasVi(label) ? 'fa-vi' : undefined}>{label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {preset.kind === 'video' && (
+              <VideoOptionsBar opts={videoOpts} onChange={setVideoOpts} />
+            )}
+            {imgRef && (
+              <AttachmentChip imgRef={imgRef} onRemove={() => setImgRef(null)} />
+            )}
+
+            <div>
+              <label htmlFor="ai-prompt" className="sr">Prompt · {preset.label}</label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '3px 12px 10px 3px' }}>
+                <span className="pf" aria-hidden="true" style={{ flexShrink: 0, fontSize: 24, color: COLORS.red }}>&gt;</span>
+                {acceptImage && (
+                  <label
+                    title={imgRef ? imgRef.name : 'attach image'}
+                    className="sbtn"
+                    style={{
+                      display: 'grid', placeItems: 'center', flexShrink: 0, width: 50, height: 56,
+                      color: imgRef ? COLORS.onAccent : COLORS.text,
+                      background: imgRef ? '#ffd25e' : COLORS.paper,
+                    }}>
+                    <input type="file" accept="image/*" onChange={onImageRef} className="sr" />
+                    <span className="sr">{t('ai.attach')}</span>
+                    <StrokeIcon d={ICO.clip} size={22} />
+                  </label>
+                )}
+                <div style={{ flex: 1, minWidth: 0, display: 'flex' }}>
+                  <input
+                    id="ai-prompt"
+                    type="text"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    placeholder={preset.placeholder}
+                    onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
+                    autoFocus
+                    className="field pxs"
+                    style={{ width: '100%', height: 56, padding: '0 14px', fontSize: 14, fontFamily: "'JetBrains Mono', monospace" }}
+                  />
+                </div>
                 <button
-                  key={p.id}
-                  onClick={() => setPresetId(p.id)}
-                  className="mono"
+                  type="button"
+                  className="sk pbtn"
+                  onClick={() => send()}
+                  disabled={!canSend}
                   style={{
-                    flexShrink: 0,
-                    display: 'inline-flex', alignItems: 'center', gap: 8,
-                    padding: '8px 12px', borderRadius: 999,
-                    border: '1px solid ' + (active ? COLORS.red + '55' : COLORS.line),
-                    background: active ? COLORS.red + '14' : 'transparent',
-                    color: active ? COLORS.text : COLORS.muted,
-                    cursor: 'pointer', fontSize: 11, letterSpacing: '0.04em',
-                    whiteSpace: 'nowrap',
+                    display: 'inline-flex', alignItems: 'center', gap: 12, flexShrink: 0, height: 56,
+                    padding: isMobile ? '0 16px' : '0 24px', fontSize: isMobile ? 14 : 17,
+                    color: COLORS.onAccent, background: '#e04545', textTransform: 'uppercase',
                   }}
                 >
-                  <span style={{
-                    color: active ? COLORS.red : COLORS.muted, fontSize: 12, fontWeight: 700,
-                  }}>{p.icon}</span>
-                  {label}
+                  {t('ai.send')}<PixelArrow dir="right" size={16} />
                 </button>
-              );
-            })}
+              </div>
+            </div>
           </div>
-        </Panel>
-      ) : (
-      <Panel padding={16} style={{ display: 'flex', flexDirection: 'column' }}>
-        <Kicker style={{ marginBottom: 14 }}>PRESETS · {String(AI_PRESETS.length).padStart(2, '0')}</Kicker>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {AI_PRESETS.map((p) => {
-            const active = p.id === presetId;
-            const label = t('ai.preset.' + p.id + '.label');
-            return (
-              <button
-                key={p.id}
-                onClick={() => setPresetId(p.id)}
-                className="mono"
-                style={{
-                  textAlign: 'left',
-                  display: 'flex', alignItems: 'center', gap: 10,
-                  padding: '11px 12px', borderRadius: 10,
-                  border: '1px solid ' + (active ? COLORS.red + '55' : 'transparent'),
-                  background: active ? COLORS.red + '14' : 'transparent',
-                  color: active ? COLORS.text : COLORS.muted,
-                  cursor: 'pointer', fontSize: 12, letterSpacing: '0.04em',
-                  transition: 'background 120ms',
-                }}
-                onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
-                onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = 'transparent'; }}
-              >
-                <span style={{
-                  width: 28, height: 28, display: 'grid', placeItems: 'center',
-                  border: `1px solid ${active ? COLORS.red : COLORS.line}`, borderRadius: 8,
-                  color: active ? COLORS.red : COLORS.muted, fontSize: 13, fontWeight: 700,
-                }}>{p.icon}</span>
-                {label}
-              </button>
-            );
-          })}
-        </div>
-        <div style={{ flex: 1 }} />
-      </Panel>
-      )}
+        </section>
+      </div>
 
-      <Panel padding={0} style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%' }}>
-        <div style={{
-          padding: '16px 20px', borderBottom: '1px solid ' + COLORS.line,
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16, minWidth: 0, flexWrap: 'wrap' }}>
-            <div>
-              <Kicker>SESSION · {presetId.toUpperCase()}</Kicker>
-              <div className="mono" style={{ fontSize: 16, fontWeight: 700, marginTop: 4 }}>{preset.label}</div>
-            </div>
-            {preset.kind === 'image' && (
-              <ModelSwap
-                label="MODEL"
-                value={imageEngine}
-                onChange={setImageEngine}
-                options={IMAGE_ENGINES}
-              />
-            )}
-            {preset.kind === 'video' && (
-              <ModelSwap
-                label="MODEL"
-                value={videoEngine}
-                onChange={setVideoEngine}
-                options={VIDEO_ENGINES}
-              />
-            )}
+      {/* ── Side column: session + engines + tip ── */}
+      <aside className="fa-ai-aside" aria-label="Session settings" style={{
+        display: 'flex', flexDirection: 'column', gap: 34, minWidth: 0, minHeight: 0,
+        overflowY: 'auto', padding: '4px 14px 16px 4px', margin: '-4px -14px -14px -4px',
+      }}>
+        <section className="px" aria-label="Session" style={{ padding: '20px 20px 12px', background: COLORS.paper, flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 6 }}>
+            <h3 className="sk" style={{ margin: 0, fontSize: 14, fontFamily: "'Silkscreen', monospace" }}>SESSION</h3>
+            <span className="sk pxs" style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 8px', fontSize: 10,
+              background: '#7fd18b', color: COLORS.onAccent,
+            }}><span className="blink" style={{ width: 8, height: 8, background: COLORS.onAccent }} />SAVED</span>
           </div>
-          <Btn onClick={clearChat} variant="ghost">{t('ai.clear')}</Btn>
-        </div>
-        <div ref={scrollRef} style={{ flex: 1, overflow: 'auto', padding: '20px 24px' }}>
-          {messages.length === 0 && (
-            <div style={{
-              padding: '20px 22px', background: COLORS.bg,
-              border: '1px solid ' + COLORS.line, borderRadius: 12, maxWidth: 560,
-            }}>
-              <Kicker style={{ color: COLORS.red, marginBottom: 8 }}>se77n ::</Kicker>
-              <div style={{ fontSize: 14, lineHeight: 1.6 }}>{preset.seed}</div>
-            </div>
-          )}
-          {messages.map((m, i) => (
-            <Message
-              key={i}
-              role={m.role}
-              content={m.content}
-              image={m.image}
-              video={m.video}
-              onReplyImage={
-                preset.kind === 'image' && m.role === 'assistant' && m.image
-                  ? () => setImgRef({ name: 'reply.jpg', dataUrl: m.image })
-                  : null
-              }
-              onRetry={m.error && m.retry ? () => send(m.retry) : null}
-              retryLabel={t('ai.retry')}
-            />
-          ))}
-          {busy && <Message role="assistant" content="…" typing kind={preset.kind} />}
-        </div>
-        {preset.kind === 'video' && (
-          <VideoOptionsBar opts={videoOpts} onChange={setVideoOpts} />
-        )}
-        {imgRef && (
-          <AttachmentChip imgRef={imgRef} onRemove={() => setImgRef(null)} />
-        )}
-        <div style={{
-          padding: '14px 18px', borderTop: '1px solid ' + COLORS.line,
-          background: COLORS.panel2, display: 'flex', gap: 10, alignItems: 'center',
-        }}>
-          <span className="mono" style={{ color: COLORS.red, fontSize: 13 }}>{'>'}</span>
-          {acceptImage && (
-            <label
-              title={imgRef ? imgRef.name : 'attach image'}
-              style={{
-                display: 'grid', placeItems: 'center', width: 36, height: 36, borderRadius: 8,
-                background: imgRef ? COLORS.gold + '1a' : 'transparent',
-                border: `1px solid ${imgRef ? COLORS.gold : COLORS.line}`,
-                color: imgRef ? COLORS.gold : COLORS.muted, cursor: 'pointer',
-                fontFamily: 'JetBrains Mono, monospace', fontSize: 14,
+          <dl style={{ margin: 0 }}>
+            {[
+              ['PRESET', preset.label],
+              ['KIND', kindLabel],
+              ['THREAD', 'ai:' + presetId],
+              ['MESSAGES', String(messages.length).padStart(2, '0')],
+              ['AUTO-LOG', '→ HISTORY'],
+            ].map(([k, v], i, arr) => (
+              <div key={k} style={{
+                display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, padding: '10px 0',
+                borderBottom: i < arr.length - 1 ? '3px dashed ' + COLORS.rule : 'none',
               }}>
-              <input type="file" accept="image/*" onChange={onImageRef} style={{ display: 'none' }} />
-              {imgRef ? '◉' : '◇'}
-            </label>
-          )}
-          <Field
-            value={input}
-            onChange={setInput}
-            placeholder={preset.placeholder}
-            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
-            autoFocus
-            style={{ background: COLORS.bg }}
-          />
-          <Btn variant="solid" onClick={send} disabled={busy || (!input.trim() && !imgRef)}>↗ {t('ai.send')}</Btn>
-        </div>
-      </Panel>
+                <dt className="sk" style={{ fontSize: 11, color: COLORS.muted }}>{k}</dt>
+                <dd style={{ margin: 0, fontSize: 13, fontWeight: 700, textAlign: 'right', color: COLORS.text }}>{v}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+
+        <section className="px" aria-label="Engines" style={{ padding: '20px 14px 18px', background: COLORS.paper, flexShrink: 0 }}>
+          <h3 className="sk" style={{ margin: '0 6px 6px', fontSize: 14, fontFamily: "'Silkscreen', monospace" }}>ENGINES</h3>
+          <p style={{ margin: '0 6px 16px', fontSize: 12, lineHeight: 1.5, color: COLORS.muted }}>
+            Saved per player. The MODEL switch above uses the same picks.
+          </p>
+          <EngineGroup title="IMAGE GEN" value={imageEngine} onChange={setImageEngine} options={IMAGE_ENGINES} />
+          <EngineGroup title="VIDEO GEN" value={videoEngine} onChange={setVideoEngine} options={VIDEO_ENGINES} />
+          <div className="sk" style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '0 6px', fontSize: 11 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}><span style={{ color: COLORS.muted }}>CHAT</span><span>GEMINI 3.1 · YUNWU</span></div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}><span style={{ color: COLORS.muted }}>BG REMOVE</span><span>IDEOGRAM · FAL.AI</span></div>
+          </div>
+        </section>
+
+        <DialogBox speaker="SE77N TIP:" padding="28px 20px 28px" style={{ flexShrink: 0 }}>
+          <p style={{ margin: 0, fontSize: 13, lineHeight: 1.6, color: COLORS.text }}>
+            Paste an image anywhere with Ctrl+V to attach it. Every finished reply is auto-logged to History.
+          </p>
+        </DialogBox>
+      </aside>
     </div>
+  );
+}
+
+// Preset icons (square-cap strokes) — replace the old glyph icons.
+const PRESET_ICON = {
+  chat: 'M3 4h18v12H11l-5 4v-4H3z',
+  tr: 'M3 8h14M13 4l4 4-4 4M21 16H7M11 12l-4 4 4 4',
+  tldr: 'M4 6h16M4 12h16M4 18h10',
+  code: 'M8 6l-6 6 6 6M16 6l6 6-6 6M14 3l-4 18',
+  image: 'M3 4h18v16H3zM3 16l5-5 4 4 3-3 6 6M15 7h3v3h-3z',
+  video: 'M3 5h18v14H3zM10 9v6l5-3z',
+  bg: 'M4 12a8 8 0 1 0 16 0a8 8 0 1 0-16 0M6.5 17.5l11-11',
+};
+function PresetIcon({ id, size = 18 }) {
+  return <StrokeIcon d={PRESET_ICON[id] || PRESET_ICON.chat} size={size} />;
+}
+
+// Result-kind tag for an assistant reply (pixel chip next to the name plate).
+// Image replies count as "edited" when the prompt that produced them carried
+// an image. Plain chat replies carry no tag.
+function resultBadge(kind, presetId, prevMsg) {
+  if (kind === 'image') {
+    return prevMsg?.role === 'user' && prevMsg.image
+      ? { label: 'IMAGE · EDITED', color: '#b9a2ff', icon: ICO.edit }
+      : { label: 'IMAGE · GENERATED', color: '#b9a2ff', icon: PRESET_ICON.image };
+  }
+  if (kind === 'video') return { label: 'VIDEO · GENERATED', color: '#ffd25e', icon: PRESET_ICON.video };
+  if (kind === 'bg-remove') return { label: 'BACKGROUND · REMOVED', color: '#9fd8ff', icon: PRESET_ICON.bg };
+  if (presetId === 'tr') return { label: 'TRANSLATE', color: '#ffd25e', icon: PRESET_ICON.tr };
+  if (presetId === 'code') return { label: 'CODE', color: '#7fd18b', icon: PRESET_ICON.code };
+  if (presetId === 'tldr') return { label: 'TL;DR', color: '#fffaf0', icon: PRESET_ICON.tldr };
+  return null;
+}
+
+// Radio list of engines (side panel). Same state as the MODEL switch.
+function EngineGroup({ title, value, onChange, options }) {
+  return (
+    <>
+      <div className="sk" style={{ margin: '0 6px 6px', fontSize: 10, color: COLORS.muted }}>{title}</div>
+      <div role="radiogroup" aria-label={title} style={{
+        display: 'flex', flexDirection: 'column', gap: 2, paddingBottom: 12, marginBottom: 14,
+        borderBottom: '3px dashed ' + COLORS.rule,
+      }}>
+        {options.map((o) => (
+          <button key={o.v} type="button" role="radio" aria-checked={o.v === value}
+            className="fa-eng sk" onClick={() => onChange(o.v)}>
+            <span className="rd" />{o.l}
+          </button>
+        ))}
+      </div>
+    </>
   );
 }
 
@@ -456,8 +605,8 @@ const VIDEO_ENGINES = [
   { v: 'grok',     l: 'GROK IMAGINE' },
 ];
 
-// Animated dropdown — uses CSS transitions on opacity + transform for the
-// flip-card feel from the GSAP reference. Lightweight, no GSAP dep.
+// Model switch — gold pixel chip that flips open a paper list. CSS-only
+// motion (stepped opacity/transform); click-outside closes it.
 function ModelSwap({ label, value, onChange, options }) {
   const [open, setOpen] = useState(false);
   const wrapRef = useRef(null);
@@ -475,122 +624,85 @@ function ModelSwap({ label, value, onChange, options }) {
 
   return (
     <div ref={wrapRef} style={{
-      position: 'relative', display: 'inline-flex', alignItems: 'center', gap: 8,
+      position: 'relative', display: 'inline-flex', alignItems: 'center', gap: 12,
       flexShrink: 0,
     }}>
-      <span className="mono" style={{
-        fontSize: 9, letterSpacing: '0.22em', color: COLORS.muted,
-      }}>{label}</span>
+      <span className="sk" style={{ fontSize: 11, color: COLORS.muted }}>{label}</span>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="mono"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        className="sk pxs"
         style={{
-          display: 'inline-flex', alignItems: 'center', gap: 8,
-          padding: '6px 12px', borderRadius: 999,
-          background: open ? COLORS.gold + '24' : COLORS.gold + '14',
-          border: `1px solid ${COLORS.gold}80`,
-          color: COLORS.gold, cursor: 'pointer',
-          fontSize: 11, letterSpacing: '0.14em',
-          fontFamily: 'JetBrains Mono, monospace',
-          whiteSpace: 'nowrap',
-          transition: 'background 180ms ease, transform 180ms ease',
-          transform: open ? 'translateY(-1px)' : 'translateY(0)',
+          display: 'inline-flex', alignItems: 'center', gap: 10, height: 36, padding: '0 12px',
+          border: 0, cursor: 'pointer', fontSize: 12, whiteSpace: 'nowrap',
+          color: COLORS.onAccent, background: '#ffd25e',
         }}
       >
-        <span style={{
-          width: 6, height: 6, borderRadius: 999,
-          background: COLORS.gold, flexShrink: 0,
-          boxShadow: `0 0 8px ${COLORS.gold}`,
-        }} />
+        <span className="blink" style={{ width: 8, height: 8, background: COLORS.onAccent, flexShrink: 0 }} />
         {current.l}
-        <span style={{
-          fontSize: 9, opacity: 0.7,
-          transition: 'transform 220ms ease',
-          transform: open ? 'rotate(180deg)' : 'rotate(0)',
-        }}>▾</span>
+        <PixelArrow dir="down" size={7} style={{ transform: open ? 'scaleY(-1)' : 'none' }} />
       </button>
       <div
+        role="listbox"
+        aria-label={label}
+        className="px fa-drop-menu"
         style={{
-          position: 'absolute', left: 0, top: 'calc(100% + 6px)', zIndex: 30,
-          minWidth: 210,
-          background: COLORS.panel, border: '1px solid ' + COLORS.line,
-          borderRadius: 10, padding: 4,
-          boxShadow: '0 12px 30px rgba(0,0,0,0.5)',
+          position: 'absolute', left: 0, top: 'calc(100% + 16px)', zIndex: 30,
+          display: 'flex', flexDirection: 'column', gap: 2, minWidth: 230, padding: 8,
+          background: COLORS.paper,
           opacity: open ? 1 : 0,
-          transform: open ? 'translateY(0) scale(1)' : 'translateY(-6px) scale(0.96)',
-          transformOrigin: 'top left',
+          transform: open ? 'translateY(0)' : 'translateY(-6px)',
           pointerEvents: open ? 'auto' : 'none',
-          transition: 'opacity 180ms ease, transform 180ms ease',
+          visibility: open ? 'visible' : 'hidden',
         }}
       >
-        {options.map((o, i) => {
-          const on = o.v === value;
-          return (
-            <button
-              key={o.v}
-              type="button"
-              onClick={() => { onChange(o.v); setOpen(false); }}
-              className="mono"
-              style={{
-                display: 'block', width: '100%', textAlign: 'left',
-                padding: '8px 12px', borderRadius: 7,
-                background: on ? COLORS.gold + '1f' : 'transparent',
-                color: on ? COLORS.gold : COLORS.text,
-                border: 'none', cursor: 'pointer',
-                fontSize: 12, letterSpacing: '0.06em',
-                opacity: open ? 1 : 0,
-                transform: open ? 'translateX(0)' : 'translateX(-6px)',
-                transition: `opacity 220ms ease ${i * 30}ms, transform 220ms ease ${i * 30}ms, background 120ms ease`,
-              }}
-              onMouseEnter={(e) => { if (!on) e.currentTarget.style.background = 'rgba(245,237,224,0.05)'; }}
-              onMouseLeave={(e) => { if (!on) e.currentTarget.style.background = 'transparent'; }}
-            >
-              {o.l}
-            </button>
-          );
-        })}
+        {options.map((o) => (
+          <button
+            key={o.v}
+            type="button"
+            role="option"
+            aria-selected={o.v === value}
+            onClick={() => { onChange(o.v); setOpen(false); }}
+            className="fa-eng sk"
+          >
+            <span className="rd" />{o.l}
+          </button>
+        ))}
       </div>
     </div>
   );
 }
 
-// Pill above the composer: thumbnail + filename + × so users can see at a glance
-// what they've attached, instead of just the gold dot on the paperclip.
+// Attached image: thumbnail + filename + remove, as a gold pixel chip.
 function AttachmentChip({ imgRef, onRemove }) {
   const truncate = (s, n = 28) => (s && s.length > n ? s.slice(0, n - 1) + '…' : s || 'pasted-image.png');
   return (
-    <div style={{
-      padding: '8px 18px', borderTop: '1px solid ' + COLORS.line,
-      background: COLORS.bg, display: 'flex', alignItems: 'center',
-    }}>
-      <div style={{
-        display: 'inline-flex', alignItems: 'center', gap: 10,
-        padding: '6px 10px 6px 6px', borderRadius: 999,
-        background: 'rgba(212,168,88,0.08)',
-        border: `1px solid ${COLORS.gold}55`,
+    <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '0 3px' }}>
+      <span className="sk" style={{ fontSize: 11, color: COLORS.muted }}>ATTACHED</span>
+      <div className="pxs" style={{
+        display: 'inline-flex', alignItems: 'center', gap: 12, padding: 4, minWidth: 0,
+        background: '#ffd25e', color: COLORS.onAccent,
       }}>
         <img
           src={imgRef.dataUrl}
           alt={imgRef.name || 'attachment'}
           style={{
-            width: 28, height: 28, borderRadius: 999, objectFit: 'cover',
-            display: 'block', flexShrink: 0,
-            border: '1px solid ' + COLORS.line,
+            width: 26, height: 26, objectFit: 'cover', display: 'block', flexShrink: 0,
+            border: '3px solid #1b1410', boxSizing: 'border-box',
           }}
         />
-        <span className="mono" style={{
-          fontSize: 11, letterSpacing: '0.04em', color: COLORS.gold,
-        }}>{truncate(imgRef.name)}</span>
+        <span style={{ fontSize: 13, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{truncate(imgRef.name)}</span>
         <button
           type="button"
           onClick={onRemove}
           aria-label="Remove attachment"
           style={{
-            background: 'transparent', border: 'none', cursor: 'pointer',
-            color: COLORS.gold, fontSize: 14, lineHeight: 1, padding: '0 4px',
+            display: 'grid', placeItems: 'center', flexShrink: 0, width: 26, height: 26, padding: 0,
+            border: 0, cursor: 'pointer', color: '#fffaf0', background: '#1b1410',
           }}
-        >×</button>
+        ><StrokeIcon d={ICO.x} size={12} sw={3.4} /></button>
       </div>
     </div>
   );
@@ -599,12 +711,11 @@ function AttachmentChip({ imgRef, onRemove }) {
 function VideoOptionsBar({ opts, onChange }) {
   const set = (patch) => onChange({ ...opts, ...patch });
   return (
-    <div style={{
-      padding: '10px 18px', borderTop: '1px solid ' + COLORS.line,
-      display: 'flex', flexWrap: 'wrap', gap: 14, alignItems: 'center',
-      background: COLORS.bg, fontSize: 11,
+    <div role="group" aria-label="Video options" style={{
+      display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '12px 18px',
+      padding: '8px 10px 10px', background: COLORS.field, border: '3px dashed ' + COLORS.rule,
     }}>
-      <PillGroup label="DURATION" value={opts.duration} onChange={(v) => set({ duration: v })}
+      <PillGroup label="DUR" value={opts.duration} onChange={(v) => set({ duration: v })}
         options={VIDEO_DURATIONS.map((s) => ({ v: s, l: `${s}s` }))} />
       <PillGroup label="RES" value={opts.resolution} onChange={(v) => set({ resolution: v })}
         options={VIDEO_RESOLUTIONS.map((r) => ({ v: r, l: r }))} />
@@ -613,17 +724,17 @@ function VideoOptionsBar({ opts, onChange }) {
       <button
         type="button"
         onClick={() => set({ generateAudio: !opts.generateAudio })}
-        className="mono"
+        aria-pressed={!!opts.generateAudio}
+        className="sk sbtn"
         style={{
-          padding: '5px 12px', borderRadius: 999,
-          background: opts.generateAudio ? COLORS.gold + '1f' : 'transparent',
-          border: '1px solid ' + (opts.generateAudio ? COLORS.gold + '80' : COLORS.line),
-          color: opts.generateAudio ? COLORS.gold : COLORS.muted,
-          fontSize: 10, letterSpacing: '0.18em', cursor: 'pointer',
+          display: 'inline-flex', alignItems: 'center', gap: 8, height: 30, padding: '0 10px', margin: '3px 7px 8px 3px', fontSize: 10,
+          color: opts.generateAudio ? COLORS.onAccent : COLORS.text,
+          background: opts.generateAudio ? '#ffd25e' : COLORS.paper,
         }}
         title="Generate audio track with the video"
       >
-        ♪ AUDIO {opts.generateAudio ? 'ON' : 'OFF'}
+        <StrokeIcon d={ICO.sound} size={14} sw={2.6} />
+        AUDIO {opts.generateAudio ? 'ON' : 'OFF'}
       </button>
     </div>
   );
@@ -631,23 +742,19 @@ function VideoOptionsBar({ opts, onChange }) {
 
 function PillGroup({ label, value, onChange, options }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-      <span className="mono" style={{ fontSize: 9, letterSpacing: '0.2em', color: COLORS.muted }}>{label}</span>
-      <div style={{ display: 'inline-flex', border: '1px solid ' + COLORS.line, borderRadius: 8, overflow: 'hidden' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <span className="sk" style={{ fontSize: 9, color: COLORS.muted }}>{label}</span>
+      <div role="group" aria-label={label} className="fa-seg pxs">
         {options.map((o) => {
           const on = String(value) === String(o.v);
           return (
             <button
               key={o.v}
               type="button"
+              aria-pressed={on}
               onClick={() => onChange(o.v)}
-              className="mono"
-              style={{
-                padding: '5px 10px', cursor: 'pointer',
-                background: on ? COLORS.gold + '1f' : 'transparent',
-                color: on ? COLORS.gold : COLORS.muted,
-                border: 'none', fontSize: 10, letterSpacing: '0.14em',
-              }}
+              className="sk"
+              style={{ height: 30, padding: '0 8px', fontSize: 10 }}
             >{o.l}</button>
           );
         })}
@@ -656,85 +763,143 @@ function PillGroup({ label, value, onChange, options }) {
   );
 }
 
-function Message({ role, content, image, video, typing, kind, onReplyImage, onRetry, retryLabel }) {
-  const isUser = role === 'user';
+// Name plate that straddles the top edge of an assistant dialog box, with an
+// optional result-kind chip beside it.
+function NamePlate({ badge, extra }) {
   return (
-    <div style={{
-      display: 'flex', justifyContent: isUser ? 'flex-end' : 'flex-start',
-      margin: '12px 0', animation: 'fadeUp 200ms ease-out',
-    }}>
-      <div style={{
-        maxWidth: '78%', padding: '12px 16px', borderRadius: 12,
-        background: isUser ? COLORS.red + '14' : COLORS.bg,
-        border: `1px solid ${isUser ? COLORS.red + '40' : COLORS.line}`,
-        whiteSpace: 'pre-wrap', fontSize: 13.5, lineHeight: 1.6,
-        fontFamily: isUser ? "'JetBrains Mono', monospace" : "'Geist', system-ui, sans-serif",
-        color: COLORS.text,
-      }}>
-        {!isUser && (
-          <div className="mono" style={{
-            fontSize: 9, letterSpacing: '0.2em', color: COLORS.red, marginBottom: 6,
-          }}>se77n ::</div>
-        )}
-        {image && (
-          <img src={image} alt="" style={{ display: 'block', maxWidth: '100%', borderRadius: 8, marginBottom: content ? 8 : 0 }} />
-        )}
-        {video && (
-          <video src={video} controls style={{ display: 'block', maxWidth: '100%', borderRadius: 8, marginBottom: content ? 8 : 0 }} />
-        )}
-        {typing ? <TypingDots kind={kind} /> : content}
-        {onRetry && (
-          <div style={{ marginTop: 8, display: 'flex', justifyContent: 'flex-start' }}>
-            <button
-              onClick={onRetry}
-              className="mono"
-              style={{
-                fontSize: 10, letterSpacing: '0.15em',
-                padding: '4px 10px', borderRadius: 999,
-                background: 'transparent',
-                border: `1px solid ${COLORS.red}66`,
-                color: COLORS.red, cursor: 'pointer',
-              }}
-            >↻ {retryLabel}</button>
-          </div>
-        )}
-        {onReplyImage && (
-          <div style={{ marginTop: 8, display: 'flex', justifyContent: 'flex-end' }}>
-            <button
-              onClick={onReplyImage}
-              className="mono"
-              style={{
-                fontSize: 10, letterSpacing: '0.15em',
-                padding: '4px 10px', borderRadius: 999,
-                background: 'transparent',
-                border: `1px solid ${COLORS.gold}66`,
-                color: COLORS.gold, cursor: 'pointer',
-              }}
-            >↺ REPLY · EDIT</button>
-          </div>
-        )}
+    <div style={{ position: 'absolute', left: 16, top: -14, zIndex: 1, display: 'flex', alignItems: 'center', gap: 14 }}>
+      <span className="sk" style={{ padding: '6px 12px', fontSize: 11, color: COLORS.stripText, background: COLORS.strip }}>SE77N</span>
+      {badge && (
+        <span className="sk pxs" style={{
+          display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 8px', fontSize: 10,
+          color: COLORS.onAccent, background: badge.color, whiteSpace: 'nowrap',
+        }}><StrokeIcon d={badge.icon} size={12} sw={3} />{badge.label}</span>
+      )}
+      {extra}
+    </div>
+  );
+}
+
+// Checkerboard behind media so transparent PNGs (BG remove) read clearly.
+const CHECKER = {
+  backgroundColor: '#fffaf0',
+  backgroundImage: 'linear-gradient(45deg, #d8cdb9 25%, transparent 25%, transparent 75%, #d8cdb9 75%), linear-gradient(45deg, #d8cdb9 25%, transparent 25%, transparent 75%, #d8cdb9 75%)',
+  backgroundSize: '16px 16px',
+  backgroundPosition: '0 0, 8px 8px',
+};
+
+function Message({ role, content, image, video, typing, kind, error, badge, onReplyImage, onRetry, retryLabel }) {
+  const isUser = role === 'user';
+
+  if (isUser) {
+    return (
+      <div className="rise" style={{ display: 'flex', justifyContent: 'flex-end', paddingRight: 12 }}>
+        <div className="fa-ubub" style={{
+          display: 'flex', flexDirection: image ? 'column' : 'row', gap: 10,
+          padding: image ? 10 : '12px 16px',
+          fontSize: 14, lineHeight: 1.55, whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+        }}>
+          {image && (
+            <img src={image} alt="" style={{
+              display: 'block', maxWidth: '100%', maxHeight: 180, objectFit: 'contain', alignSelf: 'flex-start',
+              border: '3px solid #fffaf0', ...CHECKER,
+            }} />
+          )}
+          <span style={{ padding: image ? '0 6px 2px' : 0 }}>{content}</span>
+          <svg className="fa-tail" width="12" height="12" viewBox="0 0 3 3" shapeRendering="crispEdges" aria-hidden="true"><path d="M0 0h1v1h1v1h1v1H0z" /></svg>
+        </div>
+      </div>
+    );
+  }
+
+  const media = image || video;
+  const text = error && typeof content === 'string' ? content.replace(/^⚠\s*/, '') : content;
+  return (
+    <div className={typing ? undefined : 'rise'} style={{ display: 'flex', justifyContent: 'flex-start' }}>
+      <div role={typing ? 'status' : undefined} style={{ position: 'relative', width: typing ? 'auto' : '100%', maxWidth: media ? 560 : 640, marginTop: 14 }}>
+        <NamePlate
+          badge={typing ? null : badge}
+          extra={typing && (kind === 'image' || kind === 'video') ? (
+            <span className="sk pxs" style={{ padding: '4px 8px', fontSize: 10, color: COLORS.onAccent, background: '#ffd25e' }}>RENDERING</span>
+          ) : null}
+        />
+        <div className="px" style={{
+          position: 'relative', background: COLORS.paper, color: COLORS.text,
+          padding: typing ? '28px 22px 18px' : '30px 22px 20px',
+          borderLeft: error ? '8px solid #e04545' : undefined,
+        }}>
+          {typing ? <TypingDots kind={kind} /> : (
+            <>
+              {image && (
+                <a href={image} target="_blank" rel="noreferrer" aria-label="Open image" className="pxs" style={{
+                  display: 'block', border: '6px solid #ffd25e', ...CHECKER,
+                }}>
+                  <img src={image} alt="" style={{ display: 'block', width: '100%', maxHeight: 340, objectFit: 'contain' }} />
+                </a>
+              )}
+              {video && (
+                <div className="pxs" style={{ border: '6px solid #ffd25e', background: '#1b1410' }}>
+                  <video src={video} controls style={{ display: 'block', width: '100%', maxHeight: 340 }} />
+                </div>
+              )}
+              {error ? (
+                <p style={{ display: 'flex', alignItems: 'flex-start', gap: 12, margin: 0, fontSize: 14, lineHeight: 1.55 }}>
+                  <StrokeIcon d={ICO.warn} size={20} sw={2.6} color="#e04545" style={{ marginTop: 1 }} />
+                  <span><span className="sr">Error: </span>{text}</span>
+                </p>
+              ) : text ? (
+                <div style={{
+                  marginTop: media ? 14 : 0, fontSize: 14, lineHeight: 1.7,
+                  whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+                }}>{text}</div>
+              ) : null}
+              {(onRetry || onReplyImage || media) && (
+                <div style={{
+                  display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: onRetry ? 'flex-start' : 'flex-end',
+                  gap: 16, marginTop: 16, padding: '0 6px 6px 3px',
+                }}>
+                  {onRetry && (
+                    <button type="button" onClick={onRetry} className="sk sbtn" style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 8, height: 36, padding: '0 14px',
+                      fontSize: 12, color: COLORS.onAccent, background: '#ff7a7a', textTransform: 'uppercase',
+                    }}><StrokeIcon d={ICO.retry} size={14} sw={2.8} />{retryLabel}</button>
+                  )}
+                  {onReplyImage && (
+                    <button type="button" onClick={onReplyImage} className="sk sbtn" style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 8, height: 36, padding: '0 12px',
+                      fontSize: 11, color: COLORS.onAccent, background: '#ffd25e',
+                    }}><StrokeIcon d={ICO.edit} size={13} sw={2.8} />REPLY · EDIT</button>
+                  )}
+                  {media && (
+                    <a href={media} target="_blank" rel="noreferrer" className="sk sbtn" style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 8, height: 36, padding: '0 12px',
+                      fontSize: 11, color: COLORS.text, background: COLORS.paper, textDecoration: 'none',
+                    }}>OPEN <StrokeIcon d={ICO.open} size={13} sw={2.8} /></a>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+          {!typing && !error && !media && (
+            <PixelArrow dir="down" size={9} color="#e04545" className="bob" style={{ position: 'absolute', right: 16, bottom: 12 }} />
+          )}
+        </div>
       </div>
     </div>
   );
 }
 
 function TypingDots({ kind }) {
-  if (kind === 'image' || kind === 'video') {
-    return (
-      <span className="mono" style={{ fontSize: 11, color: COLORS.muted, letterSpacing: '0.1em' }}>
-        ◇ rendering · {kind === 'video' ? 'this can take 30–60s' : 'a few seconds'}…
-      </span>
-    );
-  }
+  const media = kind === 'image' || kind === 'video';
   return (
-    <span style={{ display: 'inline-flex', gap: 4 }}>
-      {[0, 1, 2].map((i) => (
-        <span key={i} style={{
-          width: 6, height: 6, borderRadius: 999, background: COLORS.text,
-          opacity: 0.45, animation: `pulse 1s ease-in-out ${i * 0.15}s infinite`,
-        }} />
-      ))}
-    </span>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+      <span className="dots-step" aria-hidden="true" style={{ color: COLORS.text, display: 'inline-flex' }}><i /><i /><i /></span>
+      <span className="sk" style={{ fontSize: 11, color: COLORS.muted }}>
+        {media
+          ? `RENDERING · ${kind === 'video' ? 'THIS CAN TAKE 30–60S' : 'A FEW SECONDS'}`
+          : 'THINKING'}
+      </span>
+    </div>
   );
 }
 
@@ -744,28 +909,95 @@ function TypingDots({ kind }) {
 // Pink isn't a global brand color — it's the dedicated accent for the Thảo
 // love-letter tool, so it lives next to the tool data rather than in COLORS.
 const PINK = '#f59cb4';
+// Item-shop accents (B · Pixel Lobby palette) — always carry ink text.
+const T_GOLD = '#ffd25e';
+const T_GREEN = '#7fd18b';
+const T_RED = '#ff7a7a';
 
 const PUBLIC_TOOLS = [
   // Full modules folded into Toolbox — clicking these navigates to their panel.
-  { id: 'tv4',  route: 'tv4',  name: 'Travel Plan',          desc: 'Trips · plans · expenses',   icon: '⊕', accent: COLORS.gold,  tag: 'TRAVEL' },
-  { id: 'tech', route: 'tech', name: 'Subscription Manager', desc: 'Monthly + yearly burn',      icon: '⌬', accent: COLORS.green, tag: 'FINANCE' },
-  { id: 'todo', route: 'todo', name: 'To Do',                desc: 'Priorities · localStorage',  icon: '✓', accent: COLORS.green, tag: 'TASKS' },
-  { id: 'short',   nameKey: 'tools.short.name',   descKey: 'tools.short.desc',   icon: '/',  accent: COLORS.green, tag: 'WEB' },
-  { id: 'pst',     nameKey: 'tools.pst.name',     descKey: 'tools.pst.desc',     icon: '¶',  accent: COLORS.green, tag: 'WEB' },
-  { id: 'game',    nameKey: 'tools.game.name',    descKey: 'tools.game.desc',    icon: '◉',  accent: COLORS.gold,  tag: 'ARCHIVE' },
-  { id: 'bmi',     nameKey: 'tools.bmi.name',     descKey: 'tools.bmi.desc',     icon: '⚖',  accent: COLORS.green, tag: 'HEALTH' },
-  { id: 'convert', nameKey: 'tools.convert.name', descKey: 'tools.convert.desc', icon: '⇄',  accent: COLORS.gold,  tag: 'MEDIA' },
-  { id: 'mic',     nameKey: 'tools.mic.name',     descKey: 'tools.mic.desc',     icon: '⏺',  accent: COLORS.red,   tag: 'MEDIA' },
-  { id: 'hex',     nameKey: 'tools.hex.name',     descKey: 'tools.hex.desc',     icon: '0x', accent: COLORS.green, tag: 'DEV' },
-  { id: '2fa',     nameKey: 'tools.2fa.name',     descKey: 'tools.2fa.desc',     icon: '2F', accent: COLORS.red,   tag: 'SECURITY' },
-  { id: 'thao',    nameKey: 'tools.thao.name',    descKey: 'tools.thao.desc',    icon: '♥',  accent: PINK,         tag: 'PIN · 4 DIGIT' },
+  { id: 'tv4',  route: 'tv4',  name: 'Travel Plan',          desc: 'Trips · plans · expenses',   icon: '⊕', accent: T_GOLD,  tag: 'TRAVEL' },
+  { id: 'tech', route: 'tech', name: 'Subscription Manager', desc: 'Monthly + yearly burn',      icon: '⌬', accent: T_GREEN, tag: 'FINANCE' },
+  { id: 'todo', route: 'todo', name: 'To Do',                desc: 'Priorities · localStorage',  icon: '✓', accent: T_GREEN, tag: 'TASKS' },
+  { id: 'short',   nameKey: 'tools.short.name',   descKey: 'tools.short.desc',   icon: '/',  accent: T_GREEN, tag: 'WEB' },
+  { id: 'pst',     nameKey: 'tools.pst.name',     descKey: 'tools.pst.desc',     icon: '¶',  accent: T_GREEN, tag: 'WEB' },
+  { id: 'game',    nameKey: 'tools.game.name',    descKey: 'tools.game.desc',    icon: '◉',  accent: T_GOLD,  tag: 'ARCHIVE' },
+  { id: 'bmi',     nameKey: 'tools.bmi.name',     descKey: 'tools.bmi.desc',     icon: '⚖',  accent: T_GREEN, tag: 'HEALTH' },
+  { id: 'convert', nameKey: 'tools.convert.name', descKey: 'tools.convert.desc', icon: '⇄',  accent: T_GOLD,  tag: 'MEDIA' },
+  { id: 'mic',     nameKey: 'tools.mic.name',     descKey: 'tools.mic.desc',     icon: '⏺',  accent: T_RED,   tag: 'MEDIA' },
+  { id: 'hex',     nameKey: 'tools.hex.name',     descKey: 'tools.hex.desc',     icon: '0x', accent: T_GREEN, tag: 'DEV' },
+  { id: '2fa',     nameKey: 'tools.2fa.name',     descKey: 'tools.2fa.desc',     icon: '2F', accent: T_RED,   tag: 'SECURITY' },
+  { id: 'thao',    nameKey: 'tools.thao.name',    descKey: 'tools.thao.desc',    icon: '♥',  accent: PINK,    tag: 'PIN · 4 DIGIT' },
 ];
 const PRIVATE_TOOLS = [
-  { id: 'srv', nameKey: 'tools.srv.name', descKey: 'tools.srv.desc', icon: '⌬', accent: COLORS.red, tag: 'OWNER' },
-  { id: 'fin', nameKey: 'tools.fin.name', descKey: 'tools.fin.desc', icon: '$', accent: COLORS.red, tag: 'OWNER' },
+  { id: 'srv', nameKey: 'tools.srv.name', descKey: 'tools.srv.desc', icon: '⌬', accent: T_RED, tag: 'OWNER' },
+  { id: 'fin', nameKey: 'tools.fin.name', descKey: 'tools.fin.desc', icon: '$', accent: T_RED, tag: 'OWNER' },
 ];
 
 const THAO_PIN = '2609';
+
+// Inventory icons (square-cap strokes on the tool's accent tile).
+const TOOL_ICON = {
+  tv4: 'M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2zM9 4v14M15 6v14',
+  tech: 'M3 6h18v13H3zM3 10h18M7 15h4',
+  todo: 'M4 4h16v16H4zM8 12l3 3 5-6',
+  short: 'M10 7H5v10h5M14 7h5v10h-5M8 12h8',
+  pst: 'M5 5h14v16H5zM9 3h6v4H9zM8 12h8M8 16h5',
+  game: 'M4 4h13l3 3v13H4zM8 4v5h7V4M8 20v-6h8v6',
+  bmi: 'M12 4v16M7 20h10M4 7h16M6 7l-3 6h6zM18 7l-3 6h6z',
+  convert: 'M4 8h15M15 4l4 4-4 4M20 16H5M9 12l-4 4 4 4',
+  mic: 'M9 3h6v11H9zM5 11v1a7 7 0 0 0 14 0v-1M12 19v3M8 22h8',
+  hex: 'M8 6l-5 6 5 6M16 6l5 6-5 6M14 4l-4 16',
+  '2fa': 'M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6zM8.5 12l2.5 2.5 4.5-5',
+  srv: 'M4 4h16v7H4zM4 13h16v7H4zM8 7.5h2M8 16.5h2',
+  fin: 'M12 3v18M17 7H9.5a2.5 2.5 0 0 0 0 5h5a2.5 2.5 0 0 1 0 5H7',
+};
+
+function ToolIcon({ id, size = 26 }) {
+  if (id === 'thao') return <PixelHeart size={size} color="#1b1410" />;
+  return <StrokeIcon d={TOOL_ICON[id] || TOOL_ICON.tech} size={size} />;
+}
+
+// Accent icon tile for a tool (pixel ring, ink glyph).
+function ToolTile({ tool, size = 48, className }) {
+  return (
+    <span className={'pxs' + (className ? ' ' + className : '')} style={{
+      display: 'grid', placeItems: 'center', flexShrink: 0, width: size, height: size,
+      background: tool.accent, color: COLORS.onAccent,
+    }}>
+      <ToolIcon id={tool.id} size={Math.round(size * 0.54)} />
+    </span>
+  );
+}
+
+// Pixel padlock — closed or open.
+function PixelLock({ open = false, size = 10, color = 'currentColor', hole }) {
+  return open ? (
+    <svg width={size} height={size} viewBox="0 0 9 9" shapeRendering="crispEdges" aria-hidden="true" style={{ flexShrink: 0 }}>
+      <path d="M4 0h4v1h1v2H8V1H5v3H4z" fill={color} /><path d="M0 4h7v5H0z" fill={color} />
+    </svg>
+  ) : (
+    <svg width={Math.round(size * 8 / 9)} height={size} viewBox="0 0 8 9" shapeRendering="crispEdges" aria-hidden="true" style={{ flexShrink: 0 }}>
+      <path d="M2 0h4v1h1v3H6V1H2v3H1V1h1z" fill={color} /><path d="M0 4h8v5H0z" fill={color} />
+      {hole && <rect x="3" y="5" width="2" height="2" fill={hole} />}
+    </svg>
+  );
+}
+
+// PUBLIC / PRIVATE access badge.
+function AccessBadge({ priv, unlocked, compact }) {
+  return (
+    <span className="sk" style={{
+      display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, flexShrink: 0,
+      padding: compact ? 0 : '3px 7px', width: compact ? 24 : undefined, height: compact ? 24 : undefined,
+      fontSize: 10, boxSizing: 'border-box', border: '2px solid ' + (priv ? COLORS.ink : COLORS.text),
+      background: priv ? COLORS.ink : COLORS.field, color: priv ? COLORS.stripText : COLORS.text,
+    }}>
+      <PixelLock open={!priv || unlocked} size={10} />
+      {compact ? <span className="sr">{priv ? 'Private' : 'Public'}</span> : (priv ? 'PRIVATE' : 'PUBLIC')}
+    </span>
+  );
+}
 
 export function Toolbox({ nav }) {
   const { t } = useLang();
@@ -779,13 +1011,15 @@ export function Toolbox({ nav }) {
   const [pin, setPin] = useState('');
   const [err, setErr] = useState(false);
   const [activeTool, setActiveTool] = useState(null);
+  // Item-shop category filter (presentation only; resets with the access tab).
+  const [cat, setCat] = useState('all');
+  const scrollRef = useRef(null);
+  // Opening / closing a tool starts at the top of the panel.
+  useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = 0; }, [activeTool]);
 
   // Phone shell (≤768) gets the dedicated mobile layout: full-width segmented
-  // control + single-column horizontal tool rows. On desktop the cards are
-  // 3-up, collapsing to 2 on a narrow desktop window.
+  // control, a scrolling category rail and a 2-up inventory of compact slots.
   const isMobile = useMediaQuery('(max-width: 768px)');
-  const tbMid = useMediaQuery('(max-width: 900px)');
-  const toolCols = tbMid ? 2 : 3;
 
   // Sub-route #/tools/thao opens the Thảo letter directly.
   useEffect(() => {
@@ -827,272 +1061,476 @@ export function Toolbox({ nav }) {
   }
 
   const tools = tab === 'public' ? PUBLIC_TOOLS : PRIVATE_TOOLS;
-  const tbAccent = tab === 'public' ? COLORS.green : COLORS.red;
-  const accent = tbAccent;
   const subtitle = tab === 'public'
     ? `${PUBLIC_TOOLS.length} public utilities — no sign-in`
     : (unlocked ? `${PRIVATE_TOOLS.length} private tools — owner only` : 'Locked zone — PIN required');
+  const locked = tab === 'private' && !unlocked;
 
-  // Segmented PUBLIC / PRIVATE — full-width on mobile, compact pill on desktop.
+  // Category chips come from the tags of the tools in the current tab.
+  const cats = useMemo(() => {
+    const m = new Map();
+    for (const tl of tools) m.set(tl.tag, (m.get(tl.tag) || 0) + 1);
+    return [...m.entries()];
+  }, [tools]);
+  const shown = cat === 'all' ? tools : tools.filter((tl) => tl.tag === cat);
+  const pad2 = (n) => String(n).padStart(2, '0');
+
+  function pickTab(k) { setTab(k); setActiveTool(null); setCat('all'); }
+
+  // ACCESS: PUBLIC / PRIVATE in one pixel ring.
   const segmented = (
-    <div style={{
-      display: 'flex', gap: 6, padding: 5,
-      background: COLORS.bg, border: '1px solid ' + COLORS.line,
-      borderRadius: isMobile ? 13 : 12, flex: isMobile ? undefined : 'none',
+    <div role="group" aria-label="Filter by access" className="fa-seg pxs sk" style={{
+      display: isMobile ? 'grid' : 'inline-flex', gridTemplateColumns: isMobile ? '1fr 1fr' : undefined,
+      fontSize: isMobile ? 12 : 13,
     }}>
-      {['public', 'private'].map((k) => {
-        const active = tab === k;
-        const c = k === 'public' ? COLORS.green : COLORS.red;
+      {['public', 'private'].map((k) => (
+        <button
+          key={k}
+          type="button"
+          aria-pressed={tab === k}
+          onClick={() => pickTab(k)}
+          className="sk"
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            height: 44, padding: '0 16px', fontSize: 'inherit',
+          }}
+        >
+          {k.toUpperCase()}
+          <span style={{ opacity: 0.75 }}>{pad2(k === 'public' ? PUBLIC_TOOLS.length : PRIVATE_TOOLS.length)}</span>
+          {k === 'private' && !unlocked && <PixelLock size={11} />}
+        </button>
+      ))}
+    </div>
+  );
+
+  const chipRow = (
+    <div role="group" aria-label="Filter by category" className={isMobile ? 'fa-rail' : undefined} style={{
+      display: 'flex', flexWrap: isMobile ? 'nowrap' : 'wrap', gap: isMobile ? 14 : '16px 14px',
+      overflowX: isMobile ? 'auto' : 'visible', padding: isMobile ? '3px 3px 8px' : 3, minWidth: 0, flex: 1,
+    }}>
+      {[['all', tools.length], ...cats].map(([c, n]) => (
+        <button
+          key={c}
+          type="button"
+          aria-pressed={cat === c}
+          onClick={() => setCat(cat === c && c !== 'all' ? 'all' : c)}
+          className={'chip-px sk' + (cat === c ? ' on' : '')}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0,
+            height: isMobile ? 44 : 38, padding: '0 12px', fontSize: 11, whiteSpace: 'nowrap',
+          }}
+        >{c === 'all' ? 'ALL' : c} <span style={{ opacity: 0.7 }}>{pad2(n)}</span></button>
+      ))}
+    </div>
+  );
+
+  const status = (
+    <p className="sk" style={{
+      display: 'flex', alignItems: 'center', gap: 10, margin: 0, fontSize: isMobile ? 11 : 12,
+      color: locked ? COLORS.muted : COLORS.greenInk, whiteSpace: 'nowrap',
+    }}>
+      <span className={locked ? undefined : 'blink'} style={{ width: 10, height: 10, background: 'currentColor' }} />
+      {locked ? 'LOCKED' : (activeTool ? 'EQUIPPED' : `SHOWING ${pad2(shown.length)} / ${pad2(tools.length)} ITEMS`)}
+    </p>
+  );
+
+  let body;
+  if (locked) {
+    body = (
+      <div style={{ display: 'grid', placeItems: isMobile ? 'stretch' : 'center', padding: isMobile ? '6px 6px 0 3px' : '20px 0 10px' }}>
+        <div className={'px' + (err ? ' fa-shake' : ' rise')} style={{
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, textAlign: 'center',
+          width: '100%', maxWidth: isMobile ? undefined : 400, boxSizing: 'border-box',
+          padding: isMobile ? '28px 20px 26px' : '34px 30px 30px', background: COLORS.paper,
+        }}>
+          <span className="pxs" style={{ display: 'grid', placeItems: 'center', width: 64, height: 64, background: T_RED }}>
+            <PixelLock size={32} color="#1b1410" hole={T_RED} />
+          </span>
+          <p className="sk" style={{ margin: '6px 0 0', fontSize: 16, color: COLORS.text }}>PRIVATE ZONE</p>
+          <p style={{ margin: 0, fontSize: 13, lineHeight: 1.5, color: COLORS.muted }}>
+            Nhập 4-digit PIN để mở khu vực private.
+          </p>
+          <label className="sr" htmlFor="tb-pin">4-digit PIN</label>
+          <div style={{ width: '100%', maxWidth: 260, marginTop: 8, padding: 3 }}>
+            <PinInput id="tb-pin" value={pin} err={err}
+              onChange={(v) => setPin(v.replace(/\D/g, '').slice(0, 4))}
+              onEnter={tryUnlock} />
+          </div>
+          <PxButton kind="big" fill="#e04545" onClick={tryUnlock} style={{ width: '100%', maxWidth: 254, marginTop: 10 }}>
+            UNLOCK
+          </PxButton>
+          {err && (
+            <p className="sk" role="alert" style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '8px 0 0', fontSize: 11, color: COLORS.text }}>
+              <StrokeIcon d={ICO.x} size={12} sw={3.4} color="#e04545" />INVALID PIN
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  } else if (activeTool) {
+    body = (
+      <ToolDetail
+        tool={activeTool}
+        name={toolName(activeTool)}
+        desc={toolDesc(activeTool)}
+        priv={tab === 'private'}
+        accent={activeTool.accent}
+        onBack={() => setActiveTool(null)}
+      />
+    );
+  } else {
+    body = (
+      <>
+        <div className={isMobile ? 'fa-inv-m' : 'fa-inv'} style={{ padding: isMobile ? '0 6px 6px 3px' : '0 12px 14px 4px' }}>
+          {shown.map((tool, i) => {
+            const name = toolName(tool);
+            const desc = toolDesc(tool);
+            const priv = tab === 'private';
+            return isMobile ? (
+              <button
+                key={tool.id}
+                type="button"
+                onClick={() => openTool(tool)}
+                className="fa-slot rise"
+                style={{
+                  display: 'flex', flexDirection: 'column', gap: 8, width: '100%', height: '100%', minHeight: 160,
+                  boxSizing: 'border-box', padding: 12, textAlign: 'left', border: 0,
+                  background: COLORS.paper, color: COLORS.text, animationDelay: i * 40 + 'ms',
+                }}
+              >
+                <span style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 6 }}>
+                  <ToolTile tool={tool} size={38} />
+                  <AccessBadge priv={priv} unlocked={unlocked} compact />
+                </span>
+                <span className={'pf' + (hasVi(name) ? ' fa-vi' : '')} style={{ fontSize: 15, lineHeight: 1.15 }}>{name}</span>
+                <span className="fa-clamp2" style={{ fontSize: 11, lineHeight: 1.4, color: COLORS.muted }}>{desc}</span>
+                <span className="sk" style={{
+                  display: 'flex', justifyContent: 'space-between', gap: 6, marginTop: 'auto', paddingTop: 8,
+                  borderTop: '3px dashed ' + COLORS.rule, fontSize: 9,
+                }}><span style={{ color: COLORS.muted }}>{tool.tag}</span><PixelArrow size={9} /></span>
+              </button>
+            ) : (
+              <button
+                key={tool.id}
+                type="button"
+                onClick={() => openTool(tool)}
+                className="fa-card px lift rise"
+                style={{
+                  position: 'relative', display: 'flex', flexDirection: 'column', gap: 12,
+                  width: '100%', height: '100%', minHeight: 214, boxSizing: 'border-box', padding: 18,
+                  textAlign: 'left', border: 0, background: COLORS.paper, color: COLORS.text,
+                  animationDelay: i * 40 + 'ms',
+                }}
+              >
+                <span style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
+                  <ToolTile tool={tool} className="fa-ico" />
+                  <span className="sk" style={{ padding: '3px 7px', fontSize: 10, whiteSpace: 'nowrap', border: '2px solid ' + COLORS.text }}>{tool.tag}</span>
+                </span>
+                <span className={'pf' + (hasVi(name) ? ' fa-vi' : '')} style={{ fontSize: 20, lineHeight: 1.1 }}>{name}</span>
+                <span style={{ fontSize: 12, lineHeight: 1.5, color: COLORS.muted }}>{desc}</span>
+                <span className="sk" style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
+                  marginTop: 'auto', paddingTop: 12, borderTop: '3px dashed ' + COLORS.rule, fontSize: 10,
+                }}>
+                  <AccessBadge priv={priv} unlocked={unlocked} />
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>{tool.route ? 'ENTER' : 'USE'} <PixelArrow size={9} /></span>
+                </span>
+              </button>
+            );
+          })}
+        </div>
+        {tab === 'public' && cat === 'all' && (
+          <DialogBox speaker="SE77N SAYS:" padding={isMobile ? '28px 18px 24px' : '28px 24px 24px'}
+            style={{ marginTop: isMobile ? 34 : 52, maxWidth: 760, marginRight: isMobile ? 6 : 12 }}>
+            <p style={{ margin: 0, fontSize: 13, lineHeight: 1.6, color: COLORS.text }}>
+              Travel Plan, Subscription Manager and To Do live inside Toolbox — their cards open the full page. Every other item opens right here.
+            </p>
+          </DialogBox>
+        )}
+      </>
+    );
+  }
+
+  return (
+    <div ref={scrollRef} style={{
+      height: '100%', overflowY: 'auto', overflowX: 'hidden', boxSizing: 'border-box',
+      padding: isMobile ? '6px 2px 24px' : '8px 14px 36px 6px',
+    }}>
+      {/* Item-shop filters */}
+      {isMobile ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 18 }}>
+          <div style={{ padding: '3px 3px 0' }}>{segmented}</div>
+          {!activeTool && <p style={{ margin: 0, fontSize: 12, lineHeight: 1.5, color: COLORS.muted }}>{subtitle}</p>}
+          {!locked && !activeTool && chipRow}
+          {!activeTool && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10 }}>
+              <h2 className="pf" style={{ margin: 0, fontSize: 22 }}>{locked ? 'Locked' : 'Inventory'}</h2>
+              {status}
+            </div>
+          )}
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24, marginBottom: 46, padding: '0 8px 0 4px' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 20 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 18 }}>
+              <span className="sk" style={{ width: 92, fontSize: 12, color: COLORS.muted }}>ACCESS</span>
+              {segmented}
+              <span style={{ fontSize: 12, color: COLORS.muted }}>{subtitle}</span>
+            </div>
+            {status}
+          </div>
+          {!locked && !activeTool && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', gap: 18 }}>
+              <span className="sk" style={{ width: 92, paddingTop: 12, fontSize: 12, color: COLORS.muted }}>CATEGORY</span>
+              {chipRow}
+            </div>
+          )}
+        </div>
+      )}
+      {body}
+    </div>
+  );
+}
+
+// Big centred PIN well (Toolbox private zone + Thảo letter).
+function PinInput({ id, value, onChange, onEnter, err }) {
+  return (
+    <input
+      id={id}
+      type="password"
+      inputMode="numeric"
+      autoComplete="off"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      onKeyDown={(e) => { if (e.key === 'Enter') onEnter(); }}
+      placeholder="• • • •"
+      autoFocus
+      className="field mono"
+      style={{
+        width: '100%', height: 56, padding: '0 12px', boxSizing: 'border-box', textAlign: 'center',
+        fontSize: 22, letterSpacing: '0.5em',
+        ...(err ? { boxShadow: '0 -3px 0 0 #e04545, 0 3px 0 0 #e04545, -3px 0 0 0 #e04545, 3px 0 0 0 #e04545' } : {}),
+      }}
+    />
+  );
+}
+
+// The "EQUIPPED" panel: an RPG box with a back button, the tool's tile and
+// its body. On wide screens an item card sits beside it.
+function ToolDetail({ tool, name, desc, priv, accent, onBack }) {
+  const isMobile = useMediaQuery('(max-width: 768px)');
+  const wide = useMediaQuery('(min-width: 1181px)');
+  return (
+    <div className="rise" style={{ display: 'flex', alignItems: 'flex-start', gap: 40, padding: isMobile ? '0 6px 0 3px' : '0 12px 0 4px' }}>
+      <div style={{ position: 'relative', flex: '999 1 560px', minWidth: 0, marginTop: 14 }}>
+        <span className="sk" style={{
+          position: 'absolute', left: isMobile ? 14 : 20, top: -18, zIndex: 1, padding: '6px 12px',
+          fontSize: 12, color: COLORS.stripText, background: COLORS.strip,
+        }}>EQUIPPED</span>
+        <div className="px" style={{ padding: isMobile ? '30px 16px 22px' : '34px 26px 28px', background: COLORS.paper }}>
+          <div style={{
+            display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: isMobile ? 14 : 18,
+            paddingBottom: 20, borderBottom: '3px dashed ' + COLORS.rule,
+          }}>
+            <button type="button" onClick={onBack} className="sk sbtn" style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8, flexShrink: 0, height: 38, padding: '0 12px',
+              fontSize: 11, color: COLORS.text, background: COLORS.paper,
+            }}><PixelArrow dir="left" size={10} />BACK</button>
+            <ToolTile tool={tool} size={isMobile ? 40 : 48} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="sk" style={{ marginBottom: 6, fontSize: 11, color: COLORS.muted }}>TOOL · {tool.tag}</div>
+              <h2 className={'pf' + (hasVi(name) ? ' fa-vi' : '')} style={{ margin: 0, fontSize: isMobile ? 22 : 26, lineHeight: 1.05 }}>{name}</h2>
+            </div>
+            {!isMobile && <AccessBadge priv={priv} unlocked />}
+          </div>
+          <div style={{ marginTop: 24 }}>
+            {tool.id === 'short'   ? <ShortenerTool accent={accent} /> :
+             tool.id === 'pst'     ? <PastebinTool accent={accent} /> :
+             tool.id === 'convert' ? <ConverterTool accent={accent} /> :
+             tool.id === 'mic'     ? <VoiceRecorderTool accent={accent} /> :
+             tool.id === 'hex'     ? <HexToTextTool accent={accent} /> :
+             tool.id === 'bmi'     ? <BMICalculatorTool accent={accent} /> :
+             tool.id === '2fa'     ? <TotpAuthenticatorTool accent={accent} /> :
+             tool.id === 'fin'     ? <FinanceTool accent={accent} /> :
+             tool.id === 'game'    ? <GameResourcesTool accent={accent} /> :
+             tool.id === 'thao'    ? <ThaoTool onClose={onBack} /> :
+             <PlaceholderTool tool={tool} name={name} desc={desc} accent={accent} />}
+          </div>
+        </div>
+      </div>
+
+      {wide && (
+        <aside aria-label="Item card" style={{ flex: '1 1 260px', maxWidth: 320, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 40, marginTop: 14 }}>
+          <div className="px" style={{ padding: '22px 22px 14px', background: COLORS.paper }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>
+              <ToolTile tool={tool} size={56} className="bob" />
+              <div className="sk" style={{ fontSize: 11, color: COLORS.muted, lineHeight: 1.5 }}>ITEM CARD<br />SLOT · {tool.id.toUpperCase()}</div>
+            </div>
+            <p style={{ margin: '0 0 8px', fontSize: 13, lineHeight: 1.55, color: COLORS.text }}>{desc}</p>
+            <dl style={{ margin: 0 }}>
+              {[['CATEGORY', tool.tag], ['ACCESS', priv ? 'OWNER · PIN' : 'PUBLIC']].map(([k, v], i) => (
+                <div key={k} style={{
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, padding: '10px 0',
+                  borderTop: '3px dashed ' + COLORS.rule,
+                }}>
+                  <dt className="sk" style={{ fontSize: 10, color: COLORS.muted }}>{k}</dt>
+                  <dd className="sk" style={{ margin: 0, fontSize: 11, textAlign: 'right' }}>{v}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+          <div className="px" style={{ padding: '20px 22px 16px', background: COLORS.paper }}>
+            <div className="sk" style={{ marginBottom: 6, fontSize: 12, color: COLORS.muted }}>ACCESS KEY</div>
+            {[
+              [<AccessBadge key="p" />, 'No sign-in — open to everyone'],
+              [<AccessBadge key="q" priv />, 'Owner only — 4-digit PIN'],
+            ].map(([b, txt], i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 0', borderBottom: i === 0 ? '3px dashed ' + COLORS.rule : 'none' }}>
+                <span style={{ width: 92, flexShrink: 0 }}>{b}</span>
+                <span style={{ fontSize: 12, lineHeight: 1.45, color: COLORS.muted }}>{txt}</span>
+              </div>
+            ))}
+          </div>
+        </aside>
+      )}
+    </div>
+  );
+}
+
+// ── Shared tool UI (B vocabulary) ──────────────────────────────
+// Visible label above an input.
+function TLabel({ children, htmlFor, style }) {
+  return (
+    <label htmlFor={htmlFor} className="sk" style={{ display: 'block', marginBottom: 8, fontSize: 11, color: COLORS.muted, ...style }}>
+      {children}
+    </label>
+  );
+}
+
+// Inline error: paper slab, red edge + warning glyph, ink text (contrast-safe).
+function TError({ children, style }) {
+  return (
+    <div role="alert" className="pxs" style={{
+      display: 'flex', alignItems: 'flex-start', gap: 10, padding: '11px 14px', margin: 3,
+      background: COLORS.paper, color: COLORS.text, borderLeft: '6px solid #e04545',
+      fontSize: 12, lineHeight: 1.5, whiteSpace: 'pre-wrap', wordBreak: 'break-word', ...style,
+    }}>
+      <StrokeIcon d={ICO.warn} size={16} sw={2.6} color="#e04545" style={{ marginTop: 1 }} />
+      <span className="mono">{children}</span>
+    </div>
+  );
+}
+
+// Dark "screen" output box with a blinking OUTPUT header.
+function Screen({ label = 'OUTPUT', dot = '#7fd18b', children, style, live = true, right }) {
+  return (
+    <div className="fa-screen" aria-live={live ? 'polite' : undefined} style={{ padding: '18px 20px 20px', ...style }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 14 }}>
+        <span className="sk" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 10, color: '#c9bca6' }}>
+          <span className="blink" style={{ width: 8, height: 8, background: dot }} />{label}
+        </span>
+        {right}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+// "> PROMPT_" idle line for screens.
+function ScreenPrompt({ children }) {
+  return (
+    <p className="sk" style={{ margin: 0, fontSize: 13, lineHeight: 1.5, color: '#fffaf0' }}>
+      &gt; {children}<span className="blink" style={{ color: '#7fd18b' }}>_</span>
+    </p>
+  );
+}
+
+// Primary action — big pixel button in the tool's accent.
+function PrimaryBtn({ accent, children, style, ...rest }) {
+  return (
+    <PxButton kind="big" fill={accent} style={{ height: 50, minHeight: 50, padding: '0 22px', fontSize: 14, textTransform: 'uppercase', ...style }} {...rest}>
+      {children}
+    </PxButton>
+  );
+}
+
+// Note / hint slab (dashed rule frame).
+function TNote({ children, style }) {
+  return (
+    <div className="mono" style={{
+      padding: '11px 14px', border: '3px dashed ' + COLORS.rule, background: COLORS.field,
+      fontSize: 11, lineHeight: 1.6, color: COLORS.muted, ...style,
+    }}>{children}</div>
+  );
+}
+
+// Pixel progress bar (stage + percent).
+function TProgress({ stage, progress, accent }) {
+  return (
+    <div>
+      <div className="sk" style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginBottom: 8, fontSize: 10, color: COLORS.muted }}>
+        <span>{stage}</span>
+        <span>{Math.round(progress * 100)}%</span>
+      </div>
+      <div className="hpbar" style={{ '--a': accent }} role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)}>
+        <span style={{ width: `${progress * 100}%` }} />
+      </div>
+    </div>
+  );
+}
+
+// Segmented choice in one ring.
+function Seg({ value, options, onChange, label, disabled, size = 'md' }) {
+  return (
+    <div role="group" aria-label={label} className="fa-seg pxs" style={{ margin: 3 }}>
+      {options.map((o) => {
+        const v = typeof o === 'string' ? o : o.v;
+        const l = typeof o === 'string' ? o : o.l;
         return (
-          <button
-            key={k}
-            onClick={() => { setTab(k); setActiveTool(null); }}
-            className="mono tabtap"
-            style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              gap: isMobile ? 7 : 8, flex: isMobile ? 1 : undefined,
-              padding: isMobile ? '12px 0' : '10px 18px', borderRadius: 9,
-              background: active ? c + '1f' : 'transparent',
-              border: `1px solid ${active ? c + '73' : 'transparent'}`,
-              color: active ? c : COLORS.muted,
-              fontSize: isMobile ? 11 : 10.5, letterSpacing: '0.16em',
-              textTransform: 'uppercase', fontWeight: 800, cursor: 'pointer',
-              transition: 'all 180ms',
-            }}
-          >
-            {k}
-            {k === 'public' && <span style={{ fontSize: 9, color: active ? c : COLORS.muted }}>0{PUBLIC_TOOLS.length}</span>}
-            {k === 'private' && !unlocked && <span style={{ fontSize: 11 }}>🔒</span>}
+          <button key={v} type="button" aria-pressed={value === v} disabled={disabled}
+            onClick={() => onChange(v)} className="sk"
+            style={{ height: size === 'lg' ? 46 : 36, padding: size === 'lg' ? '0 16px' : '0 12px', fontSize: size === 'lg' ? 13 : 11 }}>
+            {l}
           </button>
         );
       })}
     </div>
   );
+}
 
-  const header = (
-    <>
-      <div className="mono" style={{
-        fontSize: isMobile ? 9.5 : 10, letterSpacing: '0.26em', fontWeight: 800,
-        color: tbAccent, transition: 'color 250ms',
-      }}>02 · UTILITIES</div>
-      <h1 className="mono" style={{
-        fontSize: isMobile ? 32 : 34, margin: isMobile ? '8px 0 6px' : '10px 0 7px',
-        color: COLORS.text, fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1,
-      }}>Toolbox<span style={{ color: tbAccent, transition: 'color 250ms' }}>.</span></h1>
-      <p style={{ margin: 0, fontSize: isMobile ? 11.5 : 12.5, color: COLORS.muted, lineHeight: 1.5 }}>{subtitle}</p>
-    </>
-  );
-
+// Copy-to-clipboard small button.
+function CopyBtn({ onClick, children = 'COPY', style }) {
   return (
-    <Panel padding={0} style={{
-      display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%',
-      ...(isMobile ? { background: 'transparent', border: 'none', borderRadius: 0 } : {}),
-    }}>
-      {isMobile ? (
-        <div style={{ padding: '6px 2px 0' }}>
-          {header}
-          <div style={{ marginTop: 16 }}>{segmented}</div>
-        </div>
-      ) : (
-        <div style={{
-          padding: '22px 24px', borderBottom: '1px solid ' + COLORS.line,
-          display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 24,
-        }}>
-          <div>{header}</div>
-          {segmented}
-        </div>
-      )}
-
-      <div style={{ flex: 1, padding: isMobile ? '16px 2px 4px' : 24, overflow: 'auto' }}>
-        {tab === 'private' && !unlocked ? (
-          <div style={{
-            display: isMobile ? 'block' : 'grid', placeItems: 'center',
-            minHeight: isMobile ? 0 : 360, animation: 'fadeUp 250ms ease-out',
-          }}>
-            <div className={isMobile ? 'mtap' : ''} style={{
-              position: 'relative', overflow: 'hidden',
-              padding: isMobile ? '34px 26px' : 36, textAlign: 'center',
-              border: '1px solid ' + COLORS.line, borderRadius: isMobile ? 18 : 16,
-              background: isMobile ? '#131010' : COLORS.bg,
-              width: isMobile ? '100%' : undefined, maxWidth: isMobile ? undefined : 360,
-              animation: err ? 'shake 350ms ease' : 'none',
-              boxShadow: isMobile ? `0 18px 44px rgba(0,0,0,.45), 0 0 40px ${COLORS.red}14` : 'none',
-            }}>
-              {isMobile && <span className="msheen" />}
-              <div style={{
-                width: 56, height: 56, margin: '0 auto 16px', borderRadius: 999,
-                display: 'grid', placeItems: 'center',
-                background: COLORS.red + '14', border: `1px solid ${COLORS.red}55`,
-                fontSize: 24, color: COLORS.red,
-              }}>🔒</div>
-              <div className="mono" style={{
-                fontSize: 13, letterSpacing: '0.18em', textTransform: 'uppercase',
-                color: COLORS.text, fontWeight: 700, marginBottom: 6,
-              }}>Private zone</div>
-              <div style={{ fontSize: 12, color: COLORS.muted, marginBottom: 22, lineHeight: 1.5 }}>
-                Nhập 4-digit PIN để mở khu vực private.
-              </div>
-              <Field
-                value={pin}
-                onChange={(v) => setPin(v.replace(/\D/g, '').slice(0, 4))}
-                placeholder="• • • •"
-                type="password"
-                onKeyDown={(e) => { if (e.key === 'Enter') tryUnlock(); }}
-                style={{
-                  textAlign: 'center', fontSize: 22, letterSpacing: '0.5em',
-                  padding: '14px 16px', borderColor: err ? COLORS.red : COLORS.line,
-                }}
-                autoFocus
-              />
-              <div style={{ marginTop: 16 }}>
-                <Btn variant="solid" onClick={tryUnlock} style={{ width: '100%' }}>Unlock</Btn>
-              </div>
-              {err && (
-                <div className="mono" style={{ fontSize: 10, color: COLORS.red, marginTop: 12, letterSpacing: '0.12em' }}>
-                  ✕ INVALID PIN
-                </div>
-              )}
-            </div>
-          </div>
-        ) : activeTool ? (
-          <ToolDetail tool={activeTool} accent={activeTool.accent || accent} onBack={() => setActiveTool(null)} />
-        ) : isMobile ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, animation: 'fadeUp 200ms ease-out' }}>
-            {tools.map((tool) => {
-              const a = tool.accent || accent;
-              return (
-                <button
-                  key={tool.id}
-                  onClick={() => openTool(tool)}
-                  className="mtap"
-                  style={{
-                    position: 'relative', overflow: 'hidden', textAlign: 'left',
-                    display: 'flex', alignItems: 'center', gap: 15, padding: '16px 18px',
-                    border: '1px solid ' + COLORS.line, borderRadius: 15,
-                    background: '#131010', cursor: 'pointer', color: COLORS.text,
-                  }}
-                >
-                  <span className="msheen" />
-                  <div className="mono" style={{
-                    width: 50, height: 50, flex: 'none', display: 'grid', placeItems: 'center',
-                    borderRadius: 13, border: `1px solid ${a}55`, background: a + '12',
-                    color: a, fontSize: 20, fontWeight: 800,
-                  }}>{tool.icon}</div>
-                  <div style={{ minWidth: 0, flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span className="mono" style={{
-                        fontSize: 13, fontWeight: 800, letterSpacing: '0.03em', textTransform: 'uppercase',
-                        color: COLORS.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                      }}>{toolName(tool)}</span>
-                      <span className="mono" style={{
-                        fontSize: 7.5, letterSpacing: '0.16em', fontWeight: 800, color: a,
-                        border: `1px solid ${a}55`, borderRadius: 999, padding: '3px 8px', flex: 'none',
-                      }}>{tool.tag}</span>
-                    </div>
-                    <div style={{ fontSize: 11, color: COLORS.muted, marginTop: 5, lineHeight: 1.5 }}>{toolDesc(tool)}</div>
-                  </div>
-                  <span className="mono" style={{ flex: 'none', fontSize: 16, color: a, fontWeight: 800 }}>›</span>
-                </button>
-              );
-            })}
-          </div>
-        ) : (
-          <div style={{
-            display: 'grid', gridTemplateColumns: `repeat(${toolCols}, minmax(0, 1fr))`,
-            gap: 16, animation: 'fadeUp 200ms ease-out',
-          }}>
-            {tools.map((tool) => {
-              const a = tool.accent || accent;
-              return (
-                <button
-                  key={tool.id}
-                  onClick={() => openTool(tool)}
-                  className="tcard lit"
-                  style={{
-                    position: 'relative', overflow: 'hidden', textAlign: 'left',
-                    display: 'flex', flexDirection: 'column', gap: 16, padding: 22,
-                    border: '1px solid ' + COLORS.line, borderRadius: 14,
-                    background: COLORS.bg, cursor: 'pointer', color: COLORS.text,
-                    transition: 'transform 180ms, border-color 180ms, box-shadow 180ms',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-3px)';
-                    e.currentTarget.style.borderColor = a + '70';
-                    e.currentTarget.style.boxShadow = `0 18px 44px rgba(0,0,0,.4), 0 0 36px ${a}1f`;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.borderColor = COLORS.line;
-                    e.currentTarget.style.boxShadow = 'none';
-                  }}
-                >
-                  <span className="sheen" />
-                  <div className="wm mono" style={{
-                    position: 'absolute', top: -30, right: -14, fontSize: 104, fontWeight: 800,
-                    color: a + '12', lineHeight: 1, pointerEvents: 'none',
-                  }}>{tool.icon}</div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div className="tile mono" style={{
-                      width: 44, height: 44, display: 'grid', placeItems: 'center', borderRadius: 11,
-                      border: `1px solid ${a}55`, background: a + '12', color: a,
-                      fontSize: 18, fontWeight: 800,
-                    }}>{tool.icon}</div>
-                    <span className="mono" style={{
-                      fontSize: 8.5, letterSpacing: '0.2em', fontWeight: 800, color: a,
-                      border: `1px solid ${a}55`, borderRadius: 999, padding: '4px 10px',
-                    }}>{tool.tag}</span>
-                  </div>
-                  <div>
-                    <div className="mono" style={{ fontSize: 13, fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: COLORS.text }}>
-                      {toolName(tool)}
-                    </div>
-                    <div style={{ fontSize: 12, color: COLORS.muted, marginTop: 6, lineHeight: 1.5 }}>
-                      {toolDesc(tool)}
-                    </div>
-                  </div>
-                  <div className="mono" style={{
-                    marginTop: 'auto', display: 'flex', alignItems: 'center', gap: 8,
-                    fontSize: 9.5, letterSpacing: '0.2em', fontWeight: 800, color: a,
-                  }}>OPEN <span className="arrow">→</span></div>
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    </Panel>
+    <button type="button" onClick={onClick} className="sk sbtn" style={{
+      display: 'inline-flex', alignItems: 'center', gap: 8, flexShrink: 0, height: 36, padding: '0 12px',
+      fontSize: 11, color: '#1b1410', background: '#fffaf0', textTransform: 'uppercase', ...style,
+    }}><StrokeIcon d={ICO.copy} size={13} sw={2.6} />{children}</button>
   );
 }
 
-function ToolDetail({ tool, accent, onBack }) {
-  const { t } = useLang();
+// Labelled text input (pixel well). Mirrors Field's onChange(value) API.
+function TInput({ id, value, onChange, placeholder, type = 'text', onKeyDown, autoFocus, inputMode, ariaLabel, style }) {
   return (
-    <div style={{ animation: 'fadeUp 200ms ease-out' }}>
-      <div style={{ marginBottom: 18, display: 'flex', alignItems: 'center', gap: 12 }}>
-        <Btn onClick={onBack} variant="ghost">← Back</Btn>
-        <div>
-          <Kicker style={{ color: accent }}>{tool.icon} · TOOL</Kicker>
-          <div className="mono" style={{ fontSize: 18, fontWeight: 700, marginTop: 2 }}>{t(tool.nameKey)}</div>
-        </div>
-      </div>
-      <div style={{
-        border: '1px solid ' + COLORS.line, borderRadius: 12, padding: 22, background: COLORS.bg,
-      }}>
-        {tool.id === 'short'   ? <ShortenerTool accent={accent} /> :
-         tool.id === 'pst'     ? <PastebinTool accent={accent} /> :
-         tool.id === 'convert' ? <ConverterTool accent={accent} /> :
-         tool.id === 'mic'     ? <VoiceRecorderTool accent={accent} /> :
-         tool.id === 'hex'     ? <HexToTextTool accent={accent} /> :
-         tool.id === 'bmi'     ? <BMICalculatorTool accent={accent} /> :
-         tool.id === '2fa'     ? <TotpAuthenticatorTool accent={accent} /> :
-         tool.id === 'fin'     ? <FinanceTool accent={accent} /> :
-         tool.id === 'game'    ? <GameResourcesTool accent={accent} /> :
-         tool.id === 'thao'    ? <ThaoTool onClose={onBack} /> :
-         <PlaceholderTool tool={tool} accent={accent} />}
-      </div>
-    </div>
+    <input
+      id={id}
+      type={type}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      onKeyDown={onKeyDown}
+      autoFocus={autoFocus}
+      inputMode={inputMode}
+      aria-label={ariaLabel}
+      className="field mono"
+      style={{ width: '100%', height: 46, padding: '0 14px', boxSizing: 'border-box', fontSize: 14, ...style }}
+    />
   );
 }
+
+const TEXTAREA_STYLE = {
+  width: '100%', boxSizing: 'border-box', padding: '12px 14px', fontSize: 13, lineHeight: 1.6,
+  resize: 'vertical', display: 'block',
+};
 
 // Letter-cosmic experience — gated by a 4-digit PIN, then opened in a new
 // standalone tab so the standalone HTML keeps its scroll, audio, and particle
@@ -1120,54 +1558,39 @@ function ThaoTool({ onClose }) {
   }
 
   return (
-    <div style={{ display: 'grid', placeItems: 'center', minHeight: 360 }}>
-      <div style={{
-        padding: 36, textAlign: 'center', border: '1px solid ' + COLORS.line,
-        borderRadius: 16, background: COLORS.bg, maxWidth: 380,
-        animation: err ? 'shake 350ms ease' : 'fadeUp 250ms ease-out',
+    <div style={{ display: 'grid', placeItems: 'center', minHeight: 340, padding: '10px 0' }}>
+      <div className={'px ' + (err ? 'fa-shake' : 'rise')} style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, textAlign: 'center',
+        width: '100%', maxWidth: 380, boxSizing: 'border-box', padding: '32px 28px 28px', background: COLORS.paper,
       }}>
-        <div style={{
-          width: 56, height: 56, margin: '0 auto 16px', borderRadius: 999,
-          display: 'grid', placeItems: 'center',
-          background: accent + '14', border: `1px solid ${accent}55`,
-          fontSize: 26, color: accent,
-        }}>♥</div>
-        <div className="mono" style={{
-          fontSize: 13, letterSpacing: '0.18em', textTransform: 'uppercase',
-          color: COLORS.text, fontWeight: 700, marginBottom: 6,
-        }}>Thảo</div>
-        <div style={{ fontSize: 12, color: COLORS.muted, marginBottom: 22, lineHeight: 1.5 }}>
+        <span className="pxs" style={{ display: 'grid', placeItems: 'center', width: 64, height: 64, background: accent }}>
+          <PixelHeart size={34} color="#1b1410" />
+        </span>
+        <div className="sk fa-vi" style={{ marginTop: 6, fontSize: 16, fontWeight: 700, color: COLORS.text }}>Thảo</div>
+        <div style={{ fontSize: 13, color: COLORS.muted, marginBottom: 8, lineHeight: 1.5 }}>
           {unlocked
             ? 'Bấm mở để xem lại lá thư (mở trong tab mới).'
             : 'Nhập 4 số bí mật để mở lá thư.'}
         </div>
         {unlocked ? (
-          <Btn variant="solid" color={accent} onClick={openLetter} style={{ width: '100%' }}>
-            ♥ Mở thư ↗
-          </Btn>
+          <PxButton kind="big" fill={accent} onClick={openLetter} style={{ width: '100%', maxWidth: 260 }}>
+            <PixelHeart size={16} color="#1b1410" /> <span className="fa-vi">Mở thư</span> <StrokeIcon d={ICO.open} size={14} sw={2.8} />
+          </PxButton>
         ) : (
           <>
-            <Field
-              value={pin}
-              onChange={(v) => setPin(v.replace(/\D/g, '').slice(0, 4))}
-              placeholder="• • • •"
-              type="password"
-              onKeyDown={(e) => { if (e.key === 'Enter') tryUnlock(); }}
-              style={{
-                textAlign: 'center', fontSize: 22, letterSpacing: '0.5em',
-                padding: '14px 16px', borderColor: err ? COLORS.red : COLORS.line,
-              }}
-              autoFocus
-            />
-            <div style={{ marginTop: 16 }}>
-              <Btn variant="solid" color={accent} onClick={tryUnlock} style={{ width: '100%' }}>
-                Mở
-              </Btn>
+            <label className="sr" htmlFor="thao-pin">4-digit PIN</label>
+            <div style={{ width: '100%', maxWidth: 260, padding: 3 }}>
+              <PinInput id="thao-pin" value={pin} err={err}
+                onChange={(v) => setPin(v.replace(/\D/g, '').slice(0, 4))}
+                onEnter={tryUnlock} />
             </div>
+            <PxButton kind="big" fill={accent} onClick={tryUnlock} style={{ width: '100%', maxWidth: 254, marginTop: 10 }}>
+              <span className="fa-vi">Mở</span>
+            </PxButton>
             {err && (
-              <div className="mono" style={{
-                fontSize: 10, color: COLORS.red, marginTop: 12, letterSpacing: '0.12em',
-              }}>✕ SAI MÃ</div>
+              <p className="sk" role="alert" style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '8px 0 0', fontSize: 11, color: COLORS.text }}>
+                <StrokeIcon d={ICO.x} size={12} sw={3.4} color="#e04545" /><span className="fa-vi">SAI MÃ</span>
+              </p>
             )}
           </>
         )}
@@ -1204,43 +1627,40 @@ function ShortenerTool({ accent }) {
   }
 
   return (
-    <div style={{ display: 'grid', gap: 14 }}>
+    <div style={{ display: 'grid', gap: 20 }}>
       <div>
-        <Kicker style={{ marginBottom: 8 }}>LONG URL</Kicker>
-        <Field value={url} onChange={setUrl} placeholder="https://…" />
+        <TLabel htmlFor="sh-url">LONG URL</TLabel>
+        <div style={{ padding: 3 }}><TInput id="sh-url" value={url} onChange={setUrl} placeholder="https://…" type="url" /></div>
       </div>
       <div>
-        <Kicker style={{ marginBottom: 8 }}>CUSTOM ALIAS (optional)</Kicker>
-        <Field value={alias} onChange={setAlias} placeholder="my-link" />
+        <TLabel htmlFor="sh-alias">CUSTOM ALIAS (optional)</TLabel>
+        <div style={{ padding: 3 }}><TInput id="sh-alias" value={alias} onChange={setAlias} placeholder="my-link" /></div>
       </div>
-      <div>
-        <Btn variant="solid" color={accent} onClick={shorten} disabled={busy}>
-          {busy ? 'Shortening…' : 'Shorten'}
-        </Btn>
+      <div style={{ padding: '4px 0 6px 4px' }}>
+        <PrimaryBtn accent={accent} onClick={shorten} disabled={busy}>
+          {busy ? 'Shortening…' : 'Shorten'} <PixelArrow size={12} />
+        </PrimaryBtn>
       </div>
-      {err && (
-        <div className="mono" style={{
-          padding: '10px 14px', borderRadius: 10,
-          border: `1px solid ${COLORS.red}55`, background: COLORS.red + '0e',
-          color: COLORS.red, fontSize: 12,
-        }}>✕ {err}</div>
-      )}
-      {out && (
-        <div style={{
-          padding: 16, borderRadius: 10, border: `1px solid ${accent}55`,
-          background: accent + '0e',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
-        }}>
-          <a
-            href={out.url}
-            target="_blank"
-            rel="noreferrer"
-            className="mono"
-            style={{ fontSize: 14, color: accent, fontWeight: 700, textDecoration: 'none', wordBreak: 'break-all' }}
-          >{out.url}</a>
-          <Btn variant="tinted" color={accent} onClick={() => copyText(out.url)}>Copy</Btn>
-        </div>
-      )}
+      <Screen style={{ minHeight: 112 }}>
+        {err ? (
+          <p className="sk" style={{ display: 'flex', alignItems: 'center', gap: 8, margin: 0, fontSize: 13, color: '#ff7a7a' }}>
+            <StrokeIcon d={ICO.x} size={12} sw={3.4} />{err}
+          </p>
+        ) : out ? (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 14 }}>
+            <a
+              href={out.url}
+              target="_blank"
+              rel="noreferrer"
+              className="mono"
+              style={{ minWidth: 0, fontSize: 14, color: '#7fd18b', fontWeight: 700, textDecoration: 'none', wordBreak: 'break-all' }}
+            >{out.url}</a>
+            <CopyBtn onClick={() => copyText(out.url)}>Copy</CopyBtn>
+          </div>
+        ) : (
+          <ScreenPrompt>{busy ? 'SHORTENING' : 'PASTE A LONG URL'}</ScreenPrompt>
+        )}
+      </Screen>
     </div>
   );
 }
@@ -1271,51 +1691,49 @@ function PastebinTool({ accent }) {
   }
 
   return (
-    <div style={{ display: 'grid', gap: 14 }}>
-      <Kicker>PASTE CONTENT</Kicker>
-      <textarea
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        rows={9}
-        className="mono"
-        placeholder="Drop your snippet, log, or note here…"
-        style={{
-          width: '100%', background: COLORS.bg, border: '1px solid ' + COLORS.line,
-          borderRadius: 10, padding: 14, color: COLORS.text, fontSize: 12,
-          resize: 'vertical', outline: 'none',
-        }}
-      />
-      <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-        <Btn variant="solid" color={accent} onClick={save} disabled={busy}>
-          {busy ? 'Saving…' : 'Save paste'}
-        </Btn>
-        <span className="mono" style={{ fontSize: 10, color: COLORS.muted }}>
+    <div style={{ display: 'grid', gap: 18 }}>
+      <div>
+        <TLabel htmlFor="pst-text">PASTE CONTENT</TLabel>
+        <div style={{ padding: 3 }}>
+          <textarea
+            id="pst-text"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            rows={9}
+            className="field mono"
+            placeholder="Drop your snippet, log, or note here…"
+            style={{ ...TEXTAREA_STYLE, fontSize: 12 }}
+          />
+        </div>
+      </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 18, alignItems: 'center', padding: '4px 0 6px 4px' }}>
+        <PrimaryBtn accent={accent} onClick={save} disabled={busy}>
+          {busy ? 'Saving…' : 'Save paste'} <PixelArrow size={12} />
+        </PrimaryBtn>
+        <span className="sk" style={{ fontSize: 10, color: COLORS.muted }}>
           {text.length} chars · {(new Blob([text]).size / 1024).toFixed(1)} KB
         </span>
       </div>
-      {err && (
-        <div className="mono" style={{
-          padding: '10px 14px', borderRadius: 10,
-          border: `1px solid ${COLORS.red}55`, background: COLORS.red + '0e',
-          color: COLORS.red, fontSize: 12,
-        }}>✕ {err}</div>
-      )}
-      {saved && (
-        <div style={{
-          padding: 14, borderRadius: 10, border: `1px solid ${accent}55`,
-          background: accent + '0e', display: 'flex', justifyContent: 'space-between',
-          alignItems: 'center', gap: 10,
-        }}>
-          <a
-            href={saved.url}
-            target="_blank"
-            rel="noreferrer"
-            className="mono"
-            style={{ fontSize: 13, color: accent, fontWeight: 700, textDecoration: 'none', wordBreak: 'break-all' }}
-          >{saved.url}</a>
-          <Btn variant="tinted" color={accent} onClick={() => copyText(saved.url)}>Copy</Btn>
-        </div>
-      )}
+      <Screen style={{ minHeight: 104 }}>
+        {err ? (
+          <p className="sk" style={{ display: 'flex', alignItems: 'center', gap: 8, margin: 0, fontSize: 13, color: '#ff7a7a' }}>
+            <StrokeIcon d={ICO.x} size={12} sw={3.4} />{err}
+          </p>
+        ) : saved ? (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 14 }}>
+            <a
+              href={saved.url}
+              target="_blank"
+              rel="noreferrer"
+              className="mono"
+              style={{ minWidth: 0, fontSize: 13, color: '#7fd18b', fontWeight: 700, textDecoration: 'none', wordBreak: 'break-all' }}
+            >{saved.url}</a>
+            <CopyBtn onClick={() => copyText(saved.url)}>Copy</CopyBtn>
+          </div>
+        ) : (
+          <ScreenPrompt>{busy ? 'SAVING' : 'WRITE SOMETHING, THEN SAVE'}</ScreenPrompt>
+        )}
+      </Screen>
     </div>
   );
 }
@@ -1375,63 +1793,60 @@ function HexToTextTool({ accent }) {
     setTimeout(() => setCopied(false), 1500);
   }
 
-  const textAreaStyle = {
-    width: '100%', background: COLORS.bg, border: '1px solid ' + COLORS.line,
-    borderRadius: 10, padding: 14, color: COLORS.text, fontSize: 13,
-    resize: 'vertical', outline: 'none', lineHeight: 1.6,
-  };
-
   return (
-    <div style={{ display: 'grid', gap: 14 }}>
+    <div style={{ display: 'grid', gap: 18 }}>
       <div>
-        <Kicker style={{ marginBottom: 8 }}>HEX INPUT</Kicker>
-        <textarea
-          value={hex}
-          onChange={(e) => { setHex(e.target.value); setErr(''); }}
-          onKeyDown={(e) => {
-            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') convert();
-          }}
-          rows={7}
-          className="mono"
-          placeholder="48656c6c6f20576f726c64 or 0x48 0x65 0x6c 0x6c 0x6f"
-          style={textAreaStyle}
-        />
-        <div className="mono" style={{ marginTop: 7, fontSize: 10, color: COLORS.muted }}>
+        <TLabel htmlFor="hex-in">HEX INPUT</TLabel>
+        <div style={{ padding: 3 }}>
+          <textarea
+            id="hex-in"
+            value={hex}
+            onChange={(e) => { setHex(e.target.value); setErr(''); }}
+            onKeyDown={(e) => {
+              if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') convert();
+            }}
+            rows={7}
+            className="field mono"
+            placeholder="48656c6c6f20576f726c64 or 0x48 0x65 0x6c 0x6c 0x6f"
+            style={TEXTAREA_STYLE}
+          />
+        </div>
+        <div className="mono" style={{ marginTop: 8, fontSize: 11, lineHeight: 1.5, color: COLORS.muted }}>
           Hỗ trợ HEX liền nhau, khoảng trắng, dấu phẩy, 0x và \\x · Ctrl/⌘ + Enter để chuyển đổi
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-        <Btn variant="solid" color={accent} onClick={convert} disabled={!hex.trim()}>
-          Chuyển sang text
-        </Btn>
-        <Btn variant="ghost" onClick={clear} disabled={!hex && !output}>Xóa</Btn>
+      <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'center', padding: '4px 0 6px 4px' }}>
+        <PrimaryBtn accent={accent} onClick={convert} disabled={!hex.trim()} style={{ textTransform: 'none' }}>
+          <span className="fa-vi" style={{ fontWeight: 700 }}>Chuyển sang text</span> <PixelArrow size={12} />
+        </PrimaryBtn>
+        <Btn variant="ghost" onClick={clear} disabled={!hex && !output}><span className="fa-vi">Xóa</span></Btn>
       </div>
 
-      {err && (
-        <div className="mono" style={{
-          padding: '10px 14px', borderRadius: 10,
-          border: `1px solid ${COLORS.red}55`, background: COLORS.red + '0e',
-          color: COLORS.red, fontSize: 12,
-        }}>✕ {err}</div>
-      )}
+      {err && <TError>{err}</TError>}
 
-      {output !== '' && (
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-            <Kicker style={{ color: accent }}>TEXT OUTPUT</Kicker>
-            <Btn variant="tinted" color={accent} onClick={copyOutput}>
-              {copied ? 'Đã sao chép' : 'Sao chép'}
-            </Btn>
-          </div>
+      <Screen
+        label="TEXT OUTPUT"
+        right={output !== '' ? (
+          <CopyBtn onClick={copyOutput}><span className="fa-vi">{copied ? 'Đã sao chép' : 'Sao chép'}</span></CopyBtn>
+        ) : null}
+      >
+        {output !== '' ? (
           <textarea
             value={output}
             readOnly
             rows={7}
-            style={{ ...textAreaStyle, borderColor: accent + '55' }}
+            aria-label="Text output"
+            className="mono"
+            style={{
+              ...TEXTAREA_STYLE, padding: 0, border: 0, outline: 'none', background: 'transparent',
+              color: '#fffaf0', fontSize: 14,
+            }}
           />
-        </div>
-      )}
+        ) : (
+          <ScreenPrompt>DECODED TEXT APPEARS HERE</ScreenPrompt>
+        )}
+      </Screen>
     </div>
   );
 }
@@ -1441,10 +1856,10 @@ function HexToTextTool({ accent }) {
 // but we keep the standard WHO bands and surface the healthy-weight RANGE for
 // the user's height, which is the more actionable number anyway.
 const BMI_BANDS = [
-  { max: 18.5, label: 'Thiếu cân',   color: '#6aa0d8' },
-  { max: 25,   label: 'Bình thường', color: COLORS.green },
-  { max: 30,   label: 'Thừa cân',    color: COLORS.gold },
-  { max: Infinity, label: 'Béo phì', color: COLORS.red },
+  { max: 18.5, label: 'Thiếu cân',   color: '#9fd8ff' },
+  { max: 25,   label: 'Bình thường', color: '#7fd18b' },
+  { max: 30,   label: 'Thừa cân',    color: '#ffd25e' },
+  { max: Infinity, label: 'Béo phì', color: '#ff7a7a' },
 ];
 const BMI_AXIS_MIN = 12;
 const BMI_AXIS_MAX = 40;
@@ -1481,86 +1896,99 @@ function BMICalculatorTool({ accent }) {
 
   const labelStyle = { marginBottom: 8 };
 
+  // Tick positions on the 12–40 axis for the band edges.
+  const tickPct = (v) => ((v - BMI_AXIS_MIN) / (BMI_AXIS_MAX - BMI_AXIS_MIN)) * 100;
+  const gauge = (lit) => (
+    <div aria-hidden="true" style={{ display: 'flex', height: 16, border: '3px solid ' + (lit ? '#fffaf0' : '#5c5046') }}>
+      {segments.map((s, i) => (
+        <span key={i} style={{
+          width: s.pct + '%', background: lit ? s.color : '#2e251d',
+          borderLeft: i ? '3px solid #1b1410' : 'none',
+        }} />
+      ))}
+    </div>
+  );
+
   return (
-    <div style={{ display: 'grid', gap: 16 }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+    <div style={{ display: 'grid', gap: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 18 }}>
         <div>
-          <Kicker style={labelStyle}>CHIỀU CAO (cm)</Kicker>
-          <Field
-            value={height}
-            onChange={(v) => setHeight(v.replace(/[^\d.,]/g, ''))}
-            placeholder="170"
-            style={{ fontSize: 16 }}
-          />
+          <TLabel htmlFor="bmi-h" style={labelStyle}><span className="fa-vi">CHIỀU CAO</span> (cm)</TLabel>
+          <div style={{ padding: 3 }}>
+            <TInput
+              id="bmi-h"
+              inputMode="decimal"
+              value={height}
+              onChange={(v) => setHeight(v.replace(/[^\d.,]/g, ''))}
+              placeholder="170"
+              style={{ fontSize: 16, height: 48 }}
+            />
+          </div>
         </div>
         <div>
-          <Kicker style={labelStyle}>CÂN NẶNG (kg)</Kicker>
-          <Field
-            value={weight}
-            onChange={(v) => setWeight(v.replace(/[^\d.,]/g, ''))}
-            placeholder="65"
-            style={{ fontSize: 16 }}
-          />
+          <TLabel htmlFor="bmi-w" style={labelStyle}><span className="fa-vi">CÂN NẶNG</span> (kg)</TLabel>
+          <div style={{ padding: 3 }}>
+            <TInput
+              id="bmi-w"
+              inputMode="decimal"
+              value={weight}
+              onChange={(v) => setWeight(v.replace(/[^\d.,]/g, ''))}
+              placeholder="65"
+              style={{ fontSize: 16, height: 48 }}
+            />
+          </div>
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 10 }}>
-        <Btn variant="ghost" onClick={reset} disabled={!height && !weight}>Xóa</Btn>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+        <Btn variant="ghost" onClick={reset} disabled={!height && !weight}><span className="fa-vi">Xóa</span></Btn>
+        <span className="sk" style={{ fontSize: 10, color: COLORS.muted }}>WHO BANDS · AXIS 12–40</span>
       </div>
 
-      {bmi != null ? (
-        <div style={{
-          border: `1px solid ${band.color}55`, borderRadius: 12,
-          padding: 20, background: band.color + '0e',
-          animation: 'fadeUp 200ms ease-out',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-            <div className="mono" style={{ fontSize: 40, fontWeight: 800, color: band.color, lineHeight: 1 }}>
-              {bmi.toFixed(1)}
+      <Screen style={{ minHeight: 196 }}>
+        {bmi != null ? (
+          <div>
+            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+              <div className="pf" style={{ fontSize: 56, lineHeight: 0.9, color: band.color }}>
+                {bmi.toFixed(1)}
+              </div>
+              <div className="sk" style={{ padding: '6px 10px', fontSize: 12, color: '#1b1410', background: band.color }}>
+                <span className="fa-vi" style={{ fontWeight: 700 }}>{band.label}</span>
+              </div>
             </div>
-            <div className="mono" style={{
-              fontSize: 12, letterSpacing: '0.16em', textTransform: 'uppercase',
-              fontWeight: 800, color: band.color,
-              border: `1px solid ${band.color}66`, borderRadius: 999, padding: '6px 14px',
-            }}>{band.label}</div>
-          </div>
 
-          {/* Segmented WHO gauge + marker */}
-          <div style={{ marginTop: 20, position: 'relative' }}>
-            <div style={{ display: 'flex', height: 8, borderRadius: 999, overflow: 'hidden' }}>
-              {segments.map((s, i) => (
-                <div key={i} style={{ width: s.pct + '%', background: s.color, opacity: 0.85 }} />
-              ))}
+            {/* Segmented WHO gauge + marker */}
+            <div style={{ position: 'relative', marginTop: 30 }}>
+              <svg width="14" height="10" viewBox="0 0 7 5" shapeRendering="crispEdges" aria-hidden="true" style={{
+                position: 'absolute', top: -15, left: `calc(${markerPct}% - 7px)`,
+              }}><path d="M0 0h7v1H6v1H5v1H4v1H3V3H2V2H1V1H0z" fill="#fffaf0" /></svg>
+              {gauge(true)}
+              <div className="sk" aria-hidden="true" style={{ position: 'relative', height: 14, marginTop: 8, fontSize: 10, color: '#c9bca6' }}>
+                {[18.5, 25, 30].map((v) => (
+                  <span key={v} style={{ position: 'absolute', left: tickPct(v) + '%', transform: 'translateX(-50%)' }}>{v}</span>
+                ))}
+              </div>
             </div>
-            <div style={{
-              position: 'absolute', top: -4, left: `calc(${markerPct}% - 1px)`,
-              width: 2, height: 16, background: COLORS.text,
-              boxShadow: '0 0 6px rgba(0,0,0,0.6)', transition: 'left 260ms ease',
-            }} />
-            <div className="mono" style={{
-              display: 'flex', justifyContent: 'space-between',
-              fontSize: 9, color: COLORS.muted, marginTop: 8, letterSpacing: '0.08em',
-            }}>
-              <span>18.5</span><span>25</span><span>30</span>
-            </div>
-          </div>
 
-          <div className="mono" style={{ fontSize: 11.5, color: COLORS.muted, marginTop: 16, lineHeight: 1.6 }}>
-            Cân nặng hợp lý cho {h} cm:{' '}
-            <span style={{ color: COLORS.green, fontWeight: 700 }}>
-              {idealMin.toFixed(1)}–{idealMax.toFixed(1)} kg
-            </span>
+            <div className="mono" style={{ fontSize: 12, color: '#c9bca6', marginTop: 18, lineHeight: 1.6 }}>
+              Cân nặng hợp lý cho {h} cm:{' '}
+              <span style={{ color: '#7fd18b', fontWeight: 700 }}>
+                {idealMin.toFixed(1)}–{idealMax.toFixed(1)} kg
+              </span>
+            </div>
           </div>
-        </div>
-      ) : (
-        <div className="mono" style={{
-          padding: '14px 16px', borderRadius: 10, border: '1px solid ' + COLORS.line,
-          background: COLORS.bg, color: COLORS.muted, fontSize: 11.5, lineHeight: 1.6,
-        }}>
-          Nhập chiều cao &amp; cân nặng để tính BMI. Công thức:{' '}
-          <span style={{ color: accent }}>cân nặng (kg) ÷ chiều cao² (m)</span>.
-        </div>
-      )}
+        ) : (
+          <div>
+            <p className="mono" style={{ margin: 0, fontSize: 13, lineHeight: 1.6, color: '#fffaf0' }}>
+              &gt; Nhập chiều cao &amp; cân nặng để tính BMI.<span className="blink" style={{ color: '#7fd18b' }}>_</span>
+            </p>
+            <p className="mono" style={{ margin: '12px 0 0', fontSize: 12, lineHeight: 1.6, color: '#c9bca6' }}>
+              Công thức: <span style={{ color: '#7fd18b' }}>cân nặng (kg) ÷ chiều cao² (m)</span>.
+            </p>
+            <div style={{ marginTop: 24 }}>{gauge(false)}</div>
+          </div>
+        )}
+      </Screen>
     </div>
   );
 }
@@ -1716,11 +2144,12 @@ function TotpAuthenticatorTool({ accent }) {
   }
 
   return (
-    <div style={{ display: 'grid', gap: 18 }}>
+    <div style={{ display: 'grid', gap: 20 }}>
       <div>
-        <Kicker style={{ marginBottom: 8 }}>{labels.input}</Kicker>
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', gap: 8 }}>
-          <Field
+        <TLabel htmlFor="totp-secret">{labels.input}</TLabel>
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', gap: 14, alignItems: 'center', padding: '3px 0 0 3px' }}>
+          <TInput
+            id="totp-secret"
             value={secret}
             onChange={(value) => {
               setSecret(value);
@@ -1733,71 +2162,55 @@ function TotpAuthenticatorTool({ accent }) {
             onKeyDown={(e) => { if (e.key === 'Enter') activate(); }}
             autoFocus
           />
-          <Btn variant="tinted" color={accent} onClick={() => setVisible((value) => !value)}>
+          <Btn variant="ghost" onClick={() => setVisible((value) => !value)} style={{ margin: '3px 7px 8px 3px' }}>
             {visible ? labels.hide : labels.show}
           </Btn>
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-        <Btn variant="solid" color={accent} onClick={activate} disabled={!secret.trim() || busy}>
-          {busy ? labels.generating : labels.generate}
-        </Btn>
+      <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'center', padding: '4px 0 6px 4px' }}>
+        <PrimaryBtn accent={accent} onClick={activate} disabled={!secret.trim() || busy}>
+          {busy ? labels.generating : labels.generate} <PixelArrow size={12} />
+        </PrimaryBtn>
         <Btn variant="ghost" onClick={reset} disabled={!secret && !code}>{labels.clear}</Btn>
       </div>
 
-      {err && (
-        <div className="mono" style={{
-          padding: '10px 14px', borderRadius: 10,
-          border: `1px solid ${COLORS.red}55`, background: COLORS.red + '0e',
-          color: COLORS.red, fontSize: 12,
-        }}>✕ {err}</div>
-      )}
+      {err && <TError>{err}</TError>}
 
-      {code && (
-        <div style={{
-          padding: 22, borderRadius: 14, border: `1px solid ${accent}55`,
-          background: accent + '0b', display: 'grid', gap: 16,
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+      <Screen
+        label="ONE-TIME CODE"
+        dot={code ? (remaining <= 5 ? '#ff7a7a' : '#7fd18b') : '#5c5046'}
+        right={code ? <CopyBtn onClick={copyCode}>{copied ? labels.copied : labels.copy}</CopyBtn> : null}
+      >
+        {code ? (
+          <div style={{ display: 'grid', gap: 18 }}>
             <button
               type="button"
               onClick={copyCode}
-              className="mono"
+              className="pf"
               title={labels.copy}
               style={{
-                border: 0, background: 'transparent', padding: 0, cursor: 'pointer',
-                color: accent, fontSize: 'clamp(32px, 7vw, 52px)', fontWeight: 800,
-                letterSpacing: '0.16em', lineHeight: 1, whiteSpace: 'nowrap',
+                justifySelf: 'start', border: 0, background: 'transparent', padding: 0, cursor: 'pointer',
+                color: accent, fontSize: 'clamp(36px, 7vw, 60px)', fontWeight: 700,
+                letterSpacing: '0.12em', lineHeight: 1, whiteSpace: 'nowrap',
               }}
             >{code.slice(0, 3)} {code.slice(3)}</button>
-            <div style={{
-              width: 58, height: 58, borderRadius: 999, flex: '0 0 auto',
-              display: 'grid', placeItems: 'center',
-              background: `conic-gradient(${accent} ${progress}deg, ${COLORS.line} ${progress}deg)`,
-            }}>
-              <div className="mono" style={{
-                width: 48, height: 48, borderRadius: 999, display: 'grid', placeItems: 'center',
-                background: COLORS.bg, color: remaining <= 5 ? COLORS.red : COLORS.text,
-                fontSize: 15, fontWeight: 700,
-              }}>{remaining}</div>
+            <div>
+              <div className="sk" style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginBottom: 8, fontSize: 10, color: '#c9bca6' }}>
+                <span>{labels.next} {remaining}s</span>
+                <span style={{ color: remaining <= 5 ? '#ff7a7a' : '#fffaf0' }}>{String(remaining).padStart(2, '0')}</span>
+              </div>
+              <div className="hpbar" style={{ '--a': remaining <= 5 ? '#ff7a7a' : accent, background: '#2e251d', borderColor: '#fffaf0' }} aria-hidden="true">
+                <span style={{ width: `${(remaining / 30) * 100}%` }} />
+              </div>
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-            <span className="mono" style={{ color: COLORS.muted, fontSize: 10, letterSpacing: '0.08em' }}>
-              {labels.next} {remaining}s
-            </span>
-            <Btn variant="tinted" color={accent} onClick={copyCode}>
-              {copied ? labels.copied : labels.copy}
-            </Btn>
-          </div>
-        </div>
-      )}
+        ) : (
+          <ScreenPrompt>------</ScreenPrompt>
+        )}
+      </Screen>
 
-      <div className="mono" style={{
-        padding: '10px 14px', borderRadius: 10, background: COLORS.bg,
-        border: '1px solid ' + COLORS.line, fontSize: 10, color: COLORS.muted, lineHeight: 1.6,
-      }}>◇ {labels.local}</div>
+      <TNote>{labels.local}</TNote>
     </div>
   );
 }
@@ -1809,13 +2222,13 @@ function TotpAuthenticatorTool({ accent }) {
 function ConverterTool({ accent }) {
   const [mode, setMode] = useState('image'); // 'image' | 'video'
   const TABS = [
-    { id: 'image', label: 'IMAGE', sub: 'PNG · JPG · WEBP · GIF' },
-    { id: 'video', label: 'VIDEO', sub: 'FILE / LINK → GIF / MP3' },
+    { id: 'image', label: 'IMAGE', sub: 'PNG · JPG · WEBP · GIF', icon: PRESET_ICON.image },
+    { id: 'video', label: 'VIDEO', sub: 'FILE / LINK → GIF / MP3', icon: PRESET_ICON.video },
   ];
   return (
-    <div style={{ display: 'grid', gap: 18 }}>
+    <div style={{ display: 'grid', gap: 24 }}>
       <div role="tablist" aria-label="Converter mode" style={{
-        display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8,
+        display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 16, padding: 3,
       }}>
         {TABS.map((tab) => {
           const active = tab.id === mode;
@@ -1826,23 +2239,20 @@ function ConverterTool({ accent }) {
               role="tab"
               aria-selected={active}
               onClick={() => setMode(tab.id)}
-              className="mono"
+              className="chip-px"
               style={{
-                cursor: 'pointer', textAlign: 'left',
-                padding: '12px 14px',
-                borderRadius: 10,
-                border: `1px solid ${active ? accent : COLORS.line}`,
-                background: active ? accent + '14' : 'transparent',
-                color: active ? COLORS.text : COLORS.muted,
-                transition: 'all 160ms ease',
+                display: 'flex', alignItems: 'center', gap: 12, minWidth: 0,
+                textAlign: 'left', padding: '12px 14px',
               }}
-              onMouseEnter={(e) => { if (!active) e.currentTarget.style.borderColor = accent + '55'; }}
-              onMouseLeave={(e) => { if (!active) e.currentTarget.style.borderColor = COLORS.line; }}
             >
-              <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.18em', marginBottom: 2 }}>
-                {tab.label}
-              </div>
-              <div style={{ fontSize: 10, letterSpacing: '0.1em', opacity: 0.7 }}>{tab.sub}</div>
+              <span className="pxs" style={{
+                display: 'grid', placeItems: 'center', flexShrink: 0, width: 36, height: 36,
+                background: accent, color: COLORS.onAccent,
+              }}><StrokeIcon d={tab.icon} size={20} /></span>
+              <span style={{ minWidth: 0 }}>
+                <span className="sk" style={{ display: 'block', fontSize: 13, marginBottom: 4 }}>{tab.label}</span>
+                <span className="sk" style={{ display: 'block', fontSize: 9, opacity: 0.75, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{tab.sub}</span>
+              </span>
             </button>
           );
         })}
@@ -2096,16 +2506,20 @@ function ImageConverterTool({ accent }) {
   }
 
   return (
-    <div style={{ display: 'grid', gap: 16 }}>
+    <div style={{ display: 'grid', gap: 22 }}>
       <div style={{ display: 'grid', gap: 10 }}>
-        <Kicker>1. ADD IMAGE</Kicker>
-        <Field
-          value={imageUrl}
-          onChange={handleImageUrlChange}
-          placeholder="Paste a direct image link - it loads automatically"
-          style={{ padding: '15px 17px', fontSize: 14 }}
-        />
-        <div className="mono" style={{ fontSize: 11, color: urlBusy ? accent : COLORS.muted, letterSpacing: '0.05em' }}>
+        <TLabel htmlFor="imgc-url" style={{ marginBottom: 0 }}>1. ADD IMAGE</TLabel>
+        <div style={{ padding: 3 }}>
+          <TInput
+            id="imgc-url"
+            value={imageUrl}
+            onChange={handleImageUrlChange}
+            placeholder="Paste a direct image link - it loads automatically"
+            style={{ height: 50, fontSize: 14 }}
+          />
+        </div>
+        <div className="sk" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 10, color: urlBusy ? COLORS.text : COLORS.muted }}>
+          {urlBusy && <span className="blink" style={{ width: 8, height: 8, background: accent }} />}
           {urlBusy ? 'LOADING IMAGE LINK...' : 'PASTE A LINK, OR USE THE DROP ZONE BELOW'}
         </div>
         <label
@@ -2113,31 +2527,31 @@ function ImageConverterTool({ accent }) {
           onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = 'copy'; setIsDragging(true); }}
           onDragLeave={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setIsDragging(false); }}
           onDrop={handleDrop}
+          className={'fa-dropzone' + (isDragging ? ' on' : '')}
           style={{
-            minHeight: 164, padding: 24, textAlign: 'center', borderRadius: 12, cursor: 'pointer',
-            border: `2px dashed ${isDragging ? accent : COLORS.line}`,
-            background: isDragging ? accent + '12' : COLORS.bg,
-            transition: 'border-color 150ms, background 150ms',
+            minHeight: 164, padding: 24, textAlign: 'center',
             display: 'grid', placeItems: 'center',
           }}
         >
-          <input type="file" accept="image/*,.gif,.webp" onChange={onFile} style={{ display: 'none' }} />
+          <input type="file" accept="image/*,.gif,.webp" onChange={onFile} className="sr" />
           {src ? (
             <div style={{ display: 'flex', gap: 18, alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
-              <img src={src.dataUrl} style={{ height: 100, maxWidth: 130, objectFit: 'cover', borderRadius: 8, border: `1px solid ${COLORS.line}` }} alt="" />
-              <div style={{ textAlign: 'left' }}>
-                <div className="mono" style={{ fontSize: 13, fontWeight: 700, color: COLORS.text }}>{src.name}</div>
+              <img src={src.dataUrl} style={{ height: 100, maxWidth: 130, objectFit: 'cover', border: '3px solid ' + COLORS.ink, ...CHECKER }} alt="" />
+              <div style={{ textAlign: 'left', minWidth: 0 }}>
+                <div className="mono" style={{ fontSize: 13, fontWeight: 700, color: COLORS.text, wordBreak: 'break-all' }}>{src.name}</div>
                 <div className="mono" style={{ fontSize: 11, color: COLORS.muted, marginTop: 6 }}>
                   {(src.size / 1024).toFixed(1)} KB - {src.w}x{src.h}{cropRect ? ` -> ${Math.round(cropRect.w * src.w)}x${Math.round(cropRect.h * src.h)}` : ''}
                 </div>
-                <div className="mono" style={{ fontSize: 10, color: accent, marginTop: 12, letterSpacing: '0.08em' }}>DROP ANOTHER IMAGE TO REPLACE</div>
+                <div className="sk" style={{ fontSize: 10, color: COLORS.text, marginTop: 12 }}>DROP ANOTHER IMAGE TO REPLACE</div>
               </div>
             </div>
           ) : (
-            <div>
-              <div style={{ fontSize: 32, color: accent, marginBottom: 11 }}>+</div>
-              <div className="mono" style={{ fontSize: 14, color: COLORS.text, fontWeight: 700, letterSpacing: '0.09em' }}>DROP IMAGE HERE</div>
-              <div className="mono" style={{ fontSize: 11, color: COLORS.muted, marginTop: 8, letterSpacing: '0.04em' }}>
+            <div style={{ display: 'grid', justifyItems: 'center' }}>
+              <span className="pxs" style={{ display: 'grid', placeItems: 'center', width: 44, height: 44, marginBottom: 14, background: accent, color: COLORS.onAccent }}>
+                <StrokeIcon d={ICO.plus} size={22} sw={3} />
+              </span>
+              <div className="sk" style={{ fontSize: 14, color: COLORS.text }}>DROP IMAGE HERE</div>
+              <div className="mono" style={{ fontSize: 11, color: COLORS.muted, marginTop: 8, lineHeight: 1.5 }}>
                 Drag a file from your device or an image/link from another website. Click to browse.
               </div>
             </div>
@@ -2146,44 +2560,44 @@ function ImageConverterTool({ accent }) {
       </div>
 
       {/* Source -> target format */}
-      <div style={{ padding: 18, border: `1px solid ${COLORS.line}`, borderRadius: 12, background: COLORS.bg }}>
-        <Kicker style={{ marginBottom: 14 }}>2. CHOOSE FORMAT</Kicker>
+      <div style={{ padding: '16px 16px 18px', border: '3px dashed ' + COLORS.rule, background: COLORS.field }}>
+        <div className="sk" style={{ marginBottom: 14, fontSize: 11, color: COLORS.muted }}>2. CHOOSE FORMAT</div>
         <div style={{ display: 'flex', alignItems: 'end', gap: 18, flexWrap: 'wrap' }}>
           <div style={{ display: 'grid', gap: 8 }}>
-            <div className="mono" style={{ fontSize: 10, color: COLORS.muted, letterSpacing: '0.12em' }}>SOURCE</div>
-            <FmtPills value={srcFmt} options={FORMATS} accent={accent} onChange={setSrcFmt} dim />
+            <div className="sk" style={{ fontSize: 10, color: COLORS.muted }}>SOURCE</div>
+            <FmtPills value={srcFmt} options={FORMATS} accent={accent} onChange={setSrcFmt} dim label="Source format" />
           </div>
           <button
             type="button"
             onClick={swap}
             title="Swap source and target formats"
             aria-label="Swap formats"
+            className="sbtn"
             style={{
-              border: `1px solid ${accent}77`, background: accent + '12', color: accent,
-              width: 50, height: 50, borderRadius: 12, cursor: 'pointer', fontSize: 21, lineHeight: 1,
-              display: 'grid', placeItems: 'center', transition: 'all 160ms ease',
+              display: 'grid', placeItems: 'center', width: 48, height: 46, margin: '3px 7px 8px 3px',
+              color: COLORS.onAccent, background: accent,
             }}
-            onMouseEnter={(event) => { event.currentTarget.style.background = accent + '24'; }}
-            onMouseLeave={(event) => { event.currentTarget.style.background = accent + '12'; }}
-          >⇄</button>
+          ><StrokeIcon d={ICO.swap} size={22} /></button>
           <div style={{ display: 'grid', gap: 8 }}>
-            <div className="mono" style={{ fontSize: 10, color: accent, letterSpacing: '0.12em' }}>CONVERT TO</div>
-            <FmtPills value={target} options={FORMATS} accent={accent} onChange={setTarget} />
+            <div className="sk" style={{ fontSize: 10, color: COLORS.text }}>CONVERT TO</div>
+            <FmtPills value={target} options={FORMATS} accent={accent} onChange={setTarget} label="Target format" />
           </div>
         </div>
         {(srcFmt === 'gif' || target === 'gif') && (
-          <div className="mono" style={{ fontSize: 10, color: COLORS.muted, marginTop: 14, letterSpacing: '0.05em' }}>
+          <div className="mono" style={{ fontSize: 11, color: COLORS.muted, marginTop: 14, lineHeight: 1.5 }}>
             GIF and WebP keep animation. First use loads FFmpeg once in your browser.
           </div>
         )}
       </div>
 
       <div>
-        <Kicker style={{ marginBottom: 10 }}>3. QUALITY - {quality}</Kicker>
+        <TLabel htmlFor="imgc-q">3. QUALITY - {quality}</TLabel>
         <input
+          id="imgc-q"
           type="range" min="20" max="100" value={quality}
           onChange={(event) => setQuality(+event.target.value)}
-          style={{ width: '100%', accentColor: accent, height: 22, cursor: 'pointer' }}
+          className="fa-range"
+          style={{ '--a': accent }}
         />
       </div>
 
@@ -2192,14 +2606,14 @@ function ImageConverterTool({ accent }) {
           survives quality / format changes without re-clipping. */}
       {src && (
         <div>
-          <Kicker style={{ marginBottom: 8 }}>CROP {cropRect ? '· APPLIED' : '· OFF'}</Kicker>
+          <TLabel>CROP {cropRect ? '· APPLIED' : '· OFF'}</TLabel>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <Btn variant={cropOpen ? 'tinted' : 'ghost'} color={accent} onClick={() => setCropOpen((v) => !v)}>
-              {cropOpen ? 'Đóng cropper' : 'Mở crop'}
+              <span className="fa-vi">{cropOpen ? 'Đóng cropper' : 'Mở crop'}</span>
             </Btn>
             {cropRect && (
               <Btn variant="ghost" color={accent} onClick={() => setCropRect(null)}>
-                Xoá vùng crop
+                <span className="fa-vi">Xoá vùng crop</span>
               </Btn>
             )}
           </div>
@@ -2216,27 +2630,27 @@ function ImageConverterTool({ accent }) {
         </div>
       )}
 
-      <Btn variant="solid" color={accent} onClick={download} disabled={!src || busy}>
-        {busy ? (stage || 'Working…') : `Convert ${cropRect ? '+ Crop ' : ''}& Download`}
-      </Btn>
-      {err && (
-        <div className="mono" style={{ fontSize: 11, color: '#c46868', whiteSpace: 'pre-wrap' }}>
-          {err}
-        </div>
-      )}
+      <div style={{ padding: '4px 0 6px 4px' }}>
+        <PrimaryBtn accent={accent} onClick={download} disabled={!src || busy}>
+          {busy ? (stage || 'Working…') : `Convert ${cropRect ? '+ Crop ' : ''}& Download`}
+          {!busy && <StrokeIcon d={ICO.down} size={16} sw={2.8} />}
+        </PrimaryBtn>
+      </div>
+      {err && <TError>{err}</TError>}
     </div>
   );
 }
 
 // Compact pill row for source / target format. `dim` styles the source
 // chip a touch lower-key so the visual hierarchy reads "SRC → TGT".
-function FmtPills({ value, options, onChange, accent, dim }) {
+function FmtPills({ value, options, onChange, accent, dim, label }) {
   return (
-    <div style={{ display: 'flex', gap: 6, opacity: dim ? 0.85 : 1 }}>
+    <div role="group" aria-label={label} className="fa-seg pxs" style={{ margin: '3px 7px 8px 3px', opacity: dim ? 0.9 : 1 }}>
       {options.map((f) => (
-        <Btn key={f} variant={value === f ? 'tinted' : 'ghost'} color={accent} onClick={() => onChange(f)} style={{ minWidth: 66, minHeight: 50, padding: '13px 17px', fontSize: 13 }}>
+        <button key={f} type="button" aria-pressed={value === f} onClick={() => onChange(f)} className="sk"
+          style={{ minWidth: 60, height: 46, padding: '0 14px', fontSize: 13 }}>
           {f.toUpperCase()}
-        </Btn>
+        </button>
       ))}
     </div>
   );
@@ -2246,11 +2660,11 @@ function FmtPills({ value, options, onChange, accent, dim }) {
 // Outputs a normalized rect (0..1) so the parent can apply it at the
 // source's full resolution at convert time.
 function CropCanvas({ src, value, onChange, accent }) {
-  const wrapRef = React.useRef(null);
-  const [box, setBox] = React.useState(value || { x: 0.1, y: 0.1, w: 0.8, h: 0.8 });
-  const [drag, setDrag] = React.useState(null); // { mode: 'move'|'tl'|'tr'|'bl'|'br'|'new', startX, startY, start: box }
+  const wrapRef = useRef(null);
+  const [box, setBox] = useState(value || { x: 0.1, y: 0.1, w: 0.8, h: 0.8 });
+  const [drag, setDrag] = useState(null); // { mode: 'move'|'tl'|'tr'|'bl'|'br'|'new', startX, startY, start: box }
 
-  React.useEffect(() => { onChange(box); }, [box]);
+  useEffect(() => { onChange(box); }, [box]);
 
   // Convert pointer coords (in CSS px relative to the wrapper) to 0..1.
   function toNorm(e) {
@@ -2324,7 +2738,7 @@ function CropCanvas({ src, value, onChange, accent }) {
   const pct = (n) => `${(n * 100).toFixed(2)}%`;
 
   return (
-    <div style={{ display: 'grid', gap: 8 }}>
+    <div style={{ display: 'grid', gap: 10 }}>
       <div
         ref={wrapRef}
         onPointerDown={(e) => {
@@ -2334,16 +2748,16 @@ function CropCanvas({ src, value, onChange, accent }) {
             onPointerDown(e, 'new');
           }
         }}
+        className="pxs"
         style={{
           position: 'relative',
-          width: dispW, maxWidth: '100%',
+          width: dispW, maxWidth: 'calc(100% - 6px)',
+          margin: 3,
           aspectRatio: `${src.w} / ${src.h}`,
-          background: '#000',
-          borderRadius: 10,
+          background: '#1b1410',
           overflow: 'hidden',
           touchAction: 'none',
           userSelect: 'none',
-          border: `1px solid ${COLORS.line}`,
         }}
       >
         <img
@@ -2354,10 +2768,10 @@ function CropCanvas({ src, value, onChange, accent }) {
         />
         {/* Dimming mask outside the rect — 4 strips so we don't fight
             the crop rect's own pointer events. */}
-        <div style={{ position: 'absolute', left: 0, top: 0, right: 0, height: pct(box.y), background: 'rgba(0,0,0,0.55)', pointerEvents: 'none' }} />
-        <div style={{ position: 'absolute', left: 0, top: pct(box.y + box.h), right: 0, bottom: 0, background: 'rgba(0,0,0,0.55)', pointerEvents: 'none' }} />
-        <div style={{ position: 'absolute', left: 0, top: pct(box.y), width: pct(box.x), height: pct(box.h), background: 'rgba(0,0,0,0.55)', pointerEvents: 'none' }} />
-        <div style={{ position: 'absolute', left: pct(box.x + box.w), top: pct(box.y), right: 0, height: pct(box.h), background: 'rgba(0,0,0,0.55)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', left: 0, top: 0, right: 0, height: pct(box.y), background: 'rgba(27,20,16,0.62)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', left: 0, top: pct(box.y + box.h), right: 0, bottom: 0, background: 'rgba(27,20,16,0.62)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', left: 0, top: pct(box.y), width: pct(box.x), height: pct(box.h), background: 'rgba(27,20,16,0.62)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', left: pct(box.x + box.w), top: pct(box.y), right: 0, height: pct(box.h), background: 'rgba(27,20,16,0.62)', pointerEvents: 'none' }} />
 
         {/* Rect itself */}
         <div
@@ -2366,34 +2780,33 @@ function CropCanvas({ src, value, onChange, accent }) {
             position: 'absolute',
             left: pct(box.x), top: pct(box.y),
             width: pct(box.w), height: pct(box.h),
-            border: `1.5px solid ${accent}`,
-            boxShadow: `0 0 0 1px ${accent}55, 0 0 0 9999px transparent inset`,
+            border: `3px dashed ${accent}`,
+            boxSizing: 'border-box',
             cursor: 'move',
           }}
         >
           {/* Handles */}
           {[
-            { k: 'tl', s: { left: -6, top: -6, cursor: 'nwse-resize' } },
-            { k: 'tr', s: { right: -6, top: -6, cursor: 'nesw-resize' } },
-            { k: 'bl', s: { left: -6, bottom: -6, cursor: 'nesw-resize' } },
-            { k: 'br', s: { right: -6, bottom: -6, cursor: 'nwse-resize' } },
+            { k: 'tl', s: { left: -8, top: -8, cursor: 'nwse-resize' } },
+            { k: 'tr', s: { right: -8, top: -8, cursor: 'nesw-resize' } },
+            { k: 'bl', s: { left: -8, bottom: -8, cursor: 'nesw-resize' } },
+            { k: 'br', s: { right: -8, bottom: -8, cursor: 'nwse-resize' } },
           ].map(({ k, s }) => (
             <div
               key={k}
               onPointerDown={(e) => { e.stopPropagation(); onPointerDown(e, k); }}
               style={{
                 position: 'absolute',
-                width: 12, height: 12,
+                width: 13, height: 13,
                 background: accent,
-                border: '2px solid #0d0a08',
-                borderRadius: 2,
+                border: '3px solid #1b1410',
                 ...s,
               }}
             />
           ))}
         </div>
       </div>
-      <div className="mono" style={{ fontSize: 10, color: COLORS.muted, letterSpacing: '0.1em' }}>
+      <div className="sk" style={{ fontSize: 10, color: COLORS.muted }}>
         {Math.round(box.x * src.w)},{Math.round(box.y * src.h)} · {Math.round(box.w * src.w)}×{Math.round(box.h * src.h)} px
       </div>
     </div>
@@ -2676,173 +3089,147 @@ function VideoToTool({ accent }) {
   }
 
   return (
-    <div style={{ display: 'grid', gap: 16 }}>
-      <div style={{ display: 'grid', gap: 8 }}>
-        <Kicker>LINK → AUDIO / VIDEO</Kicker>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 8 }}>
-          <Field
+    <div style={{ display: 'grid', gap: 22 }}>
+      <div style={{ display: 'grid', gap: 10 }}>
+        <TLabel htmlFor="vid-url" style={{ marginBottom: 0 }}>LINK → AUDIO / VIDEO</TLabel>
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', gap: 14, alignItems: 'center', padding: '3px 0 0 3px' }}>
+          <TInput
+            id="vid-url"
             value={videoUrl}
             onChange={setVideoUrl}
             onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); loadVideoUrl(); } }}
             placeholder="Paste YouTube / TikTok / direct .mp4 · .webm · audio URL"
-            style={{ padding: '15px 17px', fontSize: 14 }}
+            style={{ height: 50, fontSize: 14 }}
           />
-          <Btn variant="tinted" color={accent} disabled={urlBusy || !videoUrl.trim()}
-            onClick={() => loadVideoUrl()}>
+          <Btn variant="solid" color={accent} disabled={urlBusy || !videoUrl.trim()}
+            onClick={() => loadVideoUrl()} style={{ height: 46 }}>
             {urlBusy ? 'Loading…' : 'Load'}
           </Btn>
         </div>
-        <div className="mono" style={{ fontSize: 11, color: urlBusy ? accent : COLORS.muted, letterSpacing: '0.05em', lineHeight: 1.5 }}>
+        <div className="mono" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: urlBusy ? COLORS.text : COLORS.muted, lineHeight: 1.5 }}>
+          {urlBusy && <span className="blink" style={{ flexShrink: 0, width: 8, height: 8, background: accent }} />}
           {urlBusy
             ? (stage || 'RESOLVING LINK…')
             : 'Direct media links load in-browser. YouTube / TikTok need COBALT_API_URL (optional env).'}
         </div>
       </div>
 
-      <Kicker>OR UPLOAD VIDEO</Kicker>
-      <label
-        onDragEnter={(event) => { event.preventDefault(); setIsDragging(true); }}
-        onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = 'copy'; setIsDragging(true); }}
-        onDragLeave={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setIsDragging(false); }}
-        onDrop={handleDrop}
-        style={{
-          padding: 32, textAlign: 'center', borderRadius: 12, cursor: 'pointer',
-          border: `2px dashed ${isDragging ? accent : COLORS.line}`,
-          background: isDragging ? accent + '12' : COLORS.bg,
-          transition: 'border-color 150ms, background 150ms',
-        }}
-      >
-        <input type="file" accept="video/*,audio/*" onChange={onFile} style={{ display: 'none' }} />
-        {src ? (
-          <div>
-            <video ref={videoRef} src={src.url} controls onLoadedMetadata={onMetadata}
-              style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 8 }} />
-            <div className="mono" style={{ fontSize: 11, color: COLORS.muted, marginTop: 8 }}>
-              {src.name} · {(src.size / 1024 / 1024).toFixed(2)} MB
-              {duration > 0 && ` · ${duration.toFixed(1)}s`}
+      <div>
+        <TLabel>OR UPLOAD VIDEO</TLabel>
+        <label
+          onDragEnter={(event) => { event.preventDefault(); setIsDragging(true); }}
+          onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = 'copy'; setIsDragging(true); }}
+          onDragLeave={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setIsDragging(false); }}
+          onDrop={handleDrop}
+          className={'fa-dropzone' + (isDragging ? ' on' : '')}
+          style={{ display: 'block', padding: 28, textAlign: 'center' }}
+        >
+          <input type="file" accept="video/*,audio/*" onChange={onFile} className="sr" />
+          {src ? (
+            <div>
+              <video ref={videoRef} src={src.url} controls onLoadedMetadata={onMetadata}
+                style={{ maxWidth: '100%', maxHeight: 200, background: '#1b1410', border: '3px solid ' + COLORS.ink }} />
+              <div className="mono" style={{ fontSize: 11, color: COLORS.muted, marginTop: 8, wordBreak: 'break-all' }}>
+                {src.name} · {(src.size / 1024 / 1024).toFixed(2)} MB
+                {duration > 0 && ` · ${duration.toFixed(1)}s`}
+              </div>
             </div>
-          </div>
-        ) : (
-          <div>
-            <div style={{ fontSize: 28, color: COLORS.muted, marginBottom: 8 }}>▶</div>
-            <div className="mono" style={{ fontSize: 12, color: COLORS.muted, letterSpacing: '0.1em' }}>
-              DROP FILE / LINK · OR CLICK TO BROWSE
+          ) : (
+            <div style={{ display: 'grid', justifyItems: 'center' }}>
+              <span className="pxs" style={{ display: 'grid', placeItems: 'center', width: 44, height: 44, marginBottom: 14, background: accent, color: COLORS.onAccent }}>
+                <StrokeIcon d={PRESET_ICON.video} size={22} />
+              </span>
+              <div className="sk" style={{ fontSize: 12, color: COLORS.text }}>
+                DROP FILE / LINK · OR CLICK TO BROWSE
+              </div>
             </div>
-          </div>
-        )}
-      </label>
+          )}
+        </label>
+      </div>
 
       <div>
-        <Kicker style={{ marginBottom: 8 }}>EXTRACT AS</Kicker>
-        <div style={{ display: 'flex', gap: 6 }}>
-          {[['gif', 'GIF (clip)'], ['mp3', 'MP3 (audio)']].map(([k, lbl]) => (
-            <Btn key={k} variant={mode === k ? 'tinted' : 'ghost'} color={accent} onClick={() => setMode(k)}>
-              {lbl}
-            </Btn>
-          ))}
-        </div>
+        <TLabel>EXTRACT AS</TLabel>
+        <Seg label="Extract as" value={mode} onChange={setMode}
+          options={[{ v: 'gif', l: 'GIF (clip)' }, { v: 'mp3', l: 'MP3 (audio)' }]} size="lg" />
       </div>
 
       {src && (
-        <div style={{ display: 'grid', gap: 12 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        <div style={{ display: 'grid', gap: 18 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '18px 24px' }}>
             <div>
-              <Kicker style={{ marginBottom: 8 }}>START · {startTime.toFixed(1)}s</Kicker>
-              <input type="range" min="0" max={Math.max(0, duration - 0.5)} step="0.1"
+              <TLabel htmlFor="vid-start">START · {startTime.toFixed(1)}s</TLabel>
+              <input id="vid-start" type="range" min="0" max={Math.max(0, duration - 0.5)} step="0.1"
                 value={startTime} onChange={(e) => setStartTime(+e.target.value)}
-                style={{ width: '100%', accentColor: accent }} />
+                className="fa-range" style={{ '--a': accent }} />
             </div>
             <div>
-              <Kicker style={{ marginBottom: 8 }}>DURATION · {clipLen}s</Kicker>
-              <input type="range" min="1" max={Math.max(1, Math.floor(duration - startTime) || 1)} step="1"
+              <TLabel htmlFor="vid-len">DURATION · {clipLen}s</TLabel>
+              <input id="vid-len" type="range" min="1" max={Math.max(1, Math.floor(duration - startTime) || 1)} step="1"
                 value={clipLen} onChange={(e) => setClipLen(+e.target.value)}
-                style={{ width: '100%', accentColor: accent }} />
+                className="fa-range" style={{ '--a': accent }} />
             </div>
           </div>
 
           {mode === 'gif' ? (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '18px 24px' }}>
               <div>
-                <Kicker style={{ marginBottom: 8 }}>FPS · {fps}</Kicker>
-                <input type="range" min="5" max="24" step="1"
+                <TLabel htmlFor="vid-fps">FPS · {fps}</TLabel>
+                <input id="vid-fps" type="range" min="5" max="24" step="1"
                   value={fps} onChange={(e) => setFps(+e.target.value)}
-                  style={{ width: '100%', accentColor: accent }} />
+                  className="fa-range" style={{ '--a': accent }} />
               </div>
               <div>
-                <Kicker style={{ marginBottom: 8 }}>WIDTH · {width}px</Kicker>
-                <input type="range" min="240" max="960" step="40"
+                <TLabel htmlFor="vid-w">WIDTH · {width}px</TLabel>
+                <input id="vid-w" type="range" min="240" max="960" step="40"
                   value={width} onChange={(e) => setWidth(+e.target.value)}
-                  style={{ width: '100%', accentColor: accent }} />
+                  className="fa-range" style={{ '--a': accent }} />
               </div>
             </div>
           ) : (
             <div>
-              <Kicker style={{ marginBottom: 8 }}>BITRATE</Kicker>
-              <div style={{ display: 'flex', gap: 6 }}>
-                {['128k', '192k', '320k'].map((b) => (
-                  <Btn key={b} variant={bitrate === b ? 'tinted' : 'ghost'} color={accent}
-                    onClick={() => setBitrate(b)}>{b}</Btn>
-                ))}
-              </div>
+              <TLabel>BITRATE</TLabel>
+              <Seg label="Bitrate" value={bitrate} onChange={setBitrate} options={['128k', '192k', '320k']} />
             </div>
           )}
         </div>
       )}
 
-      <div className="mono" style={{
-        padding: '10px 14px', borderRadius: 10, background: COLORS.bg,
-        border: '1px solid ' + COLORS.line, fontSize: 11, color: COLORS.muted, lineHeight: 1.5,
-      }}>
-        ◇ File / direct-link conversion runs in your browser via ffmpeg.wasm (~25 MB lib, cached). Platform-link audio uses Cobalt when configured — nothing is stored on our servers.
-      </div>
+      <TNote>
+        File / direct-link conversion runs in your browser via ffmpeg.wasm (~25 MB lib, cached). Platform-link audio uses Cobalt when configured — nothing is stored on our servers.
+      </TNote>
 
       {(busy || urlBusy || progress > 0) && (
-        <div>
-          <div className="mono" style={{ fontSize: 11, color: COLORS.muted, marginBottom: 6, display: 'flex', justifyContent: 'space-between' }}>
-            <span>{stage}</span>
-            <span>{Math.round(progress * 100)}%</span>
-          </div>
-          <div style={{ height: 4, background: COLORS.line, borderRadius: 4, overflow: 'hidden' }}>
-            <div style={{
-              height: '100%', width: `${progress * 100}%`,
-              background: accent, transition: 'width 120ms',
-            }} />
-          </div>
-        </div>
+        <TProgress stage={stage} progress={progress} accent={accent} />
       )}
 
-      {err && (
-        <div className="mono" style={{
-          padding: '10px 14px', borderRadius: 10,
-          border: `1px solid ${COLORS.red}55`, background: COLORS.red + '0e',
-          color: COLORS.red, fontSize: 12,
-        }}>✕ {err}</div>
-      )}
+      {err && <TError>{err}</TError>}
 
       {output && (
-        <div style={{
-          padding: 14, borderRadius: 12, border: `1px solid ${accent}55`,
-          background: accent + '08', display: 'grid', gap: 10,
-        }}>
-          {output.mode === 'gif' ? (
-            <img src={output.url} alt="GIF preview" style={{ maxWidth: '100%', borderRadius: 8 }} />
-          ) : (
-            <audio src={output.url} controls style={{ width: '100%' }} />
-          )}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
-            <div className="mono" style={{ fontSize: 11, color: COLORS.muted }}>
-              {output.name} · {(output.size / 1024).toFixed(1)} KB
+        <Screen label={output.mode === 'gif' ? 'GIF READY' : 'MP3 READY'}>
+          <div style={{ display: 'grid', gap: 14 }}>
+            {output.mode === 'gif' ? (
+              <img src={output.url} alt="GIF preview" style={{ maxWidth: '100%', justifySelf: 'start', border: '3px solid #fffaf0' }} />
+            ) : (
+              <audio src={output.url} controls style={{ width: '100%' }} />
+            )}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 14 }}>
+              <div className="mono" style={{ fontSize: 11, color: '#c9bca6', wordBreak: 'break-all' }}>
+                {output.name} · {(output.size / 1024).toFixed(1)} KB
+              </div>
+              <a href={output.url} download={output.name} className="sk sbtn" style={{
+                display: 'inline-flex', alignItems: 'center', gap: 8, height: 38, padding: '0 14px', margin: '3px 7px 8px 3px',
+                fontSize: 12, color: '#1b1410', background: accent, textDecoration: 'none', textTransform: 'uppercase',
+              }}><StrokeIcon d={ICO.down} size={14} sw={2.8} />Download</a>
             </div>
-            <a href={output.url} download={output.name} style={{ textDecoration: 'none' }}>
-              <Btn variant="solid" color={accent}>↓ Download</Btn>
-            </a>
           </div>
-        </div>
+        </Screen>
       )}
 
-      <Btn variant="solid" color={accent} disabled={!src || busy || urlBusy} onClick={convert}>
-        {busy ? 'Converting…' : 'Convert'}
-      </Btn>
+      <div style={{ padding: '4px 0 6px 4px' }}>
+        <PrimaryBtn accent={accent} disabled={!src || busy || urlBusy} onClick={convert}>
+          {busy ? 'Converting…' : 'Convert'} {!busy && <PixelArrow size={12} />}
+        </PrimaryBtn>
+      </div>
     </div>
   );
 }
@@ -2910,7 +3297,7 @@ function VoiceRecorderTool({ accent }) {
     statusReady: 'Sẵn sàng', statusBlocked: 'Mic bị chặn', statusNeeded: 'Cần quyền mic',
     permPrompt: 'Công cụ này cần dùng micro của bạn. Nó chỉ hỏi khi bạn bấm "Cho phép micro" — không ghi âm gì cho đến khi bạn bấm ghi.',
     permRequesting: 'Đang chờ bạn cho phép quyền micro…',
-    permDenied: 'Micro đang bị chặn. Bật lại trong cài đặt trang của trình duyệt (biểu tượng 🔒 trên thanh địa chỉ), rồi thử lại.',
+    permDenied: 'Micro đang bị chặn. Bật lại trong cài đặt trang của trình duyệt (biểu tượng ổ khóa trên thanh địa chỉ), rồi thử lại.',
     btnAllow: 'Cho phép micro', btnRequesting: 'Đang xin quyền…', btnRetry: 'Thử lại quyền micro',
     btnStart: 'Bắt đầu ghi', btnProcessing: 'Đang xử lý…', btnPause: 'Tạm dừng', btnResume: 'Tiếp tục',
     btnStop: 'Dừng & lưu', btnDiscard: 'Xóa bản ghi', discardTitle: 'Xóa bản ghi này',
@@ -2925,13 +3312,13 @@ function VoiceRecorderTool({ accent }) {
     tapHint: 'BẤM ĐỂ GHI · PHÍM CÁCH',
     btnReRecord: 'Ghi lại',
     bitrateTitle: 'BITRATE MP3',
-    footer: '◇ Mọi thứ chạy ngay trong trình duyệt. Mic được ghi cục bộ rồi chuyển sang MP3 qua ffmpeg.wasm (~25 MB, chỉ tải lần đầu) — không upload lên đâu cả. Cần trang HTTPS (hoặc localhost) và quyền micro.',
+    footer: 'Mọi thứ chạy ngay trong trình duyệt. Mic được ghi cục bộ rồi chuyển sang MP3 qua ffmpeg.wasm (~25 MB, chỉ tải lần đầu) — không upload lên đâu cả. Cần trang HTTPS (hoặc localhost) và quyền micro.',
     rawTakeBadge: '· bản gốc',
     download: '↓ Tải xuống',
     errNoRecorder: 'Trình duyệt này không hỗ trợ ghi âm (thiếu MediaRecorder / getUserMedia).',
     errNoGetUserMedia: 'Trình duyệt này không thể truy cập micro (thiếu getUserMedia).',
     errPermDeniedStart: 'Quyền truy cập micro bị từ chối. Hãy cho phép micro trong trình duyệt rồi thử lại.',
-    errPermBlockedRequest: 'Micro đang bị chặn. Bật lại trong cài đặt trang của trình duyệt (biểu tượng 🔒 trên thanh địa chỉ), rồi thử lại.',
+    errPermBlockedRequest: 'Micro đang bị chặn. Bật lại trong cài đặt trang của trình duyệt (biểu tượng ổ khóa trên thanh địa chỉ), rồi thử lại.',
     errNoMic: 'Không tìm thấy micro. Hãy cắm micro rồi thử lại.',
     errOpenMicFailed: (d) => `Không thể mở micro: ${d}`,
     errAccessMicFailed: (d) => `Không thể truy cập micro: ${d}`,
@@ -2946,7 +3333,7 @@ function VoiceRecorderTool({ accent }) {
     statusReady: 'Ready', statusBlocked: 'Mic blocked', statusNeeded: 'Mic access needed',
     permPrompt: 'This tool needs your microphone. It only asks when you tap "Allow microphone" — nothing records until you press record.',
     permRequesting: 'Waiting for you to allow microphone access…',
-    permDenied: 'Mic access is blocked. Enable it in your browser\'s site settings (🔒 in the address bar), then allow again.',
+    permDenied: 'Mic access is blocked. Enable it in your browser\'s site settings (the lock icon in the address bar), then allow again.',
     btnAllow: 'Allow microphone', btnRequesting: 'Requesting…', btnRetry: 'Retry mic access',
     btnStart: 'Start recording', btnProcessing: 'Processing…', btnPause: 'Pause', btnResume: 'Resume',
     btnStop: 'Stop & save', btnDiscard: 'Discard', discardTitle: 'Discard this take',
@@ -2961,13 +3348,13 @@ function VoiceRecorderTool({ accent }) {
     tapHint: 'TAP TO RECORD · SPACE',
     btnReRecord: 'Re-record',
     bitrateTitle: 'MP3 BITRATE',
-    footer: '◇ Everything runs in your browser. The mic feed is recorded locally and transcoded to MP3 via ffmpeg.wasm (~25 MB lib, cached on first use) — nothing is uploaded. Recording needs an HTTPS page (or localhost) and mic permission.',
+    footer: 'Everything runs in your browser. The mic feed is recorded locally and transcoded to MP3 via ffmpeg.wasm (~25 MB lib, cached on first use) — nothing is uploaded. Recording needs an HTTPS page (or localhost) and mic permission.',
     rawTakeBadge: '· raw take',
     download: '↓ Download',
     errNoRecorder: 'This browser can\'t record audio (no MediaRecorder / getUserMedia).',
     errNoGetUserMedia: 'This browser can\'t access a microphone (no getUserMedia).',
     errPermDeniedStart: 'Microphone permission denied. Allow mic access in your browser, then try again.',
-    errPermBlockedRequest: 'Microphone blocked. Enable it in your browser\'s site settings (the 🔒 icon in the address bar), then retry.',
+    errPermBlockedRequest: 'Microphone blocked. Enable it in your browser\'s site settings (the lock icon in the address bar), then retry.',
     errNoMic: 'No microphone found. Plug one in and retry.',
     errOpenMicFailed: (d) => `Could not open the mic: ${d}`,
     errAccessMicFailed: (d) => `Could not access the mic: ${d}`,
@@ -3064,20 +3451,16 @@ function VoiceRecorderTool({ accent }) {
   function paintBars(ctx2d, W, H, heightAt, color, alphaFor) {
     ctx2d.clearRect(0, 0, W, H);
     const slot = W / METER_BARS;
-    const bw = Math.max(2, Math.min(5, slot - 3));
-    const r = bw / 2;
+    const bw = Math.max(2, Math.min(6, slot - 4));
     ctx2d.fillStyle = color;
     for (let i = 0; i < METER_BARS; i++) {
       const v = heightAt(i);
-      const h = Math.max(bw, v * H);
-      const x = i * slot + (slot - bw) / 2;
-      const y = (H - h) / 2;
+      // Square bars snapped to a 4px grid — reads as a pixel VU meter.
+      const h = Math.max(bw, Math.round((v * H) / 4) * 4);
+      const x = Math.round(i * slot + (slot - bw) / 2);
+      const y = Math.round((H - h) / 2);
       ctx2d.globalAlpha = alphaFor(v);
-      ctx2d.beginPath();
-      // roundRect isn't in older Safari — fall back to a plain rect.
-      if (ctx2d.roundRect) ctx2d.roundRect(x, y, bw, h, r);
-      else ctx2d.rect(x, y, bw, h);
-      ctx2d.fill();
+      ctx2d.fillRect(x, y, bw, h);
     }
     ctx2d.globalAlpha = 1;
   }
@@ -3358,39 +3741,28 @@ function VoiceRecorderTool({ accent }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [active, busy, micPerm, status]);
 
-  // Full-width row with a pill switch on the left; rows stack and are divided
-  // by a hairline rather than sitting in separate cards.
+  // Full-width row with a pixel switch on the left; rows stack and are
+  // divided by a dashed rule rather than sitting in separate cards.
   const Toggle = ({ on, set, label, hint, first }) => (
     <button
       type="button"
+      role="switch"
+      aria-checked={on}
       onClick={() => set(!on)}
       disabled={active || busy}
-      className="mono"
+      className="mono fa-row-btn"
       style={{
-        textAlign: 'left', display: 'flex', alignItems: 'flex-start', gap: 12,
-        padding: '11px 4px', width: '100%', background: 'transparent', borderRadius: 0,
-        border: 'none', borderTop: first ? 'none' : `1px solid ${COLORS.line}`,
+        textAlign: 'left', display: 'flex', alignItems: 'flex-start', gap: 16,
+        padding: '13px 6px', width: '100%', background: 'transparent', color: COLORS.text,
+        border: 'none', borderTop: first ? 'none' : '3px dashed ' + COLORS.rule,
         cursor: active || busy ? 'not-allowed' : 'pointer',
-        opacity: active || busy ? 0.55 : 1, transition: 'opacity 120ms',
+        opacity: active || busy ? 0.55 : 1,
       }}
     >
-      <span style={{
-        width: 32, height: 18, flex: 'none', marginTop: 1, borderRadius: 999, padding: '0 2px',
-        display: 'flex', alignItems: 'center', justifyContent: on ? 'flex-end' : 'flex-start',
-        background: on ? accent : COLORS.line,
-        border: `1px solid ${on ? accent : COLORS.line}`,
-        transition: 'background 160ms, justify-content 160ms',
-      }}>
-        {/* COLORS.bg (not text) — styles.css flips bg-coloured surfaces in
-            light mode, so the knob stays readable on both themes. */}
-        <span style={{
-          width: 13, height: 13, borderRadius: 999, display: 'block',
-          background: COLORS.bg, boxShadow: '0 1px 2px rgba(0,0,0,.2)',
-        }} />
-      </span>
+      <span className={'fa-switch' + (on ? ' on' : '')} style={{ '--a': accent }}><span /></span>
       <span style={{ display: 'grid', gap: 4, minWidth: 0 }}>
-        <span style={{ fontSize: 11.5, color: COLORS.text }}>{label}</span>
-        <span style={{ fontSize: 10, color: COLORS.muted, lineHeight: 1.55 }}>{hint}</span>
+        <span style={{ fontSize: 13, fontWeight: 700, color: COLORS.text }}>{label}</span>
+        <span style={{ fontSize: 11, color: COLORS.muted, lineHeight: 1.55 }}>{hint}</span>
       </span>
     </button>
   );
@@ -3401,86 +3773,81 @@ function VoiceRecorderTool({ accent }) {
       : busy ? labels.statusProcessing
         : micPerm === 'granted' ? labels.statusReady
           : micPerm === 'denied' ? labels.statusBlocked : labels.statusNeeded;
+  const statusDot = recording ? '#ff7a7a'
+    : paused ? '#ffd25e'
+      : output ? '#7fd18b'
+        : micPerm === 'granted' ? '#c9bca6' : '#ff7a7a';
+  // Round arcade button (record / stop) — the only round controls here.
   const roundBtn = (size) => ({
-    width: size, height: size, borderRadius: 999, background: accent,
-    border: `3px solid ${COLORS.panel}`, boxShadow: `0 0 0 1px ${COLORS.line}, 0 2px 6px rgba(0,0,0,.14)`,
-    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+    width: size, height: size, background: accent, color: '#1b1410',
+    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
   });
 
   return (
-    <div style={{ display: 'grid', gap: 16 }}>
-      {/* Recorder stage */}
-      <div style={{
-        padding: 20, borderRadius: 14, border: `1px solid ${active ? accent + '55' : COLORS.line}`,
-        background: COLORS.panel, display: 'grid', gap: 16, transition: 'border-color 200ms',
-      }}>
+    <div style={{ display: 'grid', gap: 20 }}>
+      {/* Recorder stage — a dark screen with the VU meter */}
+      <div className="fa-screen" style={{ padding: '18px 20px 20px', display: 'grid', gap: 18 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{
-              width: 7, height: 7, borderRadius: 999,
-              background: recording ? accent
-                : paused ? COLORS.gold
-                  : output ? COLORS.green
-                    : micPerm === 'granted' ? COLORS.muted : accent,
-              animation: recording ? 'blink 1s step-start infinite' : 'none',
-            }} />
-            <span className="mono" style={{ fontSize: 9.5, letterSpacing: '0.14em', color: COLORS.muted, textTransform: 'uppercase' }}>
+            <span className={recording ? 'blink' : undefined} style={{ width: 9, height: 9, background: statusDot }} />
+            <span className="sk" style={{ fontSize: 11, color: '#c9bca6', textTransform: 'uppercase' }}>
               {statusText}
             </span>
           </div>
-          <span className="mono" style={{
-            fontSize: 26, fontWeight: 700, letterSpacing: '0.02em',
-            color: recording ? accent : (active || output) ? COLORS.text : COLORS.muted,
+          <span className="pf" style={{
+            fontSize: 30, lineHeight: 1,
+            color: recording ? accent : (active || output) ? '#fffaf0' : '#c9bca6',
             fontVariantNumeric: 'tabular-nums',
           }}>
             {fmtClock(elapsed)}
           </span>
         </div>
 
-        <div style={{
-          height: 92, borderRadius: 10, background: COLORS.panel2,
-          border: `1px solid ${COLORS.line}`, display: 'flex', alignItems: 'center',
-          padding: '0 14px', overflow: 'hidden',
+        <div className="fa-scan" style={{
+          height: 92, display: 'flex', alignItems: 'center', padding: '0 14px', overflow: 'hidden',
+          background: '#241b15', boxShadow: 'inset 0 0 0 3px #3a2f27',
         }}>
           <canvas ref={canvasRef} width={600} height={72} style={{ width: '100%', height: 72, display: 'block' }} />
         </div>
 
         {/* Permission gate — only ask for the mic once the user opts in here. */}
         {!active && !busy && micPerm !== 'granted' && (
-          <div style={{ display: 'grid', gap: 12, justifyItems: 'center' }}>
+          <div style={{ display: 'grid', gap: 14, justifyItems: 'center' }}>
             <p className="mono" style={{
-              margin: 0, maxWidth: 430, textAlign: 'center', fontSize: 11, lineHeight: 1.65,
-              color: micPerm === 'denied' ? COLORS.red : COLORS.muted,
+              margin: 0, maxWidth: 460, textAlign: 'center', fontSize: 12, lineHeight: 1.65,
+              color: micPerm === 'denied' ? '#ff9a9a' : '#c9bca6',
             }}>
               {micPerm === 'denied'
                 ? (permErr || labels.permDenied)
                 : micPerm === 'requesting' ? labels.permRequesting : labels.permPrompt}
             </p>
-            <Btn variant="solid" color={accent} disabled={busy || micPerm === 'requesting'} onClick={requestMic}>
-              ⏺ {micPerm === 'requesting' ? labels.btnRequesting : micPerm === 'denied' ? labels.btnRetry : labels.btnAllow}
-            </Btn>
+            <PxButton kind="small" fill={accent} disabled={busy || micPerm === 'requesting'} onClick={requestMic}
+              style={{ margin: '3px 7px 8px 3px', textTransform: 'uppercase' }}>
+              <StrokeIcon d={ICO.mic} size={15} sw={2.6} />
+              {micPerm === 'requesting' ? labels.btnRequesting : micPerm === 'denied' ? labels.btnRetry : labels.btnAllow}
+            </PxButton>
           </div>
         )}
 
         {/* Ready — one big target, the way a recorder should read. */}
         {!active && !busy && micPerm === 'granted' && (
-          <div style={{ display: 'grid', gap: 10, justifyItems: 'center' }}>
-            <button type="button" onClick={start} title={labels.btnStart} aria-label={labels.btnStart} style={roundBtn(64)}>
-              <span style={{ width: 20, height: 20, borderRadius: 999, background: COLORS.text, display: 'block' }} />
+          <div style={{ display: 'grid', gap: 12, justifyItems: 'center' }}>
+            <button type="button" onClick={start} title={labels.btnStart} aria-label={labels.btnStart} className="abtn round" style={roundBtn(66)}>
+              <span className="round" style={{ width: 22, height: 22, background: '#1b1410', display: 'block' }} />
             </button>
-            <span className="mono" style={{ fontSize: 10, letterSpacing: '0.1em', color: COLORS.muted }}>{labels.tapHint}</span>
+            <span className="sk" style={{ fontSize: 10, color: '#c9bca6' }}>{labels.tapHint}</span>
           </div>
         )}
 
         {active && (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 18, flexWrap: 'wrap' }}>
             {recording
-              ? <Btn variant="ghost" onClick={pause}>❚❚ {labels.btnPause}</Btn>
-              : <Btn variant="ghost" onClick={resume}>▶ {labels.btnResume}</Btn>}
-            <button type="button" onClick={stop} title={labels.btnStop} aria-label={labels.btnStop} style={roundBtn(56)}>
-              <span style={{ width: 17, height: 17, borderRadius: 3, background: COLORS.text, display: 'block' }} />
+              ? <Btn variant="ghost" onClick={pause}><StrokeIcon d={ICO.pause} size={12} sw={0} style={{ fill: 'currentColor', marginRight: 6, verticalAlign: '-1px' }} />{labels.btnPause}</Btn>
+              : <Btn variant="ghost" onClick={resume}><StrokeIcon d={ICO.play} size={12} sw={0} style={{ fill: 'currentColor', marginRight: 6, verticalAlign: '-1px' }} />{labels.btnResume}</Btn>}
+            <button type="button" onClick={stop} title={labels.btnStop} aria-label={labels.btnStop} className="abtn round" style={roundBtn(58)}>
+              <span style={{ width: 18, height: 18, background: '#1b1410', display: 'block' }} />
             </button>
-            <Btn variant="ghost" onClick={cancel} title={labels.discardTitle}>✕ {labels.btnDiscard}</Btn>
+            <Btn variant="ghost" onClick={cancel} title={labels.discardTitle}><StrokeIcon d={ICO.x} size={11} sw={3.4} style={{ marginRight: 6, verticalAlign: '-1px' }} />{labels.btnDiscard}</Btn>
           </div>
         )}
 
@@ -3497,50 +3864,50 @@ function VoiceRecorderTool({ accent }) {
             />
             <div style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
-              background: COLORS.panel2, border: `1px solid ${COLORS.line}`, borderRadius: 9, padding: '10px 12px',
+              background: '#2e251d', padding: '10px 12px',
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
                 <button
                   type="button"
                   onClick={togglePlay}
                   aria-label={playing ? labels.btnPause : labels.btnResume}
-                  className="mono"
                   style={{
-                    width: 32, height: 32, flex: 'none', borderRadius: 999, border: 'none',
-                    background: accent, color: COLORS.bg, fontSize: 11, cursor: 'pointer',
+                    width: 34, height: 34, flex: 'none', border: 'none', cursor: 'pointer',
+                    background: accent, color: '#1b1410', boxShadow: '0 0 0 3px #fffaf0',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}
                 >
-                  {playing ? '❚❚' : '▶'}
+                  <StrokeIcon d={playing ? ICO.pause : ICO.play} size={13} sw={0} style={{ fill: 'currentColor' }} />
                 </button>
                 <span className="mono" style={{
-                  fontSize: 10.5, lineHeight: 1.3, color: COLORS.text,
+                  fontSize: 11, lineHeight: 1.3, color: '#fffaf0',
                   whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                 }}>
                   {output.name} · {bitrate} · {(output.size / 1024).toFixed(1)} KB
-                  {output.fallback && <span style={{ color: COLORS.gold }}> {labels.rawTakeBadge}</span>}
+                  {output.fallback && <span style={{ color: '#ffd25e' }}> {labels.rawTakeBadge}</span>}
                 </span>
               </div>
-              <span className="mono" style={{ fontSize: 10, color: COLORS.muted, whiteSpace: 'nowrap' }}>{fmtClock(elapsed)}</span>
+              <span className="sk" style={{ fontSize: 10, color: '#c9bca6', whiteSpace: 'nowrap' }}>{fmtClock(elapsed)}</span>
             </div>
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-              <a href={output.url} download={output.name} style={{ textDecoration: 'none', flex: 1, minWidth: 170 }}>
-                <Btn variant="solid" color={accent} style={{ width: '100%' }}>{labels.download}</Btn>
-              </a>
-              <Btn variant="ghost" onClick={start}>⏺ {labels.btnReRecord}</Btn>
+            <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'center' }}>
+              <a href={output.url} download={output.name} className="sk sbtn" style={{
+                flex: 1, minWidth: 170, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                height: 42, margin: '3px 7px 8px 3px', fontSize: 12, color: '#1b1410', background: accent,
+                textDecoration: 'none', textTransform: 'uppercase',
+              }}>{labels.download}</a>
+              <Btn variant="ghost" onClick={start}>
+                <span className="round" style={{ display: 'inline-block', width: 9, height: 9, marginRight: 8, background: '#e04545' }} />{labels.btnReRecord}
+              </Btn>
             </div>
           </div>
         )}
       </div>
 
       {/* Clarity options + bitrate */}
-      <div style={{
-        padding: '16px 18px', borderRadius: 14, border: `1px solid ${COLORS.line}`,
-        background: COLORS.panel, display: 'grid', gap: 14,
-      }}>
+      <div className="pxs" style={{ margin: 3, padding: '16px 18px', background: COLORS.paper, display: 'grid', gap: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-          <Kicker style={{ margin: 0 }}>{labels.clarityTitle}</Kicker>
-          <span className="mono" style={{ fontSize: 9.5, color: COLORS.muted }}>{labels.clarityCount(onCount)}</span>
+          <span className="sk" style={{ fontSize: 11, color: COLORS.muted }}>{labels.clarityTitle}</span>
+          <span className="sk" style={{ fontSize: 10, padding: '3px 7px', color: COLORS.onAccent, background: accent }}>{labels.clarityCount(onCount)}</span>
         </div>
 
         <div style={{ display: 'grid' }}>
@@ -3550,64 +3917,24 @@ function VoiceRecorderTool({ accent }) {
         </div>
 
         <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
-          paddingTop: 13, borderTop: `1px solid ${COLORS.line}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap',
+          paddingTop: 12, borderTop: '3px dashed ' + COLORS.rule,
         }}>
-          <Kicker style={{ margin: 0 }}>{labels.bitrateTitle}</Kicker>
-          <div style={{
-            display: 'flex', gap: 3, background: COLORS.panel2,
-            border: `1px solid ${COLORS.line}`, borderRadius: 8, padding: 3,
-          }}>
-            {['128k', '192k', '320k'].map((b) => {
-              const sel = bitrate === b;
-              return (
-                <button
-                  key={b}
-                  type="button"
-                  className="mono"
-                  disabled={active || busy}
-                  onClick={() => setBitrate(b)}
-                  style={{
-                    border: 'none', borderRadius: 6, padding: '6px 13px', fontSize: 10,
-                    letterSpacing: '0.06em', cursor: active || busy ? 'not-allowed' : 'pointer',
-                    background: sel ? COLORS.panel : 'transparent',
-                    color: sel ? COLORS.text : COLORS.muted,
-                    boxShadow: sel ? '0 1px 2px rgba(0,0,0,.1)' : 'none',
-                    opacity: active || busy ? 0.55 : 1,
-                    transition: 'background 120ms, color 120ms',
-                  }}
-                >
-                  {b.toUpperCase()}
-                </button>
-              );
-            })}
-          </div>
+          <span className="sk" style={{ fontSize: 11, color: COLORS.muted }}>{labels.bitrateTitle}</span>
+          <Seg label={labels.bitrateTitle} value={bitrate} onChange={setBitrate} disabled={active || busy}
+            options={['128k', '192k', '320k'].map((b) => ({ v: b, l: b.toUpperCase() }))} />
         </div>
       </div>
 
-      <p className="mono" style={{ margin: 0, padding: '0 4px', fontSize: 9.5, lineHeight: 1.7, color: COLORS.muted }}>
+      <p className="mono" style={{ margin: 0, padding: '0 4px', fontSize: 11, lineHeight: 1.7, color: COLORS.muted }}>
         {labels.footer}
       </p>
 
       {(busy || progress > 0) && (
-        <div>
-          <div className="mono" style={{ fontSize: 11, color: COLORS.muted, marginBottom: 6, display: 'flex', justifyContent: 'space-between' }}>
-            <span>{stage}</span>
-            <span>{Math.round(progress * 100)}%</span>
-          </div>
-          <div style={{ height: 4, background: COLORS.line, borderRadius: 4, overflow: 'hidden' }}>
-            <div style={{ height: '100%', width: `${progress * 100}%`, background: accent, transition: 'width 120ms' }} />
-          </div>
-        </div>
+        <TProgress stage={stage} progress={progress} accent={accent} />
       )}
 
-      {err && (
-        <div className="mono" style={{
-          padding: '10px 14px', borderRadius: 10,
-          border: `1px solid ${COLORS.red}55`, background: COLORS.red + '0e',
-          color: COLORS.red, fontSize: 12, lineHeight: 1.5,
-        }}>✕ {err}</div>
-      )}
+      {err && <TError>{err}</TError>}
     </div>
   );
 }
@@ -3671,79 +3998,76 @@ function FinanceTool({ accent }) {
       : v.toLocaleString(undefined, { maximumFractionDigits: 2 });
   }
 
+  const rowBtn = { width: 38, height: 36, padding: 0, display: 'inline-grid', placeItems: 'center' };
+
   return (
-    <div style={{ display: 'grid', gap: 16 }}>
+    <div style={{ display: 'grid', gap: 20 }}>
       {/* ─ Totals ─ */}
       {totalsByCcy.length > 0 && (
-        <div style={{
-          padding: 16, borderRadius: 12, border: `1px solid ${accent}55`,
-          background: accent + '08',
-        }}>
-          <Kicker style={{ color: accent, marginBottom: 10 }}>NET WORTH · BY CURRENCY</Kicker>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-            {totalsByCcy.map(([ccy, val]) => (
-              <div key={ccy} className="mono" style={{
-                padding: '8px 12px', borderRadius: 8,
-                border: '1px solid ' + COLORS.line, background: COLORS.bg,
-                fontSize: 12,
-              }}>
-                <span style={{ color: accent, fontWeight: 700 }}>{formatVal(val, ccy)}</span>
-                <span style={{ color: COLORS.muted, marginLeft: 6 }}>{ccy}</span>
+        <Screen label="NET WORTH · BY CURRENCY" live={false}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px 26px', alignItems: 'baseline' }}>
+            {totalsByCcy.map(([ccy, val], i) => (
+              <div key={ccy} style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+                {i === 0 && <PixelCoin size={18} spin />}
+                <span className="pf" style={{ fontSize: i === 0 ? 34 : 22, lineHeight: 1, color: i === 0 ? '#ffd25e' : '#fffaf0' }}>{formatVal(val, ccy)}</span>
+                <span className="sk" style={{ fontSize: 11, color: '#c9bca6' }}>{ccy}</span>
               </div>
             ))}
           </div>
-        </div>
+        </Screen>
       )}
 
       {/* ─ Account list ─ */}
-      <div style={{ display: 'grid', gap: 8 }}>
+      <div className="pxs" style={{ margin: 3, background: COLORS.paper }}>
+        <div className="sk" style={{
+          display: 'flex', justifyContent: 'space-between', gap: 12, padding: '10px 14px',
+          fontSize: 10, color: COLORS.muted, borderBottom: '3px solid ' + COLORS.ink,
+        }}>
+          <span>ACCOUNT</span><span>VALUE · CCY</span>
+        </div>
         {accounts.length === 0 && !adding && (
-          <div style={{
-            padding: 28, textAlign: 'center', borderRadius: 12,
-            border: `1px dashed ${COLORS.line}`, background: COLORS.bg,
-            color: COLORS.muted, fontSize: 13,
-          }}>
-            <div className="mono" style={{ fontSize: 12, letterSpacing: '0.14em', marginBottom: 6 }}>
-              NO ACCOUNTS YET
-            </div>
-            Add cash, crypto, stocks, or any holding you want to track.
-          </div>
+          <EmptyState title="NO ACCOUNTS YET" hint="Add cash, crypto, stocks, or any holding you want to track." style={{ padding: '28px 16px' }} />
         )}
-        {accounts.map((a) => {
+        {accounts.map((a, i) => {
           const isEditing = editingId === a.id;
+          const sep = i < accounts.length - 1 ? '3px dashed ' + COLORS.rule : 'none';
           if (isEditing) {
             return (
               <div key={a.id} style={{
-                padding: 12, borderRadius: 10,
-                border: `1px solid ${accent}55`, background: accent + '08',
-                display: 'grid', gridTemplateColumns: '2fr 1fr 80px auto', gap: 8, alignItems: 'center',
+                padding: '12px 12px 6px', background: withAlpha(accent, 0.18), borderBottom: sep,
+                display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr) 84px auto', gap: 12, alignItems: 'center',
               }}>
-                <Field value={editDraft.name} onChange={(v) => setEditDraft({ ...editDraft, name: v })} placeholder="Name" />
-                <Field value={editDraft.value} onChange={(v) => setEditDraft({ ...editDraft, value: v })} placeholder="0" />
-                <Field value={editDraft.ccy} onChange={(v) => setEditDraft({ ...editDraft, ccy: v.toUpperCase() })} placeholder="USD" />
+                <TInput value={editDraft.name} onChange={(v) => setEditDraft({ ...editDraft, name: v })} placeholder="Name" ariaLabel="Name" style={{ height: 40, fontSize: 13 }} />
+                <TInput value={editDraft.value} onChange={(v) => setEditDraft({ ...editDraft, value: v })} placeholder="0" ariaLabel="Value" style={{ height: 40, fontSize: 13 }} />
+                <TInput value={editDraft.ccy} onChange={(v) => setEditDraft({ ...editDraft, ccy: v.toUpperCase() })} placeholder="USD" ariaLabel="Currency" style={{ height: 40, fontSize: 13 }} />
                 <div style={{ display: 'flex', gap: 4 }}>
                   <Btn variant="solid" color={accent} onClick={saveEdit}>Save</Btn>
-                  <Btn variant="ghost" onClick={() => { setEditingId(null); setEditDraft(null); }}>✕</Btn>
+                  <Btn variant="ghost" onClick={() => { setEditingId(null); setEditDraft(null); }} title="Cancel" style={rowBtn}>
+                    <StrokeIcon d={ICO.x} size={12} sw={3.2} /><span className="sr">Cancel</span>
+                  </Btn>
                 </div>
               </div>
             );
           }
           return (
             <div key={a.id} style={{
-              padding: 14, borderRadius: 10, background: COLORS.bg,
-              border: '1px solid ' + COLORS.line,
+              padding: '8px 10px 8px 14px', borderBottom: sep,
               display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12,
             }}>
-              <div className="mono" style={{ fontSize: 12, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <div className="mono" style={{ fontSize: 13, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {a.name}
               </div>
-              <div className="mono" style={{ fontSize: 14, fontWeight: 700, color: accent }}>
+              <div className="mono" style={{ fontSize: 14, fontWeight: 700, color: COLORS.text, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
                 {formatVal(a.value, a.ccy)}
-                <span style={{ fontSize: 10, color: COLORS.muted, marginLeft: 6 }}>{a.ccy}</span>
+                <span className="sk" style={{ fontSize: 10, color: COLORS.muted, marginLeft: 6 }}>{a.ccy}</span>
               </div>
-              <div style={{ display: 'flex', gap: 4 }}>
-                <Btn variant="ghost" onClick={() => startEdit(a)} title="Edit">✎</Btn>
-                <Btn variant="ghost" onClick={() => deleteAccount(a.id)} title="Delete">✕</Btn>
+              <div style={{ display: 'flex', gap: 2 }}>
+                <Btn variant="ghost" onClick={() => startEdit(a)} title="Edit" style={rowBtn}>
+                  <StrokeIcon d={ICO.edit} size={14} sw={2.6} /><span className="sr">Edit</span>
+                </Btn>
+                <Btn variant="ghost" onClick={() => deleteAccount(a.id)} title="Delete" style={rowBtn}>
+                  <StrokeIcon d={ICO.x} size={12} sw={3.2} /><span className="sr">Delete</span>
+                </Btn>
               </div>
             </div>
           );
@@ -3752,38 +4076,30 @@ function FinanceTool({ accent }) {
 
       {/* ─ Add form ─ */}
       {adding ? (
-        <div style={{
-          padding: 14, borderRadius: 10,
-          border: `1px solid ${accent}55`, background: accent + '08',
-          display: 'grid', gap: 10,
-        }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 80px', gap: 8 }}>
+        <div className="pxs" style={{ margin: 3, padding: '16px 16px 12px', background: COLORS.field, display: 'grid', gap: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr) 90px', gap: 14 }}>
             <div>
-              <Kicker style={{ marginBottom: 6 }}>NAME</Kicker>
-              <Field value={draft.name} onChange={(v) => setDraft({ ...draft, name: v })} placeholder="Cash · USD" />
+              <TLabel htmlFor="fin-name">NAME</TLabel>
+              <TInput id="fin-name" value={draft.name} onChange={(v) => setDraft({ ...draft, name: v })} placeholder="Cash · USD" style={{ height: 42, fontSize: 13 }} />
             </div>
             <div>
-              <Kicker style={{ marginBottom: 6 }}>VALUE</Kicker>
-              <Field value={draft.value} onChange={(v) => setDraft({ ...draft, value: v })} placeholder="0" />
+              <TLabel htmlFor="fin-val">VALUE</TLabel>
+              <TInput id="fin-val" value={draft.value} onChange={(v) => setDraft({ ...draft, value: v })} placeholder="0" style={{ height: 42, fontSize: 13 }} />
             </div>
             <div>
-              <Kicker style={{ marginBottom: 6 }}>CCY</Kicker>
-              <Field value={draft.ccy} onChange={(v) => setDraft({ ...draft, ccy: v.toUpperCase() })} placeholder="USD" />
+              <TLabel htmlFor="fin-ccy">CCY</TLabel>
+              <TInput id="fin-ccy" value={draft.ccy} onChange={(v) => setDraft({ ...draft, ccy: v.toUpperCase() })} placeholder="USD" style={{ height: 42, fontSize: 13 }} />
             </div>
           </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+          <div role="group" aria-label="Currency suggestions" style={{ display: 'flex', flexWrap: 'wrap', gap: 10, padding: 3 }}>
             {CCY_SUGGESTIONS.map((c) => (
               <button
                 key={c}
+                type="button"
+                aria-pressed={draft.ccy === c}
                 onClick={() => setDraft({ ...draft, ccy: c })}
-                className="mono"
-                style={{
-                  padding: '4px 8px', fontSize: 10, borderRadius: 6,
-                  border: '1px solid ' + COLORS.line, cursor: 'pointer',
-                  background: draft.ccy === c ? accent + '20' : 'transparent',
-                  color: draft.ccy === c ? accent : COLORS.muted,
-                  letterSpacing: '0.1em',
-                }}
+                className={'chip-px sk' + (draft.ccy === c ? ' on' : '')}
+                style={{ height: 30, padding: '0 9px', fontSize: 10 }}
               >{c}</button>
             ))}
           </div>
@@ -3795,7 +4111,11 @@ function FinanceTool({ accent }) {
           </div>
         </div>
       ) : (
-        <Btn variant="tinted" color={accent} onClick={() => setAdding(true)}>+ Add account</Btn>
+        <div>
+          <Btn variant="solid" color={accent} onClick={() => setAdding(true)}>
+            <StrokeIcon d={ICO.plus} size={12} sw={3.2} style={{ marginRight: 8, verticalAlign: '-1px' }} />Add account
+          </Btn>
+        </div>
       )}
     </div>
   );
@@ -3839,22 +4159,24 @@ function GameResourcesTool({ accent }) {
   function formatDate(s) {
     try { return new Date(s).toISOString().slice(0, 10); } catch { return '—'; }
   }
+  // File-type pixel icons (stroke paths on the accent tile).
   function iconFor(f) {
-    if (f.isFolder) return '▤';
+    if (f.isFolder) return 'M3 6h7l2 2h9v11H3z';
     const ext = (f.name.split('.').pop() || '').toLowerCase();
-    if (['zip', '7z', 'rar', 'tar', 'gz'].includes(ext)) return '◫';
-    if (['exe', 'msi', 'dmg', 'pkg'].includes(ext)) return '▶';
-    if (['iso', 'img'].includes(ext)) return '◉';
-    if (['txt', 'md', 'pdf', 'doc', 'docx'].includes(ext)) return '¶';
-    if (['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(ext)) return '◐';
-    if (['mp4', 'mkv', 'avi', 'mov', 'webm'].includes(ext)) return '▶';
-    return '◇';
+    if (['zip', '7z', 'rar', 'tar', 'gz'].includes(ext)) return 'M5 3h14v18H5zM11 3v2h2v2h-2v2h2v2h-2v3h2v3h-2z';
+    if (['exe', 'msi', 'dmg', 'pkg'].includes(ext)) return 'M3 4h18v14H3zM3 8h18M10 11v5l4-2.5z';
+    if (['iso', 'img'].includes(ext)) return 'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18M12 10a2 2 0 1 0 0 4a2 2 0 1 0 0-4';
+    if (['txt', 'md', 'pdf', 'doc', 'docx'].includes(ext)) return 'M6 3h9l4 4v14H6zM15 3v4h4M9 12h7M9 16h7';
+    if (['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(ext)) return PRESET_ICON.image;
+    if (['mp4', 'mkv', 'avi', 'mov', 'webm'].includes(ext)) return PRESET_ICON.video;
+    return 'M6 3h9l4 4v14H6zM15 3v4h4';
   }
 
   if (loading) {
     return (
-      <div style={{ padding: 40, textAlign: 'center', color: COLORS.muted }} className="mono">
-        ◇ loading drive…
+      <div style={{ padding: 40, display: 'grid', justifyItems: 'center', gap: 14, color: COLORS.muted }}>
+        <span className="dots-step" aria-hidden="true" style={{ color: COLORS.text, display: 'inline-flex' }}><i /><i /><i /></span>
+        <span className="sk" style={{ fontSize: 11 }}>LOADING DRIVE…</span>
       </div>
     );
   }
@@ -3862,22 +4184,15 @@ function GameResourcesTool({ accent }) {
   if (err) {
     const isSetup = err.includes('not configured');
     return (
-      <div style={{
-        padding: 24, borderRadius: 12,
-        border: `1px solid ${COLORS.line}`, background: COLORS.bg,
-        color: COLORS.muted, fontSize: 13, lineHeight: 1.6,
-      }}>
-        <div className="mono" style={{ color: COLORS.red, fontSize: 12, letterSpacing: '0.14em', marginBottom: 10 }}>
-          {isSetup ? '⚠ SETUP REQUIRED' : '✕ ERROR'}
-        </div>
-        <div style={{ marginBottom: 12, color: COLORS.text }}>{err}</div>
+      <Screen label={isSetup ? 'SETUP REQUIRED' : 'ERROR'} dot="#ff7a7a" live={false}>
+        <div className="mono" style={{ marginBottom: isSetup ? 14 : 0, fontSize: 13, lineHeight: 1.6, color: '#fffaf0' }}>{err}</div>
         {isSetup && (
-          <ol style={{ paddingLeft: 18, margin: 0, fontSize: 12 }}>
+          <ol className="mono" style={{ paddingLeft: 20, margin: 0, fontSize: 12, lineHeight: 1.7, color: '#c9bca6' }}>
             <li>Create a Google Drive folder, share "Anyone with link" → Viewer.</li>
-            <li>Grab the folder ID from the URL (the part after <code>/folders/</code>).</li>
+            <li>Grab the folder ID from the URL (the part after <code style={{ color: '#7fd18b' }}>/folders/</code>).</li>
             <li>Google Cloud Console → enable Drive API → Create an API Key.</li>
             <li>In Vercel → Project → Settings → Environment Variables, add:
-              <pre style={{ background: COLORS.bg, padding: 10, borderRadius: 6, marginTop: 6, fontSize: 11, color: COLORS.text }}>
+              <pre style={{ background: '#2e251d', padding: 10, marginTop: 6, fontSize: 11, color: '#7fd18b', overflowX: 'auto' }}>
 {`GDRIVE_API_KEY=AIza…
 GDRIVE_FOLDER_ID=1abcXYZ…`}
               </pre>
@@ -3885,53 +4200,47 @@ GDRIVE_FOLDER_ID=1abcXYZ…`}
             <li>Redeploy.</li>
           </ol>
         )}
-      </div>
+      </Screen>
     );
   }
 
   return (
-    <div style={{ display: 'grid', gap: 14 }}>
-      <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-        <div style={{ flex: 1 }}>
-          <Field value={search} onChange={setSearch} placeholder="Search files…" />
+    <div style={{ display: 'grid', gap: 18 }}>
+      <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
+        <div style={{ flex: 1, minWidth: 200, position: 'relative', padding: 3 }}>
+          <label htmlFor="gr-search" className="sr">Search files</label>
+          <StrokeIcon d={ICO.search} size={16} sw={2.6} color={COLORS.muted} style={{ position: 'absolute', left: 15, top: 18, pointerEvents: 'none' }} />
+          <TInput id="gr-search" value={search} onChange={setSearch} placeholder="Search files…" style={{ paddingLeft: 40 }} />
         </div>
-        <span className="mono" style={{ fontSize: 10, color: COLORS.muted, letterSpacing: '0.1em' }}>
+        <span className="sk" style={{ fontSize: 11, color: COLORS.muted }}>
           {filtered.length}/{files.length} FILES
         </span>
       </div>
 
       {filtered.length === 0 ? (
-        <div style={{
-          padding: 28, textAlign: 'center', borderRadius: 12,
-          border: `1px dashed ${COLORS.line}`, background: COLORS.bg,
-          color: COLORS.muted, fontSize: 13,
-        }}>
-          <div className="mono" style={{ fontSize: 12, letterSpacing: '0.14em', marginBottom: 6 }}>
-            {files.length === 0 ? 'FOLDER EMPTY' : 'NO MATCHES'}
-          </div>
-          {files.length === 0
+        <EmptyState
+          title={files.length === 0 ? 'FOLDER EMPTY' : 'NO MATCHES'}
+          hint={files.length === 0
             ? 'Upload files to your Drive folder, then refresh.'
             : 'Try a different search term.'}
-        </div>
+        />
       ) : (
-        <div style={{ display: 'grid', gap: 6 }}>
-          {filtered.map((f) => (
+        <div className="pxs" style={{ margin: 3, background: COLORS.paper }}>
+          {filtered.map((f, i) => (
             <div key={f.id} style={{
-              padding: 12, borderRadius: 10, background: COLORS.bg,
-              border: '1px solid ' + COLORS.line,
-              display: 'grid', gridTemplateColumns: '40px 1fr auto auto', gap: 12, alignItems: 'center',
+              padding: '10px 12px', borderBottom: i < filtered.length - 1 ? '3px dashed ' + COLORS.rule : 'none',
+              display: 'grid', gridTemplateColumns: '40px minmax(0, 1fr) auto auto', gap: 12, alignItems: 'center',
             }}>
-              <div style={{
-                width: 36, height: 36, display: 'grid', placeItems: 'center',
-                borderRadius: 8, border: `1px solid ${accent}55`,
-                color: accent, fontSize: 16, fontFamily: 'JetBrains Mono, monospace',
-              }}>{iconFor(f)}</div>
+              <span className="pxs" style={{
+                width: 34, height: 34, display: 'grid', placeItems: 'center', margin: 3,
+                background: accent, color: COLORS.onAccent,
+              }}><StrokeIcon d={iconFor(f)} size={18} sw={2.4} /></span>
               <div style={{ minWidth: 0 }}>
                 <div className="mono" style={{
-                  fontSize: 12, fontWeight: 700, overflow: 'hidden',
+                  fontSize: 13, fontWeight: 700, overflow: 'hidden',
                   textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                 }}>{f.name}</div>
-                <div className="mono" style={{ fontSize: 10, color: COLORS.muted, marginTop: 3 }}>
+                <div className="mono" style={{ fontSize: 11, color: COLORS.muted, marginTop: 3 }}>
                   {formatSize(f.size)} · {formatDate(f.modifiedAt)}
                 </div>
               </div>
@@ -3939,26 +4248,24 @@ GDRIVE_FOLDER_ID=1abcXYZ…`}
                 href={f.viewUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="mono"
+                className="sk sbtn"
                 style={{
-                  fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase',
-                  padding: '6px 10px', borderRadius: 6, color: COLORS.muted,
-                  border: '1px solid ' + COLORS.line, textDecoration: 'none',
+                  display: 'inline-flex', alignItems: 'center', height: 32, padding: '0 10px', margin: '3px 7px 8px 3px',
+                  fontSize: 10, color: COLORS.text, background: COLORS.paper, textDecoration: 'none',
                 }}
-              >View</a>
-              {!f.isFolder && (
+              >VIEW</a>
+              {!f.isFolder ? (
                 <a
                   href={f.downloadUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="mono"
+                  className="sk sbtn"
                   style={{
-                    fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase',
-                    padding: '6px 10px', borderRadius: 6, color: accent, fontWeight: 700,
-                    border: `1px solid ${accent}55`, textDecoration: 'none',
+                    display: 'inline-flex', alignItems: 'center', gap: 6, height: 32, padding: '0 10px', margin: '3px 7px 8px 3px',
+                    fontSize: 10, color: COLORS.onAccent, background: accent, textDecoration: 'none',
                   }}
-                >↓ DL</a>
-              )}
+                ><StrokeIcon d={ICO.down} size={12} sw={2.8} />DL</a>
+              ) : <span />}
             </div>
           ))}
         </div>
@@ -3967,18 +4274,23 @@ GDRIVE_FOLDER_ID=1abcXYZ…`}
   );
 }
 
-function PlaceholderTool({ tool, accent }) {
+function PlaceholderTool({ tool, name, desc, accent }) {
   return (
-    <div style={{ padding: 30, textAlign: 'center', color: COLORS.muted }}>
-      <div style={{ fontSize: 36, color: accent, marginBottom: 12 }}>{tool.icon}</div>
-      <div className="mono" style={{
-        fontSize: 12, letterSpacing: '0.16em', textTransform: 'uppercase',
-        color: COLORS.text, marginBottom: 8,
-      }}>{tool.name}</div>
-      <div style={{ fontSize: 13, maxWidth: 320, margin: '0 auto', lineHeight: 1.5 }}>
-        {tool.desc}. Module wired to private API — interactive in production build.
+    <Screen label="CARTRIDGE LOADED" live={false} style={{ padding: '20px 22px 24px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+        <span className="pxs" style={{
+          display: 'grid', placeItems: 'center', width: 52, height: 52, flexShrink: 0,
+          background: accent, color: COLORS.onAccent, boxShadow: '0 0 0 3px #fffaf0',
+        }}><ToolIcon id={tool.id} size={28} /></span>
+        <p className={'pf' + (hasVi(name) ? ' fa-vi' : '')} style={{ margin: 0, fontSize: 28, lineHeight: 1.05, color: accent }}>{name || tool.name}</p>
       </div>
-    </div>
+      <p className="mono" style={{ margin: '14px 0 0', fontSize: 13, lineHeight: 1.55, color: '#c9bca6' }}>
+        {desc || tool.desc}. Module wired to private API — interactive in production build.
+      </p>
+      <p className="sk" style={{ margin: '18px 0 0', fontSize: 13, color: '#fffaf0' }}>
+        READY<span className="blink" style={{ color: '#7fd18b' }}>_</span>
+      </p>
+    </Screen>
   );
 }
 
@@ -5121,7 +5433,7 @@ const GAME_TILES = [
   {
     id: 'tavern',
     label: 'Tavern',
-    accent: '#8a4fff',
+    accent: '#b9a2ff',
     glyph: '⌑',
     tagline: 'Roleplay engine',
     desc: 'Worlds, characters, lore AI, scene images. Discord + web.',
@@ -5132,7 +5444,7 @@ const GAME_TILES = [
   {
     id: 'ludo',
     label: 'Cờ Cá Ngựa',
-    accent: '#ff5763',
+    accent: '#ff7a7a',
     glyph: '◆',
     tagline: 'Anime Fantasy Ludo',
     desc: 'Bàn cờ 3D phong cách anime, 4 tộc, AI đối thủ, 6 chủ đề. Chơi ngay trên web.',
@@ -5143,7 +5455,7 @@ const GAME_TILES = [
   {
     id: 'project-k',
     label: 'Project K',
-    accent: '#e5b85c',
+    accent: '#ffd25e',
     glyph: '♜',
     tagline: 'Game design · Unity',
     desc: 'Action RPG kiểu Souls/Sekiro, hệ đồ kiểu Path of Exile 2. Tải bản thử nghiệm cho Windows, xem đoạn mở đầu, ảnh trong game và tài liệu thiết kế.',
@@ -5154,7 +5466,7 @@ const GAME_TILES = [
   {
     id: 'cultivation',
     label: 'Ngự Kiếm',
-    accent: '#8fd3ff',
+    accent: '#9fd8ff',
     glyph: '⚔',
     tagline: 'Flying Swords · webcam',
     desc: '13 cử chỉ tay điều khiển đàn kiếm bay. Nhận diện tay chạy hoàn toàn trong trình duyệt — video không rời khỏi máy bạn.',
@@ -5163,6 +5475,84 @@ const GAME_TILES = [
     external: true,
   },
 ];
+
+// Presentation extras per venue: cartridge status + genre plate + icon.
+// Project K ships as a Windows test build, hence PLAYTEST.
+const GAME_META = {
+  tavern:        { status: 'LIVE',     genre: 'RP',      icon: 'M5 7h11v14H5zM16 10h3v7h-3M8.5 11v6M12.5 11v6M5 4h11' },
+  ludo:          { status: 'LIVE',     genre: 'BOARD',   icon: 'M4 4h16v16H4z' },
+  'project-k':   { status: 'PLAYTEST', genre: 'ARPG',    icon: 'M20 4L9 15M20 4h-4M20 4v4M6 12l6 6M8.5 15.5L4 20' },
+  cultivation:   { status: 'LIVE',     genre: 'GESTURE', icon: 'M8 13V5h2.5v7M10.5 11V3.5H13V11M13 11.5V5h2.5v7.5M15.5 12.5V8H18v6.5c0 4-2.6 6.5-6 6.5-3 0-4.6-1.6-6-4.2L4 13.5l1.8-1 2.2 2.5' },
+};
+
+function GameIcon({ id, size = 36 }) {
+  const meta = GAME_META[id] || GAME_META.tavern;
+  return (
+    <StrokeIcon d={meta.icon} size={size}>
+      {id === 'ludo' && (
+        <g fill="currentColor" stroke="none">
+          <rect x="7.5" y="7.5" width="2" height="2" /><rect x="14.5" y="7.5" width="2" height="2" />
+          <rect x="11" y="11" width="2" height="2" />
+          <rect x="7.5" y="14.5" width="2" height="2" /><rect x="14.5" y="14.5" width="2" height="2" />
+        </g>
+      )}
+    </StrokeIcon>
+  );
+}
+
+// Pixel scenes for the cabinet screen — one per venue (static rects; only
+// a few cells blink).
+function GameScene({ id }) {
+  return (
+    <svg width="100%" height="100%" viewBox="0 0 40 24" preserveAspectRatio="xMidYMid meet" shapeRendering="crispEdges" aria-hidden="true">
+      {id === 'tavern' && (<>
+        <rect x="3" y="2" width="1" height="1" fill="#fffaf0" /><rect className="blink" x="13" y="4" width="1" height="1" fill="#fffaf0" /><rect x="20" y="1" width="1" height="1" fill="#9fd8ff" /><rect className="blink" x="38" y="3" width="1" height="1" fill="#fffaf0" style={{ animationDelay: '0.5s' }} />
+        <path d="M34 1h2v1h1v2h-1v1h-2V4h1V2h-1z" fill="#ffd25e" />
+        <rect x="0" y="20" width="40" height="4" fill="#2f7a3d" /><rect x="0" y="20" width="40" height="1" fill="#5bbf6a" />
+        <rect x="8" y="6" width="12" height="1" fill="#8e4a22" /><rect x="7" y="7" width="14" height="1" fill="#8e4a22" /><rect x="6" y="8" width="16" height="1" fill="#8e4a22" /><rect x="5" y="9" width="18" height="1" fill="#8e4a22" />
+        <rect x="6" y="10" width="16" height="10" fill="#c9733e" />
+        <rect x="12" y="14" width="4" height="6" fill="#1b1410" />
+        <rect x="8" y="12" width="3" height="3" fill="#ffd25e" /><rect x="17" y="12" width="3" height="3" fill="#ffd25e" />
+        <rect x="22" y="11" width="3" height="1" fill="#1b1410" /><rect x="23" y="12" width="2" height="3" fill="#fffaf0" />
+        <rect x="25" y="4" width="12" height="6" fill="#fffaf0" /><rect x="26" y="10" width="2" height="1" fill="#fffaf0" /><rect x="26" y="11" width="1" height="1" fill="#fffaf0" />
+        <rect className="blink" x="28" y="6" width="2" height="2" fill="#1b1410" /><rect className="blink" x="31" y="6" width="2" height="2" fill="#1b1410" style={{ animationDelay: '0.33s' }} /><rect className="blink" x="34" y="6" width="2" height="2" fill="#1b1410" style={{ animationDelay: '0.66s' }} />
+        <rect x="29" y="14" width="2" height="2" fill="#ffd2a8" /><rect x="28" y="16" width="4" height="3" fill="#b9a2ff" /><rect x="28" y="19" width="1" height="1" fill="#1b1410" /><rect x="31" y="19" width="1" height="1" fill="#1b1410" />
+      </>)}
+      {id === 'ludo' && (<>
+        <rect x="8" y="0" width="24" height="24" fill="#fffaf0" />
+        <rect x="9" y="1" width="8" height="8" fill="#ff7a7a" /><rect x="23" y="1" width="8" height="8" fill="#7fd18b" /><rect x="9" y="15" width="8" height="8" fill="#9fd8ff" /><rect x="23" y="15" width="8" height="8" fill="#ffd25e" />
+        <rect x="11" y="3" width="4" height="4" fill="#fffaf0" /><rect x="25" y="3" width="4" height="4" fill="#fffaf0" /><rect x="11" y="17" width="4" height="4" fill="#fffaf0" /><rect x="25" y="17" width="4" height="4" fill="#fffaf0" />
+        <rect x="18" y="1" width="4" height="22" fill="#f3eee4" /><rect x="9" y="10" width="22" height="4" fill="#f3eee4" />
+        <path d="M18 1v22M20 1v22M22 1v22M9 10h22M9 12h22M9 14h22" stroke="#d8cdb9" strokeWidth="0.3" fill="none" />
+        <rect x="18" y="10" width="4" height="4" fill="#b9a2ff" />
+        <rect x="19" y="4" width="2" height="2" fill="#e04545" stroke="#1b1410" strokeWidth="0.3" /><rect x="25" y="11" width="2" height="2" fill="#2f7a3d" stroke="#1b1410" strokeWidth="0.3" /><rect x="12" y="11" width="2" height="2" fill="#7aa8ff" stroke="#1b1410" strokeWidth="0.3" /><rect x="19" y="18" width="2" height="2" fill="#c98a12" stroke="#1b1410" strokeWidth="0.3" />
+        <rect x="12" y="4" width="2" height="2" fill="#e04545" /><rect x="26" y="4" width="2" height="2" fill="#2f7a3d" /><rect x="12" y="18" width="2" height="2" fill="#7aa8ff" /><rect x="26" y="18" width="2" height="2" fill="#c98a12" />
+        <rect x="33" y="15" width="6" height="6" fill="#fffaf0" stroke="#1b1410" strokeWidth="0.4" />
+        <rect x="34" y="16" width="1" height="1" fill="#1b1410" /><rect x="37" y="16" width="1" height="1" fill="#1b1410" /><rect x="34" y="19" width="1" height="1" fill="#1b1410" /><rect x="37" y="19" width="1" height="1" fill="#1b1410" />
+        <rect className="blink" x="2" y="4" width="1" height="1" fill="#ffd25e" /><rect className="blink" x="4" y="9" width="1" height="1" fill="#ff7a7a" style={{ animationDelay: '0.5s' }} /><rect x="35" y="5" width="1" height="1" fill="#9fd8ff" />
+      </>)}
+      {id === 'project-k' && (<>
+        <rect x="3" y="2" width="3" height="3" fill="#e04545" />
+        <rect x="36" y="4" width="1" height="1" fill="#c9bca6" /><rect x="31" y="1" width="1" height="1" fill="#c9bca6" />
+        <rect x="0" y="21" width="40" height="3" fill="#5c5046" /><rect x="0" y="21" width="40" height="1" fill="#8e4a22" />
+        <rect x="18" y="9" width="4" height="12" fill="#8e4a22" /><rect x="16" y="19" width="2" height="2" fill="#8e4a22" /><rect x="22" y="19" width="2" height="2" fill="#8e4a22" />
+        <rect x="14" y="2" width="12" height="2" fill="#2f7a3d" /><rect x="12" y="4" width="16" height="3" fill="#2f7a3d" /><rect x="10" y="6" width="20" height="3" fill="#2f7a3d" /><rect x="13" y="9" width="5" height="1" fill="#2f7a3d" /><rect x="22" y="9" width="5" height="1" fill="#2f7a3d" />
+        <rect className="blink" x="13" y="1" width="2" height="2" fill="#e04545" /><rect x="17" y="0" width="2" height="2" fill="#ffa764" /><rect className="blink" x="22" y="1" width="2" height="2" fill="#e04545" style={{ animationDelay: '0.5s' }} /><rect x="26" y="3" width="2" height="2" fill="#ffd25e" /><rect className="blink" x="10" y="4" width="2" height="2" fill="#ffa764" style={{ animationDelay: '0.25s' }} /><rect x="28" y="6" width="2" height="2" fill="#e04545" /><rect x="20" y="1" width="1" height="1" fill="#ffd25e" />
+        <rect x="32" y="12" width="1" height="9" fill="#c9bca6" /><rect x="30" y="11" width="5" height="1" fill="#ffd25e" /><rect x="32" y="8" width="1" height="3" fill="#8e4a22" /><rect x="32" y="7" width="1" height="1" fill="#ffd25e" />
+        <rect x="6" y="15" width="2" height="2" fill="#ffd2a8" /><rect x="5" y="17" width="4" height="3" fill="#7aa8ff" /><rect x="5" y="20" width="1" height="1" fill="#1b1410" /><rect x="8" y="20" width="1" height="1" fill="#1b1410" /><rect x="9" y="16" width="1" height="4" fill="#c9bca6" />
+      </>)}
+      {id === 'cultivation' && (<>
+        <rect x="2" y="2" width="1" height="1" fill="#fffaf0" /><rect className="blink" x="9" y="5" width="1" height="1" fill="#9fd8ff" /><rect x="26" y="2" width="1" height="1" fill="#fffaf0" /><rect className="blink" x="37" y="8" width="1" height="1" fill="#fffaf0" style={{ animationDelay: '0.5s' }} /><rect x="34" y="20" width="1" height="1" fill="#9fd8ff" />
+        <rect x="10" y="4" width="3" height="1" fill="#7aa8ff" /><rect x="14" y="4" width="2" height="1" fill="#8e4a22" /><rect x="16" y="3" width="1" height="3" fill="#ffd25e" /><rect x="17" y="4" width="6" height="1" fill="#fffaf0" />
+        <rect x="18" y="8" width="3" height="1" fill="#7aa8ff" /><rect x="22" y="8" width="2" height="1" fill="#8e4a22" /><rect x="24" y="7" width="1" height="3" fill="#ffd25e" /><rect x="25" y="8" width="6" height="1" fill="#fffaf0" />
+        <rect x="12" y="11" width="3" height="1" fill="#7aa8ff" /><rect x="16" y="11" width="2" height="1" fill="#8e4a22" /><rect x="18" y="10" width="1" height="3" fill="#ffd25e" /><rect x="19" y="11" width="6" height="1" fill="#fffaf0" />
+        <rect x="21" y="14" width="3" height="1" fill="#7aa8ff" /><rect x="25" y="14" width="2" height="1" fill="#8e4a22" /><rect x="27" y="13" width="1" height="3" fill="#ffd25e" /><rect x="28" y="14" width="6" height="1" fill="#fffaf0" />
+        <rect x="15" y="17" width="3" height="1" fill="#7aa8ff" /><rect x="19" y="17" width="2" height="1" fill="#8e4a22" /><rect x="21" y="16" width="1" height="3" fill="#ffd25e" /><rect x="22" y="17" width="6" height="1" fill="#fffaf0" />
+        <rect x="3" y="13" width="1" height="4" fill="#ffd2a8" /><rect x="5" y="12" width="1" height="5" fill="#ffd2a8" /><rect x="7" y="13" width="1" height="4" fill="#ffd2a8" /><rect x="2" y="17" width="7" height="5" fill="#ffd2a8" /><rect x="9" y="16" width="1" height="3" fill="#ffd2a8" />
+      </>)}
+    </svg>
+  );
+}
 
 function readGameSubRoute() {
   if (typeof window === 'undefined') return null;
@@ -5173,9 +5563,11 @@ function readGameSubRoute() {
 
 export function GamePanel() {
   const [sub, setSub] = useState(readGameSubRoute);
-  // Two big venue cards side-by-side on desktop; stack into the dedicated
-  // mobile layout (full-width PLAY NOW, auto-sheen, tap press) on phones.
+  // Arcade floor: a featured cabinet + info card, then one cartridge per
+  // venue. Stacks to a single column on phones.
   const isMobile = useMediaQuery('(max-width: 768px)');
+  // Which venue the cabinet shows (presentation only).
+  const [featured, setFeatured] = useState(0);
 
   useEffect(() => {
     function onHash() { setSub(readGameSubRoute()); }
@@ -5195,142 +5587,218 @@ export function GamePanel() {
     }
   }, [sub]);
 
+  // Same link behaviour as before: #/game/<id>, external venues load in-tab.
+  const onPlay = (t) => (e) => {
+    if (t.external) {
+      e.preventDefault();
+      window.location.href = t.href;
+    }
+  };
+
+  const total = GAME_TILES.length;
+  const num = (i) => String(i + 1).padStart(2, '0');
+  const cur = GAME_TILES[featured] || GAME_TILES[0];
+  const curMeta = GAME_META[cur.id] || {};
+  const curVi = hasVi(cur.label);
+
   return (
-    <Panel padding={0} style={{
-      display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%',
-      ...(isMobile ? { background: 'transparent', border: 'none', borderRadius: 0 } : {}),
+    <div style={{
+      height: '100%', overflowY: 'auto', overflowX: 'hidden', boxSizing: 'border-box',
+      padding: isMobile ? '6px 6px 30px 3px' : '8px 18px 40px 6px',
     }}>
-      <div style={{
-        padding: isMobile ? '6px 2px 0' : '22px 24px',
-        borderBottom: isMobile ? 'none' : '1px solid ' + COLORS.line,
-      }}>
-        <div className="mono" style={{ fontSize: isMobile ? 9.5 : 10, letterSpacing: '0.26em', fontWeight: 800, color: COLORS.red }}>04 · GAME HUB</div>
-        <h1 className="mono" style={{
-          fontSize: isMobile ? 32 : 34, margin: isMobile ? '8px 0 6px' : '10px 0 7px', color: COLORS.text,
-          fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1,
-        }}>Pick a venue<span style={{ color: COLORS.red }}>.</span></h1>
-        <p style={{ margin: 0, fontSize: isMobile ? 11.5 : 12.5, color: COLORS.muted }}>
-          {GAME_TILES.length} venues live · web + Discord
-        </p>
-      </div>
-
-      <div style={{ flex: 1, padding: isMobile ? '16px 2px 4px' : 24, overflow: 'auto' }}>
-        <div style={{
-          display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 14 : 18,
-          animation: 'fadeUp 200ms ease-out',
-        }}>
-          {GAME_TILES.map((t) => (
-            <a
-              key={t.id}
-              href={`#/game/${t.id}`}
-              onClick={(e) => {
-                if (t.external) {
-                  e.preventDefault();
-                  window.location.href = t.href;
-                }
-              }}
-              className={isMobile ? 'gcard mtap' : 'gcard lit'}
-              style={{
-                position: 'relative', overflow: 'hidden',
-                display: 'flex', flexDirection: 'column', gap: isMobile ? 13 : 14,
-                padding: isMobile ? '24px 22px 22px' : '30px 30px 26px',
-                minHeight: isMobile ? 'auto' : 280, borderRadius: 18,
-                border: `1px solid ${COLORS.line}`,
-                background: 'linear-gradient(180deg, #141010, #100d0c)',
-                color: COLORS.text, textDecoration: 'none',
-                transition: 'border-color 200ms ease, transform 200ms ease, box-shadow 200ms ease',
-              }}
-              onMouseEnter={isMobile ? undefined : (e) => {
-                e.currentTarget.style.transform = 'translateY(-4px)';
-                e.currentTarget.style.borderColor = t.accent + '70';
-                e.currentTarget.style.boxShadow = `0 24px 60px rgba(0,0,0,.5), 0 0 50px ${t.accent}26`;
-              }}
-              onMouseLeave={isMobile ? undefined : (e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.borderColor = COLORS.line;
-                e.currentTarget.style.boxShadow = 'none';
-              }}
-            >
-              <span className={isMobile ? 'msheen' : 'sheen'} />
-              <div style={{
-                position: 'absolute', inset: 0, pointerEvents: 'none',
-                background: `radial-gradient(60% 70% at 85% 100%, ${t.accent}14 0%, transparent 70%)`,
-              }} />
-              <div className="gwm mono" style={{
-                position: 'absolute', bottom: isMobile ? -42 : -52, right: isMobile ? -16 : -22,
-                fontSize: isMobile ? 150 : 190, lineHeight: 1,
-                color: t.accent + '16', pointerEvents: 'none', fontWeight: 800,
-              }}>{t.glyph}</div>
-
-              <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span className="mono" style={{
-                  fontSize: 9.5, letterSpacing: '0.22em', fontWeight: 800, color: t.accent,
-                  border: `1px solid ${t.accent}55`, background: t.accent + '12',
-                  borderRadius: 999, padding: '5px 12px', textTransform: 'uppercase',
-                }}>{t.tagline}</span>
-                <span className="gglyph" style={{ fontSize: 26, color: t.accent, lineHeight: 1 }}>{t.glyph}</span>
-              </div>
-
-              <div style={{ position: 'relative' }}>
-                <div className="gtitle mono" style={{
-                  fontSize: isMobile ? 27 : 30, fontWeight: 800, letterSpacing: '-0.02em', color: COLORS.text,
-                }}>{t.label}</div>
-                <div style={{ fontSize: 12.5, color: COLORS.muted, marginTop: 8, lineHeight: 1.65, maxWidth: 380 }}>{t.desc}</div>
-              </div>
-
-              <div style={{ position: 'relative', display: 'flex', gap: 7, flexWrap: 'wrap' }}>
-                {t.chips.map((c) => (
-                  <span key={c} className="mono" style={{
-                    fontSize: 9, letterSpacing: '0.14em', fontWeight: 700, color: COLORS.muted,
-                    border: `1px solid ${COLORS.line}`, borderRadius: 999, padding: '4px 11px',
-                  }}>{c}</span>
-                ))}
-              </div>
-
-              {isMobile ? (
-                <span className="mono" style={{
-                  position: 'relative', marginTop: 4, width: '100%', textAlign: 'center',
-                  background: t.accent, color: '#ffffff', padding: '14px 0', borderRadius: 11,
-                  fontWeight: 800, letterSpacing: '0.18em', fontSize: 11,
-                  boxShadow: `0 10px 26px ${t.accent}45`,
-                }}>PLAY NOW →</span>
-              ) : (
-                <div style={{ position: 'relative', marginTop: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <span className="gplay mono" style={{
-                    background: t.accent, color: '#ffffff', padding: '13px 26px', borderRadius: 10,
-                    fontWeight: 800, letterSpacing: '0.18em', fontSize: 10.5,
-                    whiteSpace: 'nowrap', flex: 'none', boxShadow: `0 10px 28px ${t.accent}45`,
-                  }}>PLAY NOW →</span>
-                  <span className="mono" style={{
-                    fontSize: 9.5, letterSpacing: '0.16em', color: COLORS.muted, fontWeight: 700,
-                  }}>{t.href}</span>
-                </div>
-              )}
-            </a>
-          ))}
+      {/* ── 1 · Arcade floor (featured venue) ── */}
+      <section aria-labelledby="floor-h">
+        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-end', gap: 16, marginBottom: isMobile ? 26 : 34 }}>
+          <div>
+            <p className="sk" style={{ margin: '0 0 10px', fontSize: isMobile ? 11 : 13, color: COLORS.muted }}>ARCADE FLOOR · NOW SHOWING</p>
+            <h2 id="floor-h" className="pf fa-sec-h" style={{ margin: 0, fontSize: 40, lineHeight: 1 }}>
+              Pick a venue<span style={{ color: '#e04545' }}>.</span>
+            </h2>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 18, padding: '0 8px 8px 0' }}>
+            <button type="button" className="sk sbtn" onClick={() => setFeatured((featured - 1 + total) % total)} aria-label="Previous venue" style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8, height: 40, padding: '0 14px', fontSize: 12, color: COLORS.text, background: COLORS.paper,
+            }}><PixelArrow dir="left" size={10} />PREV</button>
+            <span className="sk" style={{ fontSize: 13 }}>{num(featured)} / {num(total - 1)}</span>
+            <button type="button" className="sk sbtn" onClick={() => setFeatured((featured + 1) % total)} aria-label="Next venue" style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8, height: 40, padding: '0 14px', fontSize: 12, color: COLORS.text, background: COLORS.paper,
+            }}>NEXT<PixelArrow size={10} /></button>
+          </div>
         </div>
 
-        {/* Slim "more soon" strip — keeps the hub feeling alive without a
-            hollow placeholder tile. */}
-        <div className="mono" style={{
-          marginTop: isMobile ? 14 : 18, display: 'flex', alignItems: 'center', gap: isMobile ? 12 : 14,
-          padding: isMobile ? '16px 20px' : '18px 24px', border: `1px dashed ${COLORS.line}`,
-          borderRadius: 14, color: COLORS.muted,
-        }}>
-          <span style={{ fontSize: isMobile ? 15 : 16 }}>✦</span>
-          {isMobile ? (
-            <div>
-              <div style={{ fontSize: 9.5, letterSpacing: '0.18em', fontWeight: 800 }}>MORE · SOON</div>
-              <div style={{ fontSize: 10.5, color: COLORS.muted, marginTop: 3 }}>Mini-games, leaderboards, arcade</div>
+        <div className="fa-hero">
+          {/* Cabinet */}
+          <div className="px" style={{ position: 'relative', display: 'flex', flexDirection: 'column', padding: isMobile ? '14px 14px 0' : '18px 18px 0', background: cur.accent }}>
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, padding: '14px 16px',
+              background: '#fffaf0', color: '#1b1410', border: '3px solid #1b1410',
+            }}>
+              <span aria-hidden="true" style={{ display: 'flex', gap: 6 }}>
+                <span className="blink" style={{ width: 8, height: 8, background: '#e04545' }} />
+                <span className="blink" style={{ width: 8, height: 8, background: '#ffd25e', animationDelay: '0.5s' }} />
+              </span>
+              <span className={'pf fa-cab-h' + (curVi ? ' fa-vi' : '')} style={{ fontSize: 30, lineHeight: 1, textAlign: 'center' }}>{cur.label}</span>
+              <span aria-hidden="true" style={{ display: 'flex', gap: 6 }}>
+                <span className="blink" style={{ width: 8, height: 8, background: '#ffd25e', animationDelay: '0.5s' }} />
+                <span className="blink" style={{ width: 8, height: 8, background: '#e04545' }} />
+              </span>
             </div>
-          ) : (
-            <>
-              <span style={{ fontSize: 10, letterSpacing: '0.2em', fontWeight: 800 }}>MORE · SOON</span>
-              <span style={{ fontSize: 11.5, color: COLORS.muted, letterSpacing: 0 }}>Mini-games, leaderboards, arcade</span>
-            </>
-          )}
+
+            <div style={{ display: 'flex', flexDirection: 'column', flex: 1, marginTop: 16, padding: 14, background: '#1b1410' }}>
+              <div className="fa-scan fa-scr" role="img" aria-label={`${cur.label} — attract screen`} style={{
+                position: 'relative', flex: 1, minHeight: 300, overflow: 'hidden', backgroundColor: '#241b15',
+              }}>
+                <div className="sk" style={{
+                  position: 'absolute', left: 14, right: 14, top: 12, zIndex: 1, display: 'flex', justifyContent: 'space-between',
+                  fontSize: 12, color: '#fffaf0',
+                }}><span>1UP · P1</span><span style={{ color: '#ffd25e' }}>{curMeta.status} · {num(featured)}</span></div>
+                <div aria-hidden="true" style={{ position: 'absolute', left: 18, right: 18, top: 40, bottom: 44 }}>
+                  <GameScene id={cur.id} />
+                </div>
+                <p className="sk blink" style={{ position: 'absolute', left: 0, right: 0, bottom: 14, margin: 0, textAlign: 'center', fontSize: 14, color: '#ffd25e' }}>PRESS START</p>
+              </div>
+            </div>
+
+            <div aria-hidden="true" style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
+              margin: isMobile ? '0 -14px' : '0 -18px', padding: '14px 24px',
+              backgroundImage: 'linear-gradient(rgba(27, 20, 16, 0.14), rgba(27, 20, 16, 0.14))', borderTop: '4px solid #1b1410',
+            }}>
+              <svg width="36" height="44" viewBox="0 0 10 12" shapeRendering="crispEdges"><path d="M3 0h4v1h1v3H7v1H3V4H2V1h1z" fill="#e04545" stroke="#1b1410" strokeWidth="0.4" /><rect x="4" y="5" width="2" height="4" fill="#1b1410" /><rect x="1" y="9" width="8" height="3" fill="#1b1410" /></svg>
+              <span style={{ display: 'flex', gap: 14 }}>
+                {['#e04545', '#ffd25e', '#9fd8ff'].map((c) => (
+                  <span key={c} className="round" style={{ width: 28, height: 28, background: c, border: '3px solid #1b1410', boxShadow: '0 4px 0 #1b1410' }} />
+                ))}
+              </span>
+              <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '8px 12px', background: '#1b1410' }}>
+                <span style={{ width: 4, height: 18, background: '#ffd25e' }} />
+                <span className="sk" style={{ fontSize: 10, color: '#fffaf0' }}>COIN</span>
+              </span>
+            </div>
+          </div>
+
+          {/* Venue info */}
+          <div className="px fa-hero-p" style={{
+            position: 'relative', display: 'flex', flexDirection: 'column', gap: 20,
+            padding: '32px 32px 28px', background: COLORS.paper,
+          }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 14 }}>
+              <span className="sk pxs" style={{ padding: '6px 10px', fontSize: 11, color: COLORS.onAccent, background: cur.accent, textTransform: 'uppercase' }}>{cur.tagline}</span>
+              <span className="sk pxs" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 10px', fontSize: 11, background: COLORS.paper, color: COLORS.text }}>
+                <span className="blink" style={{ width: 8, height: 8, background: COLORS.greenInk }} />{curMeta.status}
+              </span>
+              <span className="sk" style={{ marginLeft: 'auto', fontSize: 11, color: COLORS.muted }}>CARTRIDGE {num(featured)}</span>
+            </div>
+            <div>
+              <h3 className={'pf fa-hero-t' + (curVi ? ' fa-vi' : '')} style={{ margin: 0, fontSize: 46, lineHeight: 1 }}>{cur.label}</h3>
+              <p style={{ margin: '14px 0 0', fontSize: 15, lineHeight: 1.6, color: COLORS.muted }}>{cur.desc}</p>
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, paddingLeft: 3 }}>
+              {cur.chips.map((c) => (
+                <span key={c} className={'sk pxs' + (hasVi(c) ? ' fa-vi' : '')} style={{ padding: '5px 9px', fontSize: 10, fontWeight: 700, background: COLORS.field, color: COLORS.text }}>{c}</span>
+              ))}
+            </div>
+            <dl style={{ margin: 0, borderTop: '3px dashed ' + COLORS.rule }}>
+              {[
+                ['GENRE', curMeta.genre],
+                ['STATUS', curMeta.status],
+                ['OPENS', 'FULL PAGE · THIS TAB'],
+                ['PATH', cur.href],
+              ].map(([k, v]) => (
+                <div key={k} style={{
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12,
+                  padding: '10px 0', borderBottom: '3px dashed ' + COLORS.rule,
+                }}>
+                  <dt className="sk" style={{ fontSize: 11, color: COLORS.muted }}>{k}</dt>
+                  <dd className={k === 'PATH' ? 'mono' : 'sk'} style={{ margin: 0, fontSize: k === 'PATH' ? 13 : 12, textAlign: 'right', wordBreak: 'break-all' }}>{v}</dd>
+                </div>
+              ))}
+            </dl>
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 22, marginTop: 'auto', padding: '6px 10px 10px 4px' }}>
+              <a className="sk pbtn" href={`#/game/${cur.id}`} onClick={onPlay(cur)} style={{
+                display: 'inline-flex', alignItems: 'center', gap: 12, height: 56, padding: '0 24px', fontSize: 16,
+                color: COLORS.onAccent, background: '#e04545', textDecoration: 'none',
+              }}>
+                <PixelArrow size={14} />PLAY NOW
+              </a>
+              <span className="sk" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 11, color: COLORS.muted }}>OR PICK A CARTRIDGE BELOW <PixelArrow dir="down" size={6} /></span>
+            </div>
+          </div>
         </div>
-      </div>
-    </Panel>
+      </section>
+
+      {/* ── 2 · Game select (one cartridge per venue) ── */}
+      <section aria-labelledby="select-h" style={{ marginTop: isMobile ? 64 : 84 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-end', gap: 16, marginBottom: isMobile ? 52 : 60 }}>
+          <div>
+            <p className="sk" style={{ margin: '0 0 10px', fontSize: isMobile ? 11 : 13, color: COLORS.muted }}>GAME SELECT · {num(total - 1)} CARTRIDGES</p>
+            <h2 id="select-h" className="pf fa-sec-h" style={{ margin: 0, fontSize: 40, lineHeight: 1 }}>Choose your cartridge</h2>
+          </div>
+          <p className="sk" style={{ display: 'flex', alignItems: 'center', gap: 10, margin: 0, fontSize: isMobile ? 11 : 13, color: COLORS.greenInk }}>
+            <span className="blink" style={{ width: 10, height: 10, background: 'currentColor' }} />
+            {total} VENUES LIVE · WEB + DISCORD
+          </p>
+        </div>
+
+        <div className="fa-carts" style={{ padding: '0 12px 14px 4px' }}>
+          {GAME_TILES.map((t, i) => {
+            const meta = GAME_META[t.id] || {};
+            const on = i === featured;
+            const vi = hasVi(t.label);
+            return (
+              <article key={t.id} className={'fa-cart rise' + (on ? ' fa-cart-on' : '')} style={{
+                display: 'flex', flexDirection: 'column', minHeight: 340, background: t.accent, color: COLORS.onAccent,
+                animationDelay: i * 60 + 'ms',
+              }}>
+                {on && (
+                  <span className="sk bob" aria-hidden="true" style={{
+                    position: 'absolute', left: '50%', top: -40, marginLeft: -28, display: 'inline-flex', alignItems: 'center', gap: 6,
+                    padding: '4px 10px', fontSize: 12, color: COLORS.stripText, background: COLORS.strip,
+                  }}>P1 <PixelArrow dir="down" size={6} /></span>
+                )}
+                <span className="sk fa-ribs" style={{
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: 26, padding: '0 12px',
+                  fontSize: 12, borderBottom: '4px solid #1b1410',
+                }}><span>{meta.status}</span>{num(i)}</span>
+                <button type="button" className="fa-csel" onClick={() => setFeatured(i)} aria-pressed={on} aria-label={`Feature ${t.label}`} style={{
+                  display: 'flex', flexDirection: 'column', gap: 10, flex: 1, margin: '14px 14px 0', padding: 16,
+                  textAlign: 'left', color: COLORS.text, background: COLORS.paper, border: '3px solid #1b1410',
+                }}>
+                  <span className="fa-ico" style={{ display: 'inline-flex' }}><GameIcon id={t.id} size={34} /></span>
+                  <span className={'pf' + (vi ? ' fa-vi' : '')} style={{ fontSize: vi ? 21 : 24, lineHeight: 1.05 }}>{t.label}</span>
+                  <span className="sk" style={{ fontSize: 11, color: COLORS.muted, textTransform: 'uppercase' }}>{t.tagline}</span>
+                  <span className="fa-clamp2" style={{ fontSize: 13, lineHeight: 1.5, color: COLORS.muted }}>{t.desc}</span>
+                  <span style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 'auto', paddingTop: 4 }}>
+                    {t.chips.map((c) => (
+                      <span key={c} className={'sk' + (hasVi(c) ? ' fa-vi' : '')} style={{ padding: '3px 6px', fontSize: 10, fontWeight: 700, border: '2px solid ' + COLORS.text }}>{c}</span>
+                    ))}
+                  </span>
+                </button>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '16px 18px 18px 14px' }}>
+                  <span className="sk" style={{ fontSize: 11 }}>GENRE · {meta.genre}</span>
+                  <a className="sk sbtn" href={`#/game/${t.id}`} onClick={onPlay(t)} aria-label={`Play ${t.label}`} style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 8, height: 36, padding: '0 12px', fontSize: 12,
+                    color: '#1b1410', background: '#fffaf0', textDecoration: 'none',
+                  }}>PLAY <PixelArrow size={10} /></a>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+
+        {/* Slim "more soon" line — an RPG dialog box keeps the hub feeling
+            alive without a hollow placeholder tile. */}
+        <DialogBox speaker="SE77N SAYS:" padding={isMobile ? '28px 46px 22px 20px' : '28px 60px 24px 28px'}
+          style={{ marginTop: isMobile ? 44 : 60, marginRight: 12 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px 20px' }}>
+            <svg width="28" height="28" viewBox="0 0 7 7" shapeRendering="crispEdges" aria-hidden="true">
+              <path d="M3 0h1v2h2v1h1v1H6v1H4v2H3V5H1V4H0V3h1V2h2z" fill="#ffd25e" stroke="#1b1410" strokeWidth="0.35" />
+            </svg>
+            <span className="sk" style={{ fontSize: 15, color: COLORS.text }}>MORE · SOON</span>
+            <span style={{ fontSize: 14, lineHeight: 1.5, color: COLORS.muted }}>Mini-games, leaderboards, arcade</span>
+          </div>
+        </DialogBox>
+      </section>
+    </div>
   );
 }
