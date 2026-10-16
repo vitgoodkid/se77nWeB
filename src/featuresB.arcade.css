@@ -1,0 +1,172 @@
+/* ══════════════════════════════════════════════════════════════
+   featuresB — Subscriptions · Currency · To-do · History
+   "B · Pixel Lobby" helpers for the modules in featuresB.jsx.
+   Colours come from the theme variables (styles.css); accents are hex
+   and always carry ink (#1b1410) text. Things that change at a
+   breakpoint live here because inline styles beat media queries.
+   ══════════════════════════════════════════════════════════════ */
+
+.fb-root {
+  --fb-red-ink: #b42828;      /* red that reads as text on paper */
+  --fb-screen: var(--strip);  /* always-dark "screen" surfaces */
+  min-width: 0;
+  padding-bottom: 28px;       /* room for the last panel's drop when the shell scrolls */
+}
+[data-theme="dark"] .fb-root { --fb-red-ink: #ff8f8f; }
+
+.fb-root :is(.sbtn, .pbtn) { text-transform: uppercase; }
+:where(.fb-root) p { margin: 0; }
+
+/* ── Layout ─────────────────────────────────────────────────── */
+.fb-row { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 44px 36px; }
+.fb-main { flex: 999 1 560px; min-width: 0; }
+.fb-side { flex: 1 1 300px; min-width: 0; }
+.fb-col { display: flex; flex-direction: column; gap: 44px; }
+
+/* ── Small parts ────────────────────────────────────────────── */
+.fb-lbl { display: block; margin: 0 0 8px; font-size: 11px; color: var(--muted); }
+.fb-fld {
+  display: block; width: 100%; height: 46px; padding: 0 12px;
+  font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 14px;
+}
+select.fb-fld { appearance: none; -webkit-appearance: none; padding-right: 34px; cursor: pointer; }
+.fb-tdot { display: inline-block; width: 7px; height: 7px; background: currentColor; flex-shrink: 0; }
+.fb-icob {
+  display: grid; place-items: center; flex-shrink: 0;
+  width: 40px; height: 40px; padding: 0;
+  color: var(--text); background: var(--paper);
+}
+.fb-icob:hover { background: var(--paper-2); }
+
+/* Segmented control: one ring around a row of buttons. */
+.fb-seg { display: flex; }
+.fb-seg > button {
+  flex: 1 1 0; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  height: 42px; padding: 0 14px; border: 0; cursor: pointer;
+  font-family: 'Silkscreen', 'JetBrains Mono', monospace; font-weight: 700; font-size: 12px;
+  text-transform: uppercase; white-space: nowrap;
+  color: var(--text); background: var(--paper);
+  transition: background 80ms steps(2);
+}
+.fb-seg > button + button { border-left: 3px solid var(--ink); }
+.fb-seg > button:hover { background: var(--paper-2); }
+.fb-seg > button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+[data-theme="dark"] .fb-seg > button[aria-pressed="true"] { background: var(--strip-text); color: #1b1410; }
+
+/* ── Subscriptions (tech) ───────────────────────────────────── */
+.fb-hud { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 0.75fr); }
+.fb-hud > * + * { border-left: 3px dashed var(--rule); }
+.fb-hud-big { font-size: 44px; }
+
+.fb-srow {
+  display: grid; align-items: center; gap: 16px;
+  grid-template-columns: minmax(210px, 1fr) 150px 96px 92px 104px;
+  grid-template-areas: "svc nat per usd act";
+  padding: 16px 10px; border-bottom: 3px dashed var(--rule);
+}
+.fb-srow.ro { grid-template-columns: minmax(210px, 1fr) 150px 96px 92px; grid-template-areas: "svc nat per usd"; }
+.fb-srow-h { padding-top: 4px; padding-bottom: 10px; font-size: 11px; color: var(--muted); }
+.fb-srow-on { background: var(--cream); box-shadow: inset 6px 0 0 #7fd18b; }
+.fb-srow > .c-svc { grid-area: svc; min-width: 0; }
+.fb-srow > .c-nat { grid-area: nat; }
+.fb-srow > .c-per { grid-area: per; }
+.fb-srow > .c-usd { grid-area: usd; text-align: right; }
+.fb-srow > .c-act { grid-area: act; }
+.fb-cyc { display: inline-block; padding: 5px 8px; font-size: 10px; color: #1b1410; }
+
+/* ── Currency (crypto) ──────────────────────────────────────── */
+.fb-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px 28px; }
+.fb-tile-big { font-size: 36px; }
+.fb-pseg { display: block; width: 14px; height: 14px; background: var(--cream); box-shadow: 0 0 0 2px var(--ink); }
+.fb-pseg.on { background: #7fd18b; }
+
+.fb-hrow {
+  display: grid; grid-template-columns: 170px minmax(0, 1fr) 124px; gap: 22px; align-items: center;
+  padding: 18px 0; border-bottom: 3px dashed var(--rule);
+}
+.fb-hrow.head { padding: 0 0 10px; font-size: 11px; color: var(--muted); }
+
+/* Pixel step chart: one bar per close, heights snapped to 8 steps. */
+.fb-chart {
+  position: relative; display: flex; align-items: flex-end; gap: 2px;
+  height: 72px; padding: 8px 8px 0; min-width: 0; overflow: hidden;
+  background-color: var(--fb-screen);
+  background-image: linear-gradient(rgba(255, 250, 240, 0.09) 2px, transparent 2px);
+  background-size: 100% 18px;
+}
+.fb-chart > i { flex: 1 1 0; min-width: 0; background: var(--c); box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.45); }
+.fb-chart > i:last-child { box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.45), 0 0 0 2px #fffaf0; }
+.fb-chart-empty {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  font-size: 11px; color: #c9bca6; text-align: center; padding: 0 8px;
+}
+
+.fb-lcd {
+  background-color: var(--fb-screen);
+  background-image: repeating-linear-gradient(0deg, rgba(255, 250, 240, 0.05) 0 2px, transparent 2px 4px);
+  box-shadow: inset 0 0 0 3px #43362b;
+}
+
+/* ── To-do ──────────────────────────────────────────────────── */
+@keyframes fb-tick { 0% { transform: scale(0.3); } 60% { transform: scale(1.25); } 100% { transform: none; } }
+.fb-tick { animation: fb-tick 0.3s steps(3); }
+.fb-qbox { cursor: pointer; border: 0; transition: transform 60ms; }
+.fb-qbox:hover { transform: translate(-1px, -2px); }
+.fb-qbox:active { transform: translate(1px, 2px); }
+.fb-ppick { cursor: pointer; border: 0; transition: transform 60ms; }
+.fb-ppick:hover { transform: translateY(-2px); }
+.fb-qdel { cursor: pointer; border: 0; color: var(--muted); background: transparent; }
+.fb-qdel:hover, .fb-qdel:focus-visible { color: var(--fb-red-ink); background: var(--paper-2); }
+.fb-xpfill { height: 100%; transition: width 0.3s steps(5); }
+.fb-qrow { display: flex; align-items: center; gap: 16px; padding: 14px 2px 14px 4px; border-bottom: 3px dashed var(--rule); }
+
+/* ── History (feed) ─────────────────────────────────────────── */
+.fb-fold {
+  display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px;
+  padding: 8px 10px; border: 0; cursor: pointer; text-align: left;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  color: var(--text); background: transparent;
+  transition: background 80ms steps(2);
+}
+.fb-fold:hover { background: var(--cream); }
+.fb-fold .fb-fsub { color: var(--muted); }
+.fb-fold .fb-fic { border: 3px solid var(--ink); }
+.fb-fold.on, .fb-fold.on:hover { color: #fffaf0; background: var(--strip); }
+.fb-fold.on .fb-fsub { color: #c9bca6; }
+.fb-fold.on .fb-fic { border-color: #fffaf0; }
+.fb-slots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 36px 32px; }
+
+/* ── Breakpoints ────────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .fb-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fb-hud { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fb-hud > :first-child { grid-column: 1 / -1; }
+  .fb-hud > :nth-child(2) { border-left: 0; border-top: 3px dashed var(--rule); }
+  .fb-hud > :nth-child(3) { border-top: 3px dashed var(--rule); }
+  .fb-slots { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 768px) {
+  .fb-row { gap: 36px; }
+  .fb-col { gap: 36px; }
+  .fb-hide-sm { display: none !important; }
+  .fb-tiles { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  .fb-hud { grid-template-columns: minmax(0, 1fr); }
+  .fb-hud > * + * { border-left: 0; border-top: 3px dashed var(--rule); }
+  .fb-hud-big { font-size: 34px; }
+
+  .fb-srow, .fb-srow.ro {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "svc svc" "nat usd" "per act";
+    row-gap: 12px; padding: 16px 4px;
+  }
+  .fb-srow-h { display: none; }
+  .fb-srow > .c-act { justify-content: flex-end; }
+
+  .fb-hrow { grid-template-columns: minmax(0, 1fr) auto; gap: 14px; }
+  .fb-hrow .fb-chart { grid-column: 1 / -1; order: 3; height: 52px; }
+  .fb-hrow.head { display: none; }
+
+  .fb-qrow { gap: 12px; }
+  .fb-tile-big { font-size: 30px; }
+  .fb-pad { padding-left: 18px !important; padding-right: 18px !important; }
+}
