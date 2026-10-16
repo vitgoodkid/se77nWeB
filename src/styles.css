@@ -1,16 +1,63 @@
-:root {
-  --bg: #0d0a08;
-  --panel: #15110d;
-  --panel-2: #1c1813;
-  --line: rgba(255, 255, 255, 0.08);
-  --text: #f5ede0;
-  --muted: rgba(245, 237, 224, 0.5);
+/* ══════════════════════════════════════════════════════════════
+   se77n · "B · Pixel Lobby" arcade theme
+   Neutral colours are CSS variables so COLORS.bg/panel/panel2/line/text/
+   muted (lib.jsx → 'var(--x)') flip with [data-theme] on <html>.
+   Light (default) = cream paper + ink.  Dark = ink room + warm paper text.
+   Pixel classes (.px .pxs .pbtn .sbtn .tab …) live in arcade.css.
+   ══════════════════════════════════════════════════════════════ */
+:root,
+[data-theme="light"] {
+  --cream: #f3eee4;          /* page ground */
+  --paper: #fffaf0;          /* panels, cards, inputs on dark ground */
+  --paper-2: #f7f0e3;        /* nested / zebra surface */
+  --ink: #1b1410;            /* outlines, pixel rings, hard drops */
+  --on-accent: #1b1410;      /* text on accent fills — both themes */
+  --rule: #d8cdb9;           /* dashed separators */
+  --strip: #1b1410;          /* tab bar / ticker strip */
+  --strip-2: #2e251d;        /* inactive tab */
+  --strip-text: #fffaf0;
+  --shadow: rgba(27, 20, 16, 0.18);
+  --dot: rgba(27, 20, 16, 0.09);
+  --field: #f3eee4;          /* input wells */
+
+  --bg: var(--cream);
+  --panel: var(--paper);
+  --panel-2: var(--paper-2);
+  --line: rgba(27, 20, 16, 0.22);
+  --text: #1b1410;
+  --muted: #5c5046;
+
   --red: #e04545;
   --green: #5ba868;
+  --green-ink: #2f7a3d;
   --gold: #d4a858;
+  --sky: #9fd8ff;
+  --coin: #ffc93c;
+
   --ambient-r: 224;
   --ambient-g: 69;
   --ambient-b: 69;
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --cream: #17110d;
+  --paper: #261d16;
+  --paper-2: #2e241b;
+  --ink: #050302;
+  --rule: #3d3127;
+  --strip: #0b0806;
+  --strip-2: #261d16;
+  --strip-text: #fffaf0;
+  --shadow: rgba(0, 0, 0, 0.5);
+  --dot: rgba(255, 250, 240, 0.05);
+  --field: #17110d;
+
+  --line: rgba(255, 250, 240, 0.14);
+  --text: #fffaf0;
+  --muted: #c9bca6;
+  --green-ink: #7fd18b;
+  color-scheme: dark;
 }
 
 *,
@@ -24,8 +71,10 @@ body {
   margin: 0;
   padding: 0;
   min-height: 100%;
-  background: var(--bg);
-  font-family: 'Geist', system-ui, sans-serif;
+  background-color: var(--bg);
+  background-image: radial-gradient(var(--dot) 1.2px, transparent 1.6px);
+  background-size: 16px 16px;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
   color: var(--text);
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
@@ -33,6 +82,24 @@ body {
 
 .mono {
   font-family: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+/* Pixel look: square corners everywhere in the app; opt back in with .round
+   (arcade buttons, avatars that must stay circular). */
+#root *:not(.round) { border-radius: 0 !important; }
+.round { border-radius: 999px !important; }
+
+/* Display type: real headings and big heavy titles use the pixel face. */
+#root :is(h1, h2, h3) { font-family: 'Pixelify Sans', 'JetBrains Mono', monospace; font-weight: 700; letter-spacing: 0; }
+#root [style*="font-weight: 800"]:is([style*="font-size: 2"], [style*="font-size: 3"], [style*="font-size: 4"], [style*="font-size: 5"], [style*="font-size: 6"], [style*="font-size: 7"], [style*="font-size: 8"], [style*="font-size: 9"]) {
+  font-family: 'Pixelify Sans', 'JetBrains Mono', monospace;
+  letter-spacing: 0 !important;
+}
+/* Tiny spaced-out uppercase labels → Silkscreen (made for small sizes). */
+#root .mono:is([style*="letter-spacing: 0.18em"], [style*="letter-spacing: 0.2em"], [style*="letter-spacing: 0.22em"], [style*="letter-spacing: 0.24em"], [style*="letter-spacing: 0.26em"], [style*="letter-spacing: 0.28em"], [style*="letter-spacing: 0.3em"]) {
+  font-family: 'Silkscreen', 'JetBrains Mono', monospace;
+  letter-spacing: 0.04em !important;
+  font-weight: 700;
 }
 
 @keyframes ticker {
@@ -95,20 +162,56 @@ body {
   from { opacity: 0; transform: translateY(4px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-/* Glowing "special" first letter of the rotating hero quote. */
+/* Red highlight letters of the rotating hero quote (pixel drop, no glow). */
 @keyframes qGlow {
-  0%, 100% { text-shadow: 0 0 7px rgba(224,69,69,0.45); }
-  50%      { text-shadow: 0 0 15px rgba(224,69,69,0.9), 0 0 30px rgba(224,69,69,0.4); }
+  0%, 100% { text-shadow: 2px 2px 0 var(--ink); }
+  50%      { text-shadow: 3px 3px 0 var(--ink); }
 }
-.qglow { animation: qGlow 2.6s ease-in-out infinite; }
+.qglow { animation: qGlow 2.6s steps(2) infinite; }
 
-::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.08); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.15); }
+/* Chunky pixel scrollbars */
+::-webkit-scrollbar { width: 12px; height: 12px; }
+::-webkit-scrollbar-track { background: var(--paper-2); }
+::-webkit-scrollbar-thumb { background: var(--ink); border: 3px solid var(--paper-2); }
+::-webkit-scrollbar-thumb:hover { background: var(--red); }
 
 button { font-family: inherit; }
-input, textarea { font-family: inherit; }
+input, textarea, select { font-family: inherit; }
+
+:focus-visible { outline: 3px solid var(--red); outline-offset: 2px; }
+
+/* ── Legacy literal colours → theme variables ─────────────────────
+   Older components hardcode the previous dark palette as literal hex/rgba
+   (not via COLORS). The browser serialises inline styles with spaces, so
+   match that form and remap on the intended property only. Applies in both
+   themes now that the palette is variable-driven. */
+[style*="background: rgb(13, 10, 8)"],
+[style*="background-color: rgb(13, 10, 8)"] { background-color: var(--bg) !important; }
+[style*="background: rgb(21, 17, 13)"],
+[style*="background-color: rgb(21, 17, 13)"],
+[style*="background: rgb(19, 16, 16)"],
+[style*="background-color: rgb(19, 16, 16)"] { background-color: var(--panel) !important; }
+[style*="background: rgb(28, 24, 19)"],
+[style*="background-color: rgb(28, 24, 19)"] { background-color: var(--panel-2) !important; }
+
+[style*="background: rgba(13, 10, 8, 0.5)"],
+[style*="background: rgba(13, 10, 8, 0.6)"],
+[style*="background: rgba(13, 10, 8, 0.7)"],
+[style*="background: rgba(13, 10, 8, 0.78)"],
+[style*="background: rgba(13, 10, 8, 0.92)"] { background-color: var(--paper) !important; }
+
+[style*="color: rgb(245, 237, 224)"] { color: var(--text) !important; }
+[style*="color: rgba(245, 237, 224, 0.5)"] { color: var(--muted) !important; }
+[style*="color: rgba(245, 237, 224, 0.3)"] { color: var(--muted) !important; opacity: 0.75; }
+[style*="solid rgba(255, 255, 255, 0.08)"],
+[style*="border-color: rgba(255, 255, 255, 0.08)"] { border-color: var(--line) !important; }
+
+/* Game venue cards (.gcard) keep their own dark neon look in both themes. */
+.gcard[style*="color: rgb(245, 237, 224)"],
+.gcard [style*="color: rgb(245, 237, 224)"] { color: #f5ede0 !important; }
+.gcard [style*="color: rgba(245, 237, 224, 0.5)"] { color: rgba(245, 237, 224, 0.6) !important; }
+.gcard[style*="solid rgba(255, 255, 255, 0.08)"],
+.gcard [style*="solid rgba(255, 255, 255, 0.08)"] { border-color: rgba(255, 255, 255, 0.12) !important; }
 
 /* ── Toolbox & Game redesign — parent-hover child motion + light ──── */
 /* Spring-bounce micro-animations that can't be expressed with inline
@@ -152,87 +255,6 @@ input, textarea { font-family: inherit; }
 .mtap   { transition: transform .14s ease, box-shadow .2s ease; }
 .mtap:active   { transform: scale(.975); }
 .tabtap:active { transform: scale(.94); }
-
-/* ── Light mode ─────────────────────────────────────────────────
-   Toggled via [data-theme="light"] on <html> (header LightToggle, persisted
-   in `kata.theme` — shared with the kata dashboard pages). The base palette
-   is already var-driven, so html/body + anything reading the vars flips here.
-   The components also hardcode COLORS hex inline; those are remapped below,
-   matched both as authored hex AND the browser's serialized rgb()/rgba()
-   (with spaces), and only on the intended property (background:/color:/solid )
-   so gradients and box-shadows are never touched. */
-[data-theme="light"] {
-  --bg: #f3eee4;
-  --panel: #ffffff;
-  --panel-2: #faf6ee;
-  --line: rgba(33, 28, 22, 0.12);
-  --text: #211c16;
-  --muted: rgba(33, 28, 22, 0.55);
-}
-[data-theme="light"] ::-webkit-scrollbar-thumb { background: rgba(33, 28, 22, 0.18); }
-[data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: rgba(33, 28, 22, 0.30); }
-
-[data-theme="light"] [style*="background: rgb(13, 10, 8)"],
-[data-theme="light"] [style*="background-color: rgb(13, 10, 8)"],
-[data-theme="light"] [style*="background:#0d0a08"] { background-color: #f3eee4 !important; }
-
-[data-theme="light"] [style*="background: rgb(21, 17, 13)"],
-[data-theme="light"] [style*="background-color: rgb(21, 17, 13)"],
-[data-theme="light"] [style*="background:#15110d"] { background-color: #ffffff !important; }
-
-[data-theme="light"] [style*="background: rgb(28, 24, 19)"],
-[data-theme="light"] [style*="background-color: rgb(28, 24, 19)"],
-[data-theme="light"] [style*="background:#1c1813"] { background-color: #faf6ee !important; }
-
-/* Mobile card surface — authored as a literal #131010 (a touch above --bg).
-   The kata shell maps it the same way; mirror that here so mobile Toolbox /
-   cards flip to a light card surface instead of staying black. */
-[data-theme="light"] [style*="background: rgb(19, 16, 16)"],
-[data-theme="light"] [style*="background-color: rgb(19, 16, 16)"],
-[data-theme="light"] [style*="background:#131010"] { background-color: #ffffff !important; }
-
-/* Game venue cards (.gcard) stay dark/neon in BOTH themes — their background is
-   a gradient the remap can't flip, so the global light-mode rules would turn
-   their inline light text/borders dark-on-dark. Re-pin those to the dark-theme
-   values; the extra .gcard ancestor outranks the generic remap. */
-[data-theme="light"] .gcard[style*="color: rgb(245, 237, 224)"],
-[data-theme="light"] .gcard[style*="color:#f5ede0"],
-[data-theme="light"] .gcard [style*="color: rgb(245, 237, 224)"],
-[data-theme="light"] .gcard [style*="color:#f5ede0"] { color: #f5ede0 !important; }
-[data-theme="light"] .gcard [style*="color: rgba(245, 237, 224, 0.5)"],
-[data-theme="light"] .gcard [style*="color:rgba(245,237,224,0.5)"] { color: rgba(245, 237, 224, 0.5) !important; }
-[data-theme="light"] .gcard[style*="solid rgba(255, 255, 255, 0.08)"],
-[data-theme="light"] .gcard[style*="solid rgba(255,255,255,0.08)"],
-[data-theme="light"] .gcard [style*="solid rgba(255, 255, 255, 0.08)"],
-[data-theme="light"] .gcard [style*="solid rgba(255,255,255,0.08)"] { border-color: rgba(255, 255, 255, 0.08) !important; }
-
-[data-theme="light"] [style*="color: rgb(245, 237, 224)"],
-[data-theme="light"] [style*="color:#f5ede0"] { color: #211c16 !important; }
-
-[data-theme="light"] [style*="color: rgba(245, 237, 224, 0.5)"],
-[data-theme="light"] [style*="color:rgba(245,237,224,0.5)"] { color: rgba(33, 28, 22, 0.55) !important; }
-
-/* Faint hint text (mobile chat chrome, dividers) authored at 0.3 alpha. */
-[data-theme="light"] [style*="color: rgba(245, 237, 224, 0.3)"],
-[data-theme="light"] [style*="color:rgba(245,237,224,0.3)"] { color: rgba(33, 28, 22, 0.38) !important; }
-
-[data-theme="light"] [style*="solid rgba(255, 255, 255, 0.08)"],
-[data-theme="light"] [style*="solid rgba(255,255,255,0.08)"],
-[data-theme="light"] [style*="border-color: rgba(255, 255, 255, 0.08)"] { border-color: rgba(33, 28, 22, 0.12) !important; }
-
-/* Translucent dark chrome (header / nav rail / ticker / popovers + modals) →
-   light chrome. These are authored as literal rgba(13,10,8,A); the browser
-   serializes them with spaces. */
-[data-theme="light"] [style*="background: rgba(13, 10, 8, 0.5)"],
-[data-theme="light"] [style*="background:rgba(13,10,8,0.5)"] { background-color: rgba(248, 244, 237, 0.72) !important; }
-[data-theme="light"] [style*="background: rgba(13, 10, 8, 0.6)"],
-[data-theme="light"] [style*="background:rgba(13,10,8,0.6)"] { background-color: rgba(248, 244, 237, 0.80) !important; }
-[data-theme="light"] [style*="background: rgba(13, 10, 8, 0.7)"],
-[data-theme="light"] [style*="background:rgba(13,10,8,0.7)"] { background-color: rgba(248, 244, 237, 0.85) !important; }
-[data-theme="light"] [style*="background: rgba(13, 10, 8, 0.78)"],
-[data-theme="light"] [style*="background:rgba(13,10,8,0.78)"] { background-color: rgba(248, 244, 237, 0.88) !important; }
-[data-theme="light"] [style*="background: rgba(13, 10, 8, 0.92)"],
-[data-theme="light"] [style*="background:rgba(13,10,8,0.92)"] { background-color: rgba(255, 255, 255, 0.95) !important; }
 
 /* ── Stylist (route 07) — hero motion + card hover ──────────────── */
 @keyframes st-float {

@@ -663,17 +663,55 @@ export function useSyncedData(spec, defaultValue) {
 }
 
 // ── Colors ─────────────────────────────────────────────────────
+// Neutrals are CSS variables (see styles.css) so they flip with the light /
+// dark theme. Never concatenate an alpha suffix onto them — use withAlpha().
+// Accents stay hex so the existing `color + '22'` pattern keeps working.
 export const COLORS = {
-  bg: '#0d0a08',
-  panel: '#15110d',
-  panel2: '#1c1813',
-  line: 'rgba(255,255,255,0.08)',
-  text: '#f5ede0',
-  muted: 'rgba(245,237,224,0.5)',
+  bg: 'var(--bg)',
+  panel: 'var(--panel)',
+  panel2: 'var(--panel-2)',
+  line: 'var(--line)',
+  text: 'var(--text)',
+  muted: 'var(--muted)',
   red: '#E04545',
   green: '#5BA868',
   gold: '#D4A858',
+  // Arcade (B · Pixel Lobby) tokens
+  ink: 'var(--ink)',            // pixel rings, outlines, hard drops
+  onAccent: '#1b1410',          // text on any accent fill, both themes
+  paper: 'var(--paper)',
+  cream: 'var(--cream)',
+  rule: 'var(--rule)',          // dashed separators
+  field: 'var(--field)',        // input wells
+  strip: 'var(--strip)',        // dark tab-bar / ticker strip
+  stripText: '#fffaf0',
+  greenInk: 'var(--green-ink)', // green that reads as text on paper
 };
+
+// Module accents — always paired with COLORS.onAccent text.
+export const ACCENTS = {
+  home: '#fffaf0',
+  ai: '#ff7a7a',
+  tools: '#7fd18b',
+  game: '#7aa8ff',
+  crypto: '#ffd25e',
+  feed: '#ffa764',
+  kata: '#b9a2ff',
+  stylist: '#ff9ad5',
+  store: '#66d9d2',
+  tv4: '#ffd25e',
+  tech: '#7fd18b',
+  todo: '#7fd18b',
+};
+
+// Alpha for any colour: hex gets an alpha byte, anything else (CSS vars)
+// goes through color-mix.
+export function withAlpha(color, a) {
+  if (typeof color === 'string' && /^#[0-9a-f]{6}$/i.test(color)) {
+    return color + Math.round(a * 255).toString(16).padStart(2, '0');
+  }
+  return `color-mix(in srgb, ${color} ${Math.round(a * 100)}%, transparent)`;
+}
 
 // ── Persisted state ────────────────────────────────────────────
 export function usePersisted(key, initial) {
@@ -1143,10 +1181,9 @@ export const SOCIALS = [
 export function Panel({ children, style, padding = 20 }) {
   return (
     <div
+      className="px"
       style={{
         background: COLORS.panel,
-        border: '1px solid ' + COLORS.line,
-        borderRadius: 14,
         padding,
         position: 'relative',
         ...style,
@@ -1159,12 +1196,12 @@ export function Panel({ children, style, padding = 20 }) {
 
 export function PanelHeader({ kicker, title, right }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 14 }}>
+    <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, marginBottom: 16 }}>
       <div>
-        <div className="mono" style={{ fontSize: 10, letterSpacing: '0.22em', color: COLORS.muted, marginBottom: 6 }}>
+        <div className="sk" style={{ fontSize: 11, color: COLORS.muted, marginBottom: 6 }}>
           {kicker}
         </div>
-        <div className="mono" style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.01em' }}>
+        <div className="pf" style={{ fontSize: 22, lineHeight: 1.1 }}>
           {title}
         </div>
       </div>
@@ -1173,52 +1210,30 @@ export function PanelHeader({ kicker, title, right }) {
   );
 }
 
+// Pixel button. variant: ghost (paper), solid (accent fill), tinted (light
+// accent wash). Text on fills is always ink for contrast.
 export function Btn({ children, onClick, variant = 'ghost', color = COLORS.red, style, type, disabled, title }) {
+  const isHex = typeof color === 'string' && color.startsWith('#');
   const styles = {
-    ghost: {
-      background: 'transparent',
-      border: `1px solid ${COLORS.line}`,
-      color: COLORS.text,
-    },
-    solid: {
-      background: color,
-      border: `1px solid ${color}`,
-      color: '#0d0a08',
-      fontWeight: 700,
-    },
-    tinted: {
-      background: color + '1a',
-      border: `1px solid ${color}55`,
-      color,
-    },
-  }[variant];
+    ghost: { background: COLORS.paper, color: COLORS.text },
+    solid: { background: color, color: isHex ? COLORS.onAccent : COLORS.paper },
+    tinted: { background: isHex ? color + '40' : COLORS.paper, color: COLORS.text },
+  }[variant] || {};
   return (
     <button
       onClick={onClick}
       type={type}
       disabled={disabled}
       title={title}
-      className="mono"
+      className="sk sbtn"
       style={{
-        padding: '9px 14px',
-        borderRadius: 10,
-        fontSize: 11,
-        letterSpacing: '0.08em',
-        cursor: disabled ? 'not-allowed' : 'pointer',
+        padding: '10px 14px',
+        margin: '3px 7px 8px 3px',
+        fontSize: 12,
+        lineHeight: 1.2,
         textTransform: 'uppercase',
-        opacity: disabled ? 0.45 : 1,
-        transition: 'transform 100ms, background 120ms',
         ...styles,
         ...style,
-      }}
-      onMouseDown={(e) => {
-        if (!disabled) e.currentTarget.style.transform = 'translateY(1px)';
-      }}
-      onMouseUp={(e) => {
-        e.currentTarget.style.transform = 'translateY(0)';
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = 'translateY(0)';
       }}
     >
       {children}
@@ -1235,48 +1250,32 @@ export function Field({ value, onChange, placeholder, type = 'text', mono = true
       placeholder={placeholder}
       onKeyDown={onKeyDown}
       autoFocus={autoFocus}
-      className={mono ? 'mono' : ''}
+      className={(mono ? 'mono ' : '') + 'field'}
       style={{
         width: '100%',
-        background: COLORS.bg,
-        border: `1px solid ${COLORS.line}`,
-        borderRadius: 10,
         padding: '11px 14px',
-        color: COLORS.text,
         fontSize: 13,
-        outline: 'none',
-        transition: 'border-color 120ms, box-shadow 120ms',
         ...style,
-      }}
-      onFocus={(e) => {
-        e.currentTarget.style.borderColor = COLORS.red;
-        e.currentTarget.style.boxShadow = `0 0 0 3px ${COLORS.red}22`;
-      }}
-      onBlur={(e) => {
-        e.currentTarget.style.borderColor = COLORS.line;
-        e.currentTarget.style.boxShadow = 'none';
       }}
     />
   );
 }
 
 export function Pill({ children, color = COLORS.red, size = 'sm' }) {
+  const isHex = typeof color === 'string' && color.startsWith('#');
   return (
     <span
-      className="mono"
+      className="sk pxs"
       style={{
         display: 'inline-flex',
         alignItems: 'center',
         gap: 6,
-        padding: size === 'sm' ? '3px 8px' : '5px 11px',
-        borderRadius: 999,
-        background: color + '18',
-        border: `1px solid ${color}40`,
-        color,
-        fontSize: size === 'sm' ? 9 : 10,
-        letterSpacing: '0.12em',
+        margin: 3,
+        padding: size === 'sm' ? '3px 7px' : '5px 10px',
+        background: isHex ? color : COLORS.paper,
+        color: isHex ? COLORS.onAccent : color,
+        fontSize: size === 'sm' ? 10 : 11,
         textTransform: 'uppercase',
-        fontWeight: 600,
         whiteSpace: 'nowrap',
       }}
     >
@@ -1287,7 +1286,7 @@ export function Pill({ children, color = COLORS.red, size = 'sm' }) {
 
 export function Kicker({ children, color = COLORS.muted, style }) {
   return (
-    <div className="mono" style={{ fontSize: 10, letterSpacing: '0.22em', color, ...style }}>
+    <div className="sk" style={{ fontSize: 11, color, ...style }}>
       {children}
     </div>
   );

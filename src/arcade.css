@@ -1,0 +1,165 @@
+/* ══════════════════════════════════════════════════════════════
+   se77n arcade kit — pixel building blocks shared by every screen.
+   All colours come from the theme variables in styles.css, so each
+   class works in light (cream/ink) and dark (ink/paper) themes.
+   Motion is CSS-only (transform/opacity) and stops under .still or
+   prefers-reduced-motion.
+   ══════════════════════════════════════════════════════════════ */
+
+/* Type */
+.pf { font-family: 'Pixelify Sans', 'JetBrains Mono', monospace; font-weight: 700; letter-spacing: 0; }
+.sk { font-family: 'Silkscreen', 'JetBrains Mono', monospace; font-weight: 700; letter-spacing: 0.02em; }
+
+/* Pixel rings: a notched outline drawn with four box-shadows (corners stay
+   open, like a sprite), plus an optional hard drop. The ring sits OUTSIDE the
+   box — leave ~8px of room around these so parents don't clip them. */
+.px {
+  box-shadow:
+    0 -4px 0 0 var(--ink), 0 4px 0 0 var(--ink), -4px 0 0 0 var(--ink), 4px 0 0 0 var(--ink),
+    10px 10px 0 4px var(--shadow);
+}
+.pxs {
+  box-shadow: 0 -3px 0 0 var(--ink), 0 3px 0 0 var(--ink), -3px 0 0 0 var(--ink), 3px 0 0 0 var(--ink);
+}
+.pxd {
+  box-shadow:
+    0 -3px 0 0 var(--ink), 0 3px 0 0 var(--ink), -3px 0 0 0 var(--ink), 3px 0 0 0 var(--ink),
+    6px 7px 0 3px var(--shadow);
+}
+
+/* Pressable buttons */
+.pbtn, .sbtn {
+  cursor: pointer;
+  border: 0;
+  transition: transform 60ms, box-shadow 60ms;
+}
+.pbtn {
+  box-shadow:
+    0 -4px 0 0 var(--ink), 0 4px 0 0 var(--ink), -4px 0 0 0 var(--ink), 4px 0 0 0 var(--ink),
+    6px 8px 0 4px var(--ink);
+}
+.pbtn:hover:not(:disabled) {
+  transform: translate(-2px, -2px);
+  box-shadow:
+    0 -4px 0 0 var(--ink), 0 4px 0 0 var(--ink), -4px 0 0 0 var(--ink), 4px 0 0 0 var(--ink),
+    8px 10px 0 4px var(--ink);
+}
+.pbtn:active:not(:disabled) {
+  transform: translate(6px, 8px);
+  box-shadow: 0 -4px 0 0 var(--ink), 0 4px 0 0 var(--ink), -4px 0 0 0 var(--ink), 4px 0 0 0 var(--ink), 0 0 0 4px var(--ink);
+}
+.sbtn {
+  box-shadow:
+    0 -3px 0 0 var(--ink), 0 3px 0 0 var(--ink), -3px 0 0 0 var(--ink), 3px 0 0 0 var(--ink),
+    4px 5px 0 3px var(--ink);
+}
+.sbtn:hover:not(:disabled) { transform: translate(-1px, -1px); }
+.sbtn:active:not(:disabled) {
+  transform: translate(4px, 5px);
+  box-shadow: 0 -3px 0 0 var(--ink), 0 3px 0 0 var(--ink), -3px 0 0 0 var(--ink), 3px 0 0 0 var(--ink), 0 0 0 3px var(--ink);
+}
+.pbtn:disabled, .sbtn:disabled { cursor: not-allowed; opacity: 0.45; }
+
+/* Round arcade button (chat send, FAB) */
+.abtn {
+  cursor: pointer;
+  border: 0;
+  border-radius: 999px !important;
+  box-shadow: 0 5px 0 #8e1f1f, 0 0 0 3px var(--ink);
+  transition: transform 60ms, box-shadow 60ms;
+}
+.abtn:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 1px 0 #8e1f1f, 0 0 0 3px var(--ink); }
+
+/* Inputs */
+.field {
+  border: 0;
+  outline: none;
+  background: var(--field);
+  color: var(--text);
+  box-shadow: 0 -3px 0 0 var(--ink), 0 3px 0 0 var(--ink), -3px 0 0 0 var(--ink), 3px 0 0 0 var(--ink);
+}
+.field::placeholder { color: var(--muted); opacity: 0.85; }
+.field:focus {
+  background: var(--paper);
+  box-shadow: 0 -3px 0 0 var(--red), 0 3px 0 0 var(--red), -3px 0 0 0 var(--red), 3px 0 0 0 var(--red);
+}
+
+/* Hover lift for clickable cards */
+.lift { transition: transform 100ms steps(2); }
+.lift:hover, .lift:focus-visible { transform: translate(-3px, -4px); }
+.lift:active { transform: translate(2px, 3px); }
+
+/* Chips (filters, segmented controls) */
+.chip-px {
+  cursor: pointer;
+  border: 0;
+  background: var(--paper);
+  color: var(--text);
+  box-shadow: 0 -3px 0 0 var(--ink), 0 3px 0 0 var(--ink), -3px 0 0 0 var(--ink), 3px 0 0 0 var(--ink);
+  transition: background 80ms steps(2);
+}
+.chip-px:hover { background: var(--paper-2); }
+.chip-px.on, .chip-px[aria-pressed="true"], .chip-px[aria-selected="true"] { background: var(--ink); color: var(--paper); }
+[data-theme="dark"] .chip-px.on,
+[data-theme="dark"] .chip-px[aria-pressed="true"],
+[data-theme="dark"] .chip-px[aria-selected="true"] { background: var(--strip-text); color: #1b1410; }
+
+/* Module tab bar */
+.tab {
+  display: flex; align-items: center; gap: 8px;
+  height: 40px; padding: 0 14px;
+  font-size: 12px; white-space: nowrap; text-decoration: none; cursor: pointer;
+  border: 0;
+  color: #e8dfcf; background: var(--strip-2);
+  box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.07);
+  transition: background 80ms steps(2);
+}
+.tab:hover { color: #ffffff; background: #43362b; }
+.tab .tn { color: var(--a); }
+.tab-on, .tab-on:hover { height: 48px; color: #1b1410; background: var(--a); box-shadow: inset 0 4px 0 rgba(255, 255, 255, 0.4); }
+.tab-on .tn { color: #1b1410; }
+
+/* Ribbed cartridge strip */
+.ribs { background-image: repeating-linear-gradient(90deg, rgba(27, 20, 16, 0.22) 0 4px, transparent 4px 10px); }
+
+/* Brick + grass strip */
+.bricks {
+  background-color: #c9733e;
+  background-image: linear-gradient(#8e4a22 4px, transparent 4px), linear-gradient(90deg, #8e4a22 4px, transparent 4px);
+  background-size: 32px 24px;
+  border-top: 8px solid #5bbf6a;
+  box-shadow: inset 0 4px 0 var(--ink);
+}
+
+/* HP / XP bar */
+.hpbar { height: 18px; background: var(--paper); border: 3px solid var(--ink); overflow: hidden; }
+.hpbar > span { display: block; height: 100%; background: repeating-linear-gradient(90deg, var(--a, #7fd18b) 0 10px, transparent 10px 12px); }
+
+/* Motion */
+@keyframes px-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@keyframes px-coin { 0% { transform: scaleX(1); } 50% { transform: scaleX(0.12); } 100% { transform: scaleX(1); } }
+@keyframes px-rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+@keyframes px-drift { from { transform: translateX(-200px); } to { transform: translateX(110vw); } }
+@keyframes px-pop { 0% { opacity: 1; transform: translate(-50%, 0); } 70% { opacity: 1; transform: translate(-50%, -52px); } 100% { opacity: 0; transform: translate(-50%, -60px); } }
+@keyframes px-pop2 { 0% { opacity: 1; transform: translate(-50%, 0); } 70% { opacity: 1; transform: translate(-50%, -52px); } 100% { opacity: 0; transform: translate(-50%, -60px); } }
+@keyframes px-dots { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
+
+.blink { animation: blink 1s steps(1) infinite; }
+.bob { animation: px-bob 1s steps(2) infinite; }
+.coin-spin { animation: px-coin 0.9s steps(4) infinite; }
+.marq { animation: ticker 30s linear infinite; }
+.rise { animation: px-rise 0.4s steps(4) backwards; }
+.drift { animation: px-drift 46s linear infinite; }
+.pop-a { animation: px-pop 0.6s steps(6) forwards; }
+.pop-b { animation: px-pop2 0.6s steps(6) forwards; }
+.dots-step > i { display: inline-block; width: 8px; height: 8px; margin-right: 6px; background: currentColor; animation: px-dots 0.9s steps(2) infinite; }
+.dots-step > i:nth-child(2) { animation-delay: 0.3s; }
+.dots-step > i:nth-child(3) { animation-delay: 0.6s; }
+
+.still *, .still *::before, .still *::after { animation: none !important; transition: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  #root *, #root *::before, #root *::after { animation: none !important; transition: none !important; }
+}
+
+/* Visually hidden (labels for icon inputs) */
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
