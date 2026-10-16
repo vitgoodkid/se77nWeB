@@ -68,8 +68,8 @@ const bare = (s) => String(s || '').replace(/^[●◇✓↗]\s*/, '');
 const SHELL_CSS = `
 :root, [data-theme="light"] { --sh-red-ink: #b42828; }
 [data-theme="dark"] { --sh-red-ink: #ff8a8a; }
-.sh-wrap { width: 100%; max-width: 1280px; margin-left: auto; margin-right: auto; padding-left: 48px; padding-right: 48px; box-sizing: border-box; }
-.sh-route { padding: 12px max(48px, calc((100% - 1184px) / 2)) 28px; }
+.sh-wrap { width: 100%; max-width: 1720px; margin-left: auto; margin-right: auto; padding-left: 48px; padding-right: 48px; box-sizing: border-box; }
+.sh-route { padding: 12px max(48px, calc((100% - 1624px) / 2)) 28px; }
 .sh-tabs { scrollbar-width: none; }
 .sh-tabs::-webkit-scrollbar { display: none; }
 .sh-tabs .tab { flex-shrink: 0; }
@@ -114,6 +114,19 @@ const SHELL_CSS = `
 .sh-cart:hover .sh-p1, .sh-cart:focus-visible .sh-p1 { opacity: 1; animation: px-bob 1s steps(2) infinite; }
 .sh-cart .sh-go { display: inline-block; transition: transform 100ms steps(2); }
 .sh-cart:hover .sh-go, .sh-cart:focus-visible .sh-go { transform: translateX(4px); }
+/* Wide screens: use the room instead of leaving empty side bands. */
+@media (min-width: 1500px) {
+  .sh-hero { gap: 72px; }
+  .sh-hero-h { font-size: 66px; }
+  .sh-scene { height: 500px !important; }
+  .sh-grid4 { gap: 52px 36px; }
+  .sh-cart { min-height: 268px; }
+}
+@media (min-width: 1880px) {
+  .sh-hero-h { font-size: 76px; }
+  .sh-scene { height: 560px !important; }
+  .sh-grid4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
 @media (max-width: 1200px) {
   .sh-game { display: none !important; }
 }
