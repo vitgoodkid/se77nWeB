@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { storeApi } from './api.js';
+import { PixelArrow, PixelCloud, PixelCoin, ModuleIcon } from '../ui/arcade.jsx';
 import './store.css';
 
 const CART_KEY = 'se77n.store.cart.v2';
@@ -130,6 +131,108 @@ function ProductArt({ src, alt, className = '' }) {
   );
 }
 
+/* ── Pixel bits for the "B · Pixel Lobby" item shop ─────────────────── */
+const KS_ACCENT = '#66d9d2';
+
+function BagIcon({ size = 18, fill = KS_ACCENT }) {
+  return (
+    <svg className="ks-ico" width={size} height={size} viewBox="0 0 12 12" shapeRendering="crispEdges" aria-hidden="true">
+      <path d="M4 1h4v1h1v2H8V2H4v2H3V2h1z" fill="currentColor" />
+      <path d="M1 4h10v7H1z" fill={fill} stroke="currentColor" strokeWidth="0.8" />
+    </svg>
+  );
+}
+
+function StrokeIcon({ size = 16, width = 2.6, children }) {
+  return (
+    <svg className="ks-ico" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={width}
+      strokeLinecap="square" strokeLinejoin="miter" aria-hidden="true">
+      {children}
+    </svg>
+  );
+}
+
+const BagPlusIcon = ({ size = 14 }) => <StrokeIcon size={size} width={2.8}><path d="M5 8h14l-1.2 12H6.2z" /><path d="M12 11v6M9 14h6" /></StrokeIcon>;
+const CloseIcon = ({ size = 16 }) => <StrokeIcon size={size} width={3}><path d="M6 6l12 12M18 6L6 18" /></StrokeIcon>;
+const CheckIcon = ({ size = 16 }) => <StrokeIcon size={size} width={3.2}><path d="M4 12.5l5 5L20 6.5" /></StrokeIcon>;
+
+function ChatIcon({ size = 20 }) {
+  return (
+    <svg className="ks-ico" width={size} height={Math.round(size * 8 / 9)} viewBox="0 0 9 8" shapeRendering="crispEdges" aria-hidden="true">
+      <path d="M1 0h7v1h1v4H8v1H4v1H3v1H2V6H1V5H0V1h1z" fill="currentColor" />
+      <rect className="ks-ico__hole" x="2" y="2" width="1" height="1" />
+      <rect className="ks-ico__hole" x="4" y="2" width="1" height="1" />
+      <rect className="ks-ico__hole" x="6" y="2" width="1" height="1" />
+    </svg>
+  );
+}
+
+/** Pixel market stall with the shopkeeper sprite (pure decoration). */
+function KsStall({ closed = false, tagline }) {
+  const awning = `ks-awning-${useId().replace(/:/g, '')}`;
+  return (
+    <div className={`ks-stall${closed ? ' is-closed' : ''}`}>
+      <svg className="ks-stall__layer" width="320" height="240" viewBox="0 0 64 48" shapeRendering="crispEdges">
+        <defs>
+          <pattern id={awning} width="8" height="10" patternUnits="userSpaceOnUse">
+            <rect width="4" height="10" fill={closed ? '#c9bca6' : KS_ACCENT} />
+            <rect x="4" width="4" height="10" fill="#fffaf0" />
+          </pattern>
+        </defs>
+        <rect x="20" y="9" width="2" height="4" fill="#8e4a22" />
+        <rect x="42" y="9" width="2" height="4" fill="#8e4a22" />
+        <rect x="16" y="1" width="32" height="8" fill="#fffaf0" stroke="#1b1410" strokeWidth="0.6" />
+        <rect x="6" y="20" width="3" height="14" fill="#8e4a22" stroke="#1b1410" strokeWidth="0.5" />
+        <rect x="55" y="20" width="3" height="14" fill="#8e4a22" stroke="#1b1410" strokeWidth="0.5" />
+        <rect x="3" y="12" width="58" height="8" fill={`url(#${awning})`} stroke="#1b1410" strokeWidth="0.6" />
+        <path d="M3 20h4v2H3zM11 20h4v2h-4zM19 20h4v2h-4zM27 20h4v2h-4zM35 20h4v2h-4zM43 20h4v2h-4zM51 20h4v2h-4zM59 20h2v2h-2z"
+          fill={closed ? '#c9bca6' : KS_ACCENT} stroke="#1b1410" strokeWidth="0.4" />
+      </svg>
+      <svg className={`ks-stall__keeper${closed ? '' : ' bob'}`} width="60" height="70" viewBox="0 0 12 14" shapeRendering="crispEdges">
+        <path d="M3 0h6v1h1v2H2V1h1z" fill="#1b1410" />
+        <path d="M2 3h8v4H9v1H3V7H2z" fill="#f2c9a0" stroke="#1b1410" strokeWidth="0.3" />
+        {closed
+          ? <path d="M3.5 5h2v.6h-2zM6.5 5h2v.6h-2z" fill="#1b1410" />
+          : <><rect x="4" y="4" width="1" height="1" fill="#1b1410" /><rect x="7" y="4" width="1" height="1" fill="#1b1410" /></>}
+        <rect x="5" y="6" width="2" height={closed ? 0.6 : 1} fill="#1b1410" />
+        <path d="M1 8h10v6H1z" fill="#fffaf0" stroke="#1b1410" strokeWidth="0.3" />
+        <path d="M3 9h6v5H3z" fill={closed ? '#c9bca6' : KS_ACCENT} stroke="#1b1410" strokeWidth="0.3" />
+      </svg>
+      <svg className="ks-stall__layer" width="320" height="240" viewBox="0 0 64 48" shapeRendering="crispEdges">
+        {!closed && <>
+          <rect x="10" y="27" width="8" height="3" fill={KS_ACCENT} stroke="#1b1410" strokeWidth="0.4" />
+          <rect x="11" y="24" width="6" height="3" fill="#ff9ad5" stroke="#1b1410" strokeWidth="0.4" />
+          <path d="M39 24h4v1h-1v1h-2v-1h-1z" fill="#1b1410" />
+          <rect x="37" y="26" width="8" height="4" fill="#ffd25e" stroke="#1b1410" strokeWidth="0.4" />
+          <rect x="49" y="28" width="5" height="2" fill="#ffc93c" stroke="#1b1410" strokeWidth="0.4" />
+          <rect x="49" y="26" width="5" height="2" fill="#ffc93c" stroke="#1b1410" strokeWidth="0.4" />
+        </>}
+        <rect x="2" y="30" width="60" height="3" fill="#8e4a22" stroke="#1b1410" strokeWidth="0.5" />
+        <rect x="4" y="33" width="56" height="15" fill="#c9733e" stroke="#1b1410" strokeWidth="0.5" />
+        <rect x="4" y="38" width="56" height="1" fill="#8e4a22" />
+        <rect x="4" y="43" width="56" height="1" fill="#8e4a22" />
+      </svg>
+      <span className={`ks-stall__sign ${closed ? 'sk is-closed' : 'pf'}`}>{closed ? 'CLOSED' : 'KataShop'}</span>
+      {closed && <span className="ks-stall__zz sk bob">z<small>z</small></span>}
+      {tagline && <span className="ks-stall__tag sk">{tagline}</span>}
+    </div>
+  );
+}
+
+/** Sky + clouds + stall + brick ground. Decorative; children float on top. */
+function KsScene({ className = '', closed = false, tagline }) {
+  return (
+    <div className={`ks-scene ${className}`} aria-hidden="true">
+      <span className="ks-scene__stars" />
+      <span className="ks-scene__sun" />
+      <PixelCloud width={112} className="ks-scene__cloud drift" style={{ top: '38%', animationDelay: '-20s' }} />
+      <PixelCloud width={92} className="ks-scene__cloud" style={{ right: '22%', top: 64 }} />
+      <KsStall closed={closed} tagline={tagline} />
+      <div className="ks-scene__ground bricks" />
+    </div>
+  );
+}
+
 export default function StoreApp() {
   const [route, navigate] = useStoreRoute();
   const [config, setConfig] = useState(null);
@@ -182,7 +285,7 @@ export default function StoreApp() {
     const oldTheme = theme?.getAttribute('content');
     document.title = route.view === 'admin' ? 'KataShop · Admin' : 'KataShop · se77n';
     description?.setAttribute('content', 'KataShop — những món đồ nhỏ cho nhịp sống hằng ngày.');
-    theme?.setAttribute('content', '#f6f0e6');
+    theme?.setAttribute('content', document.documentElement.getAttribute('data-theme') === 'dark' ? '#17110d' : '#f3eee4');
     document.body.classList.add('ks-body');
     return () => {
       document.title = oldTitle;
@@ -365,42 +468,56 @@ export default function StoreApp() {
         setQuickPicker(null);
         if (action === 'cart') addToCart(product, variant, size, quantity);
         else quickCheckout(product, variant, size, quantity);
-      }} />}      {toast && <div className="ks-toast" role="status">{toast}</div>}
+      }} />}
+      {toast && <div className="ks-toast" role="status">{toast}</div>}
     </div>
   );
 }
 
 function StoreHeader({ route, navigate, cartCount, onCart, config, authBusy, onLogin, onLogout }) {
   const auth = config?.admin;
+  // Coin pop over the bag whenever the count goes up (presentation only).
+  const [coinPop, setCoinPop] = useState(0);
+  const lastCount = useRef(cartCount);
+  useEffect(() => {
+    if (cartCount > lastCount.current) setCoinPop((value) => value + 1);
+    lastCount.current = cartCount;
+  }, [cartCount]);
   return (
     <header className="ks-header">
-      <button className="ks-brand" type="button" onClick={() => navigate('/store')} aria-label="KataShop home">
-        <span className="ks-brand__seal">K</span>
-        <span><strong>KataShop</strong><small>by se77n</small></span>
-      </button>
-      <nav className="ks-nav" aria-label="Điều hướng cửa hàng">
-        <button className={route.view === 'catalog' ? 'is-active' : ''} type="button" onClick={() => navigate('/store')}>Cửa hàng</button>
-        <a href="/">se77n</a>
-        {auth?.allowed && (
-          <button className={route.view === 'admin' ? 'is-active' : ''} type="button" onClick={() => navigate('/store/admin')}>Admin</button>
-        )}
-      </nav>
-      <div className="ks-header__actions">
-        {auth && (auth.signedIn ? (
-          <button className="ks-auth-button" type="button" disabled={authBusy} onClick={onLogout}>
-            {authBusy ? 'Đang xử lý…' : 'Logout'}
+      <div className="ks-header__bar ks-wrap">
+        <div className="ks-brandgroup">
+          <span className="ks-brand__seal pxs" aria-hidden="true">K</span>
+          <button className="ks-brand" type="button" onClick={() => navigate('/store')} aria-label="KataShop home">
+            Kata<em>Shop</em>
           </button>
-        ) : (
-          <button className="ks-auth-button" type="button" disabled={authBusy} onClick={onLogin}>
-            {authBusy ? 'Đang đăng nhập…' : 'Login'}
-          </button>
-        ))}
-        {route.view !== 'admin' ? (
-          <button className="ks-cart-button" type="button" onClick={onCart}>
-            <span>Giỏ hàng</span><strong>{cartCount}</strong>
-          </button>
-        ) : <span className="ks-admin-badge">CONTROL ROOM</span>}
+          <a className="ks-lobby sk" href="/">← se77n</a>
+        </div>
+        <nav className="ks-nav" aria-label="Điều hướng cửa hàng">
+          <button className={`chip-px ks-chip${route.view === 'catalog' ? ' on' : ''}`} aria-current={route.view === 'catalog' ? 'page' : undefined} type="button" onClick={() => navigate('/store')}>Cửa hàng</button>
+          {auth?.allowed && (
+            <button className={`chip-px ks-chip${route.view === 'admin' ? ' on' : ''}`} aria-current={route.view === 'admin' ? 'page' : undefined} type="button" onClick={() => navigate('/store/admin')}>Admin</button>
+          )}
+        </nav>
+        <div className="ks-header__actions">
+          {auth && (auth.signedIn ? (
+            <button className={`ks-auth-button sbtn${authBusy ? '' : ' sk'}`} type="button" disabled={authBusy} onClick={onLogout}>
+              {authBusy ? 'Đang xử lý…' : 'Logout'}
+            </button>
+          ) : (
+            <button className={`ks-auth-button sbtn${authBusy ? '' : ' sk'}`} type="button" disabled={authBusy} onClick={onLogin}>
+              {authBusy ? 'Đang đăng nhập…' : 'Login'}
+            </button>
+          ))}
+          {route.view !== 'admin' ? (
+            <button className="ks-cart-button sbtn" type="button" onClick={onCart} aria-label={`Giỏ hàng (${cartCount})`}>
+              <BagIcon size={18} fill="#fffaf0" /><span>Giỏ hàng</span><strong>{cartCount}</strong>
+              {coinPop > 0 && <span className={`ks-coinpop ${coinPop % 2 ? 'pop-a' : 'pop-b'}`} key={coinPop} aria-hidden="true"><PixelCoin size={20} /></span>}
+            </button>
+          ) : <span className="ks-admin-badge sk pxs">CONTROL ROOM</span>}
+        </div>
       </div>
+      <div className="ks-header__strip" aria-hidden="true" />
     </header>
   );
 }
@@ -443,43 +560,50 @@ function Catalog({ products, navigate, config, onQuickAction, gender = null }) {
   }
 
   return (
-    <main className="ks-home">
-      <section className="ks-hero ks-hero--closing">
+    <main className="ks-home ks-wrap">
+      <section className="ks-hero ks-hero--closing px" aria-label="KataShop">
         <div className="ks-hero__copy">
-          <p className="ks-kicker">KATASHOP / DROP 01</p>
+          <p className="ks-hero__kicker sk pxs"><i className="blink" aria-hidden="true" />KATASHOP / DROP 01</p>
           <h1>Đồ mặc mỗi ngày.<br /><em>Một chút khác thường.</em></h1>
           <p className="ks-hero__lead">Những món đồ nhỏ được chọn cho ngày dài, đêm muộn và mọi đoạn ở giữa.</p>
           <div className="ks-hero__actions">
-            <a href="#catalog" className="ks-button ks-button--dark">Xem bộ sưu tập</a>
-            {config?.support?.url && <a href={config.support.url} target="_blank" rel="noreferrer" className="ks-text-link">Cần tư vấn? ↗</a>}
+            <a href="#catalog" className="ks-button ks-button--dark pbtn"><PixelArrow size={12} />Xem bộ sưu tập</a>
+            {config?.support?.url && <a href={config.support.url} target="_blank" rel="noreferrer" className="ks-button ks-button--light sbtn">Cần tư vấn? ↗</a>}
+          </div>
+          <div className="ks-promise">
+            <p className="ks-kicker">THE SMALL PRINT</p>
+            <div><strong>38 TWD</strong><span>phí giao hàng tiêu chuẩn</span></div>
+            <div><strong>{money(config?.shipping?.freeThreshold || 700)}</strong><span>mốc miễn phí vận chuyển</span></div>
+            <div><strong>1:1</strong><span>hỗ trợ chọn size trước khi đặt</span></div>
           </div>
         </div>
-        <div className="ks-hero__visual" aria-hidden="true">
-          {featured?.imageUrl && <img className="ks-hero__product-image" key={featured.id} src={featured.imageUrl} alt="" />}
-          <div className="ks-hero__orbit ks-hero__orbit--one" />
-          <div className="ks-hero__orbit ks-hero__orbit--two" />
-          <p>MADE FOR<br />THE IN-BETWEEN</p>
+        <div className="ks-hero__stage">
+          <KsScene tagline="MADE FOR THE IN-BETWEEN" />
+          {featured && (
+            <button className="ks-featured-ticket" type="button" onClick={() => navigate(`/store/product/${encodeURIComponent(featured.id)}`)} aria-label={`Xem sản phẩm featured: ${featured.title}`}>
+              <div className="ks-featured-ticket__content" key={`${featured.id}-${featuredIndex}`}>
+                {featured.imageUrl && <img className="ks-hero__product-image" key={featured.id} src={featured.imageUrl} alt="" />}
+                <div className="ks-featured-ticket__text">
+                  <div className="ks-featured-ticket__top sk"><span>FEATURED · ĐANG BÁN</span><small>{String(featuredIndex + 1).padStart(2, '0')} / {String(featuredProducts.length).padStart(2, '0')}</small></div>
+                  <strong>{featured.title}</strong>
+                  <em>{moneyRange(featured.minPrice, featured.maxPrice)}</em>
+                </div>
+              </div>
+              {featuredProducts.length > 1 && <div className="ks-featured-ticket__dots" aria-hidden="true">{featuredProducts.map((product, index) => <i className={index === featuredIndex ? 'is-active' : ''} key={product.id} />)}</div>}
+            </button>
+          )}
         </div>
-        {featured && (
-          <button className="ks-featured-ticket" type="button" onClick={() => navigate(`/store/product/${encodeURIComponent(featured.id)}`)} aria-label={`Xem sản phẩm featured: ${featured.title}`}>
-            <div className="ks-featured-ticket__content" key={`${featured.id}-${featuredIndex}`}>
-              <div className="ks-featured-ticket__top"><span>FEATURED · ĐANG BÁN</span><small>{String(featuredIndex + 1).padStart(2, '0')} / {String(featuredProducts.length).padStart(2, '0')}</small></div>
-              <strong>{featured.title}</strong>
-              <em>{moneyRange(featured.minPrice, featured.maxPrice)}</em>
-            </div>
-            {featuredProducts.length > 1 && <div className="ks-featured-ticket__dots" aria-hidden="true">{featuredProducts.map((product, index) => <i className={index === featuredIndex ? 'is-active' : ''} key={product.id} />)}</div>}
-          </button>
-        )}
       </section>
 
       <section className="ks-catalog ks-catalog--first" id="catalog">
         <div className="ks-section-head">
-          <div><p className="ks-kicker">THE CURRENT EDIT</p><h2>Chọn món hợp gu</h2></div>
+          <div><p className="ks-kicker">THE CURRENT EDIT · ITEM SHOP</p><h2>Chọn món hợp gu</h2></div>
           <div className="ks-filters" role="group" aria-label="Lọc sản phẩm">
             {[['all', 'Tất cả'], ['men', 'Nam'], ['women', 'Nữ']].map(([value, label]) => (
               <button
                 type="button"
-                className={filter === value ? 'is-active' : ''}
+                className={`chip-px ks-chip${filter === value ? ' on' : ''}`}
+                aria-pressed={filter === value}
                 onClick={() => setGenderFilter(value)}
                 key={value}
               >
@@ -492,14 +616,13 @@ function Catalog({ products, navigate, config, onQuickAction, gender = null }) {
           <div className="ks-product-grid">
             {shown.map((product, index) => <ProductCard key={product.id} product={product} index={index} navigate={navigate} onQuickAction={onQuickAction} />)}
           </div>
-        ) : <div className="ks-empty">Chưa có sản phẩm trong nhóm này.</div>}
-      </section>
-
-      <section className="ks-promise">
-        <p className="ks-kicker">THE SMALL PRINT</p>
-        <div><strong>38 TWD</strong><span>phí giao hàng tiêu chuẩn</span></div>
-        <div><strong>{money(config?.shipping?.freeThreshold || 700)}</strong><span>mốc miễn phí vận chuyển</span></div>
-        <div><strong>1:1</strong><span>hỗ trợ chọn size trước khi đặt</span></div>
+        ) : (
+          <div className="ks-empty">
+            <BagIcon size={40} fill="transparent" />
+            <p className="sk">EMPTY SHELF</p>
+            <span>Chưa có sản phẩm trong nhóm này.</span>
+          </div>
+        )}
       </section>
     </main>
   );
@@ -508,15 +631,17 @@ function Catalog({ products, navigate, config, onQuickAction, gender = null }) {
 function ProductCard({ product, index, navigate, onQuickAction }) {
   const variant = product.variants.find((entry) => entry.hasStock) || product.variants[0];
   return (
-    <article className={`ks-product-card ks-product-card--${index % 3}`}>
+    <article className={`ks-product-card ks-product-card--${index % 3} px lift rise`} style={{ animationDelay: `${Math.min(index, 8) * 70}ms` }}>
       <button className="ks-product-card__media" type="button" onClick={() => navigate(`/store/product/${encodeURIComponent(product.id)}`)} aria-label={`Xem ${product.title}`}>
         <ProductArt src={product.imageUrl} alt={product.title} />
+        <span className="ks-shelf" aria-hidden="true" />
         {product.discountPercent > 0 && <span className="ks-sale-tag">−{product.discountPercent}%</span>}
         {product.freeship && <span className="ks-ship-tag">FREE SHIP</span>}
       </button>
       <div className="ks-product-card__body">
-        <div><p>{product.subtitle || 'KataShop edition'}</p><h3>{product.title}</h3></div>
+        <div className="ks-product-card__titles"><p>{product.subtitle || 'KataShop edition'}</p><h3>{product.title}</h3></div>
         <div className="ks-product-card__price">
+          <PixelCoin size={16} />
           <strong>{moneyRange(product.minPrice, product.maxPrice)}</strong>
           {product.discountPercent > 0 && product.minPrice === product.maxPrice && <del>{money(product.price)}</del>}
         </div>
@@ -527,8 +652,8 @@ function ProductCard({ product, index, navigate, onQuickAction }) {
           <button type="button" onClick={() => navigate(`/store/product/${encodeURIComponent(product.id)}`)}>Xem chi tiết →</button>
         </div>
         <div className="ks-product-card__quick-actions">
-          <button className="ks-quick-cart" type="button" onClick={() => onQuickAction(product, 'cart')}>Giỏ hàng</button>
-          <button className="ks-quick-buy" type="button" onClick={() => onQuickAction(product, 'buy')}>Mua ngay</button>
+          <button className="ks-quick-cart sbtn" type="button" onClick={() => onQuickAction(product, 'cart')}><BagPlusIcon />Giỏ hàng</button>
+          <button className="ks-quick-buy sbtn" type="button" onClick={() => onQuickAction(product, 'buy')}><PixelCoin size={14} />Mua ngay</button>
         </div>
       </div>
     </article>
@@ -555,12 +680,12 @@ function QuickProductPicker({ product, action, onClose, onConfirm }) {
   return (
     <div className="ks-modal" role="dialog" aria-modal="true" aria-label="Chọn mẫu và kích thước">
       <button className="ks-modal__backdrop" type="button" onClick={onClose} aria-label="Đóng" />
-      <section className="ks-quick-picker">
-        <header><div><p className="ks-kicker">QUICK ORDER</p><h2>Chọn mẫu trước khi mua</h2></div><button type="button" onClick={onClose} aria-label="Đóng">×</button></header>
-        <div className="ks-quick-picker__product"><ProductArt src={variant?.imageUrl || product.imageUrl} alt={product.title} /><div><h3>{product.title}</h3><strong>{money(price)}</strong><p>{variant?.name}</p></div></div>
-        <fieldset className="ks-option"><legend>Mẫu <span>{variant?.name}</span></legend><div className="ks-color-options">{product.variants.map((entry) => <button key={entry.id} type="button" className={entry.id === variant?.id ? 'is-active' : ''} onClick={() => pickVariant(entry.id)}><span style={{ background: entry.colorHex }} /><small>{entry.name}</small></button>)}</div></fieldset>
-        <fieldset className="ks-option"><legend>Kích thước <span>{size}</span></legend><div className="ks-size-options">{product.sizes.map((entry) => { const count = Number(variant?.stockBySize?.[entry] || 0); return <button key={entry} type="button" disabled={!count} className={entry === size ? 'is-active' : ''} onClick={() => { setSize(entry); setQuantity(1); }}>{entry}<small>{count ? `${count} còn` : 'hết'}</small></button>; })}</div></fieldset>
-        <div className="ks-quick-picker__footer"><div className="ks-stepper"><button type="button" onClick={() => setQuantity((value) => Math.max(1, value - 1))}>−</button><strong>{quantity}</strong><button type="button" onClick={() => setQuantity((value) => Math.min(available, value + 1))}>+</button></div><button className={`ks-button ${action === 'buy' ? 'ks-button--rose' : 'ks-button--dark'} ks-quick-picker__confirm`} type="button" disabled={!available} onClick={() => onConfirm(variant, size, quantity)}>{action === 'buy' ? `Mua ngay · ${money(price * quantity)}` : 'Thêm vào giỏ'}</button></div>
+      <section className="ks-quick-picker px">
+        <header><div><p className="ks-kicker ks-kicker--plate">QUICK ORDER</p><h2>Chọn mẫu trước khi mua</h2></div><button className="ks-close sbtn" type="button" onClick={onClose} aria-label="Đóng"><CloseIcon /></button></header>
+        <div className="ks-quick-picker__product"><ProductArt className="pxs" src={variant?.imageUrl || product.imageUrl} alt={product.title} /><div><h3>{product.title}</h3><strong><PixelCoin size={16} />{money(price)}</strong><p>{variant?.name}</p></div></div>
+        <fieldset className="ks-option"><legend>Mẫu <span>{variant?.name}</span></legend><div className="ks-color-options">{product.variants.map((entry) => <button key={entry.id} type="button" aria-pressed={entry.id === variant?.id} className={`pxs${entry.id === variant?.id ? ' is-active' : ''}`} onClick={() => pickVariant(entry.id)}><span style={{ background: entry.colorHex }} /><small>{entry.name}</small></button>)}</div></fieldset>
+        <fieldset className="ks-option"><legend>Kích thước <span>{size}</span></legend><div className="ks-size-options">{product.sizes.map((entry) => { const count = Number(variant?.stockBySize?.[entry] || 0); return <button key={entry} type="button" disabled={!count} aria-pressed={entry === size} className={`pxs${entry === size ? ' is-active' : ''}`} onClick={() => { setSize(entry); setQuantity(1); }}>{entry}<small>{count ? `${count} còn` : 'hết'}</small></button>; })}</div></fieldset>
+        <div className="ks-quick-picker__footer"><div className="ks-stepper pxs" role="group" aria-label="Số lượng"><button type="button" aria-label="Giảm số lượng" onClick={() => setQuantity((value) => Math.max(1, value - 1))}>−</button><strong>{quantity}</strong><button type="button" aria-label="Tăng số lượng" onClick={() => setQuantity((value) => Math.min(available, value + 1))}>+</button></div><button className={`ks-button ${action === 'buy' ? 'ks-button--accent' : 'ks-button--dark'} ks-quick-picker__confirm pbtn`} type="button" disabled={!available} onClick={() => onConfirm(variant, size, quantity)}>{action === 'buy' ? <><PixelCoin size={16} />{`Mua ngay · ${money(price * quantity)}`}</> : <><BagPlusIcon size={16} />Thêm vào giỏ</>}</button></div>
       </section>
     </div>
   );
@@ -587,11 +712,11 @@ function ProductGallery({ product, variant }) {
 
   return (
     <div className="ks-product-gallery">
-      <div className="ks-product-gallery__stage" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+      <div className="ks-product-gallery__stage pxs" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
         <ProductArt src={images[activeIndex]} alt={`${product.title} — ảnh ${activeIndex + 1}`} />
-        {images.length > 1 && <><button className="ks-gallery-nav ks-gallery-nav--prev" type="button" onClick={() => move(-1)} aria-label="Ảnh trước">←</button><button className="ks-gallery-nav ks-gallery-nav--next" type="button" onClick={() => move(1)} aria-label="Ảnh sau">→</button><span className="ks-gallery-count">{activeIndex + 1} / {images.length}</span></>}
+        {images.length > 1 && <><button className="ks-gallery-nav ks-gallery-nav--prev sbtn" type="button" onClick={() => move(-1)} aria-label="Ảnh trước"><PixelArrow dir="left" size={14} /></button><button className="ks-gallery-nav ks-gallery-nav--next sbtn" type="button" onClick={() => move(1)} aria-label="Ảnh sau"><PixelArrow size={14} /></button><span className="ks-gallery-count sk">{activeIndex + 1} / {images.length}</span></>}
       </div>
-      {images.length > 1 && <div className="ks-gallery-thumbs" aria-label="Chọn ảnh sản phẩm">{images.map((src, index) => <button className={index === activeIndex ? 'is-active' : ''} type="button" onClick={() => setActiveIndex(index)} key={src}><img src={src} alt={`Ảnh ${index + 1}`} /></button>)}</div>}
+      {images.length > 1 && <div className="ks-gallery-thumbs" aria-label="Chọn ảnh sản phẩm">{images.map((src, index) => <button className={`pxs${index === activeIndex ? ' is-active' : ''}`} aria-pressed={index === activeIndex} type="button" onClick={() => setActiveIndex(index)} key={src}><img src={src} alt={`Ảnh ${index + 1}`} /></button>)}</div>}
     </div>
   );
 }
@@ -627,44 +752,49 @@ function ProductDetail({ product, navigate, addToCart, beginCheckout }) {
   };
 
   return (
-    <main className="ks-detail">
-      <button className="ks-back" type="button" onClick={() => navigate('/store')}>← Trở lại bộ sưu tập</button>
-      <div className="ks-detail__grid">
-        <div className="ks-detail__media">
-          <ProductGallery product={product} variant={variant} />
-          <div className="ks-detail__stamp"><span>KATA</span><strong>{product.id.slice(0, 12).toUpperCase()}</strong></div>
-        </div>
-        <section className="ks-detail__info">
-          <p className="ks-kicker ks-detail__lead">KATASHOP / {product.featured ? 'FEATURED' : 'CURRENT DROP'}</p>
-          <h1>{product.title}</h1>
-          <p className="ks-detail__subtitle">{product.subtitle}</p>
-          <div className="ks-detail__price"><strong>{money(price)}</strong>{product.discountPercent > 0 && <><del>{money((variant?.priceOverride ?? product.price) + Number(product.sizeAdjustments?.[size] || 0))}</del><span>−{product.discountPercent}%</span></>}</div>
-          <p className="ks-detail__description">{product.description}</p>
-
-          <div className="ks-detail__buyblock">
-            <fieldset className="ks-option"><legend>Phối màu <span>{variant?.name}</span></legend><div className="ks-color-options">
-              {product.variants.map((entry) => (
-                <button key={entry.id} type="button" className={entry.id === variant?.id ? 'is-active' : ''} onClick={() => pickVariant(entry.id)} title={entry.name}>
-                  <span style={{ background: entry.colorHex }} /><small>{entry.name}</small>
-                </button>
-              ))}
-            </div></fieldset>
-
-            <fieldset className="ks-option"><legend>Kích thước <span>{size}</span></legend><div className="ks-size-options">
-              {product.sizes.map((entry) => {
-                const count = Number(variant?.stockBySize?.[entry] || 0);
-                return <button key={entry} type="button" disabled={!count} className={entry === size ? 'is-active' : ''} onClick={() => { setSize(entry); setQuantity(1); }}>{entry}<small>{count ? `${count} còn` : 'hết'}</small></button>;
-              })}
-            </div></fieldset>
-
-            <div className="ks-buy-row">
-              <div className="ks-stepper"><button type="button" onClick={() => setQuantity((value) => Math.max(1, value - 1))}>−</button><strong>{quantity}</strong><button type="button" onClick={() => setQuantity((value) => Math.min(available, value + 1))}>+</button></div>
-              <button className="ks-button ks-button--dark" type="button" disabled={!available} onClick={() => addToCart(product, variant, size, quantity)}>Thêm vào giỏ</button>
-              <button className="ks-button ks-button--rose" type="button" disabled={!available} onClick={() => beginCheckout([lineItem], 'buy')}>Mua ngay</button>
+    <main className="ks-detail ks-wrap">
+      <div className="ks-inspect">
+        <span className="ks-plate sk" aria-hidden="true">INSPECT ITEM</span>
+        <div className="ks-inspect__box px">
+          <button className="ks-back" type="button" onClick={() => navigate('/store')}>← Trở lại bộ sưu tập</button>
+          <div className="ks-detail__grid">
+            <div className="ks-detail__media">
+              <ProductGallery product={product} variant={variant} />
+              <div className="ks-detail__stamp sk"><span>KATA</span><strong>{product.id.slice(0, 12).toUpperCase()}</strong></div>
             </div>
-            <div className="ks-detail__notes"><span>{product.freeship ? '✓ Sản phẩm được miễn phí giao hàng' : '✓ Phí giao hàng hiển thị trước khi đặt'}</span><span>✓ Tồn kho được kiểm tra lại khi gửi đơn</span></div>
+            <section className="ks-detail__info">
+              <p className="ks-kicker ks-detail__lead">KATASHOP / {product.featured ? 'FEATURED' : 'CURRENT DROP'}</p>
+              <h1>{product.title}</h1>
+              <p className="ks-detail__subtitle">{product.subtitle}</p>
+              <div className="ks-detail__price"><PixelCoin size={26} spin /><strong>{money(price)}</strong>{product.discountPercent > 0 && <><del>{money((variant?.priceOverride ?? product.price) + Number(product.sizeAdjustments?.[size] || 0))}</del><span>−{product.discountPercent}%</span></>}</div>
+              <p className="ks-detail__description">{product.description}</p>
+
+              <div className="ks-detail__buyblock">
+                <fieldset className="ks-option"><legend>Phối màu <span>{variant?.name}</span></legend><div className="ks-color-options">
+                  {product.variants.map((entry) => (
+                    <button key={entry.id} type="button" aria-pressed={entry.id === variant?.id} className={`pxs${entry.id === variant?.id ? ' is-active' : ''}`} onClick={() => pickVariant(entry.id)} title={entry.name}>
+                      <span style={{ background: entry.colorHex }} /><small>{entry.name}</small>
+                    </button>
+                  ))}
+                </div></fieldset>
+
+                <fieldset className="ks-option"><legend>Kích thước <span>{size}</span></legend><div className="ks-size-options">
+                  {product.sizes.map((entry) => {
+                    const count = Number(variant?.stockBySize?.[entry] || 0);
+                    return <button key={entry} type="button" disabled={!count} aria-pressed={entry === size} className={`pxs${entry === size ? ' is-active' : ''}`} onClick={() => { setSize(entry); setQuantity(1); }}>{entry}<small>{count ? `${count} còn` : 'hết'}</small></button>;
+                  })}
+                </div></fieldset>
+
+                <div className="ks-buy-row">
+                  <div className="ks-stepper pxs" role="group" aria-label="Số lượng"><button type="button" aria-label="Giảm số lượng" onClick={() => setQuantity((value) => Math.max(1, value - 1))}>−</button><strong>{quantity}</strong><button type="button" aria-label="Tăng số lượng" onClick={() => setQuantity((value) => Math.min(available, value + 1))}>+</button></div>
+                  <button className="ks-button ks-button--dark pbtn" type="button" disabled={!available} onClick={() => addToCart(product, variant, size, quantity)}><BagPlusIcon size={16} />Thêm vào giỏ</button>
+                  <button className="ks-button ks-button--accent pbtn" type="button" disabled={!available} onClick={() => beginCheckout([lineItem], 'buy')}><PixelCoin size={16} />Mua ngay</button>
+                </div>
+                <div className="ks-detail__notes"><span>{product.freeship ? '✓ Sản phẩm được miễn phí giao hàng' : '✓ Phí giao hàng hiển thị trước khi đặt'}</span><span>✓ Tồn kho được kiểm tra lại khi gửi đơn</span></div>
+              </div>
+            </section>
           </div>
-        </section>
+        </div>
       </div>
     </main>
   );
@@ -681,19 +811,23 @@ function CartDrawer({ open, items, config, onClose, onQuantity, onCheckout }) {
     <div className={`ks-drawer ${open ? 'is-open' : ''}`} aria-hidden={!open}>
       <button className="ks-drawer__backdrop" type="button" onClick={onClose} aria-label="Đóng giỏ hàng" />
       <aside className="ks-drawer__panel" aria-label="Giỏ hàng">
-        <div className="ks-drawer__head"><div><p className="ks-kicker">YOUR SELECTION</p><h2>Giỏ hàng</h2></div><button type="button" onClick={onClose} aria-label="Đóng">×</button></div>
+        <div className="ks-drawer__head">
+          <div><p className="ks-kicker ks-kicker--plate">YOUR SELECTION</p><h2><BagIcon size={28} />Giỏ hàng</h2></div>
+          <span className="ks-drawer__count sk pxs" aria-hidden="true">× {items.reduce((sum, item) => sum + item.quantity, 0)}</span>
+          <button className="ks-close sbtn" type="button" onClick={onClose} aria-label="Đóng"><CloseIcon /></button>
+        </div>
         <div className="ks-cart-list">
-          {!items.length && <div className="ks-empty"><strong>Giỏ hàng còn trống.</strong><span>Chọn một món hợp gu rồi quay lại đây nhé.</span></div>}
+          {!items.length && <div className="ks-empty"><BagIcon size={40} fill="transparent" /><strong>Giỏ hàng còn trống.</strong><span>Chọn một món hợp gu rồi quay lại đây nhé.</span></div>}
           {items.map((item) => (
             <div className="ks-cart-item" key={item.key}>
-              <ProductArt src={item.imageUrl} alt={item.title} />
+              <ProductArt className="pxs" src={item.imageUrl} alt={item.title} />
               <div className="ks-cart-item__info">
                 <h3>{item.title}</h3>
                 <p>{item.variantName} · {item.size}</p>
                 <strong>{money(item.unitPrice)}</strong>
               </div>
               <div className="ks-cart-item__controls">
-                <div className="ks-cart-item__qty">
+                <div className="ks-cart-item__qty pxs">
                   <button type="button" onClick={() => onQuantity(item.key, item.quantity - 1)} aria-label="Giảm số lượng">−</button>
                   <span>{item.quantity}</span>
                   <button type="button" onClick={() => onQuantity(item.key, item.quantity + 1)} aria-label="Tăng số lượng">+</button>
@@ -713,8 +847,8 @@ function CartDrawer({ open, items, config, onClose, onQuantity, onCheckout }) {
         <div className="ks-drawer__foot">
           <div><span>Tạm tính</span><strong>{money(summary.subtotal)}</strong></div>
           <div><span>Phí giao hàng</span><strong>{summary.shippingFee ? money(summary.shippingFee) : 'Miễn phí'}</strong></div>
-          <div className="ks-drawer__total"><span>Tổng cộng</span><strong>{money(summary.total)}</strong></div>
-          <button className="ks-button ks-button--dark" type="button" disabled={!items.length} onClick={onCheckout}>Tiếp tục đặt hàng</button>
+          <div className="ks-drawer__total"><span>Tổng cộng</span><strong><PixelCoin size={18} spin />{money(summary.total)}</strong></div>
+          <button className="ks-button ks-button--dark pbtn" type="button" disabled={!items.length} onClick={onCheckout}>Tiếp tục đặt hàng<PixelArrow size={12} /></button>
         </div>
       </aside>
     </div>
@@ -768,25 +902,26 @@ function Checkout({ checkout, config, onClose, onSuccess }) {
   return (
     <div className="ks-modal" role="dialog" aria-modal="true" aria-label="Đặt hàng">
       <button className="ks-modal__backdrop" type="button" onClick={onClose} aria-label="Đóng" />
-      <div className="ks-checkout">
+      <div className="ks-checkout px">
         {success ? (
-          <div className="ks-success">
-            <span className="ks-success__seal">✓</span><p className="ks-kicker">ORDER RECEIVED</p><h2>Cảm ơn bạn.</h2>
+          <div className="ks-success" role="status">
+            <span className="ks-success__seal pxs" aria-hidden="true"><CheckIcon size={30} /></span>
+            <p className="ks-kicker"><PixelCoin size={16} spin />ORDER RECEIVED</p><h2>Cảm ơn bạn.</h2>
             <p>Đơn <strong>{success.id}</strong> đã được ghi nhận. KataShop sẽ liên hệ qua số điện thoại để xác nhận.</p>
-            <button className="ks-button ks-button--dark" type="button" onClick={onClose}>Tiếp tục xem Store</button>
+            <button className="ks-button ks-button--accent pbtn" type="button" onClick={onClose}>Tiếp tục xem Store</button>
           </div>
         ) : (
           <form onSubmit={submit}>
-            <div className="ks-checkout__head"><div><p className="ks-kicker">CHECKOUT</p><h2>Thông tin nhận hàng</h2></div><button type="button" onClick={onClose} aria-label="Đóng">×</button></div>
+            <div className="ks-checkout__head"><div><p className="ks-kicker ks-kicker--plate">CHECKOUT</p><h2>Thông tin nhận hàng</h2></div><button className="ks-close sbtn" type="button" onClick={onClose} aria-label="Đóng"><CloseIcon /></button></div>
             <div className="ks-checkout__layout">
               <div className="ks-checkout__fields">
-                <label><span>Họ và tên *</span><input required autoComplete="name" value={form.fullName} onChange={(event) => setForm({ ...form, fullName: event.target.value })} /></label>
-                <label><span>Số điện thoại *</span><input required autoComplete="tel" inputMode="tel" value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} /></label>
-                <label><span>Địa chỉ nhận hàng</span><textarea rows="4" value={form.address} onChange={(event) => setForm({ ...form, address: event.target.value })} placeholder="Số nhà, đường, khu vực…" /></label>
-                <label><span>Ghi chú cho cửa hàng</span><textarea rows="3" value={form.note} onChange={(event) => setForm({ ...form, note: event.target.value })} placeholder="Ví dụ: gọi trước khi giao, giờ nhận hàng…" /></label>
+                <label><span>Họ và tên *</span><input className="field" required autoComplete="name" value={form.fullName} onChange={(event) => setForm({ ...form, fullName: event.target.value })} /></label>
+                <label><span>Số điện thoại *</span><input className="field" required autoComplete="tel" inputMode="tel" value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} /></label>
+                <label><span>Địa chỉ nhận hàng</span><textarea className="field" rows="4" value={form.address} onChange={(event) => setForm({ ...form, address: event.target.value })} placeholder="Số nhà, đường, khu vực…" /></label>
+                <label><span>Ghi chú cho cửa hàng</span><textarea className="field" rows="3" value={form.note} onChange={(event) => setForm({ ...form, note: event.target.value })} placeholder="Ví dụ: gọi trước khi giao, giờ nhận hàng…" /></label>
                 <div className="ks-map-upload">
                   <label className="ks-file"><span>Ảnh map / vị trí (tối đa 3 ảnh)</span><input type="file" accept="image/png,image/jpeg,image/webp" multiple onChange={(event) => { pickMaps(event.target.files); event.target.value = ''; }} /><strong>{mapImages.length ? '+ Thêm ảnh vị trí' : 'Chọn ảnh (không bắt buộc nếu đã nhập địa chỉ)'}</strong></label>
-                  {!!mapImages.length && <div className="ks-map-upload__list">{mapImages.map((image, index) => <div className="ks-map-upload__item" key={`${image.fileName}-${index}`}><img src={image.dataUrl} alt={`Ảnh vị trí ${index + 1}`} /><span>{image.fileName}</span><button type="button" onClick={() => removeMapImage(index)} aria-label={`Xoá ảnh ${index + 1}`}>×</button></div>)}</div>}
+                  {!!mapImages.length && <div className="ks-map-upload__list">{mapImages.map((image, index) => <div className="ks-map-upload__item" key={`${image.fileName}-${index}`}><img src={image.dataUrl} alt={`Ảnh vị trí ${index + 1}`} /><span>{image.fileName}</span><button className="ks-close sbtn" type="button" onClick={() => removeMapImage(index)} aria-label={`Xoá ảnh ${index + 1}`}><CloseIcon size={12} /></button></div>)}</div>}
                 </div>
               </div>
               <div className="ks-order-preview">
@@ -794,11 +929,11 @@ function Checkout({ checkout, config, onClose, onSuccess }) {
                 {checkout.items.map((item) => <div className="ks-order-preview__item" key={item.key}><span>{item.title}<small>{item.variantName} · {item.size} · ×{item.quantity}</small></span><strong>{money(item.unitPrice * item.quantity)}</strong></div>)}
                 <div className="ks-order-preview__line"><span>Tạm tính</span><strong>{money(summary.subtotal)}</strong></div>
                 <div className="ks-order-preview__line"><span>Giao hàng</span><strong>{summary.shippingFee ? money(summary.shippingFee) : 'Miễn phí'}</strong></div>
-                <div className="ks-order-preview__total"><span>Tổng cộng</span><strong>{money(summary.total)}</strong></div>
+                <div className="ks-order-preview__total"><span>Tổng cộng</span><strong><PixelCoin size={18} spin />{money(summary.total)}</strong></div>
               </div>
             </div>
             {error && <p className="ks-form-error" role="alert">{error}</p>}
-            <button className="ks-button ks-button--dark ks-checkout__submit" disabled={busy} type="submit">{busy ? 'Đang gửi đơn…' : `Xác nhận · ${money(summary.total)}`}</button>
+            <button className="ks-button ks-button--accent pbtn ks-checkout__submit" disabled={busy} type="submit">{busy ? 'Đang gửi đơn…' : `Xác nhận · ${money(summary.total)}`}</button>
           </form>
         )}
       </div>
@@ -996,17 +1131,18 @@ function Admin({ config, setConfig, refreshPublicProducts }) {
 
 function AdminLogin({ busy, error, login }) {
   return (
-    <main className="ks-admin-gate">
-      <div className="ks-admin-gate__card"><p className="ks-kicker">KATASHOP / CONTROL ROOM</p><h1>Đăng nhập để quản lý Store.</h1><p>Phiên đăng nhập dùng chung với se77n. Chỉ tài khoản owner mới xem được sản phẩm và đơn hàng.</p>
-        <div><button className="ks-button ks-button--dark" disabled={busy} type="button" onClick={() => login('discord')}>Đăng nhập Discord</button><button className="ks-button ks-button--light" disabled={busy} type="button" onClick={() => login('google')}>Đăng nhập Google</button></div>
-        {busy && <small>Đang chờ bạn hoàn tất đăng nhập ở cửa sổ mới…</small>}{error && <p className="ks-form-error">{error}</p>}
+    <main className="ks-admin-gate ks-wrap">
+      <div className="ks-admin-gate__card px"><p className="ks-kicker ks-kicker--plate">KATASHOP / CONTROL ROOM <span className="ks-owner-badge">OWNER</span></p><h1>Đăng nhập để quản lý Store.</h1><p>Phiên đăng nhập dùng chung với se77n. Chỉ tài khoản owner mới xem được sản phẩm và đơn hàng.</p>
+        <div><button className="ks-button ks-button--dark pbtn" disabled={busy} type="button" onClick={() => login('discord')}>Đăng nhập Discord</button><button className="ks-button ks-button--light pbtn" disabled={busy} type="button" onClick={() => login('google')}>Đăng nhập Google</button></div>
+        {busy && <small><span className="dots-step" aria-hidden="true"><i /><i /><i /></span>Đang chờ bạn hoàn tất đăng nhập ở cửa sổ mới…</small>}{error && <p className="ks-form-error">{error}</p>}
+        <PixelArrow dir="down" size={9} color="var(--red)" className="ks-gate-arrow bob" />
       </div>
     </main>
   );
 }
 
 function AdminDenied({ user }) {
-  return <main className="ks-admin-gate"><div className="ks-admin-gate__card"><p className="ks-kicker">ACCESS DENIED</p><h1>Tài khoản chưa được cấp quyền.</h1><p>Đang đăng nhập với <strong>{user?.displayName || 'tài khoản hiện tại'}</strong>. Quyền quản trị được kiểm tra ở máy chủ.</p><a className="ks-button ks-button--dark" href="/">Quay lại se77n</a></div></main>;
+  return <main className="ks-admin-gate ks-wrap"><div className="ks-admin-gate__card px"><p className="ks-kicker ks-kicker--plate ks-kicker--alert">ACCESS DENIED</p><h1>Tài khoản chưa được cấp quyền.</h1><p>Đang đăng nhập với <strong>{user?.displayName || 'tài khoản hiện tại'}</strong>. Quyền quản trị được kiểm tra ở máy chủ.</p><div><a className="ks-button ks-button--dark pbtn" href="/">Quay lại se77n</a></div><PixelArrow dir="down" size={9} color="var(--red)" className="ks-gate-arrow bob" /></div></main>;
 }
 
 function emptyProduct() {
@@ -1119,29 +1255,37 @@ function AdminWorkspace({ user, refreshPublicProducts }) {
   const newOrders = orders.filter((order) => order.status === 'new').length;
 
   return (
-    <main className="ks-admin">
-      <section className="ks-admin__hero"><div><p className="ks-kicker">KATASHOP / CONTROL ROOM</p><h1>Chào, {user?.displayName || 'owner'}.</h1><p>Quản lý bộ sưu tập, tồn kho và đơn hàng trong cùng một nơi.</p></div><div className="ks-admin__stats"><span><strong>{products.length}</strong>sản phẩm</span><span><strong>{newOrders}</strong>đơn mới</span><span><strong>{money(orders.filter((order) => order.status !== 'cancelled').reduce((sum, order) => sum + order.total, 0))}</strong>tổng giá trị</span></div></section>
-      <div className="ks-admin__tabs">
-        <button type="button" className={tab === 'dashboard' ? 'is-active' : ''} onClick={() => setTab('dashboard')}>Dashboard</button>
-        <button type="button" className={tab === 'products' ? 'is-active' : ''} onClick={() => setTab('products')}>Sản phẩm</button>
-        <button type="button" className={tab === 'orders' ? 'is-active' : ''} onClick={() => setTab('orders')}>Đơn hàng {newOrders ? <span>{newOrders}</span> : null}</button>
-        <button type="button" className="ks-admin__tabs-refresh" onClick={load}>Làm mới ↻</button>
-      </div>
-      {error && <p className="ks-form-error ks-admin__error">{error}</p>}
-      {loading ? <StoreLoading compact /> : tab === 'dashboard' ? (
-        <AdminDashboard analytics={analytics} productCount={products.length} orders={orders} />
-      ) : tab === 'products' ? (
-        <section className="ks-admin-panel">
-          <div className="ks-admin-panel__head">
-            <div><p className="ks-kicker">CATALOG</p><h2>Bộ sưu tập hiện tại</h2></div>
-            <div className="ks-admin-panel__actions">
-              <button className="ks-button ks-button--light" type="button" onClick={() => setAiComposerOpen(true)}>✨ Thêm bằng AI</button>
-              <button className="ks-button ks-button--dark" type="button" onClick={() => setEditor(emptyProduct())}>+ Thêm sản phẩm</button>
-            </div>
+    <main className="ks-admin ks-wrap">
+      <div className="ks-admin__console px">
+        <section className="ks-admin__hero"><div><p className="ks-kicker">KATASHOP / CONTROL ROOM <span className="ks-owner-badge">OWNER</span></p><h1>Chào, {user?.displayName || 'owner'}.</h1><p>Quản lý bộ sưu tập, tồn kho và đơn hàng trong cùng một nơi.</p></div><div className="ks-admin__stats"><span><strong>{products.length}</strong>sản phẩm</span><span><strong>{newOrders}</strong>đơn mới</span><span><strong>{money(orders.filter((order) => order.status !== 'cancelled').reduce((sum, order) => sum + order.total, 0))}</strong>tổng giá trị</span></div></section>
+        <div className="ks-admin__inner">
+          <div className="ks-admin__tabs" role="group" aria-label="Control room">
+            <button type="button" aria-pressed={tab === 'dashboard'} className={`chip-px ks-chip${tab === 'dashboard' ? ' on' : ''}`} onClick={() => setTab('dashboard')}>Dashboard</button>
+            <button type="button" aria-pressed={tab === 'products'} className={`chip-px ks-chip${tab === 'products' ? ' on' : ''}`} onClick={() => setTab('products')}>Sản phẩm</button>
+            <button type="button" aria-pressed={tab === 'orders'} className={`chip-px ks-chip${tab === 'orders' ? ' on' : ''}`} onClick={() => setTab('orders')}>Đơn hàng {newOrders ? <span>{newOrders}</span> : null}</button>
+            <button type="button" className="ks-button ks-button--light sbtn ks-admin__tabs-refresh" onClick={load}>Làm mới ↻</button>
           </div>
-          <div className="ks-admin-products">{products.map((product, index) => <AdminProductRow key={product.id} product={product} index={index} onEdit={() => setEditor(product)} onDelete={() => removeProduct(product)} />)}</div>
-        </section>
-      ) : <Orders orders={orders} onStatus={updateStatus} onDelete={removeOrder} />}
+          {error && <p className="ks-form-error ks-admin__error">{error}</p>}
+          {loading ? <StoreLoading compact /> : tab === 'dashboard' ? (
+            <AdminDashboard analytics={analytics} productCount={products.length} orders={orders} />
+          ) : tab === 'products' ? (
+            <section className="ks-admin-panel">
+              <div className="ks-admin-panel__head">
+                <div><p className="ks-kicker">CATALOG</p><h2>Bộ sưu tập hiện tại</h2></div>
+                <div className="ks-admin-panel__actions">
+                  <button className="ks-button ks-button--light sbtn" type="button" onClick={() => setAiComposerOpen(true)}><ModuleIcon id="ai" size={16} />Thêm bằng AI</button>
+                  <button className="ks-button ks-button--dark sbtn" type="button" onClick={() => setEditor(emptyProduct())}>+ Thêm sản phẩm</button>
+                </div>
+              </div>
+              {products.length ? (
+                <div className="ks-admin-products">{products.map((product, index) => <AdminProductRow key={product.id} product={product} index={index} onEdit={() => setEditor(product)} onDelete={() => removeProduct(product)} />)}</div>
+              ) : (
+                <div className="ks-empty"><PixelCoin size={36} spin /><p className="sk">NO SAVE DATA</p><span>Chưa có sản phẩm.</span></div>
+              )}
+            </section>
+          ) : <Orders orders={orders} onStatus={updateStatus} onDelete={removeOrder} />}
+        </div>
+      </div>
       {aiComposerOpen && (
         <AiAddProductComposer
           onClose={() => setAiComposerOpen(false)}
@@ -1180,22 +1324,22 @@ function AdminDashboard({ analytics, productCount, orders }) {
       </div>
 
       <div className="ks-dash-grid">
-        <article className="ks-dash-card"><span>Hôm nay</span><strong>{today.views}</strong><small>{today.uniques} unique</small></article>
-        <article className="ks-dash-card"><span>7 ngày</span><strong>{last7.views}</strong><small>{last7.uniques} unique</small></article>
-        <article className="ks-dash-card"><span>30 ngày</span><strong>{last30.views}</strong><small>{last30.uniques} unique</small></article>
-        <article className="ks-dash-card"><span>Đơn mới</span><strong>{newOrders}</strong><small>{productCount} sản phẩm</small></article>
+        <article className="ks-dash-card pxs"><span>Hôm nay</span><strong>{today.views}</strong><small>{today.uniques} unique</small></article>
+        <article className="ks-dash-card pxs"><span>7 ngày</span><strong>{last7.views}</strong><small>{last7.uniques} unique</small></article>
+        <article className="ks-dash-card pxs"><span>30 ngày</span><strong>{last30.views}</strong><small>{last30.uniques} unique</small></article>
+        <article className="ks-dash-card pxs"><span>Đơn mới</span><strong>{newOrders}</strong><small>{productCount} sản phẩm</small></article>
       </div>
 
       <div className="ks-dash-tables">
         <div className="ks-dash-paths ks-dash-paths--large">
-          <p className="ks-kicker">PHÂN BỐ HÔM NAY</p>
+          <p className="ks-kicker ks-kicker--vi">PHÂN BỐ HÔM NAY</p>
           <ul>
             <li><span>Tất cả / trang chủ</span><strong>{pathViews(today, '/store')}</strong></li>
             <li><span>Nam · /store/M</span><strong>{pathViews(today, '/store/M')}</strong></li>
             <li><span>Nữ · /store/F</span><strong>{pathViews(today, '/store/F')}</strong></li>
             <li><span>Trang sản phẩm</span><strong>{pathViews(today, '/store/product')}</strong></li>
           </ul>
-          <p className="ks-kicker ks-dash-paths__sub">TOP 30 NGÀY</p>
+          <p className="ks-kicker ks-kicker--vi ks-dash-paths__sub">TOP 30 NGÀY</p>
           <ul>
             {topPaths.length ? topPaths.map((entry) => (
               <li key={entry.path}><span>{entry.label}</span><strong>{entry.views}</strong></li>
@@ -1204,8 +1348,8 @@ function AdminDashboard({ analytics, productCount, orders }) {
         </div>
 
         <div className="ks-dash-income">
-          <p className="ks-kicker">THU NHẬP</p>
-          <div className="ks-dash-income__hero">
+          <p className="ks-kicker ks-kicker--vi">THU NHẬP</p>
+          <div className="ks-dash-income__hero pxs">
             <span>Đã hoàn tất</span>
             <strong>{money(income.completedTotal)}</strong>
             <small>{income.completedCount} đơn · không gồm đơn huỷ</small>
@@ -1222,7 +1366,7 @@ function AdminDashboard({ analytics, productCount, orders }) {
 
       <div className="ks-dash-tables ks-dash-tables--tops">
         <div className="ks-dash-rank">
-          <p className="ks-kicker">TOP BÁN CHẠY</p>
+          <p className="ks-kicker ks-kicker--vi">TOP BÁN CHẠY</p>
           <ol>
             {topSold.length ? topSold.map((entry, index) => (
               <li key={entry.productId}>
@@ -1236,7 +1380,7 @@ function AdminDashboard({ analytics, productCount, orders }) {
           </ol>
         </div>
         <div className="ks-dash-rank">
-          <p className="ks-kicker">TOP ĐƯỢC CLICK</p>
+          <p className="ks-kicker ks-kicker--vi">TOP ĐƯỢC CLICK</p>
           <ol>
             {topClicked.length ? topClicked.map((entry, index) => (
               <li key={entry.productId}>
@@ -1252,14 +1396,16 @@ function AdminDashboard({ analytics, productCount, orders }) {
       </div>
 
       <div className="ks-dash-chart ks-dash-chart--bottom">
-        <p className="ks-kicker">14 NGÀY GẦN ĐÂY</p>
-        <div className="ks-dash-bars" role="img" aria-label="Biểu đồ lượt xem 14 ngày">
+        <p className="ks-kicker ks-kicker--vi">14 NGÀY GẦN ĐÂY</p>
+        <div className={`ks-dash-bars${series.length ? '' : ' is-empty'}`} role="img" aria-label="Biểu đồ lượt xem 14 ngày">
           {series.map((entry) => (
             <div className="ks-dash-bar" key={entry.day} title={`${entry.day}: ${entry.views} views / ${entry.uniques} unique`}>
               <i style={{ height: `${Math.max(4, (Number(entry.views || 0) / maxViews) * 100)}%` }} />
               <span>{entry.day.slice(5)}</span>
             </div>
           ))}
+          {!series.length && Array.from({ length: 14 }, (_, index) => <div className="ks-dash-bar is-ghost" key={index} aria-hidden="true"><i /><span>--</span></div>)}
+          {!series.length && <span className="ks-dash-nodata sk" aria-hidden="true">NO DATA</span>}
         </div>
       </div>
     </section>
@@ -1328,22 +1474,23 @@ function summarizeStoreIncome(orders) {
 function AdminProductRow({ product, index, onEdit, onDelete }) {
   const variants = product.variants?.length ? product.variants : [];
   return (
-    <article className={`ks-product-card ks-admin-product-card ks-product-card--${index % 3}`}>
+    <article className={`ks-product-card ks-admin-product-card ks-product-card--${index % 3} px`}>
       <div className="ks-product-card__media">
         <ProductArt src={product.imageUrl} alt={product.title} />
+        <span className="ks-shelf" aria-hidden="true" />
         {product.discountPercent > 0 && <span className="ks-sale-tag">−{product.discountPercent}%</span>}
         {product.freeship && <span className="ks-ship-tag">FREE SHIP</span>}
       </div>
       <div className="ks-product-card__body">
-        <div><p>{product.subtitle || 'KataShop edition'}</p><h3>{product.title}</h3></div>
-        <div className="ks-product-card__price"><strong>{moneyRange(product.minPrice, product.maxPrice)}</strong>{product.discountPercent > 0 && product.minPrice === product.maxPrice && <del>{money(product.price)}</del>}</div>
+        <div className="ks-product-card__titles"><p>{product.subtitle || 'KataShop edition'}</p><h3>{product.title}</h3></div>
+        <div className="ks-product-card__price"><PixelCoin size={16} /><strong>{moneyRange(product.minPrice, product.maxPrice)}</strong>{product.discountPercent > 0 && product.minPrice === product.maxPrice && <del>{money(product.price)}</del>}</div>
         <div className="ks-product-card__foot">
           <div className="ks-swatches" aria-label="Màu sắc">{variants.slice(0, 5).map((variant) => <span key={variant.id} title={variant.name} style={{ background: variant.colorHex }} />)}</div>
           <span className={product.active ? 'is-live' : 'is-hidden'}>{product.active ? `${variants.length} mẫu · ${product.totalStock} còn` : 'Đang ẩn'}</span>
         </div>
         <div className="ks-product-card__quick-actions">
-          <button className="ks-quick-cart ks-admin-product-card__delete" type="button" onClick={onDelete}>Xóa</button>
-          <button className="ks-quick-buy" type="button" onClick={onEdit}>Chỉnh sửa</button>
+          <button className="ks-quick-cart ks-admin-product-card__delete sbtn" type="button" onClick={onDelete}>Xóa</button>
+          <button className="ks-quick-buy sbtn" type="button" onClick={onEdit}>Chỉnh sửa</button>
         </div>
       </div>
     </article>
@@ -1352,14 +1499,26 @@ function AdminProductRow({ product, index, onEdit, onDelete }) {
 
 function Orders({ orders, onStatus, onDelete }) {
   return (
-    <section className="ks-admin-panel"><div className="ks-admin-panel__head"><div><p className="ks-kicker">ORDERS</p><h2>Đơn hàng gần đây</h2></div></div>
-      {!orders.length ? <div className="ks-empty">Chưa có đơn hàng.</div> : <div className="ks-orders">{orders.map((order) => (
-        <article className="ks-order" key={order.id}>
-          <header><div><span className={`ks-status ks-status--${order.status}`}>{ORDER_STATUS.find(([value]) => value === order.status)?.[1] || order.status}</span><h3>{order.id}</h3><p>{new Date(order.createdAt).toLocaleString('vi-VN')}</p></div><strong>{money(order.total)}</strong></header>
-          <div className="ks-order__body"><div><p className="ks-kicker">CUSTOMER</p><strong>{order.customer.fullName}</strong><span>{order.customer.phone}</span><span>{order.customer.address || 'Có ảnh map đính kèm'}</span>{order.mapImages?.length ? <small>{order.mapImages.length} ảnh vị trí đính kèm</small> : null}{order.customer.note ? <small>Ghi chú: {order.customer.note}</small> : null}</div><div><p className="ks-kicker">ITEMS</p>{order.items.map((item, index) => <span key={`${item.productId}-${index}`}>{item.title} ×{item.quantity}<small>{item.variantName} · {item.size}</small></span>)}</div></div>
-          <footer><select value={order.status} onChange={(event) => onStatus(order.id, event.target.value)}>{ORDER_STATUS.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select><button className="is-danger" type="button" onClick={() => onDelete(order)}>Xoá đơn</button></footer>
-        </article>
-      ))}</div>}
+    <section className="ks-admin-panel"><div className="ks-admin-panel__head"><div><p className="ks-kicker">ORDERS</p><h2>Đơn hàng gần đây</h2></div><span className="ks-admin-panel__meta sk">ORDERS · {orders.length} ROWS</span></div>
+      {!orders.length ? <div className="ks-empty"><PixelCoin size={36} spin /><p className="sk">NO SAVE DATA</p><span>Chưa có đơn hàng.</span></div> : (
+        <div className="ks-orders">
+          <table className="ks-orders__table">
+            <thead><tr><th scope="col">STATUS</th><th scope="col">ORDER</th><th scope="col">CUSTOMER</th><th scope="col">ITEMS</th><th scope="col" className="is-num">TOTAL</th><th scope="col">ACTIONS</th></tr></thead>
+            <tbody>
+              {orders.map((order) => (
+                <tr className="ks-order" key={order.id}>
+                  <td data-label="STATUS"><span className={`ks-status ks-status--${order.status}`}>{ORDER_STATUS.find(([value]) => value === order.status)?.[1] || order.status}</span></td>
+                  <td data-label="ORDER"><h3>{order.id}</h3><p>{new Date(order.createdAt).toLocaleString('vi-VN')}</p></td>
+                  <td data-label="CUSTOMER" className="ks-order__customer"><strong>{order.customer.fullName}</strong><span>{order.customer.phone}</span><span>{order.customer.address || 'Có ảnh map đính kèm'}</span>{order.mapImages?.length ? <small>{order.mapImages.length} ảnh vị trí đính kèm</small> : null}{order.customer.note ? <small>Ghi chú: {order.customer.note}</small> : null}</td>
+                  <td data-label="ITEMS" className="ks-order__items">{order.items.map((item, index) => <span key={`${item.productId}-${index}`}>{item.title} ×{item.quantity}<small>{item.variantName} · {item.size}</small></span>)}</td>
+                  <td data-label="TOTAL" className="is-num"><strong>{money(order.total)}</strong></td>
+                  <td data-label="ACTIONS"><div className="ks-order__actions"><select className="field" aria-label={`Trạng thái đơn ${order.id}`} value={order.status} onChange={(event) => onStatus(order.id, event.target.value)}>{ORDER_STATUS.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select><button className="ks-button ks-button--danger sbtn" type="button" onClick={() => onDelete(order)}>Xoá đơn</button></div></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </section>
   );
 }
@@ -1367,9 +1526,9 @@ function Orders({ orders, onStatus, onDelete }) {
 function ImageField({ label, value, onChange, onPick, uploadLabel }) {
   return (
     <div className="ks-image-field">
-      <div className="ks-image-field__preview"><ProductArt src={value} alt={label} /></div>
+      <div className="ks-image-field__preview"><ProductArt className="pxs" src={value} alt={label} /></div>
       <div className="ks-image-field__controls">
-        <label><span>{label} URL</span><input value={value || ''} onChange={(event) => onChange(event.target.value)} placeholder="https://..." /></label>
+        <label><span>{label} URL</span><input className="field" value={value || ''} onChange={(event) => onChange(event.target.value)} placeholder="https://..." /></label>
         <label className="ks-file ks-file--small"><input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => onPick(event.target.files?.[0])} /><strong>{uploadLabel}</strong></label>
         {value && <a href={value} target="_blank" rel="noreferrer">Mở ảnh ↗</a>}
       </div>
@@ -1599,29 +1758,29 @@ function AiAddProductComposer({ onClose, onReady }) {
       <div className="ks-editor ks-ai-composer">
         <div className="ks-editor__head">
           <div>
-            <p className="ks-kicker">AI ADD PRODUCT</p>
+            <p className="ks-kicker ks-kicker--plate">AI ADD PRODUCT</p>
             <h2>Thêm hàng bằng AI</h2>
           </div>
-          <button type="button" onClick={onClose} disabled={locked}>×</button>
+          <button className="ks-close sbtn" type="button" onClick={onClose} disabled={locked} aria-label="Đóng"><CloseIcon /></button>
         </div>
 
         <section className="ks-ai-composer__section">
           <div className="ks-ai-composer__section-head">
             <div>
-              <p className="ks-kicker">1 · ẢNH</p>
+              <p className="ks-kicker ks-kicker--vi">1 · ẢNH</p>
               <strong>1 ảnh chính + 4 ảnh gen</strong>
               <small>Gen xong có thể chọn ảnh chính, ReGen từng ảnh, hoặc Làm nét ảnh chính.</small>
             </div>
             <div className="ks-ai-composer__tools">
               <button
-                className="ks-button ks-button--light ks-ai-composer__gen"
+                className="ks-button ks-button--light sbtn ks-ai-composer__gen"
                 type="button"
                 disabled={locked || !images.length}
                 onClick={generateViews}
               >
                 {genBusy ? (genStatus || 'Đang gen…') : 'Gen 4 ảnh · góc + mặc thử'}
               </button>
-              <label className="ks-file ks-file--small ks-ai-composer__pick">
+              <label className="ks-button ks-button--dark sbtn ks-ai-composer__pick">
                 <input
                   type="file"
                   accept="image/png,image/jpeg,image/webp"
@@ -1642,7 +1801,7 @@ function AiAddProductComposer({ onClose, onReady }) {
                 const isMain = image.role === 'main' || index === 0;
                 const cardBusy = actionBusy?.id === image.id;
                 return (
-                  <article className={`ks-ai-composer__card${isMain ? ' is-main' : ''}${cardBusy ? ' is-busy' : ''}`} key={image.id}>
+                  <article className={`ks-ai-composer__card pxs${isMain ? ' is-main' : ''}${cardBusy ? ' is-busy' : ''}`} key={image.id}>
                     <ProductArt src={image.dataUrl} alt={image.name} />
                     <footer>
                       <span>{imageRoleLabel(image, index)}</span>
@@ -1695,14 +1854,14 @@ function AiAddProductComposer({ onClose, onReady }) {
         {regenTargetId && (
           <div className="ks-regen-note" role="dialog" aria-modal="true" aria-label="Note ReGen">
             <button className="ks-regen-note__backdrop" type="button" onClick={cancelRegen} aria-label="Đóng" />
-            <div className="ks-regen-note__panel">
+            <div className="ks-regen-note__panel px">
               <div className="ks-regen-note__head">
-                <p className="ks-kicker">REGEN NOTE</p>
+                <p className="ks-kicker ks-kicker--plate">REGEN NOTE</p>
                 <strong>Ghi chú thêm khi ReGen</strong>
                 <small>Tuỳ chọn — để trống nếu chỉ muốn regen theo prompt mặc định.</small>
               </div>
               <textarea
-                className="ks-regen-note__input"
+                className="ks-regen-note__input field"
                 rows="4"
                 autoFocus
                 value={regenNote}
@@ -1710,8 +1869,8 @@ function AiAddProductComposer({ onClose, onReady }) {
                 placeholder={'VD: góc nghiêng hơn, nền sáng hơn, nhấn túi trước, không đổi màu/logo…'}
               />
               <div className="ks-regen-note__actions">
-                <button className="ks-button ks-button--light" type="button" onClick={cancelRegen}>Huỷ</button>
-                <button className="ks-button ks-button--dark" type="button" onClick={confirmRegen}>
+                <button className="ks-button ks-button--light sbtn" type="button" onClick={cancelRegen}>Huỷ</button>
+                <button className="ks-button ks-button--dark sbtn" type="button" onClick={confirmRegen}>
                   {regenNote.trim() ? 'ReGen với note' : 'ReGen'}
                 </button>
               </div>
@@ -1728,7 +1887,7 @@ function AiAddProductComposer({ onClose, onReady }) {
             </div>
           </div>
           <textarea
-            className="ks-ai-composer__note"
+            className="ks-ai-composer__note field"
             rows="7"
             value={note}
             disabled={locked}
@@ -1740,8 +1899,8 @@ function AiAddProductComposer({ onClose, onReady }) {
         {error && <p className="ks-form-error">{error}</p>}
 
         <div className="ks-editor__actions">
-          <button className="ks-button ks-button--light" type="button" onClick={onClose} disabled={locked}>Huỷ</button>
-          <button className="ks-button ks-button--dark" type="button" disabled={locked || !images.length} onClick={complete}>
+          <button className="ks-button ks-button--light sbtn" type="button" onClick={onClose} disabled={locked}>Huỷ</button>
+          <button className="ks-button ks-button--dark pbtn" type="button" disabled={locked || !images.length} onClick={complete}>
             {busy ? 'AI đang điền…' : 'Hoàn tất · mở form sản phẩm'}
           </button>
         </div>
@@ -1875,51 +2034,80 @@ function ProductEditor({ product, onClose, onSaved }) {
 
   return (
     <div className="ks-modal ks-modal--editor" role="dialog" aria-modal="true" aria-label="Sửa sản phẩm"><button className="ks-modal__backdrop" type="button" onClick={onClose} aria-label="Đóng" /><form className="ks-editor" onSubmit={save}>
-      <div className="ks-editor__head"><div><p className="ks-kicker">PRODUCT EDITOR</p><h2>{product.id ? 'Chỉnh sửa sản phẩm' : 'Sản phẩm mới'}</h2></div><button type="button" onClick={onClose}>×</button></div>
+      <div className="ks-editor__head"><div><p className="ks-kicker ks-kicker--plate">PRODUCT EDITOR</p><h2>{product.id ? 'Chỉnh sửa sản phẩm' : 'Sản phẩm mới'}</h2></div><button className="ks-close sbtn" type="button" onClick={onClose} aria-label="Đóng"><CloseIcon /></button></div>
       <div className="ks-ai-fill">
+        <span className="ks-ai-fill__tile pxs" aria-hidden="true"><ModuleIcon id="ai" size={22} /></span>
         <div>
           <p className="ks-kicker">AI ASSIST</p>
           <strong>Điền tên, mô tả và mẫu từ ảnh</strong>
           <small>Tải ảnh chính / ảnh màu trước, rồi bấm AI. Có thể chỉnh lại trước khi lưu.</small>
         </div>
-        <button className="ks-button ks-button--dark" type="button" disabled={aiBusy || busy} onClick={runAiFill}>
+        <button className="ks-button ks-button--dark sbtn" type="button" disabled={aiBusy || busy} onClick={runAiFill}>
           {aiBusy ? 'AI đang đọc ảnh…' : 'AI điền từ ảnh'}
         </button>
       </div>
       <div className="ks-editor__grid"><section>
-        <label><span>Tên sản phẩm *</span><input value={draft.title} onChange={(event) => patch('title', event.target.value)} /></label>
-        <label><span>Dòng mô tả ngắn</span><input value={draft.subtitle || ''} onChange={(event) => patch('subtitle', event.target.value)} /></label>
-        <label><span>Mô tả</span><textarea rows="5" value={draft.description || ''} onChange={(event) => patch('description', event.target.value)} /></label>
-        <div className="ks-editor__row"><label><span>Giá mặc định (TWD)</span><input type="number" min="0" value={draft.price} onChange={(event) => patch('price', event.target.value)} /></label><label><span>Giảm giá (%)</span><input type="number" min="0" max="95" value={draft.discountPercent} onChange={(event) => patch('discountPercent', event.target.value)} /></label></div>
-        <div className="ks-size-editor"><div className="ks-size-editor__head"><span>Size sản phẩm</span><button type="button" onClick={addSize}>+ Thêm size</button></div><div className="ks-size-editor__entries">{sizeInputs.map((size, index) => <div className="ks-size-editor__entry" key={index}><input value={size} onChange={(event) => patchSize(index, event.target.value)} placeholder={index === 0 ? 'VD: Free size, 38, 2XL' : 'Nhập size'} /><button type="button" onClick={() => removeSize(index)} aria-label={`Xoá size ${index + 1}`}>×</button></div>)}</div><small>Tự gõ từng lựa chọn size. Có thể thêm bao nhiêu size tùy sản phẩm.</small></div>
+        <label><span>Tên sản phẩm *</span><input className="field" value={draft.title} onChange={(event) => patch('title', event.target.value)} /></label>
+        <label><span>Dòng mô tả ngắn</span><input className="field" value={draft.subtitle || ''} onChange={(event) => patch('subtitle', event.target.value)} /></label>
+        <label><span>Mô tả</span><textarea className="field" rows="5" value={draft.description || ''} onChange={(event) => patch('description', event.target.value)} /></label>
+        <div className="ks-editor__row"><label><span>Giá mặc định (TWD)</span><input className="field" type="number" min="0" value={draft.price} onChange={(event) => patch('price', event.target.value)} /></label><label><span>Giảm giá (%)</span><input className="field" type="number" min="0" max="95" value={draft.discountPercent} onChange={(event) => patch('discountPercent', event.target.value)} /></label></div>
+        <div className="ks-size-editor"><div className="ks-size-editor__head"><span>Size sản phẩm</span><button className="ks-mini sbtn" type="button" onClick={addSize}>+ Thêm size</button></div><div className="ks-size-editor__entries">{sizeInputs.map((size, index) => <div className="ks-size-editor__entry" key={index}><input className="field" value={size} onChange={(event) => patchSize(index, event.target.value)} placeholder={index === 0 ? 'VD: Free size, 38, 2XL' : 'Nhập size'} /><button className="ks-close sbtn" type="button" onClick={() => removeSize(index)} aria-label={`Xoá size ${index + 1}`}><CloseIcon size={14} /></button></div>)}</div><small>Tự gõ từng lựa chọn size. Có thể thêm bao nhiêu size tùy sản phẩm.</small></div>
         <ImageField label="Ảnh chính" value={draft.imageUrl} onChange={(value) => patch('imageUrl', value)} onPick={(file) => pickImage(file)} uploadLabel="Tải ảnh chính lên" />
-        <div className="ks-gallery-editor"><div className="ks-gallery-editor__head"><div><span>Ảnh bổ sung</span><small>Khách có thể vuốt hoặc bấm để xem.</small></div><button type="button" onClick={addGalleryImage}>+ Thêm ảnh</button></div>{galleryImages.length ? <div className="ks-gallery-editor__items">{galleryImages.map((image, index) => <div className="ks-gallery-editor__item" key={index}><ImageField label={`Ảnh bổ sung ${index + 1}`} value={image} onChange={(value) => patchGalleryImage(index, value)} onPick={(file) => pickGalleryImage(file, index)} uploadLabel="Tải ảnh lên" /><button className="ks-gallery-editor__remove" type="button" onClick={() => removeGalleryImage(index)}>Xoá ảnh</button></div>)}</div> : <p className="ks-gallery-editor__empty">Chưa có ảnh bổ sung.</p>}</div>
+        <div className="ks-gallery-editor"><div className="ks-gallery-editor__head"><div><span>Ảnh bổ sung</span><small>Khách có thể vuốt hoặc bấm để xem.</small></div><button className="ks-mini sbtn" type="button" onClick={addGalleryImage}>+ Thêm ảnh</button></div>{galleryImages.length ? <div className="ks-gallery-editor__items">{galleryImages.map((image, index) => <div className="ks-gallery-editor__item" key={index}><ImageField label={`Ảnh bổ sung ${index + 1}`} value={image} onChange={(value) => patchGalleryImage(index, value)} onPick={(file) => pickGalleryImage(file, index)} uploadLabel="Tải ảnh lên" /><button className="ks-gallery-editor__remove ks-mini ks-mini--danger sbtn" type="button" onClick={() => removeGalleryImage(index)}>Xoá ảnh</button></div>)}</div> : <p className="ks-gallery-editor__empty">Chưa có ảnh bổ sung.</p>}</div>
         <div className="ks-editor__checks"><label><input type="checkbox" checked={draft.genders?.includes('men')} onChange={(event) => patch('genders', event.target.checked ? [...new Set([...(draft.genders || []).filter((entry) => entry !== 'unisex'), 'men'])] : draft.genders.filter((entry) => entry !== 'men'))} /> Nam</label><label><input type="checkbox" checked={draft.genders?.includes('women')} onChange={(event) => patch('genders', event.target.checked ? [...new Set([...(draft.genders || []).filter((entry) => entry !== 'unisex'), 'women'])] : draft.genders.filter((entry) => entry !== 'women'))} /> Nữ</label><label><input type="checkbox" checked={draft.freeship} onChange={(event) => patch('freeship', event.target.checked)} /> Free ship</label><label><input type="checkbox" checked={draft.featured} onChange={(event) => patch('featured', event.target.checked)} /> Featured</label><label><input type="checkbox" checked={draft.active} onChange={(event) => patch('active', event.target.checked)} /> Đang bán</label></div>
-      </section><section className="ks-editor__variants"><div className="ks-editor__variants-head"><div><p className="ks-kicker">VARIANTS</p><h3>Phân loại và tồn kho</h3></div><button type="button" onClick={addVariant}>+ Thêm mẫu</button></div>
-        {draft.variants.map((variant, index) => <div className="ks-variant-editor" key={`${variant.id}-${index}`}><div className="ks-variant-editor__head"><span style={{ background: variant.colorHex }} /><strong>Mẫu {index + 1}</strong>{draft.variants.length > 1 && <button type="button" onClick={() => setDraft((current) => ({ ...current, variants: current.variants.filter((_, variantIndex) => variantIndex !== index) }))}>Xoá</button>}</div><div className="ks-editor__row ks-editor__row--variant"><label><span>Tên mẫu</span><input value={variant.name} onChange={(event) => patchVariant(index, 'name', event.target.value)} /></label><label><span>Màu</span><input type="color" value={variant.colorHex} onChange={(event) => patchVariant(index, 'colorHex', event.target.value)} /></label><label><span>Giá mẫu (TWD)</span><input type="number" min="0" value={variant.priceOverride ?? ''} placeholder={`Mặc định: ${draft.price}`} onChange={(event) => patchVariant(index, 'priceOverride', event.target.value)} /></label></div><ImageField label={`Ảnh mẫu ${index + 1}`} value={variant.imageUrl} onChange={(value) => patchVariant(index, 'imageUrl', value)} onPick={(file) => pickImage(file, index)} uploadLabel="Tải ảnh mẫu lên" /><div className="ks-stock-grid">{sizes.map((size) => <label key={size}><span>{size}</span><input type="number" min="0" value={variant.stockBySize?.[size] || 0} onChange={(event) => patchStock(index, size, event.target.value)} /></label>)}</div></div>)}
+      </section><section className="ks-editor__variants"><div className="ks-editor__variants-head"><div><p className="ks-kicker">VARIANTS</p><h3>Phân loại và tồn kho</h3></div><button className="ks-mini sbtn" type="button" onClick={addVariant}>+ Thêm mẫu</button></div>
+        {draft.variants.map((variant, index) => <div className="ks-variant-editor" key={`${variant.id}-${index}`}><div className="ks-variant-editor__head"><span style={{ background: variant.colorHex }} /><strong>Mẫu {index + 1}</strong>{draft.variants.length > 1 && <button className="ks-mini ks-mini--danger sbtn" type="button" onClick={() => setDraft((current) => ({ ...current, variants: current.variants.filter((_, variantIndex) => variantIndex !== index) }))}>Xoá</button>}</div><div className="ks-editor__row ks-editor__row--variant"><label><span>Tên mẫu</span><input className="field" value={variant.name} onChange={(event) => patchVariant(index, 'name', event.target.value)} /></label><label><span>Màu</span><input className="ks-color-input pxs" type="color" value={variant.colorHex} onChange={(event) => patchVariant(index, 'colorHex', event.target.value)} /></label><label><span>Giá mẫu (TWD)</span><input className="field" type="number" min="0" value={variant.priceOverride ?? ''} placeholder={`Mặc định: ${draft.price}`} onChange={(event) => patchVariant(index, 'priceOverride', event.target.value)} /></label></div><ImageField label={`Ảnh mẫu ${index + 1}`} value={variant.imageUrl} onChange={(value) => patchVariant(index, 'imageUrl', value)} onPick={(file) => pickImage(file, index)} uploadLabel="Tải ảnh mẫu lên" /><div className="ks-stock-grid">{sizes.map((size) => <label key={size}><span>{size}</span><input className="field" type="number" min="0" value={variant.stockBySize?.[size] || 0} onChange={(event) => patchStock(index, size, event.target.value)} /></label>)}</div></div>)}
       </section></div>
       {error && <p className="ks-form-error">{error}</p>}
-      <div className="ks-editor__actions"><button className="ks-button ks-button--light" type="button" onClick={onClose}>Huỷ</button><button className="ks-button ks-button--dark" disabled={busy || aiBusy} type="submit">{busy ? 'Đang lưu…' : 'Lưu sản phẩm'}</button></div>
+      <div className="ks-editor__actions"><button className="ks-button ks-button--light sbtn" type="button" onClick={onClose}>Huỷ</button><button className="ks-button ks-button--accent pbtn" disabled={busy || aiBusy} type="submit">{busy ? 'Đang lưu…' : 'Lưu sản phẩm'}</button></div>
     </form></div>
   );
 }
 
 function StoreFooter({ config, navigate }) {
-  return <footer className="ks-footer"><div><span className="ks-brand__seal">K</span><strong>KataShop</strong><p>Một nhánh nhỏ của se77n.</p></div><nav><button type="button" onClick={() => navigate('/store')}>Cửa hàng</button>{config?.admin?.allowed && <button type="button" onClick={() => navigate('/store/admin')}>Admin</button>}{config?.support?.url && <a href={config.support.url} target="_blank" rel="noreferrer">Hỗ trợ ↗</a>}</nav><small>© {new Date().getFullYear()} KATASHOP · TAIWAN</small></footer>;
+  return (
+    <footer className="ks-footer">
+      <div className="ks-footer__inner ks-wrap">
+        <div className="ks-footer__brand"><span className="ks-brand__seal pxs" aria-hidden="true">K</span><strong>KataShop</strong><p>Một nhánh nhỏ của se77n.</p></div>
+        <nav aria-label="KataShop"><button type="button" onClick={() => navigate('/store')}>Cửa hàng</button>{config?.admin?.allowed && <button type="button" onClick={() => navigate('/store/admin')}>Admin</button>}{config?.support?.url && <a href={config.support.url} target="_blank" rel="noreferrer">Hỗ trợ ↗</a>}<a href="/">← se77n</a></nav>
+        <small>© {new Date().getFullYear()} KATASHOP · TAIWAN</small>
+      </div>
+      <div className="ks-footer__bricks bricks" aria-hidden="true" />
+    </footer>
+  );
 }
 
 function StoreFloatingActions({ cartCount, onCart }) {
   return (
-    <div className="ks-floating-actions" aria-label="Thao tác nhanh">
-      <button className="ks-floating-cart" type="button" onClick={onCart}><span aria-hidden="true">🛒</span><b>Giỏ hàng</b><strong>{cartCount}</strong></button>
-      <a className="ks-floating-support" href="https://www.tiktok.com/@hoa197915" target="_blank" rel="noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.53 15.22V22l4.34-2.39A10 10 0 1 0 12 2Zm1.03 13.14-2.55-2.72-4.98 2.72 5.48-5.82 2.6 2.72 4.9-2.72-5.45 5.82Z" fill="currentColor" /></svg> Hỗ trợ</a>
+    <div className="ks-floating-actions" role="group" aria-label="Thao tác nhanh">
+      <button className="ks-floating-cart pbtn" type="button" onClick={onCart}><BagIcon size={20} fill="#fffaf0" /><b>Giỏ hàng</b><strong>{cartCount}</strong></button>
+      <a className="ks-floating-support pbtn" href="https://www.tiktok.com/@hoa197915" target="_blank" rel="noreferrer"><ChatIcon size={20} /> Hỗ trợ</a>
     </div>
   );
 }
 function StoreLoading({ compact = false }) {
-  return <main className={`ks-loading ${compact ? 'is-compact' : ''}`}><span /><p>Đang mở KataShop…</p></main>;
+  return (
+    <main className={`ks-loading ${compact ? 'is-compact' : ''}`} role="status">
+      <PixelCoin size={34} spin />
+      <p>Đang mở KataShop…</p>
+      <span className="dots-step" aria-hidden="true"><i /><i /><i /></span>
+    </main>
+  );
 }
 
 function StoreError({ message, onRetry, retryLabel = 'Thử lại' }) {
-  return <main className="ks-error"><p className="ks-kicker">SOMETHING WENT WRONG</p><h1>Store chưa thể mở.</h1><p>{message}</p><button className="ks-button ks-button--dark" type="button" onClick={onRetry}>{retryLabel}</button></main>;
+  return (
+    <main className="ks-error ks-wrap">
+      <div className="ks-error__box px">
+        <KsScene className="ks-error__scene" closed />
+        <div className="ks-error__copy">
+          <p className="ks-kicker ks-kicker--plate ks-kicker--alert">SOMETHING WENT WRONG</p>
+          <h1>Store chưa thể mở.</h1>
+          <p className="ks-error__msg">{message}</p>
+          <div className="ks-error__actions"><button className="ks-button ks-button--dark pbtn" type="button" onClick={onRetry}>{retryLabel}</button></div>
+          <PixelArrow dir="down" size={9} color="var(--red)" className="ks-gate-arrow bob" />
+        </div>
+      </div>
+    </main>
+  );
 }
