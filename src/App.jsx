@@ -1,14 +1,11 @@
-import { useState, useEffect, useRef, useMemo, lazy, Suspense } from 'react';
-import { useCallback } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense } from 'react';
 import {
-  COLORS, SOCIALS,
-  Btn, Kicker,
-  GlyphSun, GlyphMoon, GlobeIcon, ControllerIcon,
-  PaperclipIcon, ChatBubbleIcon,
+  COLORS, ACCENTS, SOCIALS,
   useClock, useGeoDayNight, useAmbient, useLanyard, useLang, useAuth,
-  usePersisted, useSyncedData, usePasteImage, useMediaQuery,
+  useSyncedData, usePasteImage, useMediaQuery,
   buildChatHistory,
 } from './lib.jsx';
+import { PixelCoin, PixelHeart, PixelCloud, PixelArrow, ModuleIcon, IconTile, DialogBox, PxButton, Badge } from './ui/arcade.jsx';
 import MobileShell from './MobileShell.jsx';
 
 const AIPlayground       = lazy(() => import('./featuresA.jsx').then((m) => ({ default: m.AIPlayground })));
@@ -23,35 +20,124 @@ const Feed               = lazy(() => import('./featuresB.jsx').then((m) => ({ d
 const Stylist            = lazy(() => import('./featuresC.jsx').then((m) => ({ default: m.Stylist })));
 const StoreApp           = lazy(() => import('./store/StoreApp.jsx'));
 
+// Modules in cartridge order (00 lobby → 08). `tab` is the short tab-bar
+// label, `desc` the cartridge one-liner, `blurb` the level-header line.
 const FEATURES = [
-  { id: 'home',   label: 'Home',                  icon: (c) => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 10.7 12 3l9 7.7" />
-      <path d="M5.5 9.4V20h13V9.4" />
-      <path d="M10 20v-5h4v5" />
-    </svg>
-  ), accent: COLORS.text,  short: '00' },
-  { id: 'ai',     label: 'AI Playground',         icon: '✦',   accent: COLORS.red,   short: '01', desc: 'Chat · image · video' },
-  { id: 'tools',  label: 'Toolbox',               icon: '⚒',   accent: COLORS.green, short: '02', desc: 'Public + private utilities' },
-  { id: 'stylist',label: 'Stylist',               icon: '👗',  accent: COLORS.gold,  short: '07', desc: 'AI wardrobe · outfit mixer' },
-  { id: 'game',   label: 'Game',                  icon: (c) => <ControllerIcon color={c} size={22} />, accent: COLORS.red,   short: '03', desc: 'Tavern RP · Cờ Cá Ngựa · Project K' },
-  { id: 'crypto', label: 'Currency',              icon: '$',   accent: COLORS.gold,  short: '04', desc: 'BTC · GOLD · TWD ⇄ VND' },
-  { id: 'feed',   label: 'History',               icon: '◧',   accent: COLORS.gold,  short: '05', desc: 'Private AI history', ownerOnly: true },
-  { id: 'kata',   label: 'KataS Dashboard',       icon: '⌨',   accent: COLORS.red,   short: '06', desc: 'Discord bot · ops · cost' },
-  { id: 'store',  label: 'KataShop', icon: 'K', accent: '#d36a79', short: '08', desc: 'Independent shop \u00b7 orders' },
+  { id: 'home',    label: 'Home',            tab: 'LOBBY',    short: '00' },
+  { id: 'ai',      label: 'AI Playground',   tab: 'AI',       short: '01', desc: 'Chat · image · video',
+    blurb: 'Chat · image · video — seven presets, one control panel. Chat on Gemini 3.1, renders on fal.ai.' },
+  { id: 'tools',   label: 'Toolbox',         tab: 'TOOLBOX',  short: '02', desc: 'Public + private utilities',
+    blurb: 'Public + private utilities — travel plans, subscriptions, to-do and everyday tools in one box.' },
+  { id: 'game',    label: 'Game',            tab: 'GAME',     short: '03', desc: 'Tavern RP · Cờ Cá Ngựa · Project K',
+    blurb: 'Game hub — roleplay, board, action RPG and webcam games. Pick a venue and press start.' },
+  { id: 'crypto',  label: 'Currency',        tab: 'CURRENCY', short: '04', desc: 'BTC · GOLD · TWD ⇄ VND',
+    blurb: 'BTC · GOLD · TWD ⇄ VND — live markets and a cross-rate converter, auto-refreshed every 60s.' },
+  { id: 'feed',    label: 'History',         tab: 'HISTORY',  short: '05', desc: 'Private AI history', ownerOnly: true,
+    blurb: 'Private AI history — every chat, image, video and background cut in one archive.' },
+  { id: 'kata',    label: 'KataS Dashboard', tab: 'KATAS',    short: '06', desc: 'Discord bot · ops · cost', href: '/kata' },
+  { id: 'stylist', label: 'Stylist',         tab: 'STYLIST',  short: '07', desc: 'AI wardrobe · outfit mixer',
+    blurb: 'AI wardrobe · outfit mixer — digitize your wardrobe, then let AI mix and render full looks.' },
+  { id: 'store',   label: 'KataShop',        tab: 'KATASHOP', short: '08', desc: 'Independent shop · orders', href: '/store' },
   // Travel Plan, Subscription Manager and To Do now live inside Toolbox
   // (their routes 'tv4' / 'tech' / 'todo' are still rendered below).
 ];
 
-// Routes folded into Toolbox — not in the rail, but they still need a
-// breadcrumb label/accent when their panel is open.
+// Routes folded into Toolbox — not in the tab bar (TOOLBOX stays lit), but
+// they still need a level-header label when their panel is open.
 const MERGED_ROUTE_META = {
-  tv4:  { label: 'Travel Plan',          accent: COLORS.gold,  short: 'TB' },
-  tech: { label: 'Subscription Manager', accent: COLORS.green, short: 'TB' },
-  todo: { label: 'To Do',                accent: COLORS.green, short: 'TB' },
+  tv4:  { id: 'tv4',  label: 'Travel Plan',          tab: 'TRAVEL PLAN',
+    blurb: 'Trips · plans · expenses — map, list, trip folder, day-by-day plan and spend.' },
+  tech: { id: 'tech', label: 'Subscription Manager', tab: 'SUBSCRIPTIONS',
+    blurb: 'Monthly + yearly burn — your recurring bills in one inventory, converted across currencies.' },
+  todo: { id: 'todo', label: 'To Do',                tab: 'TO DO',
+    blurb: 'Quest log — tasks with P1–P3 priorities, synced to your account when you sign in.' },
 };
 
+// Any id the shell can render: a module, or a tool folded into Toolbox
+// (so #/tv4, #/tech and #/todo stay directly linkable).
+const isRoute = (id) => !!(FEATURES.find((f) => f.id === id) || MERGED_ROUTE_META[id]);
+
 const EXPERIMENT_NUMBER = '007';
+const ROUTE_OUT_MS = 150;   // stepped slide-out before the route swaps
+const FAB_BOTTOM = 78;      // chat button sits on top of the brick footer
+
+// Strip the leading glyph some i18n strings carry ("● ONLINE", "↗ Open …").
+const bare = (s) => String(s || '').replace(/^[●◇✓↗]\s*/, '');
+
+// Shell-only CSS: breakpoints, hovers and keyframes inline styles can't express.
+const SHELL_CSS = `
+:root, [data-theme="light"] { --sh-red-ink: #b42828; }
+[data-theme="dark"] { --sh-red-ink: #ff8a8a; }
+.sh-wrap { width: 100%; max-width: 1280px; margin-left: auto; margin-right: auto; padding-left: 48px; padding-right: 48px; box-sizing: border-box; }
+.sh-route { padding: 12px max(48px, calc((100% - 1184px) / 2)) 28px; }
+.sh-tabs { scrollbar-width: none; }
+.sh-tabs::-webkit-scrollbar { display: none; }
+.sh-tabs .tab { flex-shrink: 0; }
+.sh-tabs .tab:focus-visible { outline: 3px solid #ffd25e; outline-offset: -5px; }
+.sh-ghost { transition: background 80ms steps(2); }
+.sh-ghost:hover { background: var(--paper-2) !important; }
+.sh-crumb { background: none; border: 0; padding: 0; font: inherit; color: inherit; cursor: pointer; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; }
+.sh-crumb:hover { color: var(--text); }
+.sh-social { display: grid; place-items: center; width: 28px; height: 28px; color: var(--muted); transition: transform 80ms steps(2), color 80ms steps(2); }
+.sh-social:hover { color: var(--sh-red-ink); transform: translateY(-2px); }
+.sh-social svg { width: 15px; height: 15px; }
+.sh-fabhd { display: grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 0; cursor: pointer; color: #fffaf0; background: transparent; box-shadow: inset 0 0 0 2px rgba(255, 250, 240, 0.35); }
+.sh-fabhd:hover { background: var(--strip-2); box-shadow: inset 0 0 0 2px #fffaf0; }
+@keyframes sh-in { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: none; } }
+@keyframes sh-out { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateX(-28px); } }
+@keyframes sh-drift { from { transform: translateX(0); } to { transform: translateX(calc(100% + 180px)); } }
+@keyframes sh-sun { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+@keyframes sh-coin { 0% { opacity: 1; transform: translateY(0); } 60% { opacity: 1; transform: translateY(-14px); } 100% { opacity: 0; transform: translateY(-18px); } }
+@keyframes sh-eq { 0%, 100% { transform: scaleY(0.3); } 50% { transform: scaleY(1); } }
+.sh-sun { animation: sh-sun 2s steps(2) infinite; }
+.sh-drift { animation: sh-drift 46s linear infinite; }
+.sh-coinpop { animation: sh-coin 0.6s steps(6) forwards; }
+.sh-hero { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap: 56px; align-items: center; }
+.sh-hero-h { font-size: 56px; }
+.sh-grid4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 48px 28px; }
+.sh-cart {
+  position: relative; display: flex; flex-direction: column; min-height: 236px; padding: 0;
+  text-align: left; border: 0; color: #1b1410; font-family: inherit; cursor: pointer;
+  box-shadow: 0 -4px 0 0 var(--ink), 0 4px 0 0 var(--ink), -4px 0 0 0 var(--ink), 4px 0 0 0 var(--ink), 8px 10px 0 4px var(--shadow);
+  transition: transform 100ms steps(2), box-shadow 100ms steps(2);
+}
+.sh-cart:hover, .sh-cart:focus-visible {
+  transform: translate(-4px, -6px);
+  box-shadow: 0 -4px 0 0 var(--ink), 0 4px 0 0 var(--ink), -4px 0 0 0 var(--ink), 4px 0 0 0 var(--ink), 12px 16px 0 4px var(--shadow);
+}
+.sh-cart:active {
+  transform: translate(4px, 6px);
+  box-shadow: 0 -4px 0 0 var(--ink), 0 4px 0 0 var(--ink), -4px 0 0 0 var(--ink), 4px 0 0 0 var(--ink), 0 0 0 4px var(--shadow);
+}
+.sh-cart:hover .sh-cico, .sh-cart:focus-visible .sh-cico { animation: px-bob 0.6s steps(2) infinite; }
+.sh-cart .sh-p1 { opacity: 0; }
+.sh-cart:hover .sh-p1, .sh-cart:focus-visible .sh-p1 { opacity: 1; animation: px-bob 1s steps(2) infinite; }
+.sh-cart .sh-go { display: inline-block; transition: transform 100ms steps(2); }
+.sh-cart:hover .sh-go, .sh-cart:focus-visible .sh-go { transform: translateX(4px); }
+@media (max-width: 1200px) {
+  .sh-game { display: none !important; }
+}
+@media (max-width: 1100px) {
+  .sh-wrap, .sh-route { padding-left: 32px; padding-right: 32px; }
+  .sh-hud-x { display: none !important; }
+  .sh-hero { gap: 40px; }
+  .sh-hero-h { font-size: 46px; }
+  .sh-ctas { gap: 18px !important; }
+  .sh-cta { padding: 0 14px !important; font-size: 13px !important; }
+}
+@media (max-width: 1000px) {
+  .sh-grid4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sh-hide-md { display: none !important; }
+}
+@media (max-width: 960px) {
+  .sh-hero { grid-template-columns: minmax(0, 1fr); }
+  .sh-scene { height: 300px !important; }
+}
+@media (max-width: 900px) {
+  .sh-wrap, .sh-route { padding-left: 24px; padding-right: 24px; }
+  .sh-np { display: none !important; }
+}
+`;
 
 // Top-level router: hand off to MobileShell on phone-class viewports;
 // otherwise render the full desktop control surface. Splitting like this
@@ -87,14 +173,12 @@ export default function App() {
   return <AppDesktop />;
 }
 
+// Layout: a 100vh column of fixed chrome (HUD header → module tab bar →
+// accent strip → level header) above one scrolling route area, with the brick
+// footer pinned at the bottom. The route area has a definite height, so
+// modules that fill it (height: 100%) keep working; taller content scrolls.
 function AppDesktop() {
-  const ambientOn = true;
-  const showBg = true;
   const isMobile = useMediaQuery('(max-width: 768px)');
-  // Fixed rail + top-bar sizes so 27"/32" QHD look identical. Wider viewports
-  // get letterboxed by the max-width cap on <main>, not scaled chrome.
-  const railWidth = 84;
-  const topBarH   = 64;
 
   const [route, setRoute] = useState(() => {
     // Match against first hash segment only — sub-routes like #/tv4/list/<slug>
@@ -102,7 +186,7 @@ function AppDesktop() {
     const h = window.location.hash.replace(/^#\//, '').split('/')[0];
     if (h === 'kata') { window.location.assign('/kata'); }
     else if (h === 'store') { window.location.assign('/store'); }
-    else if (FEATURES.find((f) => f.id === h)) return h;
+    else if (isRoute(h)) return h;
     // On mobile, default landing → AI chat instead of the desktop landing page.
     const mobileNow = typeof window !== 'undefined' && window.matchMedia
       ? window.matchMedia('(max-width: 768px)').matches : false;
@@ -118,9 +202,8 @@ function AppDesktop() {
     ? authUser.providerUserId
     : undefined;
   const lanyard = useLanyard(lanyardUserId);
-  const ambient = useAmbient(ambientOn, lanyard.data);
+  const ambient = useAmbient(true, lanyard.data);
   const geo = useGeoDayNight();
-  const now = useClock();
 
   const phase = geo.phase;
 
@@ -132,8 +215,8 @@ function AppDesktop() {
     setTimeout(() => {
       setRoute(to);
       window.history.replaceState(null, '', '#/' + to);
-      setTimeout(() => setTransitioning(false), 360);
-    }, 220);
+      setTransitioning(false);
+    }, ROUTE_OUT_MS);
   }
 
   // On mobile, the desktop landing page is hidden — bounce 'home' → 'ai' (chat box default).
@@ -146,8 +229,11 @@ function AppDesktop() {
 
   useEffect(() => {
     const h = (e) => {
-      if (e.key !== 'Escape') return;
+      if (e.key !== 'Escape' || e.defaultPrevented) return;
       if (chatOpen) { setChatOpen(false); return; }
+      // A module's own overlay (lightbox, dialog) owns Esc while it is open.
+      const inDialog = (el) => el instanceof Element && !!el.closest('[role="dialog"], [aria-modal="true"]');
+      if (inDialog(e.target) || inDialog(document.activeElement) || document.querySelector('[aria-modal="true"]')) return;
       if (route !== 'home') nav('home');
     };
     window.addEventListener('keydown', h);
@@ -159,72 +245,60 @@ function AppDesktop() {
       const id = window.location.hash.replace(/^#\//, '').split('/')[0] || 'home';
       if (id === 'kata') { window.location.assign('/kata'); return; }
       if (id === 'store') { window.location.assign('/store'); return; }
-      if (FEATURES.find((f) => f.id === id) && id !== route) setRoute(id);
+      if (isRoute(id) && id !== route) setRoute(id);
     };
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
   }, [route]);
 
   const activeFeature = FEATURES.find((f) => f.id === route) || MERGED_ROUTE_META[route];
+  const isHome = route === 'home';
 
   return (
     <div style={{
-      minHeight: '100vh', background: COLORS.bg, color: COLORS.text,
-      position: 'relative', overflow: 'hidden',
+      height: '100vh', display: 'flex', flexDirection: 'column',
+      position: 'relative', overflow: 'hidden', color: COLORS.text,
     }}>
-      {showBg && <AmbientBackground phase={phase} enabled={ambientOn} track={ambient.track} />}
+      <style>{SHELL_CSS}</style>
 
-      <TopBar phase={phase} now={now} geo={geo} route={route} nav={nav} ambient={ambient} ambientOn={ambientOn} />
-      <NavRail route={route} nav={nav} />
+      <TopBar phase={phase} geo={geo} nav={nav} ambient={ambient} />
+      <ModuleTabs route={route} nav={nav} />
+      {!isHome && <LevelHeader route={route} nav={nav} feature={activeFeature} />}
 
-      <main style={{
-        position: 'relative', marginLeft: railWidth,
-        padding: '24px 32px 32px',
-        height: `calc(100vh - ${topBarH}px)`, marginTop: topBarH,
-        display: 'flex', flexDirection: 'column', overflow: 'hidden',
-      }}>
-        <Breadcrumbs route={route} nav={nav} feature={activeFeature} />
-        <div style={{ position: 'relative', flex: 1, minHeight: 0 }}>
-          <div
-            key={route + '_' + transitioning}
-            style={{
-              animation: transitioning
-                ? 'slideOutLeft 220ms ease-in forwards'
-                : 'slideInRight 360ms cubic-bezier(0.22,1,0.36,1)',
-              willChange: 'transform, opacity',
-              height: '100%',
-            }}
-          >
-            <Suspense fallback={<RouteFallback />}>
-              {route === 'home'   && <HomeView nav={nav} ambient={ambient} ambientOn={ambientOn} />}
-              {route === 'ai'     && <AIPlayground />}
-              {route === 'tools'  && <Toolbox nav={nav} />}
-              {route === 'stylist'&& <Stylist />}
-              {route === 'tv4'    && <TravelV4 />}
-              {route === 'game'   && <GamePanel />}
-              {route === 'tech'   && <TechStackMonitor />}
-              {route === 'crypto' && <CryptoWatch />}
-              {route === 'todo'   && <TodoList />}
-              {route === 'feed'   && (authUser?.isHistoryOwner ? <Feed /> : <RouteFallback />)}
-            </Suspense>
-          </div>
+      <main style={{ position: 'relative', flex: '1 1 0', minHeight: 0, overflow: 'hidden' }}>
+        {/* One scroller per level, parent of the module root: modules that
+            fill it (height: 100%) keep working, taller pages scroll with real
+            bottom room for their pixel drops. The slide is a one-off animation,
+            so no transform / will-change lingers to trap position: fixed. */}
+        <div
+          key={route}
+          className={isHome ? undefined : 'sh-route'}
+          style={{
+            height: '100%', overflowY: 'auto', overflowX: 'hidden',
+            animation: transitioning
+              ? `sh-out ${ROUTE_OUT_MS}ms steps(3) forwards`
+              : 'sh-in 240ms steps(4)',
+          }}
+        >
+          <Suspense fallback={<RouteFallback />}>
+            {route === 'home'   && <HomeView nav={nav} ambient={ambient} phase={phase} />}
+            {route === 'ai'     && <AIPlayground />}
+            {route === 'tools'  && <Toolbox nav={nav} />}
+            {route === 'stylist'&& <Stylist />}
+            {route === 'tv4'    && <TravelV4 />}
+            {route === 'game'   && <GamePanel />}
+            {route === 'tech'   && <TechStackMonitor />}
+            {route === 'crypto' && <CryptoWatch />}
+            {route === 'todo'   && <TodoList />}
+            {route === 'feed'   && (authUser?.isHistoryOwner ? <Feed /> : <RouteFallback />)}
+          </Suspense>
         </div>
-
-        <footer style={{
-          marginTop: 40, paddingTop: 20,
-          borderTop: '1px solid ' + COLORS.line,
-          display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', alignItems: 'center',
-          fontSize: 10, color: COLORS.muted, letterSpacing: '0.18em',
-        }} className="mono">
-          <span style={{ textAlign: 'left' }}>SE77N · {now.getFullYear()} · EXP {EXPERIMENT_NUMBER}</span>
-          <span style={{ textAlign: 'center' }}>BUILD · {now.toISOString().slice(0, 10).replaceAll('-', '.')}</span>
-          <span style={{ textAlign: 'right', color: phase === 'day' ? COLORS.gold : '#9bb4ff' }}>
-            {phase === 'day' ? '◐ DAYLIGHT' : '◑ NIGHTSHIFT'}
-          </span>
-        </footer>
       </main>
 
+      <Footer phase={phase} />
+
       <ChatFab open={chatOpen}
+        hidden={route === 'ai'}
         onOpen={() => setChatOpen(true)}
         onClose={() => setChatOpen(false)}
         ambient={ambient} nav={nav} />
@@ -235,143 +309,179 @@ function AppDesktop() {
 
 function RouteFallback() {
   return (
-    <div style={{ padding: 40, color: COLORS.muted, fontSize: 12 }} className="mono">
-      ◇ loading module…
+    <div className="sk" style={{
+      display: 'flex', alignItems: 'center', gap: 12, padding: '40px 8px',
+      fontSize: 12, color: COLORS.muted,
+    }}>
+      <span className="dots-step" aria-hidden="true" style={{ color: COLORS.text }}><i /><i /><i /></span>
+      loading module…
     </div>
   );
 }
 
 // ─────────────────────────────────────────────────────────────
-// Ambient (audio-reactive) background
+// Small pixel glyphs (local to the shell)
 // ─────────────────────────────────────────────────────────────
-function AmbientBackground({ phase, enabled, track }) {
-  const c1 = enabled ? track.palette[0] : COLORS.red;
-  const c2 = enabled ? track.palette[1] || COLORS.green : COLORS.green;
-  const baseTint = phase === 'day' ? 'rgba(212,168,88,0.04)' : 'rgba(91,168,104,0.02)';
-
+function PxSun({ size = 14, color = '#ffd25e', outline = true }) {
   return (
-    <>
-      <div aria-hidden style={{
-        position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0,
-        backgroundImage: `
-          radial-gradient(60% 50% at 18% 12%, ${c1}26 0%, transparent 65%),
-          radial-gradient(50% 45% at 90% 88%, ${c2}28 0%, transparent 70%),
-          radial-gradient(35% 30% at 60% 50%, ${COLORS.gold}10 0%, transparent 75%),
-          linear-gradient(180deg, ${baseTint} 0%, transparent 50%)
-        `,
-        transition: 'background-image 1.2s ease',
-      }} />
-      <div aria-hidden style={{
-        position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0,
-        opacity: 0.5,
-        backgroundImage: 'radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px)',
-        backgroundSize: '3px 3px',
-      }} />
-      {enabled && (
-        <div aria-hidden style={{
-          position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0,
-          background: `radial-gradient(600px circle at 50% 100%, ${c1}11, transparent 70%)`,
-          animation: 'ambient 4s ease-in-out infinite',
-        }} />
-      )}
-    </>
+    <svg width={size} height={size} viewBox="0 0 9 9" shapeRendering="crispEdges" aria-hidden="true">
+      <path d="M3 3h3v3H3zM4 0h1v2H4zM4 7h1v2H4zM0 4h2v1H0zM7 4h2v1H7zM1 1h1v1H1zM7 1h1v1H7zM1 7h1v1H1zM7 7h1v1H7z"
+        fill={color} stroke={outline ? '#1b1410' : 'none'} strokeWidth="0.35" />
+    </svg>
   );
 }
 
+function PxMoon({ size = 14, color = '#c9d4ff', outline = true }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 8 8" shapeRendering="crispEdges" aria-hidden="true">
+      <path d="M2 0h4v1H4v1H3v4h1v1h2v1H2V7H1V6H0V2h1V1h1z"
+        fill={color} stroke={outline ? '#1b1410' : 'none'} strokeWidth="0.35" />
+    </svg>
+  );
+}
+
+function PxClose({ size = 12 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 7 7" shapeRendering="crispEdges" aria-hidden="true">
+      <path d="M0 0h2v1h1v1h1V1h1V0h2v2H6v1H5v1h1v1h1v2H5V6H4V5H3v1H2v1H0V5h1V4h1V3H1V2H0z" fill="currentColor" />
+    </svg>
+  );
+}
+
+function PxChatIcon({ size = 30, fill = '#fffaf0', dots = '#e04545' }) {
+  return (
+    <svg width={size} height={Math.round(size * 8 / 9)} viewBox="0 0 9 8" shapeRendering="crispEdges" aria-hidden="true">
+      <path d="M1 0h7v1h1v4H8v1H4v1H3v1H2V6H1V5H0V1h1z" fill={fill} />
+      <rect x="2" y="2" width="1" height="1" fill={dots} />
+      <rect x="4" y="2" width="1" height="1" fill={dots} />
+      <rect x="6" y="2" width="1" height="1" fill={dots} />
+    </svg>
+  );
+}
+
+// Square-cap stroke icon (24 grid), matching ModuleIcon.
+function StrokeIcon({ d, size = 16, sw = 2.6, color = 'currentColor', style }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={sw}
+      strokeLinecap="square" strokeLinejoin="miter" aria-hidden="true" style={style}>
+      <path d={d} />
+    </svg>
+  );
+}
+const ICON_OPEN = 'M14 4h6v6M20 4l-9 9M10 5H4v15h15v-6';
+const ICON_IMAGE = 'M3 4h18v16H3zM3 16l5-5 4 4 3-3 6 6';
+const ICON_WARN = 'M12 3l10 18H2zM12 10v5M12 18v1';
+const ICON_RETRY = 'M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5';
+const ICON_LOGOUT = 'M10 4H4v16h6M15 8l4 4-4 4M19 12H9';
+
 // ─────────────────────────────────────────────────────────────
-// Top bar
+// Top bar — the HUD header
 // ─────────────────────────────────────────────────────────────
-function TopBar({ phase, now, geo, nav, ambient, ambientOn }) {
+function TopBar({ phase, geo, nav, ambient }) {
   const { lang, toggle, t } = useLang();
-  const isMobile = useMediaQuery('(max-width: 768px)');
+  const { status, user } = useAuth();
+  const now = useClock();
+  const [credits, setCredits] = useState(0);
   const tStr = now.toLocaleTimeString('en-GB', {
     hour: '2-digit', minute: '2-digit', second: '2-digit',
   });
-  // Fixed-height bar; rail + bar both stay 64/84 across viewports so 27"/32" QHD render identically.
+  const day = phase === 'day';
+  const live = !!ambient.isLive;
+  const city = geo.city && !geo.city.includes('—') ? geo.city : '';
+  const player = status === 'authed'
+    ? (user?.displayName || user?.username || 'P1')
+    : status === 'loading' ? 'P1 …' : 'P1 GUEST';
+  const cell = {
+    display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 5,
+    padding: '2px 18px', borderLeft: `3px dashed ${COLORS.rule}`, minWidth: 0,
+  };
+
   return (
     <header style={{
-      position: 'fixed', top: 0, left: 0, right: 0,
-      height: 64, zIndex: 50,
-      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      padding: '0 28px 0 22px',
-      background: 'rgba(13,10,8,0.7)',
-      backdropFilter: 'blur(14px)',
-      borderBottom: '1px solid ' + COLORS.line,
+      flex: 'none', position: 'relative', zIndex: 30,
+      background: COLORS.paper, borderBottom: `4px solid ${COLORS.ink}`,
     }}>
-      <button onClick={() => nav('home')} aria-label="se77n · home"
-        style={{
-          background: 'transparent', border: 'none', cursor: 'pointer',
-          display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
-          padding: 0, gap: 4, color: COLORS.text,
-        }}>
-        <div className="mono" style={{
-          fontSize: 30, fontWeight: 800, letterSpacing: '-0.025em', lineHeight: 0.95,
-        }}>
-          se<span style={{
-            color: COLORS.red,
-            textShadow: `0 0 6px ${COLORS.red}cc, 0 0 18px ${COLORS.red}66, 0 0 36px ${COLORS.red}33`,
-          }}>77</span>n
-        </div>
-        <div className="mono" style={{
-          fontSize: 9, letterSpacing: '0.24em', color: COLORS.muted, lineHeight: 1,
-          textTransform: 'uppercase',
-        }}>
-          {t('topbar.experiment')}&nbsp;<span style={{
-            color: COLORS.red, fontWeight: 700,
-            textShadow: `0 0 4px ${COLORS.red}aa, 0 0 10px ${COLORS.red}55`,
-          }}>{EXPERIMENT_NUMBER}</span> / {t('topbar.desktop')}
-        </div>
-      </button>
+      <div className="sh-wrap" style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20, height: 66,
+      }}>
+        <button onClick={() => nav('home')} aria-label="se77n · home"
+          style={{
+            background: 'transparent', border: 0, padding: 0, cursor: 'pointer', flexShrink: 0,
+            display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 5,
+            color: COLORS.text,
+          }}>
+          <span className="pf" style={{ fontSize: 31, lineHeight: 1 }}>
+            se<span style={{ color: COLORS.red, textShadow: `3px 3px 0 ${COLORS.ink}` }}>77</span>n
+          </span>
+          <span className="sk" style={{
+            fontSize: 10, lineHeight: 1, color: COLORS.muted, textTransform: 'uppercase', whiteSpace: 'nowrap',
+          }}>
+            {t('topbar.experiment')} <span style={{ color: 'var(--sh-red-ink)' }}>{EXPERIMENT_NUMBER}</span> / {t('topbar.desktop')}
+          </span>
+        </button>
 
-      {ambient.isLive && (
-        <div style={{
-          position: 'absolute', left: '50%', top: '50%',
-          transform: 'translate(-50%, -50%)',
+        <div className="sk" style={{
+          display: 'flex', alignItems: 'stretch', flexShrink: 0, whiteSpace: 'nowrap',
+          borderRight: `3px dashed ${COLORS.rule}`,
         }}>
-          <NowPlaying ambient={ambient} on={ambientOn} />
+          <div style={cell}>
+            <span style={{
+              fontSize: 10, lineHeight: 1, color: COLORS.muted, whiteSpace: 'nowrap',
+              overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 170,
+            }}>TIME{city ? ' · ' + city : ''}</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 15, lineHeight: 1 }}>
+              <span role="img" title={day ? t('topbar.day') : t('topbar.night')}
+                aria-label={day ? t('topbar.day') : t('topbar.night')} style={{ display: 'grid' }}>
+                {day ? <PxSun /> : <PxMoon />}
+              </span>
+              <span style={{ minWidth: 84 }}>{tStr}</span>
+            </span>
+          </div>
+          {/* While Spotify is live the now-playing chip takes this room. */}
+          {!live && (
+            <>
+              <div className="sh-hud-x" style={cell}>
+                <span style={{ fontSize: 10, lineHeight: 1, color: COLORS.muted }}>PLAYER</span>
+                <span style={{
+                  fontSize: 15, lineHeight: 1, maxWidth: 150, whiteSpace: 'nowrap',
+                  overflow: 'hidden', textOverflow: 'ellipsis', textTransform: 'uppercase',
+                }}>{player}</span>
+              </div>
+              {/* INSERT COIN toy — purely local, resets on reload. */}
+              <button type="button" className="sh-hud-x sh-ghost sk" aria-label="Insert coin"
+                title="Insert coin" onClick={() => setCredits((c) => c + 1)}
+                style={{
+                  ...cell, position: 'relative', alignItems: 'flex-start', background: 'transparent',
+                  borderTop: 0, borderBottom: 0, borderRight: 0, color: COLORS.text, cursor: 'pointer',
+                }}>
+                <span style={{ fontSize: 10, lineHeight: 1, color: COLORS.muted }}>CREDITS</span>
+                <span style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 7, fontSize: 15, lineHeight: 1 }}>
+                  <PixelCoin size={15} />× {String(Math.min(credits, 99)).padStart(2, '0')}
+                  {credits > 0 && (
+                    <span key={credits} className="sh-coinpop" aria-hidden="true"
+                      style={{ position: 'absolute', left: 0, top: -2, pointerEvents: 'none' }}>
+                      <PixelCoin size={15} />
+                    </span>
+                  )}
+                </span>
+              </button>
+            </>
+          )}
         </div>
-      )}
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <LangToggle lang={lang} toggle={toggle} title={t('topbar.toggleLang')} />
-        <LightToggle title="Light / dark" />
-        <ThemeToggle ambient={ambient} title="Theme" />
-        {!isMobile && <TimeChip phase={phase} city={geo.city} timeStr={tStr} />}
-        <AuthChip />
+        {live && (
+          <div className="sh-np" style={{ flex: '0 1 440px', minWidth: 0, display: 'flex' }}>
+            <NowPlaying ambient={ambient} on />
+          </div>
+        )}
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0, paddingBottom: 4 }}>
+          <LangToggle lang={lang} toggle={toggle} title={t('topbar.toggleLang')} />
+          <LightToggle title="Light / dark" />
+          <AuthChip />
+        </div>
       </div>
     </header>
-  );
-}
-
-// Compact pill: [day/night icon] [HH:MM:SS] [· City]
-function TimeChip({ phase, city, timeStr }) {
-  const day = phase === 'day';
-  const color = day ? COLORS.gold : '#9bb4ff';
-  return (
-    <div style={{
-      display: 'flex', alignItems: 'center', gap: 10,
-      padding: '6px 14px 6px 8px', borderRadius: 999,
-      background: color + '10', border: `1px solid ${color}33`,
-    }}>
-      <span style={{
-        width: 24, height: 24, borderRadius: 999, display: 'grid', placeItems: 'center',
-        background: color + '22',
-      }}
-        title={day ? 'DAY' : 'NIGHT'}
-        aria-label={day ? 'day' : 'night'}>
-        {day ? <GlyphSun color={color} size={14} /> : <GlyphMoon color={color} size={14} />}
-      </span>
-      <span className="mono" style={{
-        fontSize: 13, fontWeight: 700, letterSpacing: '0.05em', color: COLORS.text,
-        lineHeight: 1, minWidth: 76, textAlign: 'left',
-      }}>{timeStr}</span>
-      {city && (
-        <span className="mono" style={{
-          fontSize: 9, color: COLORS.muted, letterSpacing: '0.06em',
-          paddingLeft: 8, borderLeft: `1px solid ${color}25`,
-        }}>{city}</span>
-      )}
-    </div>
   );
 }
 
@@ -391,7 +501,7 @@ function readThemeMode() {
 function syncThemeColorMeta(mode) {
   try {
     document.querySelector('meta[name="theme-color"]')
-      ?.setAttribute('content', mode === 'light' ? '#f3eee4' : '#0d0a08');
+      ?.setAttribute('content', mode === 'light' ? '#f3eee4' : '#17110d');
   } catch { /* ignore */ }
 }
 
@@ -410,27 +520,18 @@ function LightToggle({ title }) {
   const light = mode === 'light';
   return (
     <button
+      type="button"
       onClick={() => setMode(light ? 'dark' : 'light')}
-      title={title}
+      title={title + ' · ' + (light ? 'LIGHT' : 'DARK')}
       aria-label={title}
-      className="mono"
+      aria-pressed={!light}
+      className="sbtn sh-ghost"
       style={{
-        display: 'flex', alignItems: 'center', gap: 7, height: 32,
-        padding: '0 12px 0 9px', borderRadius: 999,
-        border: '1px solid ' + COLORS.line, background: 'transparent',
-        color: COLORS.text, cursor: 'pointer',
-        fontSize: 10, letterSpacing: '0.14em', fontWeight: 700,
-        transition: 'border-color 120ms, background 120ms',
+        display: 'grid', placeItems: 'center', width: 36, height: 36, padding: 0,
+        background: COLORS.paper, color: COLORS.text,
       }}
-      onMouseEnter={(e) => { e.currentTarget.style.borderColor = COLORS.text + '55'; }}
-      onMouseLeave={(e) => { e.currentTarget.style.borderColor = COLORS.line; }}
     >
-      <span style={{
-        width: 12, height: 12, borderRadius: 999, flex: 'none',
-        background: light ? '#f3eee4' : '#0d0a08',
-        boxShadow: '0 0 0 1px rgba(127,127,127,0.35)',
-      }} />
-      {light ? 'LIGHT' : 'DARK'}
+      {light ? <PxSun size={18} /> : <PxMoon size={18} />}
     </button>
   );
 }
@@ -438,142 +539,16 @@ function LightToggle({ title }) {
 function LangToggle({ lang, toggle, title }) {
   const isEn = lang === 'en';
   // Highlight the *current* language; the other half is the "click to switch" target.
-  const active = COLORS.text;
-  const inactive = COLORS.muted;
   return (
-    <button
-      onClick={toggle}
-      title={title}
-      aria-label={title}
-      className="mono"
-      style={{
-        display: 'flex', alignItems: 'center', gap: 0,
-        padding: '5px 4px', borderRadius: 999,
-        background: 'transparent',
-        border: '1px solid ' + COLORS.line,
-        color: COLORS.text, cursor: 'pointer',
-        fontSize: 10, letterSpacing: '0.14em', fontWeight: 700,
-        height: 32,
-        transition: 'border-color 120ms, background 120ms',
-      }}
-      onMouseEnter={(e) => { e.currentTarget.style.borderColor = COLORS.text + '55'; }}
-      onMouseLeave={(e) => { e.currentTarget.style.borderColor = COLORS.line; }}
-    >
-      <span style={{
-        padding: '4px 8px', borderRadius: 999,
-        background: isEn ? COLORS.text + '12' : 'transparent',
-        color: isEn ? active : inactive,
-      }}>EN</span>
-      <span style={{ color: COLORS.muted, opacity: 0.4, fontSize: 9 }}>·</span>
-      <span style={{
-        padding: '4px 8px', borderRadius: 999,
-        background: !isEn ? COLORS.text + '12' : 'transparent',
-        color: !isEn ? active : inactive,
-      }}>VI</span>
-    </button>
-  );
-}
-
-const THEME_OPTIONS = [
-  { idx: null, label: 'AUTO',    swatch: null },
-  { idx: 0,    label: 'RED',     swatch: ['#E04545'] },
-  { idx: 1,    label: 'GREEN',   swatch: ['#5BA868'] },
-  { idx: 2,    label: 'GOLD',    swatch: ['#D4A858'] },
-  { idx: 3,    label: 'DUO R×G', swatch: ['#E04545', '#5BA868'] },
-  { idx: 4,    label: 'DUO G×R', swatch: ['#D4A858', '#E04545'] },
-  { idx: 5,    label: 'WHITE',   swatch: ['#FAFAF7'] },
-];
-
-function ThemeSwatch({ colors, size = 12 }) {
-  const base = { width: size, height: size, borderRadius: 999, flexShrink: 0 };
-  if (!colors) return <span style={{
-    ...base,
-    background: `conic-gradient(${COLORS.red}, ${COLORS.green}, ${COLORS.gold}, ${COLORS.red})`,
-    border: '1px solid ' + COLORS.line,
-  }} />;
-  if (colors.length === 1) return <span style={{
-    ...base, background: colors[0],
-    boxShadow: `0 0 6px ${colors[0]}88`,
-  }} />;
-  return <span style={{
-    ...base,
-    background: `linear-gradient(135deg, ${colors[0]} 50%, ${colors[1]} 50%)`,
-  }} />;
-}
-
-function ThemeToggle({ ambient, title }) {
-  const { lockedIdx, setLockedIdx, isLive } = ambient;
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const onDoc = (e) => {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
-    };
-    document.addEventListener('mousedown', onDoc);
-    return () => document.removeEventListener('mousedown', onDoc);
-  }, [open]);
-
-  const current = THEME_OPTIONS.find((o) => o.idx === lockedIdx) || THEME_OPTIONS[0];
-
-  return (
-    <div ref={ref} style={{ position: 'relative' }}>
-      <button
-        onClick={() => setOpen((v) => !v)}
-        title={isLive ? 'Spotify live — theme override pauses until rotation resumes' : title}
-        aria-label={title}
-        className="mono"
-        style={{
-          height: 32, padding: '0 10px 0 9px', borderRadius: 999,
-          background: 'transparent',
-          border: '1px solid ' + (open ? COLORS.text + '55' : COLORS.line),
-          color: COLORS.text, cursor: 'pointer',
-          fontSize: 10, letterSpacing: '0.14em', fontWeight: 700,
-          display: 'flex', alignItems: 'center', gap: 7,
-          opacity: isLive ? 0.6 : 1,
-          transition: 'border-color 120ms, opacity 120ms',
-        }}
-        onMouseEnter={(e) => { e.currentTarget.style.borderColor = COLORS.text + '55'; }}
-        onMouseLeave={(e) => { if (!open) e.currentTarget.style.borderColor = COLORS.line; }}
-      >
-        <ThemeSwatch colors={current.swatch} />
-        <span>{current.label}</span>
-        <span style={{ color: COLORS.muted, fontSize: 9, marginLeft: -2 }}>▾</span>
-      </button>
-      {open && (
-        <div role="menu" style={{
-          position: 'absolute', top: 'calc(100% + 8px)', right: 0, zIndex: 60,
-          minWidth: 160, padding: 6, borderRadius: 12,
-          background: COLORS.panel, border: '1px solid ' + COLORS.line,
-          boxShadow: '0 24px 60px -20px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.04)',
-          animation: 'fadeUp 180ms ease-out',
-        }}>
-          {THEME_OPTIONS.map((opt) => {
-            const active = opt.idx === lockedIdx;
-            return (
-              <button key={String(opt.idx)}
-                onClick={() => { setLockedIdx(opt.idx); setOpen(false); }}
-                className="mono"
-                style={{
-                  width: '100%', textAlign: 'left',
-                  padding: '8px 10px', borderRadius: 8,
-                  background: active ? COLORS.text + '12' : 'transparent',
-                  border: 'none', color: COLORS.text, cursor: 'pointer',
-                  fontSize: 10, letterSpacing: '0.14em', fontWeight: 700,
-                  display: 'flex', alignItems: 'center', gap: 10,
-                }}
-                onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = COLORS.text + '08'; }}
-                onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = 'transparent'; }}
-              >
-                <ThemeSwatch colors={opt.swatch} />
-                <span style={{ flex: 1 }}>{opt.label}</span>
-                {active && <span style={{ color: COLORS.text, fontSize: 9 }}>●</span>}
-              </button>
-            );
-          })}
-        </div>
-      )}
+    <div role="group" aria-label={title} title={title} className="pxs" style={{ display: 'flex' }}>
+      {[['en', isEn], ['vi', !isEn]].map(([code, on]) => (
+        <button key={code} type="button" aria-pressed={on}
+          onClick={() => { if (!on) toggle(); }}
+          className={'chip-px sk' + (on ? ' on' : '')}
+          style={{ height: 36, padding: '0 10px', fontSize: 12, boxShadow: 'none' }}>
+          {code.toUpperCase()}
+        </button>
+      ))}
     </div>
   );
 }
@@ -599,115 +574,98 @@ function AuthChip() {
 
   if (status === 'loading') {
     return (
-      <div className="mono" style={{
-        height: 32, padding: '0 12px', borderRadius: 999,
-        border: '1px solid ' + COLORS.line, color: COLORS.muted,
-        fontSize: 10, letterSpacing: '0.14em', display: 'flex', alignItems: 'center',
-      }}>{t('auth.syncing')}</div>
+      <div className="sk pxs" style={{
+        height: 36, padding: '0 12px', display: 'flex', alignItems: 'center',
+        background: COLORS.paper, color: COLORS.muted, fontSize: 11,
+      }}>
+        <span className="dots-step" aria-hidden="true" style={{ marginRight: 4, transform: 'scale(0.6)' }}><i /><i /><i /></span>
+        {t('auth.syncing')}
+      </div>
     );
   }
+
+  const label = { fontSize: 11, color: COLORS.muted, marginBottom: 8 };
 
   return (
     <div ref={ref} style={{ position: 'relative' }}>
       {status === 'authed' ? (
-        <button onClick={() => setOpen((v) => !v)}
+        <button type="button" onClick={() => setOpen((v) => !v)}
           aria-label={user?.displayName || t('auth.signedInAs')}
-          className="mono"
+          aria-haspopup="menu" aria-expanded={open}
+          className="sbtn sh-ghost"
           style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            height: 32, padding: '2px 10px 2px 2px', borderRadius: 999,
-            background: 'transparent', border: '1px solid ' + COLORS.line,
-            color: COLORS.text, cursor: 'pointer',
-            fontSize: 11, letterSpacing: '0.04em',
+            display: 'flex', alignItems: 'center', gap: 9, height: 36, padding: '0 10px 0 4px',
+            background: COLORS.paper, color: COLORS.text,
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.borderColor = COLORS.text + '55'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.borderColor = COLORS.line; }}
         >
           {user?.avatarUrl ? (
             <img src={user.avatarUrl} alt="" style={{
-              width: 26, height: 26, borderRadius: 999, objectFit: 'cover',
-              border: '1px solid ' + COLORS.line,
+              width: 28, height: 28, objectFit: 'cover', imageRendering: 'pixelated',
+              boxShadow: `0 0 0 2px ${COLORS.ink}`,
             }} />
           ) : (
-            <span style={{
-              width: 26, height: 26, borderRadius: 999,
-              background: COLORS.red + '22', color: COLORS.red,
-              display: 'grid', placeItems: 'center',
-              fontSize: 11, fontWeight: 800,
+            <span className="pf" style={{
+              width: 28, height: 28, display: 'grid', placeItems: 'center',
+              background: ACCENTS.ai, color: COLORS.onAccent, fontSize: 15,
             }}>{(user?.displayName || '?').slice(0, 1).toUpperCase()}</span>
           )}
-          <span style={{
-            maxWidth: 96, overflow: 'hidden', textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
+          <span className="mono" style={{
+            maxWidth: 110, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            fontSize: 12, fontWeight: 700,
           }}>{user?.displayName || user?.username || '—'}</span>
-          <span style={{ color: COLORS.muted, fontSize: 9 }}>▾</span>
+          <PixelArrow dir="down" size={5} />
         </button>
       ) : (
-        <button onClick={() => setOpen((v) => !v)}
-          className="mono"
+        <button type="button" onClick={() => setOpen((v) => !v)}
+          aria-haspopup="menu" aria-expanded={open}
+          className="sbtn sk"
           style={{
-            height: 32, padding: '0 14px', borderRadius: 999,
-            background: COLORS.red + '14', border: `1px solid ${COLORS.red}55`,
-            color: COLORS.red, cursor: 'pointer',
-            fontSize: 11, letterSpacing: '0.14em', fontWeight: 700,
-            textTransform: 'uppercase',
-            display: 'flex', alignItems: 'center', gap: 6,
+            height: 36, padding: '0 14px', fontSize: 12, textTransform: 'uppercase',
+            background: COLORS.red, color: COLORS.onAccent,
+            display: 'flex', alignItems: 'center', gap: 8,
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = COLORS.red + '22'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = COLORS.red + '14'; }}
         >
           {t('auth.signIn')}
         </button>
       )}
 
       {open && (
-        <div role="menu" style={{
-          position: 'absolute', top: 'calc(100% + 8px)', right: 0, zIndex: 60,
-          minWidth: 240, padding: 12, borderRadius: 12,
-          background: COLORS.panel, border: '1px solid ' + COLORS.line,
-          boxShadow: '0 24px 60px -20px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.04)',
-          animation: 'fadeUp 180ms ease-out',
+        <div role="menu" className="px" style={{
+          position: 'absolute', top: 'calc(100% + 18px)', right: 0, zIndex: 60,
+          width: 280, padding: '16px 18px 20px', background: COLORS.paper, color: COLORS.text,
+          animation: 'px-rise 0.2s steps(3)',
         }}>
           {status === 'authed' ? (
             <>
-              <div className="mono" style={{
-                fontSize: 9, letterSpacing: '0.18em', color: COLORS.muted,
-                padding: '4px 8px', marginBottom: 8,
-              }}>{t('auth.signedInAs').toUpperCase()} · {user?.provider?.toUpperCase()}</div>
-              <div style={{ padding: '4px 8px 10px', borderBottom: '1px solid ' + COLORS.line }}>
-                <div className="mono" style={{ fontSize: 13, fontWeight: 700, color: COLORS.text }}>
+              <div className="sk" style={label}>
+                {t('auth.signedInAs').toUpperCase()} · {user?.provider?.toUpperCase()}
+              </div>
+              <div style={{ paddingBottom: 14, marginBottom: 16, borderBottom: `3px dashed ${COLORS.rule}` }}>
+                <div className="pf" style={{ fontSize: 20, lineHeight: 1.1, overflowWrap: 'anywhere' }}>
                   {user?.displayName || '—'}
                 </div>
                 {user?.email && (
-                  <div className="mono" style={{ fontSize: 10, color: COLORS.muted, marginTop: 3 }}>
+                  <div style={{ fontSize: 11, color: COLORS.muted, marginTop: 5, overflowWrap: 'anywhere' }}>
                     {user.email}
                   </div>
                 )}
               </div>
-              <button onClick={() => { setOpen(false); logout(); }}
-                className="mono"
+              <button type="button" role="menuitem" onClick={() => { setOpen(false); logout(); }}
+                className="sbtn sk sh-ghost"
                 style={{
-                  marginTop: 8, width: '100%', textAlign: 'left',
-                  padding: '10px 12px', borderRadius: 8,
-                  background: 'transparent', border: '1px solid ' + COLORS.line,
-                  color: COLORS.text, cursor: 'pointer',
-                  fontSize: 11, letterSpacing: '0.08em',
+                  width: '100%', display: 'flex', alignItems: 'center', gap: 10, height: 38,
+                  padding: '0 12px', fontSize: 12, background: COLORS.paper, color: COLORS.text,
                 }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = COLORS.red + '12'; e.currentTarget.style.borderColor = COLORS.red + '55'; e.currentTarget.style.color = COLORS.red; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = COLORS.line; e.currentTarget.style.color = COLORS.text; }}
-              >↩ {t('auth.logout')}</button>
+              ><StrokeIcon d={ICON_LOGOUT} size={15} />{t('auth.logout')}</button>
             </>
           ) : (
             <>
-              <div className="mono" style={{
-                fontSize: 9, letterSpacing: '0.18em', color: COLORS.muted,
-                padding: '4px 8px', marginBottom: 6,
-              }}>{t('auth.signInTitle').toUpperCase()}</div>
-              <div style={{ padding: '0 8px 10px', fontSize: 11, color: COLORS.muted, lineHeight: 1.5 }}>
+              <div className="sk" style={label}>{t('auth.signInTitle').toUpperCase()}</div>
+              <div style={{ marginBottom: 16, fontSize: 12, color: COLORS.muted, lineHeight: 1.55 }}>
                 {t('auth.signInDesc')}
               </div>
               <ProviderBtn provider="discord" color="#5865F2" label={t('auth.discord')} onClick={() => login('discord')} />
-              <div style={{ height: 6 }} />
+              <div style={{ height: 14 }} />
               <ProviderBtn provider="google" color="#EA4335" label={t('auth.google')} onClick={() => login('google')} />
             </>
           )}
@@ -719,33 +677,28 @@ function AuthChip() {
 
 function ProviderBtn({ provider, color, label, onClick }) {
   return (
-    <button onClick={onClick} className="mono"
+    <button type="button" role="menuitem" onClick={onClick} className="sbtn sh-ghost"
       style={{
-        width: '100%', display: 'flex', alignItems: 'center', gap: 10,
-        padding: '10px 12px', borderRadius: 8,
-        background: color + '14', border: `1px solid ${color}50`,
-        color: COLORS.text, cursor: 'pointer',
-        fontSize: 12, letterSpacing: '0.04em', fontWeight: 600,
-        transition: 'background 120ms',
+        width: '100%', display: 'flex', alignItems: 'center', gap: 10, minHeight: 40,
+        padding: '0 12px', background: COLORS.paper, color: COLORS.text,
+        fontSize: 12, fontWeight: 700, textAlign: 'left',
       }}
-      onMouseEnter={(e) => { e.currentTarget.style.background = color + '24'; }}
-      onMouseLeave={(e) => { e.currentTarget.style.background = color + '14'; }}
     >
       {provider === 'discord' && (
-        <svg width="16" height="16" viewBox="0 0 24 24" fill={color}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill={color} aria-hidden="true">
           <path d="M20.317 4.37a19.79 19.79 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.865-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.74 19.74 0 003.677 4.37a.07.07 0 00-.032.028C.533 9.046-.32 13.58.099 18.058a.082.082 0 00.031.056 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.873-1.295 1.226-1.994a.076.076 0 00-.041-.106 13.1 13.1 0 01-1.872-.892.077.077 0 01-.008-.128c.126-.094.252-.192.372-.291a.074.074 0 01.078-.01c3.928 1.793 8.18 1.793 12.061 0a.074.074 0 01.079.01c.12.099.246.197.373.291a.077.077 0 01-.006.128 12.3 12.3 0 01-1.873.891.076.076 0 00-.04.107c.36.698.772 1.363 1.225 1.993a.076.076 0 00.084.028 19.84 19.84 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.029zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" />
         </svg>
       )}
       {provider === 'google' && (
-        <svg width="16" height="16" viewBox="0 0 24 24">
+        <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
           <path fill="#4285F4" d="M21.6 12.227c0-.709-.064-1.39-.182-2.045H12v3.868h5.382a4.6 4.6 0 01-1.995 3.018v2.51h3.232c1.891-1.741 2.981-4.305 2.981-7.351z" />
           <path fill="#34A853" d="M12 22c2.7 0 4.964-.895 6.619-2.422l-3.232-2.51c-.895.6-2.04.955-3.387.955-2.605 0-4.81-1.76-5.595-4.124H3.064v2.59A9.996 9.996 0 0012 22z" />
           <path fill="#FBBC05" d="M6.405 13.9a6.012 6.012 0 010-3.8V7.51H3.064a10.001 10.001 0 000 8.98l3.341-2.59z" />
           <path fill="#EA4335" d="M12 5.977c1.468 0 2.786.504 3.823 1.495l2.868-2.868C16.96 2.99 14.696 2 12 2 8.092 2 4.71 4.244 3.064 7.51l3.341 2.59C7.19 7.736 9.395 5.977 12 5.977z" />
         </svg>
       )}
-      <span style={{ flex: 1, textAlign: 'left' }}>{label}</span>
-      <span style={{ color: COLORS.muted, fontSize: 10 }}>↗</span>
+      <span style={{ flex: 1 }}>{label}</span>
+      <PixelArrow size={9} />
     </button>
   );
 }
@@ -765,74 +718,71 @@ function AuthErrorToast() {
   }, []);
   if (!err) return null;
   return (
-    <div role="alert" style={{
-      position: 'fixed', top: 76, right: 24, zIndex: 70,
-      padding: '12px 16px', borderRadius: 10,
-      background: COLORS.panel, border: '1px solid ' + COLORS.red + '66',
-      boxShadow: '0 16px 40px -16px ' + COLORS.red + '99',
-      color: COLORS.text, fontSize: 12, lineHeight: 1.5,
-      maxWidth: 320, display: 'flex', alignItems: 'flex-start', gap: 10,
-      animation: 'fadeUp 200ms ease-out',
+    <div role="alert" className="px" style={{
+      position: 'fixed', top: 150, right: 32, zIndex: 70,
+      width: 340, maxWidth: 'calc(100vw - 64px)',
+      padding: '14px 14px 16px 16px', background: COLORS.paper, color: COLORS.text,
+      borderLeft: `8px solid ${COLORS.red}`,
+      display: 'flex', alignItems: 'flex-start', gap: 12,
+      animation: 'px-rise 0.24s steps(4)',
     }}>
-      <span style={{ color: COLORS.red, fontSize: 14 }}>⚠</span>
-      <div style={{ flex: 1 }}>
-        <div className="mono" style={{
-          fontSize: 10, letterSpacing: '0.18em', color: COLORS.red, fontWeight: 700,
-        }}>{t('auth.error').toUpperCase()}</div>
-        <div className="mono" style={{ fontSize: 11, color: COLORS.muted, marginTop: 4 }}>{err}</div>
+      <StrokeIcon d={ICON_WARN} size={20} color="var(--sh-red-ink)" style={{ flexShrink: 0, marginTop: 1 }} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div className="sk" style={{ fontSize: 12, color: 'var(--sh-red-ink)' }}>{t('auth.error').toUpperCase()}</div>
+        <div style={{ fontSize: 12, color: COLORS.muted, marginTop: 6, lineHeight: 1.5, overflowWrap: 'anywhere' }}>{err}</div>
       </div>
-      <button onClick={() => setErr(null)} aria-label={t('auth.errorDismiss')}
+      <button type="button" onClick={() => setErr(null)} aria-label={t('auth.errorDismiss')}
+        className="sbtn sh-ghost"
         style={{
-          background: 'transparent', border: 'none', cursor: 'pointer',
-          color: COLORS.muted, fontSize: 14, padding: 0,
-        }}>✕</button>
+          display: 'grid', placeItems: 'center', width: 28, height: 28, padding: 0, flexShrink: 0,
+          background: COLORS.paper, color: COLORS.text,
+        }}><PxClose size={10} /></button>
     </div>
   );
 }
 
 function NowPlaying({ ambient, on }) {
   const { track, playing, isLive, game } = ambient;
+  const bar = track.palette[0];
   return (
-    <div style={{
-      display: 'flex', alignItems: 'center', gap: 14,
-      padding: '6px 16px 6px 8px', borderRadius: 999,
-      background: COLORS.panel,
-      border: '1px solid ' + (isLive ? '#1DB95455' : COLORS.line),
-      maxWidth: 540,
-      boxShadow: isLive ? '0 0 0 1px #1DB95422, 0 8px 24px -12px #1DB95455' : 'none',
-      transition: 'border-color 600ms, box-shadow 600ms',
+    <div className="pxs" style={{
+      display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, width: '100%',
+      padding: '4px 12px 4px 4px', background: COLORS.paper,
     }}>
       <div style={{
-        width: 38, height: 38, borderRadius: 8, flexShrink: 0,
+        width: 34, height: 34, flexShrink: 0,
         background: track.coverUrl
           ? `url(${track.coverUrl}) center/cover no-repeat`
-          : `linear-gradient(135deg, ${track.palette[0]}, ${track.palette[1] || COLORS.green})`,
-        display: 'grid', placeItems: 'center',
-        position: 'relative', overflow: 'hidden',
+          : `linear-gradient(135deg, ${track.palette[0]} 50%, ${track.palette[1] || ACCENTS.tools} 50%)`,
+        display: 'grid', placeItems: 'center', boxShadow: `0 0 0 2px ${COLORS.ink}`,
       }}>
         {!track.coverUrl && (
-          <span className="mono" style={{
-            fontSize: 11, color: '#0d0a08', fontWeight: 800, letterSpacing: '0.05em',
-          }}>{track.album.slice(0, 3)}</span>
+          <span className="sk" style={{ fontSize: 9, color: '#1b1410' }}>{track.album.slice(0, 3)}</span>
         )}
       </div>
-      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 2, height: 18 }}>
+      <div aria-hidden="true" style={{
+        display: 'flex', alignItems: 'flex-end', gap: 2, height: 26, padding: '4px 4px',
+        background: COLORS.strip, flexShrink: 0,
+      }}>
         {[0, 1, 2, 3, 4].map((i) => (
           <div key={i} style={{
-            width: 2.5, height: 18, background: track.palette[0],
-            borderRadius: 1, transformOrigin: 'bottom',
-            animation: playing && on ? `eq ${0.6 + i * 0.13}s ease-in-out ${i * 0.06}s infinite` : 'none',
-            opacity: playing && on ? 1 : 0.3,
+            width: 3, height: 18, background: bar, transformOrigin: 'bottom',
+            animation: playing && on ? `sh-eq ${0.6 + i * 0.13}s steps(3) ${i * 0.06}s infinite` : 'none',
+            opacity: playing && on ? 1 : 0.35,
           }} />
         ))}
       </div>
       <div style={{ minWidth: 0, flex: 1, lineHeight: 1.2 }}>
+        <div className="sk" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 9, color: COLORS.greenInk, whiteSpace: 'nowrap' }}>
+          {isLive && <span className="blink" style={{ width: 6, height: 6, background: '#1DB954' }} />}
+          {isLive ? 'NOW PLAYING' : 'AMBIENT'}
+        </div>
         <div className="mono" style={{
-          fontSize: 12, fontWeight: 700, color: COLORS.text,
+          fontSize: 12, fontWeight: 700, color: COLORS.text, marginTop: 3,
           whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
         }}>{track.title}</div>
         <div className="mono" style={{
-          fontSize: 9, color: COLORS.muted, letterSpacing: '0.08em', marginTop: 2,
+          fontSize: 10, color: COLORS.muted, marginTop: 1,
           whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
         }}>{track.artist}{track.album ? ' · ' + track.album : ''}</div>
       </div>
@@ -843,236 +793,181 @@ function NowPlaying({ ambient, on }) {
 
 function GameChip({ game }) {
   return (
-    <div title={[game.name, game.details, game.state].filter(Boolean).join(' · ')}
+    <div className="sh-game" title={[game.name, game.details, game.state].filter(Boolean).join(' · ')}
       style={{
-        display: 'flex', alignItems: 'center',
-        padding: '4px 12px', borderRadius: 999,
-        background: COLORS.red + '12',
-        border: '1px solid ' + COLORS.red + '40',
-        maxWidth: 200, flexShrink: 0,
+        padding: '4px 8px', background: ACCENTS.game, color: COLORS.onAccent,
+        maxWidth: 140, flexShrink: 0, minWidth: 0,
       }}>
-      <div style={{ minWidth: 0 }}>
-        <div className="mono" style={{
-          fontSize: 8, letterSpacing: '0.16em', color: COLORS.red, fontWeight: 700, lineHeight: 1,
-        }}>PLAYING</div>
-        <div className="mono" style={{
-          fontSize: 10, color: COLORS.text, marginTop: 2, lineHeight: 1.1,
-          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 140,
-        }}>{game.name}</div>
-      </div>
+      <div className="sk" style={{ fontSize: 9, lineHeight: 1 }}>PLAYING</div>
+      <div className="mono" style={{
+        fontSize: 10, fontWeight: 700, marginTop: 3, lineHeight: 1.1,
+        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+      }}>{game.name}</div>
     </div>
   );
 }
 
 // ─────────────────────────────────────────────────────────────
-// Nav rail
+// Module tab bar + accent strip
 // ─────────────────────────────────────────────────────────────
-function NavRail({ route, nav }) {
+const LOBBY_STRIP = 'linear-gradient(90deg, ' + ['ai', 'tools', 'game', 'crypto', 'feed', 'kata', 'stylist', 'store']
+  .map((id, i, a) => `${ACCENTS[id]} ${(i * 100) / a.length}% ${((i + 1) * 100) / a.length}%`).join(', ') + ')';
+
+function ModuleTabs({ route, nav }) {
   const { user } = useAuth();
   const isOwner = !!user?.isHistoryOwner;
   const visibleFeatures = FEATURES.filter((f) => !f.ownerOnly || isOwner);
-  return (
-    <aside style={{
-      position: 'fixed', top: 64, left: 0, bottom: 0,
-      width: 84, zIndex: 40,
-      borderRight: '1px solid ' + COLORS.line,
-      background: 'rgba(13,10,8,0.6)',
-      backdropFilter: 'blur(8px)',
-      padding: '20px 0',
-      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
-    }}>
-      {visibleFeatures.map((f) => {
-        const active = f.id === route;
-        return (
-          <button key={f.id} onClick={() => nav(f.id)} title={f.label}
-            style={{
-              width: 56, height: 56, borderRadius: 12,
-              background: active ? f.accent + '1a' : 'transparent',
-              border: `1px solid ${active ? f.accent + '60' : 'transparent'}`,
-              color: active ? f.accent : COLORS.muted,
-              cursor: 'pointer',
-              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-              gap: 4, transition: 'background 120ms, color 120ms, border-color 120ms',
-              position: 'relative',
-            }}
-            onMouseEnter={(e) => {
-              if (!active) {
-                e.currentTarget.style.color = COLORS.text;
-                e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!active) {
-                e.currentTarget.style.color = COLORS.muted;
-                e.currentTarget.style.background = 'transparent';
-              }
-            }}
-          >
-            <span style={{
-              fontFamily: 'JetBrains Mono, monospace', fontSize: 18, fontWeight: 700, lineHeight: 1,
-              display: 'grid', placeItems: 'center', height: 20,
-            }}>
-              {typeof f.icon === 'function' ? f.icon('currentColor') : f.icon}
-            </span>
-            <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 8, letterSpacing: '0.16em' }}>
-              {f.short}
-            </span>
-            {active && (
-              <span style={{
-                position: 'absolute', left: -1, top: 12, bottom: 12, width: 2,
-                background: f.accent, borderRadius: 2,
-              }} />
-            )}
-          </button>
-        );
-      })}
-      <div style={{ flex: 1 }} />
-      <NavSocials />
-    </aside>
-  );
-}
+  // Tools merged into Toolbox keep the TOOLBOX tab lit.
+  const activeId = MERGED_ROUTE_META[route] ? 'tools' : route;
+  const barRef = useRef(null);
 
-// 5 social links. On desktop they sit stacked at the bottom of the nav rail.
-// On mobile, collapse to a single toggle icon — tap expands the 5 icons upward.
-function NavSocials() {
-  const isMobile = useMediaQuery('(max-width: 768px)');
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
-
+  // Keep the active tab in view when the bar scrolls (narrow windows).
   useEffect(() => {
-    if (!open) return;
-    const onDoc = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
-    document.addEventListener('mousedown', onDoc);
-    document.addEventListener('touchstart', onDoc);
-    return () => {
-      document.removeEventListener('mousedown', onDoc);
-      document.removeEventListener('touchstart', onDoc);
+    let live = true;
+    const reveal = () => {
+      const bar = barRef.current;
+      const el = live && bar && bar.querySelector('[aria-current="page"]');
+      if (!el) return;
+      const l = el.offsetLeft;
+      const r = l + el.offsetWidth;
+      if (l < bar.scrollLeft) bar.scrollLeft = l - 24;
+      else if (r > bar.scrollLeft + bar.clientWidth) bar.scrollLeft = r - bar.clientWidth + 24;
     };
-  }, [open]);
-
-  if (!isMobile) {
-    return (
-      <div style={{
-        borderTop: '1px solid ' + COLORS.line, paddingTop: 14,
-        display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'center',
-      }}>
-        {SOCIALS.map((s) => (
-          <a key={s.id} href={s.href} aria-label={s.label} title={s.label}
-            style={{
-              width: 32, height: 32, display: 'grid', placeItems: 'center',
-              color: COLORS.muted, transition: 'color 120ms, transform 120ms',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.color = COLORS.red;
-              e.currentTarget.style.transform = 'translateY(-1px)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = COLORS.muted;
-              e.currentTarget.style.transform = 'translateY(0)';
-            }}
-          >{s.icon}</a>
-        ))}
-      </div>
-    );
-  }
+    reveal();
+    // Pixel fonts are wider than the fallback: measure again once they load.
+    document.fonts?.ready?.then(reveal);
+    return () => { live = false; };
+  }, [activeId]);
 
   return (
-    <div ref={ref} style={{
-      borderTop: '1px solid ' + COLORS.line, paddingTop: 14,
-      width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center',
-      position: 'relative',
-    }}>
-      {open && (
-        <div style={{
-          position: 'absolute', bottom: '100%', left: '50%', transform: 'translateX(-50%)',
-          marginBottom: 8,
-          padding: '8px 6px', borderRadius: 12,
-          background: COLORS.panel, border: '1px solid ' + COLORS.line,
-          boxShadow: '0 16px 40px -16px rgba(0,0,0,0.6)',
-          display: 'flex', flexDirection: 'column', gap: 4,
-          animation: 'fadeUp 160ms ease-out',
+    <div style={{ flex: 'none', position: 'relative', zIndex: 20 }}>
+      <nav aria-label="Modules" style={{ background: COLORS.strip }}>
+        <div ref={barRef} className="sh-wrap sh-tabs" style={{
+          position: 'relative', display: 'flex', alignItems: 'flex-end', gap: 6,
+          height: 54, overflowX: 'auto', overflowY: 'hidden',
         }}>
-          {SOCIALS.map((s) => (
-            <a key={s.id} href={s.href} aria-label={s.label} title={s.label}
-              onClick={() => setOpen(false)}
-              style={{
-                width: 32, height: 32, borderRadius: 8,
-                display: 'grid', placeItems: 'center',
-                color: COLORS.muted, transition: 'color 120ms, background 120ms',
-              }}
-              onTouchStart={(e) => { e.currentTarget.style.color = COLORS.red; }}
-            >{s.icon}</a>
-          ))}
+          {visibleFeatures.map((f) => {
+            const on = f.id === activeId;
+            return (
+              <a key={f.id} href={f.href || '#/' + f.id}
+                className={'tab sk' + (on ? ' tab-on' : '')}
+                aria-current={on ? 'page' : undefined}
+                title={f.label}
+                style={{ '--a': ACCENTS[f.id] }}
+                onClick={(e) => {
+                  // Plain clicks go through nav() (transition / full-page hop);
+                  // modified clicks keep the browser's open-in-new-tab behaviour.
+                  if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                  e.preventDefault();
+                  nav(f.id);
+                }}
+              >
+                <span className="tn">{f.short}</span>{f.tab}
+              </a>
+            );
+          })}
         </div>
-      )}
-      <button onClick={() => setOpen((v) => !v)} aria-label={open ? 'Collapse' : 'Expand socials'}
-        style={{
-          width: 32, height: 32, borderRadius: 8,
-          background: open ? COLORS.red + '14' : 'transparent',
-          border: '1px solid ' + (open ? COLORS.red + '55' : COLORS.line),
-          color: open ? COLORS.red : COLORS.muted,
-          cursor: 'pointer', display: 'grid', placeItems: 'center',
-          transition: 'background 120ms, color 120ms, border-color 120ms',
-        }}>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          {/* simple "share / link" glyph */}
-          <circle cx="6" cy="12" r="2" />
-          <circle cx="18" cy="6" r="2" />
-          <circle cx="18" cy="18" r="2" />
-          <line x1="8" y1="11" x2="16" y2="7" />
-          <line x1="8" y1="13" x2="16" y2="17" />
-        </svg>
-      </button>
+      </nav>
+      <div aria-hidden="true" style={{
+        height: 12, borderBottom: `4px solid ${COLORS.ink}`,
+        background: activeId === 'home' ? LOBBY_STRIP : (ACCENTS[activeId] || COLORS.paper),
+      }} />
     </div>
   );
 }
 
-// ─────────────────────────────────────────────────────────────
-// Breadcrumbs
-// ─────────────────────────────────────────────────────────────
-function Breadcrumbs({ route, nav, feature }) {
-  const { t } = useLang();
-  const featureLabel = feature ? feature.label : '';
+// 5 social links, now in the footer.
+function NavSocials() {
   return (
-    <div style={{
-      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      marginBottom: 18, gap: 12,
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <button onClick={() => nav('home')} className="mono" style={{
-          background: 'transparent', border: 'none', color: COLORS.muted, cursor: 'pointer',
-          fontSize: 11, letterSpacing: '0.2em',
-        }}>HOME</button>
-        {route !== 'home' && (
-          <>
-            <span className="mono" style={{ color: COLORS.muted, opacity: 0.4 }}>/</span>
-            <span className="mono" style={{ fontSize: 11, letterSpacing: '0.2em', color: COLORS.text }}>
-              {featureLabel.toUpperCase()}
-            </span>
-            <span className="mono" style={{
-              padding: '3px 8px', borderRadius: 999,
-              background: feature?.accent + '14',
-              border: `1px solid ${feature?.accent}40`,
-              color: feature?.accent, fontSize: 9, letterSpacing: '0.16em',
-            }}>{feature?.short}</span>
-          </>
-        )}
-      </div>
-      {route !== 'home' && (
-        <button onClick={() => nav('home')} className="mono" style={{
-          padding: '7px 14px', borderRadius: 8,
-          background: 'transparent', border: '1px solid ' + COLORS.line,
-          color: COLORS.muted, fontSize: 10, letterSpacing: '0.14em',
-          cursor: 'pointer',
-        }}>{t('breadcrumb.escHome')}</button>
-      )}
-    </div>
+    <nav aria-label="Social links" style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+      {SOCIALS.map((s) => (
+        <a key={s.id} href={s.href} aria-label={s.label} title={s.label} className="sh-social">{s.icon}</a>
+      ))}
+    </nav>
   );
 }
 
 // ─────────────────────────────────────────────────────────────
-// Home view
+// Level header (replaces the breadcrumbs)
+// ─────────────────────────────────────────────────────────────
+function LevelHeader({ route, nav, feature }) {
+  const { t } = useLang();
+  const merged = !!MERGED_ROUTE_META[route];
+  const f = feature || {};
+  const btn = {
+    display: 'inline-flex', alignItems: 'center', gap: 8, height: 34, padding: '0 12px',
+    fontSize: 11, background: COLORS.paper, color: COLORS.text, whiteSpace: 'nowrap',
+  };
+  return (
+    <section className="sh-wrap" style={{ flex: 'none', paddingTop: 14, paddingBottom: 4 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 18, minWidth: 0 }}>
+          <IconTile id={route} accent={ACCENTS[route]} size={52} />
+          <div style={{ minWidth: 0 }}>
+            <p className="sk" style={{ margin: '0 0 5px', fontSize: 11, lineHeight: 1.2, color: COLORS.muted, whiteSpace: 'nowrap' }}>
+              WORLD {EXPERIMENT_NUMBER} ›{' '}
+              {merged ? (
+                <><button type="button" className="sh-crumb" onClick={() => nav('tools')}>TOOLBOX</button> › {f.tab}</>
+              ) : (
+                <>LEVEL {f.short}</>
+              )}
+            </p>
+            <h1 className="pf" style={{ margin: 0, fontSize: 28, lineHeight: 1, letterSpacing: 0 }}>{f.label}</h1>
+            {f.blurb && (
+              <p title={f.blurb} style={{
+                margin: '5px 0 0', fontSize: 13, lineHeight: 1.35, color: COLORS.muted,
+                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+              }}>{f.blurb}</p>
+            )}
+          </div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0, padding: '0 8px 8px 0' }}>
+          {merged && (
+            <button type="button" className="sbtn sk sh-ghost" onClick={() => nav('tools')} style={btn}>
+              <PixelArrow dir="left" size={9} />TOOLBOX
+            </button>
+          )}
+          <button type="button" className="sbtn sk sh-ghost" onClick={() => nav('home')} style={btn}>
+            {t('breadcrumb.escHome')}
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Footer — HUD text over a brick + grass strip
+// ─────────────────────────────────────────────────────────────
+function Footer({ phase }) {
+  const now = useClock();
+  const day = phase === 'day';
+  return (
+    <footer style={{
+      flex: 'none', position: 'relative', zIndex: 10,
+      background: COLORS.paper, borderTop: `4px solid ${COLORS.ink}`,
+    }}>
+      <div className="sh-wrap sk" style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
+        height: 32, fontSize: 11, color: COLORS.muted, whiteSpace: 'nowrap',
+      }}>
+        <span>SE77N · {now.getFullYear()} · EXP {EXPERIMENT_NUMBER}</span>
+        <span className="sh-hide-md">BUILD · {now.toISOString().slice(0, 10).replaceAll('-', '.')}</span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <NavSocials />
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: COLORS.text }}>
+            {day ? <PxSun size={12} /> : <PxMoon size={12} />}
+            {day ? 'DAYLIGHT' : 'NIGHTSHIFT'}
+          </span>
+        </span>
+      </div>
+      <div className="bricks" aria-hidden="true" style={{ height: 24, borderTopWidth: 6, backgroundSize: '32px 12px' }} />
+    </footer>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Home view — the lobby
 // ─────────────────────────────────────────────────────────────
 // Short maker/builder one-liners rotated at random in the hero headline.
 const QUOTES = [
@@ -1115,149 +1010,35 @@ function pickGlowIndices(str) {
   return new Set(idxs.slice(0, count));
 }
 
-// Drifting module-color dots connected with thin lines, sitting behind the hero.
-function Constellation({ height = 360, dotCount = 18 }) {
-  const wrapRef = useRef(null);
-  const [size, setSize] = useState({ w: 800, h: height });
-  const [t, setT] = useState(0);
-  const modules = FEATURES.filter((f) => f.id !== 'home');
+// The ambient theme lock (persisted by useAmbient) now picks the lobby sky.
+// AUTO follows the visitor's day/night; the palettes tint it.
+const SKY_OPTIONS = [
+  { idx: null, label: 'AUTO' },
+  { idx: 0,    label: 'RED',     top: '#ff9f8a', mid: '#ffb99a', bottom: '#ffd3ad' },
+  { idx: 1,    label: 'GREEN',   top: '#9edcab', mid: '#b9e6bf', bottom: '#d6f2d4' },
+  { idx: 2,    label: 'GOLD',    top: '#ffd27a', mid: '#ffe19e', bottom: '#fff0c2' },
+  { idx: 3,    label: 'DUO R×G', top: '#ff9f8a', mid: '#ffc9a6', bottom: '#b9e8c0' },
+  { idx: 4,    label: 'DUO G×R', top: '#ffd27a', mid: '#ffb98a', bottom: '#ff9f8a' },
+  { idx: 5,    label: 'WHITE',   top: '#dfe6ec', mid: '#ebf0f3', bottom: '#f7f9fa' },
+];
+const SKY_DAY = { top: '#9fd8ff', mid: '#b6e2ff', bottom: '#cdeeff' };
+const SKY_NIGHT = { top: '#1f2a52', mid: '#2c3a6c', bottom: '#3d4c8a', night: true };
 
-  useEffect(() => {
-    if (!wrapRef.current) return;
-    const ro = new ResizeObserver(() => {
-      const r = wrapRef.current.getBoundingClientRect();
-      setSize({ w: r.width, h: r.height });
-    });
-    ro.observe(wrapRef.current);
-    return () => ro.disconnect();
-  }, []);
-
-  useEffect(() => {
-    let raf;
-    const start = performance.now();
-    const loop = (now) => {
-      setT((now - start) / 1000);
-      raf = requestAnimationFrame(loop);
-    };
-    raf = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(raf);
-  }, []);
-
-  const dots = useMemo(() => {
-    const out = [];
-    for (let i = 0; i < dotCount; i++) {
-      const m = modules[i % modules.length];
-      const seed = i * 17.31;
-      out.push({
-        i, color: m.accent,
-        cx: 0.1 + ((seed * 0.13) % 0.8),
-        cy: 0.1 + ((seed * 0.21) % 0.8),
-        amp: 0.02 + ((seed * 0.07) % 0.04),
-        freq: 0.25 + ((seed * 0.05) % 0.3),
-        phase: (seed * 1.7) % (Math.PI * 2),
-        r: 1.6 + ((seed * 0.11) % 1.2),
-      });
-    }
-    return out;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dotCount]);
-
-  const pts = dots.map((d) => ({
-    ...d,
-    x: (d.cx + Math.cos(t * d.freq + d.phase) * d.amp) * size.w,
-    y: (d.cy + Math.sin(t * d.freq * 0.8 + d.phase) * d.amp) * size.h,
-  }));
-
-  const edges = [];
-  const MAX = Math.min(size.w, size.h) * 0.28;
-  for (let i = 0; i < pts.length; i++) {
-    for (let j = i + 1; j < pts.length; j++) {
-      const dx = pts[i].x - pts[j].x;
-      const dy = pts[i].y - pts[j].y;
-      const d = Math.hypot(dx, dy);
-      if (d < MAX) edges.push({ a: pts[i], b: pts[j], d });
-    }
-  }
-
-  return (
-    <div ref={wrapRef} aria-hidden style={{
-      position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0,
-      overflow: 'hidden',
-    }}>
-      <svg width={size.w} height={size.h} style={{ display: 'block' }}>
-        {edges.map((e, i) => {
-          const alpha = 1 - e.d / MAX;
-          return (
-            <line key={i} x1={e.a.x} y1={e.a.y} x2={e.b.x} y2={e.b.y}
-              stroke={COLORS.text} strokeWidth="0.6" opacity={alpha * 0.18} />
-          );
-        })}
-        {pts.map((p, i) => (
-          <g key={i}>
-            <circle cx={p.x} cy={p.y} r={p.r * 3} fill={p.color} opacity="0.10" />
-            <circle cx={p.x} cy={p.y} r={p.r} fill={p.color} opacity="0.6" />
-          </g>
-        ))}
-      </svg>
-    </div>
-  );
+function skyFor(lockedIdx, phase) {
+  const opt = SKY_OPTIONS.find((o) => o.idx != null && o.idx === lockedIdx);
+  if (opt) return opt;
+  return phase === 'night' ? SKY_NIGHT : SKY_DAY;
 }
 
-function ExperimentWatermark({ number = EXPERIMENT_NUMBER }) {
-  return (
-    <div aria-hidden style={{
-      position: 'absolute', top: -40, right: -20, pointerEvents: 'none', zIndex: 0,
-      fontFamily: 'JetBrains Mono, monospace',
-      fontSize: 340, fontWeight: 800, letterSpacing: '-0.04em', lineHeight: 1,
-      color: 'transparent',
-      WebkitTextStroke: `1px ${COLORS.red}26`,
-      opacity: 0.65,
-      userSelect: 'none',
-      animation: 'breath 6s ease-in-out infinite',
-    }}>
-      {number}
-    </div>
-  );
+// Three hard bands, like a pixel-art sky.
+function skyBackground(sky) {
+  return `linear-gradient(180deg, ${sky.top} 0 34%, ${sky.mid} 34% 62%, ${sky.bottom} 62% 100%)`;
 }
 
-function MarqueeTicker({ speed = 60, items, minRepeats = 6 }) {
-  // For short item lists we need to repeat enough times that the marquee track
-  // is wider than the viewport even after the -50% translate, otherwise the
-  // right side stays blank between loops.
-  const reps = Math.max(2, minRepeats);
-  const doubled = Array.from({ length: reps }).flatMap(() => items);
-  return (
-    <div style={{
-      width: '100%', overflow: 'hidden', position: 'relative',
-      padding: '10px 0', borderTop: `1px solid ${COLORS.line}`,
-      borderBottom: `1px solid ${COLORS.line}`,
-      background: 'rgba(13,10,8,0.5)',
-      maskImage: 'linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent)',
-      WebkitMaskImage: 'linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent)',
-    }}>
-      <div style={{
-        display: 'inline-flex', gap: 28, whiteSpace: 'nowrap',
-        animation: `ticker ${speed}s linear infinite`,
-        paddingLeft: 28,
-      }}>
-        {doubled.map((it, i) => (
-          <span key={i} className="mono" style={{
-            display: 'inline-flex', alignItems: 'center', gap: 8,
-            fontSize: 11, letterSpacing: '0.18em', color: it.c, fontWeight: 700,
-          }}>
-            <span style={{
-              width: 6, height: 6, borderRadius: 999, background: it.c,
-              boxShadow: `0 0 6px ${it.c}aa`,
-            }} />
-            {it.t}
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
+const COIN_PATH = 'M2 0h4v1h1v1h1v4H7v1H6v1H2V7H1V6H0V2h1V1h1z';
+const STARS = [[8, 14], [18, 30], [30, 10], [44, 24], [58, 8], [70, 30], [84, 16], [92, 40], [12, 44], [38, 40]];
 
-function HomeView({ nav, ambient, ambientOn }) {
+function HomeView({ nav, ambient, phase }) {
   const { t } = useLang();
   const { user } = useAuth();
   const [quoteIdx, setQuoteIdx] = useState(() => Math.floor(Math.random() * QUOTES.length));
@@ -1317,99 +1098,324 @@ function HomeView({ nav, ambient, ambientOn }) {
     return () => { alive = false; clearInterval(id); };
   }, []);
 
-  const fmtBtc = (v) => v == null ? '—' : '$' + Math.round(v).toLocaleString('en-US');
-  const fmtGold = (v) => v == null ? '—' : v.toFixed(2);
+  // Offline / not-yet-loaded values show as dashed placeholders.
+  const fmtBtc = (v) => v == null ? '$--,---' : '$' + Math.round(v).toLocaleString('en-US');
+  const fmtGold = (v) => v == null ? '----.--' : v.toFixed(2);
   // /api/crypto returns USD→TWD and USD→VND. Convert to TWD→VND directly.
   const twdVnd = (markets.twd && markets.vnd) ? markets.vnd / markets.twd : null;
-  const fmtTwdVnd = (v) => v == null ? '—' : v.toFixed(0);
+  const fmtTwdVnd = (v) => v == null ? '---' : v.toFixed(0);
 
   const tickerItems = useMemo(() => [
-    { c: COLORS.gold, t: 'BTC · ' + fmtBtc(markets.btc) },
-    { c: COLORS.gold, t: 'GOLD/OZ · ' + fmtGold(markets.gold) },
-    { c: COLORS.green, t: '1 TWD · ' + fmtTwdVnd(twdVnd) + ' VND' },
+    { k: 'BTC', c: '#ffd25e', v: fmtBtc(markets.btc) },
+    { k: 'GOLD/OZ', c: '#ffd25e', v: fmtGold(markets.gold) },
+    { k: '1 TWD', c: '#7fd18b', v: '= ' + fmtTwdVnd(twdVnd) + ' VND' },
+    { k: 'PRESS START TO PLAY', c: '#9fd8ff', v: '' },
   ], [markets.btc, markets.gold, twdVnd]);
+  // Four groups per half, two halves: the -50% loop never shows a gap.
+  const tickerRun = useMemo(() => Array.from({ length: 8 }).flatMap(() => tickerItems), [tickerItems]);
+
+  const modules = FEATURES.filter((f) => f.id !== 'home' && (!f.ownerOnly || user?.isHistoryOwner));
+  const quote = QUOTES[quoteIdx];
 
   return (
     <div>
-      <section style={{ position: 'relative', marginBottom: 36, padding: '4px 0' }}>
-        <Constellation />
-        <ExperimentWatermark />
-
-        <div style={{ position: 'relative', zIndex: 1 }}>
-          <Kicker style={{ marginBottom: 14, color: COLORS.red }}>● ONLINE · EXP {EXPERIMENT_NUMBER}</Kicker>
-          <div style={{ maxWidth: 1000, minHeight: 152, display: 'grid', alignItems: 'center' }}>
-            <h1 style={{
-              margin: 0,
-              fontFamily: 'JetBrains Mono, monospace',
-              fontSize: 62, lineHeight: 1.12, fontWeight: 800, letterSpacing: '-0.03em',
+      {/* ── Hero: dialog box + pixel scene ── */}
+      <section className="sh-wrap" style={{ paddingTop: 44, paddingBottom: 56 }}>
+        <div className="sh-hero">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 28, minWidth: 0 }}>
+            <span className="sk pxs" style={{
+              alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: 10,
+              padding: '7px 12px', fontSize: 12, background: ACCENTS.tools, color: COLORS.onAccent,
             }}>
-              {[...typed].map((ch, idx) => {
-                const glow = glowSet.has(idx);
-                return (
-                  <span
-                    key={idx}
-                    className={glow ? 'qglow' : undefined}
-                    style={{ color: glow ? COLORS.red : COLORS.text, animation: 'fadeIn 150ms ease-out' }}
-                  >{ch}</span>
-                );
-              })}
-              <span style={{
-                display: 'inline-block', width: 14, height: 46,
-                marginLeft: 10, verticalAlign: '-7px',
-                background: COLORS.red,
-                boxShadow: `0 0 18px ${COLORS.red}66`,
-                animation: 'blink 1s steps(1) infinite',
-              }} />
-            </h1>
+              <span className="blink" aria-hidden="true" style={{ width: 9, height: 9, background: '#1b1410' }} />
+              {bare(t('home.online'))} {EXPERIMENT_NUMBER}
+            </span>
+
+            <DialogBox speaker="SE77N SAYS:" padding="40px 34px 34px" style={{ marginTop: 6 }}>
+              <h1 className="pf sh-hero-h" aria-label={quote} style={{
+                margin: 0, lineHeight: 1.06, minHeight: '2.12em', letterSpacing: 0, overflowWrap: 'anywhere',
+              }}>
+                <span aria-hidden="true">
+                  {[...typed].map((ch, idx) => {
+                    const glow = glowSet.has(idx);
+                    return (
+                      <span key={idx} className={glow ? 'qglow' : undefined}
+                        style={{ color: glow ? COLORS.red : COLORS.text }}>{ch}</span>
+                    );
+                  })}
+                  <span className="blink" style={{
+                    display: 'inline-block', width: '0.42em', height: '0.8em',
+                    marginLeft: '0.12em', verticalAlign: '-0.06em', background: COLORS.red,
+                  }} />
+                </span>
+              </h1>
+              <p style={{ margin: '22px 0 0', maxWidth: 540, fontSize: 15, lineHeight: 1.65, color: COLORS.muted }}>
+                A personal control surface — your modules wired to one prompt.
+                AI, finance, travel, subscriptions, tools, and the KataS bot ops, woven into a single command center.
+              </p>
+            </DialogBox>
+
+            <div className="sh-ctas" style={{ display: 'flex', flexWrap: 'wrap', gap: 24, padding: '4px 12px 12px 4px' }}>
+              <PxButton kind="big" fill={COLORS.red} onClick={() => nav('ai')} title={bare(t('home.openAi'))}
+                className="sh-cta" style={{ height: 54, padding: '0 22px', fontSize: 15 }}>
+                <PixelArrow size={13} />PRESS START
+              </PxButton>
+              <PxButton kind="big" fill={ACCENTS.crypto} onClick={() => nav('crypto')}
+                className="sh-cta" style={{ height: 54, padding: '0 20px', fontSize: 15, textTransform: 'uppercase' }}>
+                {t('home.markets')}
+              </PxButton>
+              <PxButton kind="big" fill={ACCENTS.todo} onClick={() => nav('todo')}
+                className="sh-cta" style={{ height: 54, padding: '0 20px', fontSize: 15, textTransform: 'uppercase' }}>
+                {t('home.todo')}
+              </PxButton>
+            </div>
           </div>
-          <p style={{
-            margin: '20px 0 0', maxWidth: 720,
-            fontSize: 16, color: COLORS.muted, lineHeight: 1.6,
-          }}>
-            A personal control surface — your modules wired to one prompt.
-            AI, finance, travel, subscriptions, tools, and the KataS bot ops, woven into a single command center.
-          </p>
-          <div style={{ marginTop: 26, display: 'flex', gap: 10 }}>
-            <Btn variant="solid" color={COLORS.red} onClick={() => nav('ai')}>{t('home.openAi')}</Btn>
-            <Btn variant="ghost" onClick={() => nav('crypto')}>{t('home.markets')}</Btn>
-            <Btn variant="ghost" onClick={() => nav('todo')}>{t('home.todo')}</Btn>
-          </div>
+
+          <LobbyScene ambient={ambient} phase={phase} />
         </div>
       </section>
 
-      <div style={{ margin: '36px -32px 36px -84px' }}>
-        <MarqueeTicker speed={30} items={tickerItems} />
+      {/* ── Markets marquee ── */}
+      <div role="region" aria-label="Markets ticker" style={{
+        position: 'relative', display: 'flex', alignItems: 'center', height: 58, overflow: 'hidden',
+        background: COLORS.strip, color: COLORS.stripText,
+        borderTop: `4px solid ${COLORS.ink}`, borderBottom: `4px solid ${COLORS.ink}`,
+      }}>
+        <p className="sr">
+          BTC {fmtBtc(markets.btc)} · GOLD/OZ {fmtGold(markets.gold)} · 1 TWD = {fmtTwdVnd(twdVnd)} VND
+        </p>
+        <div className="marq sk" aria-hidden="true" style={{
+          display: 'flex', width: 'max-content', whiteSpace: 'nowrap', fontSize: 17,
+          animationDuration: '48s',
+        }}>
+          {tickerRun.map((it, i) => (
+            <span key={i} style={{ display: 'inline-flex', alignItems: 'center' }}>
+              <span style={{ marginRight: it.v ? 12 : 0, color: it.c }}>{it.k}</span>
+              {it.v && <span>{it.v}</span>}
+              <span style={{ margin: '0 40px', color: COLORS.red }}>★</span>
+            </span>
+          ))}
+        </div>
       </div>
 
-      <section style={{ marginBottom: 28 }}>
+      {/* ── Cartridge select ── */}
+      <section className="sh-wrap" style={{ paddingTop: 60, paddingBottom: 72 }}>
         <div style={{
-          display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end',
-          marginBottom: 18,
+          display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-end',
+          gap: 16, marginBottom: 60,
         }}>
           <div>
-            <Kicker>MODULES · {String(FEATURES.filter((f) => f.id !== 'home' && (!f.ownerOnly || user?.isHistoryOwner)).length).padStart(2, '0')}</Kicker>
-            <div className="mono" style={{ fontSize: 20, fontWeight: 700, marginTop: 6, letterSpacing: '-0.01em' }}>
-              The dashboard
-            </div>
+            <p className="sk" style={{ margin: '0 0 10px', fontSize: 13, color: COLORS.muted }}>
+              {String(modules.length).padStart(2, '0')} CARTRIDGES
+            </p>
+            <h2 className="pf" style={{ margin: 0, fontSize: 42, lineHeight: 1 }}>Choose your module</h2>
           </div>
-          <Kicker style={{ color: COLORS.green }}>● ALL ONLINE</Kicker>
+          <p className="sk" style={{
+            display: 'flex', alignItems: 'center', gap: 10, margin: 0, fontSize: 13, color: COLORS.greenInk,
+          }}>
+            <span className="blink" aria-hidden="true" style={{ width: 10, height: 10, background: COLORS.greenInk }} />
+            {bare(t('home.allOnline'))}
+          </p>
         </div>
 
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(6, minmax(0, 1fr))',
-          gap: 16,
-        }}>
-          {FEATURES.filter((f) => f.id !== 'home' && (!f.ownerOnly || user?.isHistoryOwner)).map((f, i) => (
-            <FeatureCard
-              key={f.id}
-              feature={f}
-              onClick={() => nav(f.id)}
-              idx={i}
-            />
+        <div className="sh-grid4">
+          {modules.map((f, i) => (
+            <Cartridge key={f.id} feature={f} idx={i} onClick={() => nav(f.id)} />
           ))}
         </div>
       </section>
+    </div>
+  );
+}
+
+function Cartridge({ feature, idx, onClick }) {
+  return (
+    <button type="button" onClick={onClick} className="sh-cart rise"
+      aria-label={feature.label + ' — ' + feature.desc}
+      style={{ background: ACCENTS[feature.id], animationDelay: idx * 60 + 'ms' }}>
+      <span className="sk sh-p1" aria-hidden="true" style={{
+        position: 'absolute', left: '50%', top: -40, marginLeft: -26, padding: '4px 10px',
+        fontSize: 12, color: COLORS.stripText, background: COLORS.strip, whiteSpace: 'nowrap',
+      }}>P1 ▼</span>
+      <span className="sk ribs" style={{
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: 26,
+        padding: '0 12px', fontSize: 12, color: COLORS.onAccent, borderBottom: '4px solid #1b1410',
+      }}>
+        <span>{feature.ownerOnly ? 'OWNER' : ''}</span>{feature.short}
+      </span>
+      <span style={{
+        display: 'flex', flexDirection: 'column', gap: 10, flex: 1, margin: 14, padding: 16,
+        background: COLORS.paper, color: COLORS.text, border: '3px solid #1b1410',
+      }}>
+        <span className="sh-cico" style={{ display: 'inline-flex', alignSelf: 'flex-start' }}>
+          <ModuleIcon id={feature.id} size={34} />
+        </span>
+        <span className="pf" style={{ fontSize: 22, lineHeight: 1.1 }}>{feature.label}</span>
+        <span style={{ fontSize: 13, lineHeight: 1.45, color: COLORS.muted }}>{feature.desc}</span>
+      </span>
+      <span className="sk" style={{
+        display: 'flex', alignItems: 'center', gap: 8, padding: '0 14px 14px', fontSize: 12, color: COLORS.onAccent,
+      }}>
+        {feature.href ? 'OPEN' : 'SELECT'}<span className="sh-go"><PixelArrow size={10} /></span>
+      </span>
+    </button>
+  );
+}
+
+// Pixel scene: sky (follows the theme lock / day-night), drifting clouds,
+// hills, brick floor and the spinning 77 coin. Pure CSS/SVG.
+function LobbyScene({ ambient, phase }) {
+  const sky = skyFor(ambient.lockedIdx, phase);
+  const night = !!sky.night;
+  const clouds = [
+    { w: 160, top: 26, delay: '-38s', dur: '52s' },
+    { w: 128, top: 74, delay: '-12s', dur: '46s' },
+    { w: 96,  top: 154, delay: '-30s', dur: '60s' },
+  ];
+  return (
+    <div className="px sh-scene" style={{
+      position: 'relative', height: 440, overflow: 'hidden', background: skyBackground(sky),
+    }}>
+      <div aria-hidden="true" style={{ position: 'absolute', inset: 0 }}>
+        <div style={{ position: 'absolute', left: 16, top: 16, display: 'flex', gap: 8 }}>
+          <PixelHeart size={26} /><PixelHeart size={26} /><PixelHeart size={26} />
+        </div>
+
+        {night && STARS.map(([x, y], i) => (
+          <span key={i} className={i % 3 === 0 ? 'blink' : undefined} style={{
+            position: 'absolute', left: x + '%', top: y + '%', width: i % 2 ? 4 : 6, height: i % 2 ? 4 : 6,
+            background: '#fff3c4', animationDelay: (i * 0.17) + 's',
+          }} />
+        ))}
+
+        {night ? (
+          <div className="sh-sun" style={{ position: 'absolute', right: 70, top: 62, display: 'grid' }}>
+            <PxMoon size={76} color="#fff3c4" outline={false} />
+          </div>
+        ) : (
+          <div className="sh-sun" style={{
+            position: 'absolute', right: 72, top: 72, width: 60, height: 60, background: '#ffd25e',
+            boxShadow: '0 -8px 0 0 #ffd25e, 0 8px 0 0 #ffd25e, -8px 0 0 0 #ffd25e, 8px 0 0 0 #ffd25e',
+          }} />
+        )}
+
+        {clouds.map((c, i) => (
+          <div key={i} className="sh-drift" style={{
+            position: 'absolute', left: 0, top: c.top, width: '100%', height: 0,
+            animationDelay: c.delay, animationDuration: c.dur, opacity: night ? 0.35 : 1,
+          }}>
+            <PixelCloud width={c.w} style={{ position: 'absolute', right: '100%', top: 0 }} />
+          </div>
+        ))}
+
+        <div className="bob" style={{
+          position: 'absolute', left: '50%', top: 128, marginLeft: -56, width: 112, height: 112,
+        }}>
+          <div className="coin-spin" style={{ position: 'relative', width: 112, height: 112 }}>
+            <svg width="112" height="112" viewBox="0 0 8 8" shapeRendering="crispEdges" style={{ position: 'absolute', inset: 0 }}>
+              <path d={COIN_PATH} fill="#ffc93c" stroke="#1b1410" strokeWidth="0.25" />
+              <path d="M2 1h4v1h1v4H6v1H2V6H1V2h1z" fill="none" stroke="#c98a12" strokeWidth="0.25" />
+            </svg>
+            <span className="pf" style={{
+              position: 'absolute', inset: 0, display: 'grid', placeItems: 'center',
+              fontSize: 40, color: '#1b1410',
+            }}>77</span>
+          </div>
+        </div>
+        <div style={{ position: 'absolute', left: '20%', top: 214, display: 'flex', gap: 24 }}>
+          <PixelCoin size={28} spin />
+          <PixelCoin size={28} spin style={{ animationDelay: '0.2s' }} />
+        </div>
+        <div style={{ position: 'absolute', right: '18%', top: 240 }}>
+          <PixelCoin size={28} spin style={{ animationDelay: '0.4s' }} />
+        </div>
+
+        <svg width="100%" viewBox="0 0 70 20" shapeRendering="crispEdges" preserveAspectRatio="xMidYMax slice"
+          style={{ position: 'absolute', left: 0, right: 0, bottom: 60, height: 150 }}>
+          <path d="M0 20V12h4V9h4V7h6v2h4v3h4v8z" fill="#8fd99a" stroke="#1b1410" strokeWidth="0.4" />
+          <path d="M30 20v-7h4v-3h4V8h8v2h4v3h4v7z" fill="#8fd99a" stroke="#1b1410" strokeWidth="0.4" />
+          <path d="M14 20v-4h4v-3h4v-2h6v2h4v3h4v4z" fill="#5bbf6a" stroke="#1b1410" strokeWidth="0.4" />
+          <path d="M48 20v-5h4v-3h8v3h4v2h6v3z" fill="#5bbf6a" stroke="#1b1410" strokeWidth="0.4" />
+        </svg>
+        <div className="bricks" style={{
+          position: 'absolute', left: 0, right: 0, bottom: 0, height: 64, backgroundSize: '32px 20px',
+          boxShadow: 'inset 0 4px 0 #1b1410',
+        }} />
+      </div>
+
+      <SkyPicker ambient={ambient} />
+    </div>
+  );
+}
+
+// The old ambient "Theme" control, re-homed in the scene it now paints.
+function SkyPicker({ ambient }) {
+  const { lockedIdx, setLockedIdx } = ambient;
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [open]);
+
+  const current = SKY_OPTIONS.find((o) => o.idx === lockedIdx) || SKY_OPTIONS[0];
+  const ring = '0 -3px 0 0 #1b1410, 0 3px 0 0 #1b1410, -3px 0 0 0 #1b1410, 3px 0 0 0 #1b1410';
+  const swatch = (o) => {
+    const s = o.idx == null ? null : o;
+    return (
+      <span aria-hidden="true" style={{
+        width: 14, height: 14, flexShrink: 0, boxShadow: '0 0 0 2px #1b1410',
+        background: s
+          ? `linear-gradient(180deg, ${s.top} 50%, ${s.bottom} 50%)`
+          : `linear-gradient(135deg, ${SKY_DAY.top} 50%, ${SKY_NIGHT.top} 50%)`,
+      }} />
+    );
+  };
+
+  return (
+    <div ref={ref} style={{ position: 'absolute', right: 16, top: 16, zIndex: 3 }}>
+      <button type="button" onClick={() => setOpen((v) => !v)}
+        aria-haspopup="menu" aria-expanded={open} aria-label={'Theme · sky ' + current.label}
+        title="Theme · lobby sky"
+        className="sk"
+        style={{
+          display: 'flex', alignItems: 'center', gap: 8, height: 32, padding: '0 10px',
+          background: '#fffaf0', color: '#1b1410', border: 0, boxShadow: ring,
+          fontSize: 11, cursor: 'pointer',
+        }}>
+        {swatch(current)}SKY · {current.label}
+        <PixelArrow dir="down" size={5} />
+      </button>
+      {open && (
+        <div role="menu" style={{
+          position: 'absolute', top: 'calc(100% + 10px)', right: 0, minWidth: 168, padding: 6,
+          background: '#fffaf0', color: '#1b1410', boxShadow: ring,
+          animation: 'px-rise 0.18s steps(3)',
+        }}>
+          {SKY_OPTIONS.map((opt) => {
+            const active = opt.idx === lockedIdx || (opt.idx == null && lockedIdx == null);
+            return (
+              <button key={String(opt.idx)} type="button" role="menuitemradio" aria-checked={active}
+                onClick={() => { setLockedIdx(opt.idx); setOpen(false); }}
+                className="sk"
+                style={{
+                  width: '100%', display: 'flex', alignItems: 'center', gap: 10, height: 30,
+                  padding: '0 8px', border: 0, cursor: 'pointer', fontSize: 11, textAlign: 'left',
+                  background: active ? '#1b1410' : 'transparent', color: active ? '#fffaf0' : '#1b1410',
+                }}>
+                {swatch(opt)}
+                <span style={{ flex: 1 }}>{opt.label}</span>
+                {active && <PixelArrow dir="left" size={7} />}
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -1419,7 +1425,7 @@ function HomeView({ nav, ambient, ambientOn }) {
 // Routes to /api/agent which auto-picks chat / image gen / image edit /
 // video gen / bg-remove based on the user's prompt.
 // ─────────────────────────────────────────────────────────────
-function ChatFab({ open, onOpen, onClose, ambient, nav }) {
+function ChatFab({ open, hidden, onOpen, onClose, ambient, nav }) {
   const { t } = useLang();
   const [history, setHistory] = useSyncedData(
     { localKey: 'se77n.ai.history.v2', serverKey: 'aiHistory' },
@@ -1508,81 +1514,61 @@ function ChatFab({ open, onOpen, onClose, ambient, nav }) {
   }
 
   if (!open) {
+    // The AI module is the full chat, so the button steps aside there.
+    if (hidden) return null;
     return (
-      <button onClick={onOpen} aria-label={t('fab.openChat')}
+      <button type="button" onClick={onOpen} aria-label={t('fab.openChat')} title={t('fab.ask')}
+        className="pbtn"
         style={{
-          position: 'fixed', right: 24, bottom: 24, zIndex: 60,
-          padding: '13px 20px 13px 16px', borderRadius: 999,
-          background: accent, color: '#0d0a08',
-          border: 'none', fontFamily: 'inherit',
-          fontWeight: 700, fontSize: 13, letterSpacing: '0.01em',
-          cursor: 'pointer',
-          boxShadow: `0 14px 40px -10px ${accent}aa, 0 0 0 1px ${accent}66`,
-          display: 'flex', alignItems: 'center', gap: 10,
-          transition: 'transform 150ms, box-shadow 150ms',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform = 'translateY(-2px)';
-          e.currentTarget.style.boxShadow = `0 18px 48px -10px ${accent}cc, 0 0 0 1px ${accent}99`;
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = 'translateY(0)';
-          e.currentTarget.style.boxShadow = `0 14px 40px -10px ${accent}aa, 0 0 0 1px ${accent}66`;
+          position: 'fixed', right: 40, bottom: FAB_BOTTOM, zIndex: 60,
+          display: 'grid', placeItems: 'center', width: 64, height: 64, padding: 0,
+          background: accent,
         }}
       >
-        <ChatBubbleIcon size={16} color="#0d0a08" />
-        {t('fab.ask')}
+        <PxChatIcon size={32} dots={accent} />
       </button>
     );
   }
 
+  const canSend = !!(input.trim() || imgRef) && !busy;
+
   return (
-    <div role="dialog" aria-label={t('fab.openChat')}
+    <div role="dialog" aria-label={t('fab.openChat')} className="px"
       style={{
-        position: 'fixed', right: 24, bottom: 24, zIndex: 60,
-        width: 400, maxWidth: 'calc(100vw - 32px)',
-        height: 'min(560px, calc(100vh - 96px))',
+        position: 'fixed', right: 40, bottom: FAB_BOTTOM, zIndex: 60,
+        width: 400, maxWidth: 'calc(100vw - 72px)',
+        height: 'min(540px, calc(100vh - 210px))',
         display: 'flex', flexDirection: 'column',
-        borderRadius: 18, overflow: 'hidden',
-        background: COLORS.panel,
-        border: '1px solid ' + accent + '55',
-        boxShadow: `0 28px 64px -20px rgba(0,0,0,0.6), 0 0 0 1px ${accent}22`,
-        animation: 'fadeUp 220ms cubic-bezier(0.22,1,0.36,1)',
+        background: COLORS.paper, color: COLORS.text,
+        animation: 'px-rise 0.24s steps(4)',
       }}>
       <div style={{
-        padding: '12px 12px 12px 18px', borderBottom: '1px solid ' + COLORS.line,
+        flex: 'none', height: 48, padding: '0 8px 0 14px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
+        background: COLORS.strip, color: COLORS.stripText,
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{
-            width: 6, height: 6, borderRadius: 999, background: accent,
-            boxShadow: `0 0 6px ${accent}`,
-          }} />
-          <div className="mono" style={{ fontSize: 13, fontWeight: 700, color: COLORS.text }}>
-            {t('fab.ask')}
-          </div>
+        <div className="sk" style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, fontSize: 12 }}>
+          <span className="blink" aria-hidden="true" style={{ width: 8, height: 8, flexShrink: 0, background: accent }} />
+          <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            SE77N · {t('fab.ask')}
+          </span>
         </div>
         <div style={{ display: 'flex', gap: 6 }}>
-          <FabHeaderBtn title={t('fab.openFull')} onClick={() => { onClose(); nav('ai'); }}>↗</FabHeaderBtn>
-          <FabHeaderBtn title={t('fab.close')} onClick={onClose}>✕</FabHeaderBtn>
+          <FabHeaderBtn title={t('fab.openFull')} onClick={() => { onClose(); nav('ai'); }}>
+            <StrokeIcon d={ICON_OPEN} size={15} />
+          </FabHeaderBtn>
+          <FabHeaderBtn title={t('fab.close')} onClick={onClose}><PxClose size={11} /></FabHeaderBtn>
         </div>
       </div>
 
-      <div ref={scrollRef} style={{
-        flex: 1, padding: '14px 16px', overflowY: 'auto',
-        display: 'flex', flexDirection: 'column', gap: 10,
+      <div ref={scrollRef} role="log" style={{
+        flex: 1, minHeight: 0, overflowY: 'auto', padding: '20px 18px 18px',
+        display: 'flex', flexDirection: 'column', gap: 20, background: COLORS.cream,
       }}>
         {recent.length === 0 ? (
-          <div style={{
-            padding: '12px 14px', borderRadius: 10,
-            background: COLORS.bg, border: '1px solid ' + COLORS.line,
-            fontSize: 13, lineHeight: 1.5, color: COLORS.text,
-          }}>
-            <div className="mono" style={{
-              fontSize: 9, letterSpacing: '0.2em', color: accent, fontWeight: 700, marginBottom: 6,
-            }}>se77n ::</div>
-            Need help?
-          </div>
+          <DialogBox speaker="SE77N SAYS:" padding="22px 16px 18px" style={{ marginTop: 10, marginRight: 10 }}>
+            <span style={{ fontSize: 14, lineHeight: 1.5 }}>{t('fab.needHelp')}</span>
+          </DialogBox>
         ) : (
           recent.map((m, i) => <ChatBubble key={i} msg={m} accent={accent} onRetry={m.error && m.retry ? () => send(m.retry) : null} retryLabel={t('ai.retry')} />)
         )}
@@ -1591,75 +1577,58 @@ function ChatFab({ open, onOpen, onClose, ambient, nav }) {
 
       {imgRef && (
         <div style={{
-          padding: '8px 14px', borderTop: '1px solid ' + COLORS.line,
-          display: 'flex', alignItems: 'center', gap: 10,
+          flex: 'none', padding: '10px 14px', borderTop: `3px dashed ${COLORS.rule}`,
+          display: 'flex', alignItems: 'center', gap: 12, background: COLORS.paper,
         }}>
           <img src={imgRef.dataUrl} alt="" style={{
-            width: 40, height: 40, borderRadius: 6, objectFit: 'cover',
-            border: '1px solid ' + accent + '55',
+            width: 40, height: 40, objectFit: 'cover', boxShadow: `0 0 0 3px ${COLORS.ink}`,
           }} />
-          <div className="mono" style={{
-            fontSize: 10, color: COLORS.muted, flex: 1,
+          <div style={{
+            fontSize: 11, color: COLORS.muted, flex: 1,
             whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
           }}>{imgRef.name}</div>
-          <button onClick={() => setImgRef(null)} aria-label="Remove image"
+          <button type="button" onClick={() => setImgRef(null)} aria-label="Remove image"
+            className="sbtn sh-ghost"
             style={{
-              background: 'transparent', border: 'none', cursor: 'pointer',
-              color: COLORS.muted, fontSize: 14, padding: 4,
-            }}>✕</button>
+              display: 'grid', placeItems: 'center', width: 28, height: 28, padding: 0,
+              background: COLORS.paper, color: COLORS.text,
+            }}><PxClose size={10} /></button>
         </div>
       )}
 
       <div style={{
-        padding: '10px 12px', borderTop: '1px solid ' + COLORS.line,
-        background: COLORS.panel2,
-        display: 'flex', alignItems: 'center', gap: 8,
+        flex: 'none', padding: '12px 16px 16px 12px', borderTop: `4px solid ${COLORS.ink}`,
+        background: COLORS.paper, display: 'flex', alignItems: 'center', gap: 12,
       }}>
-        <label title="Attach image"
+        <label title="Attach image" className="sbtn sh-ghost"
           style={{
-            display: 'grid', placeItems: 'center', width: 34, height: 34, borderRadius: 8,
-            background: imgRef ? accent + '1a' : 'transparent',
-            border: `1px solid ${imgRef ? accent : COLORS.line}`,
-            color: imgRef ? accent : COLORS.muted, cursor: 'pointer', flexShrink: 0,
+            display: 'grid', placeItems: 'center', width: 38, height: 38, flexShrink: 0,
+            background: imgRef ? ACCENTS.crypto : COLORS.paper,
+            color: imgRef ? COLORS.onAccent : COLORS.text, cursor: 'pointer',
           }}>
-          <input type="file" accept="image/*" onChange={onImage} style={{ display: 'none' }} />
-          <PaperclipIcon size={15} color="currentColor" />
+          <input type="file" accept="image/*" onChange={onImage} aria-label="Attach image" style={{ display: 'none' }} />
+          <StrokeIcon d={ICON_IMAGE} size={18} />
         </label>
         <input
           ref={inputRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder={t('fab.placeholder')}
+          aria-label={t('fab.placeholder')}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
           }}
-          className="mono"
-          style={{
-            flex: 1, background: COLORS.bg,
-            border: '1px solid ' + COLORS.line, borderRadius: 8,
-            padding: '9px 12px', color: COLORS.text, fontSize: 12,
-            outline: 'none', transition: 'border-color 120ms, box-shadow 120ms',
-          }}
-          onFocus={(e) => {
-            e.currentTarget.style.borderColor = accent;
-            e.currentTarget.style.boxShadow = `0 0 0 3px ${accent}22`;
-          }}
-          onBlur={(e) => {
-            e.currentTarget.style.borderColor = COLORS.line;
-            e.currentTarget.style.boxShadow = 'none';
-          }}
+          className="field mono"
+          style={{ flex: 1, minWidth: 0, height: 38, padding: '0 12px', fontSize: 13 }}
         />
-        <button onClick={send} disabled={busy || (!input.trim() && !imgRef)} className="mono"
-          aria-label="send"
+        <button type="button" onClick={() => send()} disabled={!canSend}
+          aria-label="send" className="sbtn"
           style={{
-            padding: '9px 14px', borderRadius: 8, fontSize: 12, fontWeight: 700,
-            background: (input.trim() || imgRef) && !busy ? accent : 'transparent',
-            border: '1px solid ' + ((input.trim() || imgRef) && !busy ? accent : COLORS.line),
-            color: (input.trim() || imgRef) && !busy ? '#0d0a08' : COLORS.muted,
+            display: 'grid', placeItems: 'center', width: 42, height: 38, flexShrink: 0, padding: 0,
+            background: canSend ? accent : COLORS.paper,
+            color: canSend ? COLORS.onAccent : COLORS.muted,
             cursor: busy ? 'not-allowed' : 'pointer',
-            opacity: busy ? 0.5 : 1,
-            transition: 'background 120ms',
-          }}>↗</button>
+          }}><PixelArrow size={13} /></button>
       </div>
     </div>
   );
@@ -1667,181 +1636,99 @@ function ChatFab({ open, onOpen, onClose, ambient, nav }) {
 
 function FabHeaderBtn({ children, onClick, title }) {
   return (
-    <button onClick={onClick} title={title}
-      style={{
-        width: 28, height: 28, borderRadius: 8,
-        background: 'transparent', border: '1px solid ' + COLORS.line,
-        color: COLORS.muted, cursor: 'pointer', fontSize: 12, fontFamily: 'inherit',
-        display: 'grid', placeItems: 'center',
-        transition: 'color 120ms, border-color 120ms',
-      }}
-      onMouseEnter={(e) => { e.currentTarget.style.color = COLORS.text; e.currentTarget.style.borderColor = COLORS.text + '55'; }}
-      onMouseLeave={(e) => { e.currentTarget.style.color = COLORS.muted; e.currentTarget.style.borderColor = COLORS.line; }}
-    >{children}</button>
+    <button type="button" onClick={onClick} title={title} aria-label={title} className="sh-fabhd">
+      {children}
+    </button>
   );
 }
 
 const INTENT_BADGE = {
-  image_gen:  { label: '✨ Image · generated', color: '#C77BFF' },
-  image_edit: { label: '✏ Image · edited',    color: '#C77BFF' },
-  bg_remove:  { label: '⊘ Background · removed', color: '#7ABEFF' },
-  video_gen:  { label: '▶ Video · generated', color: '#D4A858' },
+  image_gen:  { label: 'IMAGE · GENERATED',    color: ACCENTS.kata },
+  image_edit: { label: 'IMAGE · EDITED',       color: ACCENTS.kata },
+  bg_remove:  { label: 'BACKGROUND · REMOVED', color: ACCENTS.store },
+  video_gen:  { label: 'VIDEO · GENERATED',    color: ACCENTS.crypto },
 };
 
 function ChatBubble({ msg, accent, typing, onRetry, retryLabel }) {
   const isUser = msg.role === 'user';
   const badge = !isUser && msg.intent ? INTENT_BADGE[msg.intent] : null;
-  return (
-    <div style={{
-      maxWidth: '92%',
-      alignSelf: isUser ? 'flex-end' : 'flex-start',
-      padding: '10px 13px', borderRadius: 10,
-      background: isUser ? accent + '18' : COLORS.bg,
-      border: `1px solid ${isUser ? accent + '40' : COLORS.line}`,
-      fontSize: 12.5, lineHeight: 1.55,
-      whiteSpace: 'pre-wrap',
-      fontFamily: isUser ? "'JetBrains Mono', monospace" : "'Geist', system-ui, sans-serif",
-      color: COLORS.text,
-      animation: 'fadeUp 200ms ease-out',
-    }}>
-      {!isUser && (
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6,
-          flexWrap: 'wrap',
-        }}>
-          <span className="mono" style={{
-            fontSize: 8, letterSpacing: '0.2em', color: accent, fontWeight: 700,
-          }}>se77n ::</span>
-          {badge && (
-            <span className="mono" style={{
-              fontSize: 8, letterSpacing: '0.16em', fontWeight: 700,
-              padding: '2px 6px', borderRadius: 4,
-              background: badge.color + '1a', color: badge.color,
-              border: `1px solid ${badge.color}40`,
-            }}>{badge.label}</span>
-          )}
-        </div>
-      )}
+  const media = (
+    <>
       {msg.image && (
-        <a href={msg.image} target="_blank" rel="noreferrer">
+        <a href={msg.image} target="_blank" rel="noreferrer" style={{ display: 'block' }}>
           <img src={msg.image} alt="" style={{
-            display: 'block', maxWidth: '100%', borderRadius: 8,
-            marginBottom: msg.content ? 8 : 0,
-            border: '1px solid ' + COLORS.line,
+            display: 'block', maxWidth: '100%', marginBottom: msg.content ? 10 : 0,
+            boxShadow: `0 0 0 3px ${COLORS.ink}`,
           }} />
         </a>
       )}
       {msg.video && (
         <video src={msg.video} controls style={{
-          display: 'block', maxWidth: '100%', borderRadius: 8,
-          marginBottom: msg.content ? 8 : 0,
+          display: 'block', maxWidth: '100%', marginBottom: msg.content ? 10 : 0,
         }} />
       )}
-      {typing ? (
-        <span style={{ display: 'inline-flex', gap: 4, alignItems: 'center' }}>
-          {[0, 1, 2].map((i) => (
-            <span key={i} style={{
-              width: 5, height: 5, borderRadius: 999, background: COLORS.text, opacity: 0.45,
-              animation: `pulse 1s ease-in-out ${i * 0.15}s infinite`,
-            }} />
-          ))}
-          {msg.content && (
-            <span className="mono" style={{ fontSize: 10, color: COLORS.muted, marginLeft: 6 }}>
-              {msg.content.replace(/…$/, '')}
-            </span>
-          )}
-        </span>
-      ) : msg.content}
-      {onRetry && (
-        <div style={{ marginTop: 8 }}>
-          <button onClick={onRetry} className="mono" style={{
-            fontSize: 10, letterSpacing: '0.15em', padding: '4px 10px', borderRadius: 999,
-            background: 'transparent', border: `1px solid ${COLORS.red}66`, color: COLORS.red, cursor: 'pointer',
-          }}>↻ {retryLabel}</button>
-        </div>
-      )}
-    </div>
+    </>
   );
-}
 
-function FeatureCard({ feature, onClick, idx }) {
-  const [hover, setHover] = useState(false);
-  const label = feature.label;
-  const desc = feature.desc;
-  const iconNode = typeof feature.icon === 'function' ? feature.icon(feature.accent) : feature.icon;
-  return (
-    <button onClick={onClick}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-      style={{
-        textAlign: 'left', padding: 22, borderRadius: 14,
-        background: COLORS.panel,
-        border: '1px solid ' + (hover ? feature.accent + '70' : COLORS.line),
-        cursor: 'pointer',
-        display: 'flex', flexDirection: 'column', gap: 16,
-        minHeight: 148, position: 'relative', overflow: 'hidden',
-        color: COLORS.text,
-        transform: hover ? 'translateY(-4px)' : 'translateY(0)',
-        boxShadow: hover ? `0 16px 36px -16px ${feature.accent}55, 0 0 0 1px ${feature.accent}33` : 'none',
-        transition: 'transform 180ms, border-color 180ms, box-shadow 180ms',
-        animation: `fadeUp 500ms ease-out ${idx * 50}ms both`,
-      }}
-    >
-      {hover && (
-        <>
-          <span aria-hidden style={{
-            position: 'absolute', top: 0, left: '-30%', width: '40%', height: '100%',
-            background: `linear-gradient(115deg, transparent 0%, ${feature.accent}28 50%, transparent 100%)`,
-            animation: 'rimSweep 900ms ease-out forwards',
-            pointerEvents: 'none',
-          }} />
-          <span aria-hidden style={{
-            position: 'absolute', inset: 0,
-            background: `radial-gradient(130% 90% at 30% 35%, ${feature.accent}1f 0%, transparent 65%)`,
-            animation: 'cardGlowIn 500ms ease-out 900ms both, cardGlow 2400ms ease-in-out 1400ms infinite',
-            pointerEvents: 'none',
-          }} />
-        </>
-      )}
-
-      <span style={{
-        position: 'absolute', top: 14, right: 16,
-        fontFamily: 'JetBrains Mono, monospace', fontSize: 14, fontWeight: 800,
-        letterSpacing: '0.06em', color: feature.accent, opacity: 0.7,
-      }}>{feature.short}</span>
-
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-        <span style={{
-          width: 44, height: 44, borderRadius: 12,
-          background: feature.accent + '14',
-          border: `1px solid ${feature.accent}50`,
-          color: feature.accent,
-          display: 'grid', placeItems: 'center',
-          fontFamily: 'JetBrains Mono, monospace', fontSize: 20, fontWeight: 800,
-        }}>{iconNode}</span>
-      </div>
-
-      <div>
-        <div className="mono" style={{
-          fontSize: 14, fontWeight: 700, letterSpacing: '-0.005em', color: COLORS.text,
-        }}>{label}</div>
-        <div style={{ fontSize: 12, color: COLORS.muted, marginTop: 6, lineHeight: 1.5 }}>
-          {desc}
-        </div>
-      </div>
-
+  if (isUser) {
+    return (
       <div style={{
-        position: 'absolute', bottom: 14, right: 16, display: 'flex', alignItems: 'center', gap: 6,
-        fontFamily: 'JetBrains Mono, monospace', fontSize: 8.5, letterSpacing: '0.18em',
-        color: COLORS.muted,
+        alignSelf: 'flex-end', position: 'relative', maxWidth: '86%', marginRight: 12,
+        padding: '10px 14px', background: COLORS.strip, color: COLORS.stripText,
+        fontSize: 13, lineHeight: 1.55, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere',
+        animation: 'px-rise 0.2s steps(3)',
       }}>
-        <span style={{
-          width: 5, height: 5, borderRadius: 999, background: COLORS.green,
-          boxShadow: `0 0 5px ${COLORS.green}aa`,
-          animation: 'pulse 1.6s ease-in-out infinite',
-        }} />
-        OK
+        {media}
+        {msg.content}
+        <svg width="12" height="12" viewBox="0 0 3 3" shapeRendering="crispEdges" aria-hidden="true"
+          style={{ position: 'absolute', right: -12, bottom: 0 }}>
+          <path d="M0 0h1v1h1v1h1v1H0z" style={{ fill: COLORS.strip }} />
+        </svg>
       </div>
-    </button>
+    );
+  }
+
+  const text = msg.error ? String(msg.content || '').replace(/^⚠\s*/, '') : msg.content;
+  return (
+    <div style={{
+      alignSelf: 'flex-start', position: 'relative', maxWidth: '92%', marginTop: 10,
+      animation: 'px-rise 0.2s steps(3)',
+    }}>
+      <span className="sk" style={{
+        position: 'absolute', left: 12, top: -11, zIndex: 1, padding: '3px 8px', fontSize: 10,
+        color: COLORS.stripText, background: COLORS.strip,
+      }}>SE77N</span>
+      <div className="pxs" style={{
+        padding: '18px 14px 12px', background: COLORS.paper, color: COLORS.text,
+        borderLeft: msg.error ? `6px solid ${COLORS.red}` : undefined,
+        fontSize: 13, lineHeight: 1.55, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere',
+      }}>
+        {badge && <div style={{ marginBottom: 10 }}><Badge color={badge.color}>{badge.label}</Badge></div>}
+        {media}
+        {typing ? (
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            <span className="dots-step" aria-hidden="true" style={{ color: accent }}><i /><i /><i /></span>
+            {msg.content && (
+              <span className="sk" style={{ fontSize: 10, color: COLORS.muted, marginLeft: 2 }}>
+                {msg.content.replace(/…$/, '')}
+              </span>
+            )}
+          </span>
+        ) : msg.error ? (
+          <span style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+            <StrokeIcon d={ICON_WARN} size={17} color="var(--sh-red-ink)" style={{ flexShrink: 0, marginTop: 1 }} />
+            <span><span className="sr">Error: </span>{text}</span>
+          </span>
+        ) : text}
+        {onRetry && (
+          <div style={{ marginTop: 12, paddingBottom: 4 }}>
+            <button type="button" onClick={onRetry} className="sbtn sk" style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8, height: 32, padding: '0 12px',
+              fontSize: 11, background: ACCENTS.ai, color: COLORS.onAccent,
+            }}><StrokeIcon d={ICON_RETRY} size={13} sw={2.8} />{retryLabel}</button>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
