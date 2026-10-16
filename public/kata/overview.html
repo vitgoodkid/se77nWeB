@@ -8,74 +8,44 @@
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Pixelify+Sans:wght@500;700&family=Silkscreen:wght@400;700&family=VT323&display=swap" rel="stylesheet" />
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
+  // B · Pixel Lobby palette: colour channels come from _shell.js (light + dark).
   tailwind.config = { theme: { extend: {
-    colors: { bg:'#0d0a08', panel:'#15110d', panel2:'#1c1813', line:'rgba(255,255,255,0.08)', line2:'rgba(255,255,255,0.14)', ink:'#f5ede0', mute:'rgba(245,237,224,0.5)', mute2:'rgba(245,237,224,0.3)', red:'#E04545', green:'#5BA868', gold:'#D4A858', info:'#7a9eb5', warn:'#c9a653', err:'#c46868' },
-    fontFamily: { sans:['Geist','system-ui','sans-serif'], mono:['"JetBrains Mono"','ui-monospace','monospace'] },
+    colors: {
+      bg:'rgb(var(--c-bg) / <alpha-value>)', panel:'rgb(var(--c-panel) / <alpha-value>)', panel2:'rgb(var(--c-panel2) / <alpha-value>)',
+      ink:'rgb(var(--c-ink) / <alpha-value>)', red:'rgb(var(--c-red) / <alpha-value>)', green:'rgb(var(--c-green) / <alpha-value>)',
+      gold:'rgb(var(--c-gold) / <alpha-value>)', info:'rgb(var(--c-info) / <alpha-value>)', warn:'rgb(var(--c-warn) / <alpha-value>)',
+      err:'rgb(var(--c-err) / <alpha-value>)', purple:'rgb(var(--c-purple) / <alpha-value>)',
+      line:'var(--c-line)', line2:'var(--c-line2)', mute:'var(--c-mute)', mute2:'var(--c-mute2)',
+    },
+    fontFamily: { sans:['"JetBrains Mono"','ui-monospace','monospace'], mono:['"JetBrains Mono"','ui-monospace','monospace'], pixel:['"Pixelify Sans"','monospace'], sk:['Silkscreen','monospace'] },
     letterSpacing: { kicker:'0.22em', label:'0.18em', tag:'0.12em' },
   }}};
 </script>
 <style>
-  html, body { background: #0d0a08; color: #f5ede0; font-family: Geist, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
-  .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
-  @keyframes pulse77 { 0%,100% { opacity:1; transform: scale(1); } 50% { opacity:.55; transform: scale(.82); } }
-  .dot-pulse { animation: pulse77 2s ease-in-out infinite; }
-  .glow77 { text-shadow: 0 0 6px #E04545cc, 0 0 18px #E0454566, 0 0 36px #E0454533; }
-  .grain { background-image: radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px); background-size: 3px 3px; }
-  .ambient { background-image:
-      radial-gradient(60% 50% at 18% 12%, #E0454520 0%, transparent 65%),
-      radial-gradient(50% 45% at 90% 88%, #5BA86820 0%, transparent 70%); }
-  ::-webkit-scrollbar { width: 8px; height: 8px; }
-  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
-  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
-  .kpi:hover { border-color: rgba(255,255,255,0.18); }
-  .bar { background: linear-gradient(180deg, #E04545 0%, #7a1e1e 100%); border-radius: 2px 2px 0 0; }
-  .bar-now { background: linear-gradient(180deg, #E04545 0%, #E04545 100%); box-shadow: 0 0 8px #E0454566; }
-  .navrow { transition: background .18s, transform .18s, color .18s; }
-  .navrow:hover { transform: translateX(3px); }
-  .navrow.on { background: #1a1312; }
-  .act-row:hover { background: #1a1513; }
+  /* overview · page pieces. Chrome, palette, fonts and the k-* kit come from _shell.js. */
+  .ov-head { display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:20px; margin-bottom:34px; }
+  .ov-act { display:block; margin:0 -10px; padding:12px 10px; color:inherit; text-decoration:none; }
+  .ov-act:hover { background: var(--cream); }
+  .ov-act + .ov-act { border-top: 3px dashed var(--rule); }
+  .ov-act .k-hp { margin-top:10px; }
+  .ov-top { display:flex; align-items:center; gap:12px; padding:11px 0; }
+  .ov-top + .ov-top { border-top: 3px dashed var(--rule); }
+  .ov-av { width:32px; height:32px; flex:none; display:grid; place-items:center; font-family:var(--k-pf);font-size-adjust:var(--k-fsa); font-size:13px; font-weight:700; color:#1b1410; box-shadow:0 0 0 2px var(--ink); }
+  .ov-grid { display:grid; grid-template-columns: minmax(0,1.3fr) minmax(0,1fr); gap:36px; margin-bottom:40px; }
+  .ov-sec { padding:24px 26px 26px; }
+  .ov-sec-h { display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin:0 0 16px; padding-bottom:12px; border-bottom:3px solid var(--ink); }
+  .ov-sec-h h2 { margin:0; font-size:24px; line-height:1; }
+  .ov-badge { display:inline-flex; align-items:center; padding:3px 7px; font-family:var(--k-sk);font-size-adjust:var(--k-fsa); font-size:10px; font-weight:700; color:#1b1410; box-shadow:0 0 0 2px var(--ink); }
+  .ov-fld-head { display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin-bottom:12px; }
+  #ov-stats { margin-bottom:40px; }
 
-  /* ===================== MOBILE (≤768px) =====================
-     Fixed 232px sidebar + `main pl-[244px]` had no @media → sidebar
-     covered the page on phones. Turn the sidebar into a horizontal chip
-     rail under the header, drop the offset, collapse multi-col grids. */
+  @media (max-width: 1100px) { .ov-grid { grid-template-columns: minmax(0,1fr); } }
   @media (max-width: 768px) {
-    header { padding-left: 14px !important; padding-right: 14px !important; }
-    header > div:first-child { gap: 10px !important; min-width: 0 !important; }
-    .hdr-logo { flex-shrink: 0 !important; }
-    .hdr-logo > div:first-child { font-size: 17px !important; white-space: nowrap !important; }
-    .hdr-logo > div:last-child { display: none !important; } /* hide "EXPERIMENT 007" subtitle */
-    header > div:first-child > div,
-    header > div:first-child > span { display: none !important; }
-    #kata-header-actions { gap: 6px !important; }
-    #kata-header-actions > * { transform: scale(0.9); transform-origin: right center; }
-    #kata-user-name { display: none !important; }
-
-    aside {
-      top: 64px !important; left: 0 !important; right: 0 !important; bottom: auto !important;
-      width: auto !important; height: auto !important;
-      flex-direction: row !important;
-      border-right: none !important; border-bottom: 1px solid #1d1817 !important;
-      overflow-x: auto !important; overflow-y: hidden !important; -webkit-overflow-scrolling: touch;
-    }
-    aside::-webkit-scrollbar { height: 0; }
-    aside > div:first-child,
-    aside > .flex-1,
-    aside > div:last-child { display: none !important; }
-    aside nav { display: flex !important; flex-direction: row !important; padding: 11px 12px !important; gap: 8px !important; }
-    .navrow { flex: 0 0 auto; margin-bottom: 0 !important; white-space: nowrap;
-      border-left: none !important; border: 1px solid #2c2522 !important; border-radius: 999px !important;
-      padding: 9px 15px !important; }
-    .navrow:hover { transform: none !important; }
-    .navrow.on { background: #E0454514 !important; border-color: #E0454573 !important; color: #E04545 !important; }
-
-    main { padding-left: 14px !important; padding-right: 14px !important; padding-top: 126px !important; }
-    main h1 { font-size: 26px !important; }
-    main .grid { grid-template-columns: 1fr !important; }
-    #ov-stats { flex-wrap: wrap !important; gap: 10px !important; }
+    .ov-sec { padding:20px 18px 22px; }
+    #settings-form .grid { grid-template-columns: 1fr !important; }
     footer { grid-template-columns: 1fr !important; gap: 6px !important; }
     footer span { text-align: center !important; }
   }
@@ -85,24 +55,22 @@
 <script src="_strings.js"></script>
 <script src="_shell.js"></script>
 
-<div aria-hidden class="fixed inset-0 z-0 pointer-events-none ambient"></div>
-<div aria-hidden class="fixed inset-0 z-0 pointer-events-none grain opacity-40"></div>
-
-<!-- top bar -->
-<header class="fixed top-0 inset-x-0 h-16 z-50 flex items-center justify-between px-6 backdrop-blur-md border-b border-line" style="background:rgba(13,10,8,0.7)">
+<!-- top bar (HUD) -->
+<header class="fixed top-0 inset-x-0 h-16 z-50 flex items-center justify-between px-6">
   <div class="flex items-center gap-5">
-    <a href="/" class="hdr-logo flex flex-col items-start gap-1 leading-none" title="Về se77n.com">
-      <div class="mono text-[24px] font-extrabold tracking-[-0.025em]">se<span class="text-red glow77">77</span>n<span class="text-mute font-normal"> / kata</span></div>
-      <div class="mono text-[9px] uppercase tracking-kicker text-mute">Experiment <span class="text-red font-bold">007</span> · katas dashboard</div>
+    <a href="/" class="k-logo hdr-logo" title="Về se77n.com">
+      <span class="k-word">se<span class="k-77">77</span>n<span class="k-sfx">/ kata</span></span>
+      <span class="k-sub">Experiment 007 · katas dashboard</span>
     </a>
-    <div class="flex items-center gap-2 ml-3 mono text-[10px] tracking-label uppercase">
-      <a href="index.html" class="text-mute hover:text-ink">se77n</a><span class="text-mute2">/</span>
-      <a href="index.html" class="text-mute hover:text-ink">kata</a><span class="text-mute2">/</span>
-      <a href="servers.html" class="text-mute hover:text-ink" data-i18n="bc.servers">servers</a><span class="text-mute2">/</span>
+    <a href="/" class="k-lobby" aria-label="Back to the se77n lobby"><svg width="9" height="15" viewBox="0 0 3 5" shape-rendering="crispEdges" aria-hidden="true"><path d="M2 0h1v5H2V4H1V3H0V2h1V1h1z" fill="currentColor"/></svg><span class="k-lobby-t">LOBBY</span></a>
+    <div class="k-bc flex items-center gap-2 mono text-[10px] tracking-label uppercase">
+      <a href="index.html" class="text-mute hover:text-ink">se77n</a><span class="text-mute2">›</span>
+      <a href="index.html" class="text-mute hover:text-ink">kata</a><span class="text-mute2">›</span>
+      <a href="servers.html" class="text-mute hover:text-ink" data-i18n="bc.servers">servers</a><span class="text-mute2">›</span>
       <span id="kata-breadcrumb-name" class="text-ink">—</span>
     </div>
     <!-- live indicator -->
-    <span class="mono text-[10px] tracking-label uppercase text-green flex items-center gap-1.5 ml-2"><span class="dot-pulse w-1.5 h-1.5 rounded-full bg-green"></span>live · 8s</span>
+    <span class="k-live mono text-[10px] tracking-label uppercase"><span class="dot-pulse"></span>live · 8s</span>
   </div>
 
   <div id="kata-header-actions" class="flex items-center gap-2.5"></div>
@@ -148,79 +116,82 @@
   <div style="max-width:1100px;margin:0 auto">
 
     <!-- page header -->
-    <div class="flex items-end justify-between gap-6 mb-7">
+    <div class="ov-head">
       <div>
-        <div class="mono text-[10px] uppercase tracking-kicker mb-2 flex items-center gap-3" style="color:var(--accent,#E04545)">
-          <span class="dot-pulse w-1.5 h-1.5 rounded-full" style="background:#5BA868"></span>
+        <div class="mono text-[10px] uppercase tracking-kicker text-mute mb-2 flex items-center gap-3">
+          <span class="dot-pulse w-2 h-2 bg-green"></span>
           <span>server · overview</span>
         </div>
-        <h1 class="mono text-[36px] leading-none font-extrabold tracking-[-0.035em] lowercase">overview<span class="glow77" style="color:var(--accent,#E04545)">.</span></h1>
-        <p class="mono text-[12px] text-mute mt-2">Snapshot 30 ngày · realtime</p>
+        <h1 class="text-[42px] leading-none lowercase">overview<span style="color:#e04545">.</span></h1>
+        <p class="mono text-[13px] text-mute mt-3">Snapshot 30 ngày · realtime</p>
       </div>
       <button id="ov-refresh" class="mono h-9 px-4 rounded-[10px] border border-line text-mute hover:text-ink text-[10px] tracking-label uppercase flex items-center gap-2" data-i18n="btn.refresh">↻ refresh</button>
     </div>
 
-    <!-- stat strip -->
-    <div id="ov-stats" class="flex items-stretch rounded-[16px] border border-line mb-[18px]" style="background:#131010;padding:22px 6px">
-      <div class="mono text-[11px] text-mute2 px-4 py-2">loading…</div>
+    <!-- stat strip (HUD tiles) -->
+    <div id="ov-stats" class="k-px k-kpis bg-panel k-rise">
+      <div class="k-kpi"><p class="k-kpi-l" data-i18n="empty.loading">loading…</p><p class="k-kpi-v text-mute">--</p></div>
+      <div class="k-kpi"><p class="k-kpi-l">&nbsp;</p><p class="k-kpi-v text-mute">--</p></div>
+      <div class="k-kpi"><p class="k-kpi-l">&nbsp;</p><p class="k-kpi-v text-mute">--</p></div>
+      <div class="k-kpi"><p class="k-kpi-l">&nbsp;</p><p class="k-kpi-v text-mute">--</p></div>
     </div>
 
     <!-- activity by type + top members -->
-    <div class="grid gap-[18px]" style="grid-template-columns:1.3fr 1fr">
-      <div class="rounded-[16px] border border-line" style="background:#131010;padding:22px 24px">
-        <div class="mono text-[9.5px] tracking-label uppercase text-mute mb-[18px]" style="font-weight:800">activity · by type</div>
-        <div id="ov-activity"></div>
-      </div>
-      <div class="rounded-[16px] border border-line" style="background:#131010;padding:22px 24px">
-        <div class="mono text-[9.5px] tracking-label uppercase text-mute mb-4" style="font-weight:800">top members</div>
-        <div id="ov-top"></div>
-      </div>
+    <div class="ov-grid">
+      <section class="ov-sec k-px bg-panel k-rise" style="animation-delay:80ms">
+        <div class="ov-sec-h"><h2>activity</h2><span class="k-kicker">by type · 30d</span></div>
+        <div id="ov-activity"><div class="k-kicker py-6" data-i18n="empty.loading">loading…</div></div>
+      </section>
+      <section class="ov-sec k-px bg-panel k-rise" style="animation-delay:160ms">
+        <div class="ov-sec-h"><h2>top members</h2><span class="k-kicker">30d</span></div>
+        <div id="ov-top"><div class="k-kicker py-6" data-i18n="empty.loading">loading…</div></div>
+      </section>
     </div>
 
     <!-- config (settings integrated into overview) -->
-    <form id="settings-form" class="rounded-[16px] border border-line mt-[18px]" style="background:#131010">
-      <div class="flex items-center justify-between" style="padding:20px 24px;border-bottom:1px solid #272120">
-        <div class="mono text-[9.5px] tracking-label uppercase text-mute" style="font-weight:800">config</div>
-        <span id="ovr-count" class="mono text-[9px] tracking-label uppercase" style="color:#8a7f78">—</span>
+    <form id="settings-form" class="k-px bg-panel k-rise" style="animation-delay:240ms">
+      <div class="flex items-center justify-between gap-4" style="padding:22px 26px 14px">
+        <div class="flex items-baseline gap-4"><h2 class="text-[24px] leading-none m-0">config</h2><span class="k-kicker">this server</span></div>
+        <span id="ovr-count" class="k-badge" style="background:var(--paper-2);color:var(--text)">—</span>
       </div>
-      <div style="padding:22px 24px" class="space-y-6">
+      <div style="padding:14px 26px 26px;border-top:3px solid var(--ink)" class="space-y-7">
 
         <div data-fld="systemPrompt">
-          <div class="flex items-center gap-2.5 mb-2">
-            <span class="mono text-[10px] tracking-label uppercase text-mute" style="font-weight:800">system prompt</span>
+          <div class="ov-fld-head">
+            <label for="f-systemPrompt" class="k-kicker">system prompt</label>
             <span data-badge="systemPrompt"></span>
-            <button type="button" data-reset="systemPrompt" class="mono text-[9px] tracking-label uppercase text-mute hover:text-ink" style="display:none">reset</button>
+            <button type="button" data-reset="systemPrompt" class="k-sbtn" style="display:none;height:30px;padding:0 10px">reset</button>
           </div>
-          <textarea id="f-systemPrompt" rows="6" maxlength="4000" class="w-full rounded-[10px] p-3 text-[12px] text-ink mono leading-relaxed resize-y focus:outline-none placeholder:text-mute2" style="background:#0e0b0a;border:1px solid #2c2522" placeholder="Để trống = mặc định"></textarea>
-          <div class="mono text-[10px] text-mute2 mt-1.5"><span id="f-systemPrompt-count">0</span> / 4000 ký tự</div>
+          <textarea id="f-systemPrompt" rows="6" maxlength="4000" class="w-full p-3 text-[13px] text-ink mono leading-relaxed resize-y focus:outline-none" placeholder="Để trống = mặc định"></textarea>
+          <div class="mono text-[11px] text-mute2 mt-3"><span id="f-systemPrompt-count">0</span> / 4000 ký tự</div>
         </div>
 
-        <div class="grid gap-6" style="grid-template-columns:1fr 1.5fr">
+        <div class="grid gap-8" style="grid-template-columns:1fr 1.5fr">
           <div data-fld="rateLimitPerUser">
-            <div class="flex items-center gap-2.5 mb-2">
-              <span class="mono text-[10px] tracking-label uppercase text-mute" style="font-weight:800">rate limit · msg/hr</span>
+            <div class="ov-fld-head">
+              <label for="f-rateLimitPerUser" class="k-kicker">rate limit · msg/hr</label>
               <span data-badge="rateLimitPerUser"></span>
-              <button type="button" data-reset="rateLimitPerUser" class="mono text-[9px] tracking-label uppercase text-mute hover:text-ink" style="display:none">reset</button>
+              <button type="button" data-reset="rateLimitPerUser" class="k-sbtn" style="display:none;height:30px;padding:0 10px">reset</button>
             </div>
-            <input id="f-rateLimitPerUser" type="number" min="1" max="1000" step="1" class="w-full rounded-[10px] h-10 px-3 text-[12px] text-ink mono focus:outline-none" style="background:#0e0b0a;border:1px solid #2c2522" />
+            <input id="f-rateLimitPerUser" type="number" min="1" max="1000" step="1" class="w-full h-11 px-3 text-[13px] text-ink mono focus:outline-none" />
           </div>
           <div data-fld="allowedChannels">
-            <div class="flex items-center gap-2.5 mb-2">
-              <span class="mono text-[10px] tracking-label uppercase text-mute" style="font-weight:800">allowed channels</span>
+            <div class="ov-fld-head">
+              <label for="f-allowedChannels" class="k-kicker">allowed channels</label>
               <span data-badge="allowedChannels"></span>
-              <button type="button" data-reset="allowedChannels" class="mono text-[9px] tracking-label uppercase text-mute hover:text-ink" style="display:none">reset</button>
+              <button type="button" data-reset="allowedChannels" class="k-sbtn" style="display:none;height:30px;padding:0 10px">reset</button>
               <span class="flex-1"></span>
-              <span class="mono text-[10px] text-mute2">trống = mọi channel</span>
+              <span class="mono text-[11px] text-mute2">trống = mọi channel</span>
             </div>
-            <input id="f-allowedChannels" class="w-full rounded-[10px] h-10 px-3 text-[12px] text-ink mono focus:outline-none placeholder:text-mute2" style="background:#0e0b0a;border:1px solid #2c2522" placeholder="123456789012345678, 234567890123456789" />
-            <div class="mono text-[10px] text-mute2 mt-1.5">Channel IDs cách nhau bằng dấu phẩy</div>
+            <input id="f-allowedChannels" class="w-full h-11 px-3 text-[13px] text-ink mono focus:outline-none" placeholder="123456789012345678, 234567890123456789" />
+            <div class="mono text-[11px] text-mute2 mt-3">Channel IDs cách nhau bằng dấu phẩy</div>
           </div>
         </div>
 
       </div>
-      <div class="flex items-center justify-between gap-3" style="padding:16px 24px;border-top:1px solid #272120">
+      <div class="flex flex-wrap items-center justify-between gap-4" style="padding:18px 26px 26px;border-top:3px dashed var(--rule)">
         <div id="settings-status" class="mono text-[11px] text-mute2"></div>
-        <button type="submit" id="settings-save" class="mono" style="background:var(--accent,#E04545);color:#fff;padding:11px 26px;border-radius:10px;font-size:10px;letter-spacing:.16em;font-weight:800;text-transform:uppercase;cursor:pointer;border:none" data-i18n="btn.save">▸ lưu</button>
+        <button type="submit" id="settings-save" class="k-pbtn k-sk" style="height:44px;padding:0 22px;background:var(--ka);color:#1b1410;font-size:12px" data-i18n="btn.save">▸ lưu</button>
       </div>
     </form>
 
@@ -231,7 +202,10 @@
 <div id="toast" class="fixed top-20 right-6 z-[110] pointer-events-none"></div>
 
 <script>
-const ACCENTS = ['#E04545','#D4A858','#5BA868','#7a9eb5','#9bb4ff','#c46868','#c9a653'];
+// Arcade accent fills (always ink text on top).
+const ACCENTS = ['#ff7a7a','#ffd25e','#7fd18b','#9fd8ff','#b9a2ff','#ff9ad5','#66d9d2','#ffa764'];
+const COIN_SVG = '<svg class="k-coin" width="26" height="26" viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true"><path d="M2 0h4v1h1v1h1v4H7v1H6v1H2V7H1V6H0V2h1V1h1z" fill="#ffc93c" stroke="#1b1410" stroke-width="0.5"/><rect x="4" y="2" width="1" height="4" fill="#c98a12"/></svg>';
+const DISCORD_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.317 4.37a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.865-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.74 19.74 0 0 0 3.677 4.37a.07.07 0 0 0-.032.028C.533 9.046-.32 13.58.099 18.058a.082.082 0 0 0 .031.056 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.873-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.1 13.1 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.126-.094.252-.192.372-.291a.074.074 0 0 1 .078-.01c3.928 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .079.01c.12.099.246.197.373.291a.077.077 0 0 1-.006.128 12.3 12.3 0 0 1-1.873.891.076.076 0 0 0-.04.107c.36.698.772 1.363 1.225 1.993a.076.076 0 0 0 .084.028 19.84 19.84 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.029zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>';
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
 function getGuildId(){
@@ -256,11 +230,11 @@ function relTime(d){
 
 function showToast(msg, kind='ok'){
   const wrap = document.getElementById('toast');
-  const colors = { ok:'#5BA868', err:'#c46868', info:'#7a9eb5' };
+  const colors = { ok:'#7fd18b', err:'#ff7a7a', info:'#9fd8ff' };
   const c = colors[kind] || colors.ok;
   const el = document.createElement('div');
-  el.className = 'mono text-[12px] px-4 py-2.5 rounded-[10px] mb-2 pointer-events-auto';
-  el.style.cssText = `background:${c}18;border:1px solid ${c}55;color:${c};box-shadow:0 16px 40px -16px ${c}99;animation:fadeUp 200ms ease-out`;
+  el.className = 'k-toast-i';
+  el.style.setProperty('--tc', c);
   el.textContent = msg;
   wrap.appendChild(el);
   setTimeout(()=>{ el.style.opacity='0'; el.style.transition='opacity 200ms'; setTimeout(()=>el.remove(), 220); }, 3000);
@@ -279,8 +253,8 @@ async function loadOverview(){
     const chip = document.getElementById('kata-user-chip');
     const initial = (user.displayName || user.username || '?').slice(0,1).toUpperCase();
     chip.innerHTML = (user.avatarUrl
-      ? `<img src="${user.avatarUrl}" alt="" style="width:26px;height:26px;border-radius:9999px;object-fit:cover;border:1px solid rgba(255,255,255,0.08)" />`
-      : `<span class="w-[26px] h-[26px] rounded-full grid place-items-center text-[11px] font-extrabold" style="background:#E0454522;color:#E04545">${initial}</span>`)
+      ? `<img src="${user.avatarUrl}" alt="" />`
+      : `<span aria-hidden="true">${initial}</span>`)
       + `<span class="max-w-[96px] truncate">${escapeHtml(user.displayName || user.username || '—')}</span>`
       + `<span class="text-mute text-[9px]">▾</span>`;
   }).catch(()=>{});
@@ -303,18 +277,28 @@ async function loadOverview(){
     }[data.error] || 'Không có quyền truy cập.';
     document.getElementById('kata-guild-name').textContent = 'Cần đăng nhập';
     document.querySelector('main').innerHTML = `
-      <div class="rounded-[14px] border border-line bg-panel p-10 text-center max-w-xl mx-auto mt-20">
-        <div class="text-[16px] font-medium text-ink mb-3">${escapeHtml(reason)}</div>
-        <a href="/api/auth/discord/start" class="mono inline-flex items-center gap-2 h-10 px-5 rounded-[10px] uppercase tracking-label text-[11px] font-bold text-bg mt-3" style="background:#5865F2">đăng nhập với Discord</a>
-        <a href="servers.html" class="mono inline-flex items-center gap-2 h-10 px-5 rounded-[10px] uppercase tracking-label text-[11px] text-mute hover:text-ink mt-3 ml-2 border border-line">← danh sách server</a>
+      <div class="k-say max-w-xl mx-auto mt-16">
+        <span class="k-tag">KATAS SAYS:</span>
+        <p class="k-kicker">${r.status} · access locked</p>
+        <div class="text-[16px] leading-relaxed text-ink mt-3">${escapeHtml(reason)}</div>
+        <div class="flex flex-wrap gap-5 mt-7" style="padding:0 6px 6px 3px">
+          <a href="/api/auth/discord/start" class="k-sbtn k-pri" style="height:44px;padding:0 16px">${DISCORD_SVG}đăng nhập với Discord</a>
+          <a href="servers.html" class="k-sbtn" style="height:44px;padding:0 16px">← danh sách server</a>
+        </div>
+        <span class="k-more k-bob" aria-hidden="true"></span>
       </div>`;
     return;
   }
   if (r.status === 404){
     document.querySelector('main').innerHTML = `
-      <div class="rounded-[14px] border border-line bg-panel p-10 text-center max-w-xl mx-auto mt-20">
-        <div class="text-[16px] font-medium text-ink mb-3">Bot không có trong server này.</div>
-        <a href="servers.html" class="mono inline-flex items-center gap-2 h-10 px-5 rounded-[10px] uppercase tracking-label text-[11px] text-mute hover:text-ink border border-line mt-3">← danh sách server</a>
+      <div class="k-say max-w-xl mx-auto mt-16">
+        <span class="k-tag">KATAS SAYS:</span>
+        <p class="k-kicker">404 · stage not found</p>
+        <div class="text-[16px] leading-relaxed text-ink mt-3">Bot không có trong server này.</div>
+        <div class="flex flex-wrap gap-5 mt-7" style="padding:0 6px 6px 3px">
+          <a href="servers.html" class="k-sbtn" style="height:44px;padding:0 16px">← danh sách server</a>
+        </div>
+        <span class="k-more k-bob" aria-hidden="true"></span>
       </div>`;
     return;
   }
@@ -364,57 +348,57 @@ async function loadOverview(){
   const fmtNum = (n) => Number(n || 0).toLocaleString('vi-VN');
   const joinedAt = data.guild.joinedAt;
   const statCells = [
-    { label: 'COST · 30D', value: '$' + (k.cost30d.value || 0).toFixed(2), note: 'tổng 30 ngày', color: '#D4A858' },
-    { label: 'MESSAGES',   value: fmtNum(s.msgs30d),   note: 'mentions · 30d', color: '#f5ede0' },
-    { label: 'EVENTS',     value: fmtNum(s.events30d), note: 'mọi loại',       color: '#f5ede0' },
-    { label: 'JOINED',     value: joinedAt ? agoLong(joinedAt) : '—', note: joinedAt ? new Date(joinedAt).toISOString().slice(0,10) : '', color: '#f5ede0' },
+    { label: 'COST · 30D', value: '$' + (k.cost30d.value || 0).toFixed(2), note: 'tổng 30 ngày', coin: true },
+    { label: 'MESSAGES',   value: fmtNum(s.msgs30d),   note: 'mentions · 30d' },
+    { label: 'EVENTS',     value: fmtNum(s.events30d), note: 'mọi loại' },
+    { label: 'JOINED',     value: joinedAt ? agoLong(joinedAt) : '—', note: joinedAt ? new Date(joinedAt).toISOString().slice(0,10) : '' },
   ];
-  document.getElementById('ov-stats').innerHTML = statCells.map((st, i) => `
-    <div style="flex:1;text-align:center;padding:0 14px;border-left:1px solid ${i === 0 ? 'transparent' : '#272120'}">
-      <div class="mono" style="font-size:8.5px;letter-spacing:.2em;color:rgba(245,237,224,0.5);font-weight:800">${st.label}</div>
-      <div class="mono" style="font-size:30px;font-weight:800;color:${st.color};margin-top:10px;line-height:1">${st.value}</div>
-      <div class="mono" style="font-size:10px;color:#57504b;margin-top:7px">${escapeHtml(st.note)}</div>
+  document.getElementById('ov-stats').innerHTML = statCells.map((st) => `
+    <div class="k-kpi">
+      <p class="k-kpi-l">${st.label}</p>
+      <p class="k-kpi-v">${st.coin ? COIN_SVG : ''}${st.value}</p>
+      <p class="k-kpi-n">${escapeHtml(st.note) || '&nbsp;'}</p>
     </div>`).join('');
 
   // ── Activity by type ───────────────────────────────────────
   const TYPE_META = {
-    chat:    { label: 'CHAT',    color: '#E04545' },
-    image:   { label: 'IMAGE',   color: '#D4A858' },
-    video:   { label: 'VIDEO',   color: '#c0563a' },
-    command: { label: 'COMMAND', color: '#5BA868' },
+    chat:    { label: 'CHAT',    color: '#9fd8ff' },
+    image:   { label: 'IMAGE',   color: '#ffd25e' },
+    video:   { label: 'VIDEO',   color: '#ff7a7a' },
+    command: { label: 'COMMAND', color: '#7fd18b' },
   };
   const byType = s.byType || [];
   const maxCount = Math.max(1, ...byType.map((t) => t.count));
   const gid = getGuildId();
   document.getElementById('ov-activity').innerHTML = byType.map((t) => {
-    const m = TYPE_META[t.type] || { label: t.type.toUpperCase(), color: '#8a7f78' };
+    const m = TYPE_META[t.type] || { label: t.type.toUpperCase(), color: '#d8cdb9' };
     const pct = Math.max(2, Math.round((t.count / maxCount) * 100));
     const href = `logs-image.html?guild=${encodeURIComponent(gid)}&tab=${t.type}`;
-    return `<a href="${href}" class="act-row block" style="margin:0 -6px 16px;padding:6px;border-radius:8px;text-decoration:none;color:inherit">
-      <div class="flex items-baseline gap-2.5">
-        <span style="width:9px;height:9px;border-radius:3px;background:${m.color};flex:none"></span>
-        <span class="mono" style="font-size:12.5px;font-weight:700;color:#ece6df;letter-spacing:.06em">${m.label}</span>
+    return `<a href="${href}" class="ov-act">
+      <div class="flex items-center gap-3">
+        <span aria-hidden="true" style="width:12px;height:12px;background:${m.color};box-shadow:0 0 0 2px var(--ink);flex:none"></span>
+        <span class="k-sk text-[12px]">${m.label}</span>
         <span class="flex-1"></span>
-        <span class="mono" style="font-size:13px;font-weight:800;color:#f3ede6">${fmtNum(t.count)}</span>
-        <span class="mono" style="font-size:10px;color:#57504b">· $${Number(t.cost || 0).toFixed(2)}</span>
+        <span class="text-[15px] font-bold">${fmtNum(t.count)}</span>
+        <span class="text-[11px] text-mute2">· $${Number(t.cost || 0).toFixed(2)}</span>
       </div>
-      <div style="height:5px;border-radius:99px;background:#1d1817;margin:9px 0 0 19px;overflow:hidden"><div style="height:100%;border-radius:99px;width:${pct}%;background:${m.color};transition:width .5s ease"></div></div>
+      <div class="k-hp" style="--a:${m.color}"><span style="width:${pct}%"></span></div>
     </a>`;
-  }).join('') || '<div class="text-mute2 text-[12px] py-4">Chưa có hoạt động 30 ngày</div>';
+  }).join('') || '<div class="py-8 text-center"><p class="k-kicker">NO SAVE DATA</p><p class="text-[12px] text-mute mt-2">Chưa có hoạt động 30 ngày</p></div>';
 
   // ── Top members ─────────────────────────────────────────────
   const top = data.stats.topUsers || [];
   document.getElementById('ov-top').innerHTML = top.length === 0
-    ? '<div class="text-mute2 text-[12px] py-4 text-center">Chưa có hoạt động 30 ngày</div>'
+    ? '<div class="py-8 text-center"><p class="k-kicker">NO SAVE DATA</p><p class="text-[12px] text-mute mt-2">Chưa có hoạt động 30 ngày</p></div>'
     : top.map((u) => {
         const accent = avatarSeed(u.userId);
         const name = u.displayName || u.username || ('?' + u.userId.slice(-4));
         const ini = name.replace(/[^A-Za-z0-9À-ỹ]/g, '').slice(0, 2).toUpperCase() || '??';
-        return `<div class="flex items-center gap-[11px]" style="padding:9px 0">
-          <span style="width:30px;height:30px;border-radius:99px;background:${accent}33;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:${accent};flex:none">${escapeHtml(ini)}</span>
-          <span class="truncate" style="font-size:12.5px;color:#ddd6cf" title="${escapeHtml(u.userId)}">${escapeHtml(name)}</span>
+        return `<div class="ov-top">
+          <span class="ov-av" style="background:${accent}" aria-hidden="true">${escapeHtml(ini)}</span>
+          <span class="truncate text-[13px]" title="${escapeHtml(u.userId)}">${escapeHtml(name)}</span>
           <span class="flex-1"></span>
-          <span class="mono" style="font-size:12px;font-weight:800;color:#f3ede6" title="$${Number(u.cost || 0).toFixed(2)} · 30d">${fmtNum(u.count)}</span>
+          <span class="text-[14px] font-bold" title="$${Number(u.cost || 0).toFixed(2)} · 30d">${fmtNum(u.count)}</span>
         </div>`;
       }).join('');
 
@@ -473,11 +457,10 @@ function paintFieldSources(cfg) {
     if (source === 'override') overrides++;
     const badge = document.querySelector(`[data-badge="${key}"]`);
     if (badge) {
-      badge.className = 'mono text-[9px] tracking-label uppercase';
-      badge.style.cssText = 'border-radius:99px;padding:2px 8px';
-      if (source === 'override') { badge.textContent = 'OVERRIDE'; badge.style.background = '#E0454522'; badge.style.color = '#E04545'; badge.style.border = '1px solid #E0454544'; }
-      else if (source === 'global') { badge.textContent = 'GLOBAL'; badge.style.background = '#D4A85822'; badge.style.color = '#D4A858'; badge.style.border = '1px solid #D4A85844'; }
-      else { badge.textContent = 'CODE'; badge.style.background = 'rgba(245,237,224,0.05)'; badge.style.color = 'rgba(245,237,224,0.5)'; badge.style.border = '1px solid rgba(245,237,224,0.10)'; }
+      badge.className = 'ov-badge';
+      if (source === 'override') { badge.textContent = 'OVERRIDE'; badge.style.background = '#ff7a7a'; }
+      else if (source === 'global') { badge.textContent = 'GLOBAL'; badge.style.background = '#ffd25e'; }
+      else { badge.textContent = 'CODE'; badge.style.background = 'var(--paper-2)'; badge.style.color = 'var(--text)'; }
     }
     const reset = document.querySelector(`[data-reset="${key}"]`);
     if (reset) reset.style.display = source === 'override' ? '' : 'none';

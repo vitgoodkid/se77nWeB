@@ -8,99 +8,56 @@
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Pixelify+Sans:wght@500;700&family=Silkscreen:wght@400;700&family=VT323&display=swap" rel="stylesheet" />
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
+  // B · Pixel Lobby palette: colour channels come from _shell.js (light + dark).
   tailwind.config = { theme: { extend: {
-    colors: { bg:'#0d0a08', panel:'#15110d', panel2:'#1c1813', line:'rgba(255,255,255,0.08)', line2:'rgba(255,255,255,0.14)', ink:'#f5ede0', mute:'rgba(245,237,224,0.5)', mute2:'rgba(245,237,224,0.3)', red:'#E04545', green:'#5BA868', gold:'#D4A858', info:'#7a9eb5', warn:'#c9a653', err:'#c46868' },
-    fontFamily: { sans:['Geist','system-ui','sans-serif'], mono:['"JetBrains Mono"','ui-monospace','monospace'] },
+    colors: {
+      bg:'rgb(var(--c-bg) / <alpha-value>)', panel:'rgb(var(--c-panel) / <alpha-value>)', panel2:'rgb(var(--c-panel2) / <alpha-value>)',
+      ink:'rgb(var(--c-ink) / <alpha-value>)', red:'rgb(var(--c-red) / <alpha-value>)', green:'rgb(var(--c-green) / <alpha-value>)',
+      gold:'rgb(var(--c-gold) / <alpha-value>)', info:'rgb(var(--c-info) / <alpha-value>)', warn:'rgb(var(--c-warn) / <alpha-value>)',
+      err:'rgb(var(--c-err) / <alpha-value>)', purple:'rgb(var(--c-purple) / <alpha-value>)',
+      line:'var(--c-line)', line2:'var(--c-line2)', mute:'var(--c-mute)', mute2:'var(--c-mute2)',
+    },
+    fontFamily: { sans:['"JetBrains Mono"','ui-monospace','monospace'], mono:['"JetBrains Mono"','ui-monospace','monospace'], pixel:['"Pixelify Sans"','monospace'], sk:['Silkscreen','monospace'] },
     letterSpacing: { kicker:'0.22em', label:'0.18em', tag:'0.12em' },
   }}};
 </script>
 <style>
-  html, body { background: #0d0a08; color: #f5ede0; font-family: Geist, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
-  .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
-  @keyframes pulse77 { 0%,100% { opacity:1; transform: scale(1); } 50% { opacity:.55; transform: scale(.82); } }
-  .dot-pulse { animation: pulse77 2s ease-in-out infinite; }
-  .glow77 { text-shadow: 0 0 6px #E04545cc, 0 0 18px #E0454566, 0 0 36px #E0454533; }
-  .grain { background-image: radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px); background-size: 3px 3px; }
-  .ambient { background-image:
-      radial-gradient(60% 50% at 18% 12%, #E0454520 0%, transparent 65%),
-      radial-gradient(50% 45% at 90% 88%, #5BA86820 0%, transparent 70%); }
-  ::-webkit-scrollbar { width: 8px; height: 8px; }
-  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
-  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
+  /* logs · page pieces. Chrome, palette and the k-* kit come from _shell.js. */
+  .lg-head { display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:20px; margin-bottom:34px; }
+  /* terminal panel */
+  .lg-term { color:#fffaf0; }
+  .lg-bar { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:14px; padding:18px 22px; border-bottom:3px dashed #43362b; }
+  .lg-bar h2 { margin:0; font-size:28px; line-height:1; color:#fffaf0; }
+  .lg-live { display:inline-flex; align-items:center; gap:8px; font-family:var(--k-sk);font-size-adjust:var(--k-fsa); font-size:11px; font-weight:700; color:#7fd18b; }
+  .lg-live i { width:8px; height:8px; background:#7fd18b; }
+  .kata-tab { display:inline-flex; align-items:center; gap:8px; height:38px; padding:0 12px; border:0; cursor:pointer; font-family:var(--k-sk);font-size-adjust:var(--k-fsa); font-size:11px; font-weight:700; letter-spacing:.03em; text-transform:uppercase; color:#e8dfcf; background:#2e251d; transition:background .1s steps(2); }
+  .kata-tab:hover { color:#ffffff; background:#43362b; }
+  .kata-tab.on, .kata-tab.on:hover { color:#1b1410; background:#b9a2ff; }
+  .lg-filter { display:flex; flex-wrap:wrap; align-items:flex-end; gap:14px 16px; padding:16px 22px 20px; border-bottom:3px dashed #43362b; }
+  .lg-f { display:flex; flex-direction:column; gap:6px; }
+  .lg-f label { font-family:var(--k-sk);font-size-adjust:var(--k-fsa); font-size:11px; font-weight:700; color:#c9bca6; }
+  .lg-filter input { height:40px!important; padding:0 12px; font-size:13px; }
+  #log-list { padding:18px 22px 6px; font-size:13px; }
+  #log-list > article { background:transparent!important; box-shadow:none!important; border:0!important; border-bottom:3px dashed #43362b!important; }
+  #log-list > article + article { margin-top:0!important; }
+  #log-list .log-thread { padding-bottom:16px; margin-bottom:16px!important; border-bottom:3px dashed #43362b; }
+  .lg-prompt { display:flex; flex-wrap:wrap; align-items:center; gap:8px 10px; padding:8px 22px 20px; font-size:13px; }
+  .lg-prompt b { color:#7fd18b; }
+  .lg-prompt i { font-style:normal; color:#c9bca6; }
+  .lg-foot { display:flex; align-items:center; justify-content:center; gap:16px; padding:4px 22px 24px; }
 
-  /* placeholder image swatches */
-  .ph-1 { background: linear-gradient(135deg, #2a3a5c 0%, #6b7fa8 30%, #e0c891 65%, #c46868 100%); }
-  .ph-2 { background: linear-gradient(135deg, #1f2f3a 0%, #4a6b8a 50%, #7a9eb5 100%); }
-  .ph-3 { background: linear-gradient(135deg, #5a4012 0%, #D4A858 100%); }
-  .ph-4 { background: linear-gradient(135deg, #1f3a26 0%, #5BA868 50%, #c9d4a8 100%); }
-  .ph-5 { background: linear-gradient(135deg, #2a1a3a 0%, #5a3a7a 40%, #c46868 100%); }
-  .ph-6 { background: linear-gradient(135deg, #3a1f1f 0%, #7a2e2e 40%, #E04545 100%); }
-  .ph-7 { background: linear-gradient(135deg, #1a1612 0%, #4a423a 50%, #b8aea0 100%); }
-  .ph-8 { background: linear-gradient(135deg, #0d2818 0%, #2e5a45 50%, #8aca9a 100%); }
-  .ph-9 { background: linear-gradient(135deg, #4a2a12 0%, #8a5a2e 50%, #e0c891 100%); }
-  .ph-10 { background: linear-gradient(135deg, #1a2a3a 0%, #3a5a7a 30%, #c46868 80%); }
-
-  /* server subnav (shared Server Detail design) */
-  .navrow { transition: background .18s, transform .18s, color .18s; }
-  .navrow:hover { transform: translateX(3px); }
-  .navrow.on { background: #1a1312; }
-  /* log-type chips */
-  .kata-tab { display:flex; align-items:center; gap:8px; padding:9px 18px; border-radius:99px; font-size:10px; letter-spacing:.18em; font-weight:800; cursor:pointer; border:1px solid #2c2522; background:transparent; color:#8a7f78; transition:all .18s; text-transform:uppercase; font-family:'JetBrains Mono',ui-monospace,monospace; }
-  .kata-tab:hover { transform: translateY(-2px); color:#ece6df; }
-  .kata-tab.on { background:#E0454514; color:#E04545; border-color:#E0454573; }
-  .kata-tab .tab-count { font-size:9px; color:#57504b; }
-  .kata-tab.on .tab-count { color:#E04545; }
-
-  /* ===================== MOBILE (≤768px) =====================
-     Port of admin.html's phone layout to the server-detail pages.
-     The fixed 232px sidebar + `main pl-[244px]` had no @media, so on a
-     phone the sidebar covered the page and logs were unreadable. Turn the
-     sidebar into a horizontal chip rail under the header and drop the
-     main column's sidebar offset. */
   @media (max-width: 768px) {
-    header { padding-left: 14px !important; padding-right: 14px !important; }
-    header > div:first-child { gap: 10px !important; min-width: 0 !important; }
-    .hdr-logo { flex-shrink: 0 !important; }
-    .hdr-logo > div:first-child { font-size: 17px !important; white-space: nowrap !important; }
-    .hdr-logo > div:last-child { display: none !important; } /* hide "EXPERIMENT 007" subtitle */
-    /* hide the breadcrumb (div) + "live · 4s" badge (span); keep the logo (a) */
-    header > div:first-child > div,
-    header > div:first-child > span { display: none !important; }
-    #kata-header-actions { gap: 6px !important; }
-    #kata-header-actions > * { transform: scale(0.9); transform-origin: right center; }
-    #kata-user-name { display: none !important; }
-
-    aside {
-      top: 64px !important; left: 0 !important; right: 0 !important; bottom: auto !important;
-      width: auto !important; height: auto !important;
-      flex-direction: row !important;
-      border-right: none !important; border-bottom: 1px solid #1d1817 !important;
-      overflow-x: auto !important; overflow-y: hidden !important; -webkit-overflow-scrolling: touch;
-    }
-    aside::-webkit-scrollbar { height: 0; }
-    /* hide the guild profile card, the flex spacer, and the "← all servers" footer */
-    aside > div:first-child,
-    aside > .flex-1,
-    aside > div:last-child { display: none !important; }
-    aside nav { display: flex !important; flex-direction: row !important; padding: 11px 12px !important; gap: 8px !important; }
-    .navrow { flex: 0 0 auto; margin-bottom: 0 !important; white-space: nowrap;
-      border-left: none !important; border: 1px solid #2c2522 !important; border-radius: 999px !important;
-      padding: 9px 15px !important; }
-    .navrow:hover { transform: none !important; }
-    .navrow.on { background: #E0454514 !important; border-color: #E0454573 !important; color: #E04545 !important; }
-
-    main { padding-left: 14px !important; padding-right: 14px !important; padding-top: 126px !important; }
-    main h1 { font-size: 26px !important; }
+    .lg-bar, .lg-filter { padding-left:14px; padding-right:14px; }
+    #log-list { padding-left:14px; padding-right:14px; }
     .log-side { max-width: 100% !important; }
-    #f-userId, #f-channelId, #f-command { width: 100% !important; flex: 1 1 100% !important; }
-
+    .lg-f { flex: 1 1 100%; }
+    #f-userId, #f-channelId, #f-command { width: 100% !important; }
     /* image/video log rows: stack the media ABOVE the text so the prompt gets
-       the full width (it was wrapping one word per line in a ~130px column) and
-       the thumbnails can be larger. */
-    #log-list > article > div { flex-direction: column !important; gap: 14px !important; padding: 16px !important; }
+       the full width and the thumbnails can be larger. */
+    #log-list > article > div { flex-direction: column !important; gap: 14px !important; padding: 16px 0 !important; }
     #log-list .log-io { width: 100% !important; justify-content: center !important; }
     #log-list .log-io img { width: 150px !important; height: 150px !important; }
     #log-list .log-io > div { width: 150px !important; height: 150px !important; } /* no-input / empty boxes */
@@ -113,24 +70,22 @@
 <script src="_strings.js"></script>
 <script src="_shell.js"></script>
 
-<div aria-hidden class="fixed inset-0 z-0 pointer-events-none ambient"></div>
-<div aria-hidden class="fixed inset-0 z-0 pointer-events-none grain opacity-40"></div>
-
-<!-- top bar -->
-<header class="fixed top-0 inset-x-0 h-16 z-50 flex items-center justify-between px-6 backdrop-blur-md border-b border-line" style="background:rgba(13,10,8,0.7)">
+<!-- top bar (HUD) -->
+<header class="fixed top-0 inset-x-0 h-16 z-50 flex items-center justify-between px-6">
   <div class="flex items-center gap-5">
-    <a href="index.html" class="hdr-logo flex flex-col items-start gap-1 leading-none">
-      <div class="mono text-[24px] font-extrabold tracking-[-0.025em]">se<span class="text-red glow77">77</span>n<span class="text-mute font-normal"> / kata</span></div>
-      <div class="mono text-[9px] uppercase tracking-kicker text-mute">Experiment <span class="text-red font-bold">007</span> · katas dashboard</div>
+    <a href="index.html" class="k-logo hdr-logo">
+      <span class="k-word">se<span class="k-77">77</span>n<span class="k-sfx">/ kata</span></span>
+      <span class="k-sub">Experiment 007 · katas dashboard</span>
     </a>
-    <div class="flex items-center gap-2 ml-3 mono text-[10px] tracking-label uppercase">
-      <a href="index.html" class="text-mute hover:text-ink">se77n</a><span class="text-mute2">/</span>
-      <a href="index.html" class="text-mute hover:text-ink">kata</a><span class="text-mute2">/</span>
-      <a href="servers.html" class="text-mute hover:text-ink" data-i18n="bc.servers">servers</a><span class="text-mute2">/</span>
-      <a id="bc-guild" href="#" class="text-mute hover:text-ink">—</a><span class="text-mute2">/</span>
+    <a href="/" class="k-lobby" aria-label="Back to the se77n lobby"><svg width="9" height="15" viewBox="0 0 3 5" shape-rendering="crispEdges" aria-hidden="true"><path d="M2 0h1v5H2V4H1V3H0V2h1V1h1z" fill="currentColor"/></svg><span class="k-lobby-t">LOBBY</span></a>
+    <div class="k-bc flex items-center gap-2 mono text-[10px] tracking-label uppercase">
+      <a href="index.html" class="text-mute hover:text-ink">se77n</a><span class="text-mute2">›</span>
+      <a href="index.html" class="text-mute hover:text-ink">kata</a><span class="text-mute2">›</span>
+      <a href="servers.html" class="text-mute hover:text-ink" data-i18n="bc.servers">servers</a><span class="text-mute2">›</span>
+      <a id="bc-guild" href="#" class="text-mute hover:text-ink">—</a><span class="text-mute2">›</span>
       <span class="text-ink">logs · <span id="bc-tab">chat</span></span>
     </div>
-    <span class="mono text-[10px] tracking-label uppercase text-green flex items-center gap-1.5 ml-2"><span class="dot-pulse w-1.5 h-1.5 rounded-full bg-green"></span>live · 4s</span>
+    <span class="k-live mono text-[10px] tracking-label uppercase"><span class="dot-pulse"></span>live · 4s</span>
   </div>
 
   <div id="kata-header-actions" class="flex items-center gap-2.5"></div>
@@ -171,51 +126,64 @@
 <main class="relative z-10 pt-20 pb-16 pl-[244px] pr-8">
 
   <!-- tab header -->
-  <div class="flex items-end justify-between gap-6 mb-5">
+  <div class="lg-head">
     <div>
       <div class="mono text-[10px] uppercase tracking-kicker text-mute mb-2 flex items-center gap-3">
-        <span class="dot-pulse w-1.5 h-1.5 rounded-full bg-green"></span>
+        <span class="dot-pulse w-2 h-2 bg-green"></span>
         <span id="page-tag">TAB · LOGS / —</span>
       </div>
-      <h1 class="mono text-[36px] leading-none font-extrabold tracking-[-0.035em] lowercase">logs<span id="page-tab-label" class="text-red font-extrabold"> · —</span><span class="text-red glow77">.</span></h1>
-      <div id="page-counts" class="mono text-[11px] text-mute mt-3">—</div>
+      <h1 class="text-[42px] leading-none lowercase">logs<span id="page-tab-label" class="text-red"> · —</span><span style="color:#e04545">.</span></h1>
+      <div id="page-counts" class="mono text-[13px] text-mute mt-3">—</div>
     </div>
-    <div class="flex items-center gap-2">
+    <div class="flex items-center gap-2" style="padding:0 8px 8px 4px">
       <button id="btn-refresh" class="mono h-9 px-3.5 rounded-[10px] border border-line text-mute hover:text-ink text-[10px] tracking-label uppercase" data-i18n="btn.refresh">↻ refresh</button>
     </div>
   </div>
 
-  <!-- log type chips -->
-  <div class="flex items-center gap-2 mb-5 flex-wrap">
-    <button data-tab="chat" class="kata-tab" data-i18n="logs.tab.chat">chat</button>
-    <button data-tab="image" class="kata-tab" data-i18n="logs.tab.image">image</button>
-    <button data-tab="video" class="kata-tab" data-i18n="logs.tab.video">video</button>
-    <button data-tab="command" class="kata-tab" data-i18n="logs.tab.command">commands</button>
-  </div>
+  <!-- terminal: type tabs · filters · entries · prompt -->
+  <section class="lg-term k-screen k-px k-rise" aria-label="Logs">
+    <div class="lg-bar">
+      <div class="flex items-center gap-4">
+        <h2>Logs</h2>
+        <span class="lg-live"><i class="k-blink" aria-hidden="true"></i>LIVE · 4S</span>
+      </div>
+      <!-- log type chips -->
+      <div class="flex flex-wrap items-center gap-2" role="group" aria-label="Log type">
+        <button data-tab="chat" class="kata-tab" data-i18n="logs.tab.chat">chat</button>
+        <button data-tab="image" class="kata-tab" data-i18n="logs.tab.image">image</button>
+        <button data-tab="video" class="kata-tab" data-i18n="logs.tab.video">video</button>
+        <button data-tab="command" class="kata-tab" data-i18n="logs.tab.command">commands</button>
+      </div>
+    </div>
 
-  <!-- filters -->
-  <div class="flex items-center gap-2 mb-6 flex-wrap">
-    <div class="mono text-[10px] tracking-label uppercase text-mute2 mr-1">filter</div>
-    <input id="f-userId" placeholder="user id" class="mono bg-bg border border-line rounded-[8px] h-8 px-3 w-[180px] text-[11px] text-ink placeholder:text-mute2 focus:outline-none focus:border-red/60" />
-    <input id="f-channelId" placeholder="channel id" class="mono bg-bg border border-line rounded-[8px] h-8 px-3 w-[180px] text-[11px] text-ink placeholder:text-mute2 focus:outline-none focus:border-red/60" />
-    <input id="f-command" placeholder="/command" class="mono bg-bg border border-line rounded-[8px] h-8 px-3 w-[140px] text-[11px] text-ink placeholder:text-mute2 focus:outline-none focus:border-red/60" />
-    <button id="btn-apply" class="mono h-8 px-3 rounded-[8px] text-[10px] tracking-label uppercase font-bold text-bg" style="background:#E04545">apply</button>
-    <button id="btn-clear" class="mono h-8 px-3 rounded-[8px] text-[10px] tracking-label uppercase text-red hover:underline">clear all</button>
-  </div>
+    <!-- filters -->
+    <div class="lg-filter">
+      <div class="k-kicker self-center" style="color:#c9bca6">filter</div>
+      <div class="lg-f"><label for="f-userId">USER ID</label><input id="f-userId" placeholder="user id" class="mono w-[180px] text-ink focus:outline-none" /></div>
+      <div class="lg-f"><label for="f-channelId">CHANNEL ID</label><input id="f-channelId" placeholder="channel id" class="mono w-[180px] text-ink focus:outline-none" /></div>
+      <div class="lg-f"><label for="f-command">COMMAND</label><input id="f-command" placeholder="/command" class="mono w-[150px] text-ink focus:outline-none" /></div>
+      <button id="btn-apply" class="k-sbtn k-pri" style="height:40px;padding:0 16px">apply</button>
+      <button id="btn-clear" class="k-sk text-[11px] uppercase hover:underline" style="height:40px;padding:0 8px;color:#ff7a7a;background:transparent;border:0;cursor:pointer">clear all</button>
+    </div>
 
-  <!-- log entries -->
-  <div id="log-list" class="space-y-2.5"></div>
+    <!-- log entries -->
+    <div id="log-list" role="log" aria-live="polite"><div class="k-kicker py-10 text-center" style="color:#c9bca6" data-i18n="empty.loading">loading…</div></div>
 
-  <!-- load-more -->
-  <div class="flex items-center justify-center mt-6 mb-10">
-    <button id="btn-more" class="mono h-9 px-5 rounded-[10px] border border-line text-mute hover:text-ink text-[10px] tracking-label uppercase hidden">load more ↓</button>
-    <div id="empty-state" class="hidden mono text-[11px] text-mute2" data-i18n="empty.end-of-list">— hết —</div>
-  </div>
+    <div class="lg-prompt" aria-hidden="true">
+      <b>kata@se77n:~$</b><i>tail -f logs --type <span id="lg-type">chat</span></i><span class="k-cursor k-blink" style="color:#fffaf0"></span>
+    </div>
+
+    <!-- load-more -->
+    <div class="lg-foot">
+      <button id="btn-more" class="mono h-9 px-5 rounded-[10px] border border-line text-mute hover:text-ink text-[10px] tracking-label uppercase hidden">load more ↓</button>
+      <div id="empty-state" class="hidden k-kicker" style="color:#c9bca6" data-i18n="empty.end-of-list">— hết —</div>
+    </div>
+  </section>
 
   <!-- footer -->
-  <footer class="grid grid-cols-3 items-center mono text-[10px] tracking-kicker text-mute pt-5 border-t border-line">
+  <footer class="grid grid-cols-3 items-center mono text-[10px] tracking-kicker text-mute pt-5 mt-14 border-t border-line">
     <span class="text-left">KATAS · V0.3.1</span>
-    <span class="text-center flex items-center gap-2 justify-center"><span class="w-1.5 h-1.5 rounded-full bg-green dot-pulse"></span>STATUS · OK</span>
+    <span class="text-center flex items-center gap-2 justify-center"><span class="w-2 h-2 bg-green dot-pulse"></span>STATUS · OK</span>
     <span class="text-right">© SE77N</span>
   </footer>
 </main>
@@ -224,7 +192,9 @@
 <div id="toast" class="fixed top-20 right-6 z-[110] pointer-events-none"></div>
 
 <script>
-const ACCENTS = ['#E04545','#D4A858','#5BA868','#7a9eb5','#9bb4ff','#c46868','#c9a653'];
+// Arcade accent fills (always ink text on top).
+const ACCENTS = ['#ff7a7a','#ffd25e','#7fd18b','#9fd8ff','#b9a2ff','#ff9ad5','#66d9d2','#ffa764'];
+const DISCORD_SVG = '<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M20.317 4.37a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.865-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.74 19.74 0 0 0 3.677 4.37a.07.07 0 0 0-.032.028C.533 9.046-.32 13.58.099 18.058a.082.082 0 0 0 .031.056 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.873-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.1 13.1 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.126-.094.252-.192.372-.291a.074.074 0 0 1 .078-.01c3.928 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .079.01c.12.099.246.197.373.291a.077.077 0 0 1-.006.128 12.3 12.3 0 0 1-1.873.891.076.076 0 0 0-.04.107c.36.698.772 1.363 1.225 1.993a.076.076 0 0 0 .084.028 19.84 19.84 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.029zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z\"/></svg>';
 function escapeHtml(s){return String(s ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function getGuildId(){ return new URL(window.location.href).searchParams.get('guild'); }
 function getInitialTab(){ return new URL(window.location.href).searchParams.get('tab') || 'chat'; }
@@ -237,10 +207,10 @@ function relTime(d){
   return Math.floor(s/86400) + 'd trước';
 }
 function showToast(msg, kind='ok'){
-  const colors={ok:'#5BA868',err:'#c46868',info:'#7a9eb5'}; const c=colors[kind]||colors.ok;
+  const colors={ok:'#7fd18b',err:'#ff7a7a',info:'#9fd8ff'}; const c=colors[kind]||colors.ok;
   const el=document.createElement('div');
-  el.className='mono text-[12px] px-4 py-2.5 rounded-[10px] mb-2 pointer-events-auto';
-  el.style.cssText=`background:${c}18;border:1px solid ${c}55;color:${c};box-shadow:0 16px 40px -16px ${c}99`;
+  el.className='k-toast-i';
+  el.style.setProperty('--tc', c);
   el.textContent=msg; document.getElementById('toast').appendChild(el);
   setTimeout(()=>{el.style.opacity='0';el.style.transition='opacity 200ms';setTimeout(()=>el.remove(),220);},3000);
 }
@@ -263,6 +233,8 @@ function renderTabsActive(){
   document.getElementById('page-tab-label').textContent = ' · ' + TAB_LABELS[CURRENT_TAB].vi;
   document.getElementById('page-tag').textContent = `TAB · LOGS / ${TAB_LABELS[CURRENT_TAB].vi.toUpperCase()} · ${TAB_LABELS[CURRENT_TAB].tagline}`;
   document.getElementById('bc-tab').textContent = TAB_LABELS[CURRENT_TAB].vi;
+  const lgType = document.getElementById('lg-type');
+  if (lgType) lgType.textContent = CURRENT_TAB;
   document.title = `logs · ${TAB_LABELS[CURRENT_TAB].vi} · katas`;
 }
 
@@ -275,7 +247,7 @@ function authorName(e){
 function avatarTile(e, name, useImg = true){
   const accent = avatarSeed(e.userId);
   const letter = escapeHtml(String(name).slice(0,1).toUpperCase());
-  const letterTile = (display) => `<span class="w-7 h-7 rounded-full place-items-center text-[12px] font-bold flex-shrink-0" style="display:${display};background:${accent}22;color:${accent}">${letter}</span>`;
+  const letterTile = (display) => `<span class="w-7 h-7 place-items-center text-[12px] font-bold flex-shrink-0" style="display:${display};background:${accent};color:#1b1410;box-shadow:0 0 0 2px #1b1410">${letter}</span>`;
   const url = useImg && e.user && e.user.avatarUrl;
   if (!url) return letterTile('grid');
   return `<img src="${escapeHtml(url)}" alt="" class="w-7 h-7 rounded-full object-cover flex-shrink-0" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='grid'" />${letterTile('none')}`;
@@ -356,7 +328,7 @@ function chatBlockHtml(b){
         <div class="text-[14px] leading-[1.55] whitespace-pre-wrap break-words" style="display:inline-block;text-align:left;background:rgba(212,168,88,0.08);border:1px solid rgba(212,168,88,0.28);border-radius:16px 4px 16px 16px;padding:13px 17px;color:#ddd6cf">${chatContentHtml(bot)}</div>
         ${botMeta ? `<div class="flex items-center flex-wrap mono text-[11px] text-mute2" style="justify-content:flex-end;gap:12px;margin:8px 6px 0 0">${botMeta}</div>` : ''}
       </div>
-      <span class="w-7 h-7 grid place-items-center mono text-[12px] font-bold flex-shrink-0" style="border-radius:9px;background:linear-gradient(135deg,#D4A858,#8a6a2e);color:#1a1408">K</span>
+      <span class="w-7 h-7 grid place-items-center mono text-[12px] font-bold flex-shrink-0" style="background:#ffd25e;color:#1b1410;box-shadow:0 0 0 2px #1b1410">K</span>
     </div>`;
   }
   return `<div class="log-thread" style="margin-bottom:14px">${userPart}${botPart}</div>`;
@@ -478,8 +450,8 @@ async function loadGuildBootstrap(){
     const chip = document.getElementById('kata-user-chip');
     const initial = (user.displayName || user.username || '?').slice(0,1).toUpperCase();
     chip.innerHTML = (user.avatarUrl
-      ? `<img src="${user.avatarUrl}" alt="" style="width:26px;height:26px;border-radius:9999px;object-fit:cover;border:1px solid rgba(255,255,255,0.08)" />`
-      : `<span class="w-[26px] h-[26px] rounded-full grid place-items-center text-[11px] font-extrabold" style="background:#E0454522;color:#E04545">${initial}</span>`)
+      ? `<img src="${user.avatarUrl}" alt="" />`
+      : `<span aria-hidden="true">${initial}</span>`)
       + `<span class="max-w-[96px] truncate">${escapeHtml(user.displayName || user.username || '—')}</span>`
       + `<span class="text-mute text-[9px]">▾</span>`;
   }).catch(()=>{});
@@ -499,15 +471,20 @@ async function loadGuildBootstrap(){
   }
   if (r.status === 401 || r.status === 403){
     document.querySelector('main').innerHTML = `
-      <div class="rounded-[14px] border border-line bg-panel p-10 text-center max-w-xl mx-auto mt-20">
-        <div class="text-[16px] font-medium text-ink mb-3">Cần đăng nhập với Discord (admin của server).</div>
-        <a href="/api/auth/discord/start" class="mono inline-flex items-center gap-2 h-10 px-5 rounded-[10px] uppercase tracking-label text-[11px] font-bold text-bg mt-3" style="background:#5865F2">đăng nhập với Discord</a>
-        <a href="servers.html" class="mono inline-flex items-center gap-2 h-10 px-5 rounded-[10px] uppercase tracking-label text-[11px] text-mute hover:text-ink mt-3 ml-2 border border-line">← danh sách server</a>
+      <div class="k-say max-w-xl mx-auto mt-16">
+        <span class="k-tag">KATAS SAYS:</span>
+        <p class="k-kicker">${r.status} · access locked</p>
+        <div class="text-[16px] leading-relaxed text-ink mt-3">Cần đăng nhập với Discord (admin của server).</div>
+        <div class="flex flex-wrap gap-5 mt-7" style="padding:0 6px 6px 3px">
+          <a href="/api/auth/discord/start" class="k-sbtn k-pri" style="height:44px;padding:0 16px">${DISCORD_SVG}đăng nhập với Discord</a>
+          <a href="servers.html" class="k-sbtn" style="height:44px;padding:0 16px">← danh sách server</a>
+        </div>
+        <span class="k-more k-bob" aria-hidden="true"></span>
       </div>`;
     return false;
   }
   if (r.status === 404){
-    document.querySelector('main').innerHTML = `<div class="text-mute mt-20 text-center">Bot không có trong server này.</div>`;
+    document.querySelector('main').innerHTML = `<div class="k-say max-w-xl mx-auto mt-16"><span class="k-tag">KATAS SAYS:</span><p class="k-kicker">404 · stage not found</p><div class="text-[16px] leading-relaxed text-ink mt-3">Bot không có trong server này.</div><span class="k-more k-bob" aria-hidden="true"></span></div>`;
     return false;
   }
   if (!r.ok){ showToast(`Lỗi tải (HTTP ${r.status})`, 'err'); return false; }
@@ -559,14 +536,14 @@ async function loadLogs({ append = false } = {}){
   const btnMore = document.getElementById('btn-more');
   btnMore.classList.add('hidden');
   if (!append){
-    document.getElementById('log-list').innerHTML = `<div class="mono text-[11px] text-mute2 py-10 text-center">Đang tải…</div>`;
+    document.getElementById('log-list').innerHTML = `<div class="k-kicker py-10 text-center" style="color:#c9bca6">Đang tải…</div>`;
   }
 
   let r;
   try { r = await fetch(`/api/kata/server/${encodeURIComponent(guildId)}/logs?${params}`, { credentials:'same-origin' }); }
   catch { showToast('Lỗi mạng', 'err'); return; }
   if (!r.ok){
-    document.getElementById('log-list').innerHTML = `<div class="text-err mono text-[12px] py-10 text-center">Lỗi tải (HTTP ${r.status})</div>`;
+    document.getElementById('log-list').innerHTML = `<div class="py-10 text-center"><p class="k-kicker" style="color:#ff7a7a">ERROR · HTTP ${r.status}</p><p class="mono text-[13px] mt-2" style="color:#c9bca6">Lỗi tải (HTTP ${r.status})</p></div>`;
     return;
   }
   const data = await r.json();
@@ -580,7 +557,7 @@ async function loadLogs({ append = false } = {}){
     }
   }
   if (data.items.length === 0 && !append){
-    document.getElementById('log-list').innerHTML = `<div class="rounded-[14px] border border-line bg-panel/40 p-10 text-center"><div class="mono text-[11px] text-mute">Chưa có entry nào.</div></div>`;
+    document.getElementById('log-list').innerHTML = `<div class="py-10 text-center"><p class="k-kicker" style="color:#c9bca6">NO SAVE DATA</p><p class="mono text-[13px] mt-2" style="color:#c9bca6">Chưa có entry nào.</p></div>`;
   } else if (CURRENT_TAB === 'chat'){
     CHAT_ITEMS = CHAT_ITEMS.concat(data.items);
     document.getElementById('log-list').innerHTML = pairChatItems(CHAT_ITEMS).map(chatBlockHtml).join('');

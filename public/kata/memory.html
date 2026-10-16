@@ -8,68 +8,32 @@
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Pixelify+Sans:wght@500;700&family=Silkscreen:wght@400;700&family=VT323&display=swap" rel="stylesheet" />
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
+  // B · Pixel Lobby palette: colour channels come from _shell.js (light + dark).
   tailwind.config = { theme: { extend: {
-    colors: { bg:'#0d0a08', panel:'#15110d', panel2:'#1c1813', line:'rgba(255,255,255,0.08)', line2:'rgba(255,255,255,0.14)', ink:'#f5ede0', mute:'rgba(245,237,224,0.5)', mute2:'rgba(245,237,224,0.3)', red:'#E04545', green:'#5BA868', gold:'#D4A858', info:'#7a9eb5', warn:'#c9a653', err:'#c46868' },
-    fontFamily: { sans:['Geist','system-ui','sans-serif'], mono:['"JetBrains Mono"','ui-monospace','monospace'] },
+    colors: {
+      bg:'rgb(var(--c-bg) / <alpha-value>)', panel:'rgb(var(--c-panel) / <alpha-value>)', panel2:'rgb(var(--c-panel2) / <alpha-value>)',
+      ink:'rgb(var(--c-ink) / <alpha-value>)', red:'rgb(var(--c-red) / <alpha-value>)', green:'rgb(var(--c-green) / <alpha-value>)',
+      gold:'rgb(var(--c-gold) / <alpha-value>)', info:'rgb(var(--c-info) / <alpha-value>)', warn:'rgb(var(--c-warn) / <alpha-value>)',
+      err:'rgb(var(--c-err) / <alpha-value>)', purple:'rgb(var(--c-purple) / <alpha-value>)',
+      line:'var(--c-line)', line2:'var(--c-line2)', mute:'var(--c-mute)', mute2:'var(--c-mute2)',
+    },
+    fontFamily: { sans:['"JetBrains Mono"','ui-monospace','monospace'], mono:['"JetBrains Mono"','ui-monospace','monospace'], pixel:['"Pixelify Sans"','monospace'], sk:['Silkscreen','monospace'] },
     letterSpacing: { kicker:'0.22em', label:'0.18em', tag:'0.12em' },
   }}};
 </script>
 <style>
-  html, body { background: #0d0a08; color: #f5ede0; font-family: Geist, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
-  .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
-  @keyframes pulse77 { 0%,100% { opacity:1; transform: scale(1); } 50% { opacity:.55; transform: scale(.82); } }
-  @keyframes fadeUp { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: translateY(0); } }
-  .dot-pulse { animation: pulse77 2s ease-in-out infinite; }
-  .glow77 { text-shadow: 0 0 6px #E04545cc, 0 0 18px #E0454566, 0 0 36px #E0454533; }
-  .grain { background-image: radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px); background-size: 3px 3px; }
-  .ambient { background-image:
-      radial-gradient(60% 50% at 18% 12%, #E0454520 0%, transparent 65%),
-      radial-gradient(50% 45% at 90% 88%, #5BA86820 0%, transparent 70%); }
-  ::-webkit-scrollbar { width: 8px; height: 8px; }
-  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
-  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
-  .navrow { transition: background .18s, transform .18s, color .18s; }
-  .navrow:hover { transform: translateX(3px); }
-  .navrow.on { background: #1a1312; }
-  .mem-card { transition: border-color 120ms; }
-  .mem-card:hover { border-color: rgba(255,255,255,0.18); }
+  /* memory · page pieces. Chrome, palette and the k-* kit come from _shell.js. */
+  .mem-head { display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:20px; margin-bottom:34px; }
+  .mem-card { padding:22px 24px; }
+  .mem-av { width:46px; height:46px; flex:none; display:grid; place-items:center; object-fit:cover; font-family:var(--k-pf);font-size-adjust:var(--k-fsa); font-size:16px; font-weight:700; color:#1b1410; box-shadow:0 0 0 3px var(--ink); }
+  .mem-fact { display:inline-block; margin:0 10px 10px 0; padding:4px 8px; font-size:11px; color:var(--text); background:var(--paper-2); box-shadow:0 0 0 2px var(--rule); }
+  .mem-lab { display:block; margin-bottom:10px; font-family:var(--k-sk);font-size-adjust:var(--k-fsa); font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; }
 
-  /* ===================== MOBILE (≤768px) — mirror overview.html ========= */
   @media (max-width: 768px) {
-    header { padding-left: 14px !important; padding-right: 14px !important; }
-    header > div:first-child { gap: 10px !important; min-width: 0 !important; }
-    .hdr-logo { flex-shrink: 0 !important; }
-    .hdr-logo > div:first-child { font-size: 17px !important; white-space: nowrap !important; }
-    .hdr-logo > div:last-child { display: none !important; }
-    header > div:first-child > div,
-    header > div:first-child > span { display: none !important; }
-    #kata-header-actions { gap: 6px !important; }
-    #kata-header-actions > * { transform: scale(0.9); transform-origin: right center; }
-    #kata-user-name { display: none !important; }
-
-    aside {
-      top: 64px !important; left: 0 !important; right: 0 !important; bottom: auto !important;
-      width: auto !important; height: auto !important;
-      flex-direction: row !important;
-      border-right: none !important; border-bottom: 1px solid #1d1817 !important;
-      overflow-x: auto !important; overflow-y: hidden !important; -webkit-overflow-scrolling: touch;
-    }
-    aside::-webkit-scrollbar { height: 0; }
-    aside > div:first-child,
-    aside > .flex-1,
-    aside > div:last-child { display: none !important; }
-    aside nav { display: flex !important; flex-direction: row !important; padding: 11px 12px !important; gap: 8px !important; }
-    .navrow { flex: 0 0 auto; margin-bottom: 0 !important; white-space: nowrap;
-      border-left: none !important; border: 1px solid #2c2522 !important; border-radius: 999px !important;
-      padding: 9px 15px !important; }
-    .navrow:hover { transform: none !important; }
-    .navrow.on { background: #E0454514 !important; border-color: #E0454573 !important; color: #E04545 !important; }
-
-    main { padding-left: 14px !important; padding-right: 14px !important; padding-top: 126px !important; }
-    main h1 { font-size: 26px !important; }
+    .mem-card { padding:18px 16px; }
     footer { grid-template-columns: 1fr !important; gap: 6px !important; }
     footer span { text-align: center !important; }
   }
@@ -79,21 +43,19 @@
 <script src="_strings.js"></script>
 <script src="_shell.js"></script>
 
-<div aria-hidden class="fixed inset-0 z-0 pointer-events-none ambient"></div>
-<div aria-hidden class="fixed inset-0 z-0 pointer-events-none grain opacity-40"></div>
-
-<!-- top bar -->
-<header class="fixed top-0 inset-x-0 h-16 z-50 flex items-center justify-between px-6 backdrop-blur-md border-b border-line" style="background:rgba(13,10,8,0.7)">
+<!-- top bar (HUD) -->
+<header class="fixed top-0 inset-x-0 h-16 z-50 flex items-center justify-between px-6">
   <div class="flex items-center gap-5">
-    <a href="/" class="hdr-logo flex flex-col items-start gap-1 leading-none" title="Về se77n.com">
-      <div class="mono text-[24px] font-extrabold tracking-[-0.025em]">se<span class="text-red glow77">77</span>n<span class="text-mute font-normal"> / kata</span></div>
-      <div class="mono text-[9px] uppercase tracking-kicker text-mute">Experiment <span class="text-red font-bold">007</span> · katas dashboard</div>
+    <a href="/" class="k-logo hdr-logo" title="Về se77n.com">
+      <span class="k-word">se<span class="k-77">77</span>n<span class="k-sfx">/ kata</span></span>
+      <span class="k-sub">Experiment 007 · katas dashboard</span>
     </a>
-    <div class="flex items-center gap-2 ml-3 mono text-[10px] tracking-label uppercase">
-      <a href="index.html" class="text-mute hover:text-ink">se77n</a><span class="text-mute2">/</span>
-      <a href="index.html" class="text-mute hover:text-ink">kata</a><span class="text-mute2">/</span>
-      <a href="servers.html" class="text-mute hover:text-ink" data-i18n="bc.servers">servers</a><span class="text-mute2">/</span>
-      <a id="bc-guild" href="#" class="text-mute hover:text-ink">—</a><span class="text-mute2">/</span>
+    <a href="/" class="k-lobby" aria-label="Back to the se77n lobby"><svg width="9" height="15" viewBox="0 0 3 5" shape-rendering="crispEdges" aria-hidden="true"><path d="M2 0h1v5H2V4H1V3H0V2h1V1h1z" fill="currentColor"/></svg><span class="k-lobby-t">LOBBY</span></a>
+    <div class="k-bc flex items-center gap-2 mono text-[10px] tracking-label uppercase">
+      <a href="index.html" class="text-mute hover:text-ink">se77n</a><span class="text-mute2">›</span>
+      <a href="index.html" class="text-mute hover:text-ink">kata</a><span class="text-mute2">›</span>
+      <a href="servers.html" class="text-mute hover:text-ink" data-i18n="bc.servers">servers</a><span class="text-mute2">›</span>
+      <a id="bc-guild" href="#" class="text-mute hover:text-ink">—</a><span class="text-mute2">›</span>
       <span class="text-ink">memory</span>
     </div>
   </div>
@@ -139,36 +101,39 @@
   <div style="max-width:1100px;margin:0 auto">
 
     <!-- page header -->
-    <div class="flex items-end justify-between gap-6 mb-5">
+    <div class="mem-head">
       <div>
-        <div class="mono text-[10px] uppercase tracking-kicker mb-2 flex items-center gap-3" style="color:#D4A858">
-          <span class="dot-pulse w-1.5 h-1.5 rounded-full" style="background:#5BA868"></span>
+        <div class="mono text-[10px] uppercase tracking-kicker text-mute mb-2 flex items-center gap-3">
+          <span class="dot-pulse w-2 h-2 bg-green"></span>
           <span>server · user memory</span>
         </div>
-        <h1 class="mono text-[36px] leading-none font-extrabold tracking-[-0.035em] lowercase">trí nhớ<span class="glow77" style="color:#D4A858">.</span></h1>
-        <p class="mono text-[12px] text-mute mt-2">Đặt tên khoá &amp; ghi chú tính cách cho bot · bot đọc mới mỗi tin nhắn</p>
+        <h1 class="text-[42px] leading-none lowercase">trí nhớ<span style="color:#e04545">.</span></h1>
+        <p class="mono text-[13px] text-mute mt-3">Đặt tên khoá &amp; ghi chú tính cách cho bot · bot đọc mới mỗi tin nhắn</p>
       </div>
-      <div class="flex items-center gap-2">
+      <div class="flex flex-wrap items-center gap-5" style="padding:3px 8px 8px 3px">
         <div class="relative">
-          <input id="mem-search" placeholder="tìm người dùng…" class="mono bg-bg border border-line rounded-[10px] h-9 pl-9 pr-3 w-[240px] text-[12px] text-ink placeholder:text-mute2 focus:outline-none focus:border-gold/60" />
-          <svg class="absolute left-3 top-2.5 text-mute2" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          <label for="mem-search" class="sr-only">search</label>
+          <input id="mem-search" placeholder="tìm người dùng…" class="mono h-9 pl-10 pr-3 w-[260px] text-[13px] text-ink focus:outline-none" />
+          <svg class="absolute left-3 top-3 text-mute" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square" aria-hidden="true"><rect x="4" y="4" width="12" height="12"/><path d="M16 16l5 5"/></svg>
         </div>
         <button id="mem-refresh" class="mono h-9 px-4 rounded-[10px] border border-line text-mute hover:text-ink text-[10px] tracking-label uppercase flex items-center gap-2">↻ refresh</button>
       </div>
     </div>
 
-    <!-- explainer -->
-    <div class="rounded-[14px] border border-line mb-5" style="background:#131010;padding:16px 20px">
-      <div class="mono text-[9.5px] tracking-label uppercase text-mute mb-2.5" style="font-weight:800">cách hoạt động</div>
-      <div class="text-[12.5px] text-mute leading-relaxed" style="max-width:760px">
+    <!-- explainer (RPG dialog) -->
+    <div class="k-say mb-12 k-rise" style="padding:36px 30px 26px">
+      <span class="k-tag">KATAS SAYS:</span>
+      <div class="k-kicker mb-3">cách hoạt động</div>
+      <div class="text-[13px] text-mute leading-relaxed" style="max-width:760px">
         <b class="text-ink">Tên khoá</b> — bot sẽ <b>luôn</b> gọi người này bằng đúng tên đó, đè lên tên Discord &amp; mọi biệt danh trong chat. Để trống = bỏ khoá, bot lại dùng tên Discord + tự học.
         <br>
         <b class="text-ink">Ghi chú tính cách</b> — bot coi đây là nguồn đáng tin nhất khi trả lời. Phần bot <b>tự học</b> từ chat (facts) vẫn tiếp tục cập nhật riêng.
       </div>
+      <span class="k-more k-bob" aria-hidden="true"></span>
     </div>
 
     <!-- count line -->
-    <div id="mem-count" class="mono text-[11px] text-mute mb-3">Đang tải…</div>
+    <div id="mem-count" class="mono text-[13px] text-mute mb-6">Đang tải…</div>
 
     <!-- list -->
     <div id="mem-list" class="grid grid-cols-1 gap-3"></div>
@@ -176,7 +141,7 @@
     <!-- footer -->
     <footer class="grid grid-cols-3 items-center mono text-[10px] tracking-kicker text-mute mt-14 pt-5 border-t border-line">
       <span class="text-left">KATAS · USER MEMORY</span>
-      <span class="text-center flex items-center gap-2 justify-center"><span class="w-1.5 h-1.5 rounded-full bg-green dot-pulse"></span>STATUS · OK</span>
+      <span class="text-center flex items-center gap-2 justify-center"><span class="w-2 h-2 bg-green dot-pulse"></span>STATUS · OK</span>
       <span class="text-right">© SE77N</span>
     </footer>
 
@@ -187,7 +152,9 @@
 <div id="toast" class="fixed top-20 right-6 z-[110] pointer-events-none"></div>
 
 <script>
-const ACCENTS = ['#E04545','#D4A858','#5BA868','#7a9eb5','#9bb4ff','#c46868','#c9a653'];
+// Arcade accent fills (always ink text on top).
+const ACCENTS = ['#ff7a7a','#ffd25e','#7fd18b','#9fd8ff','#b9a2ff','#ff9ad5','#66d9d2','#ffa764'];
+const DISCORD_SVG = '<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M20.317 4.37a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.865-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.74 19.74 0 0 0 3.677 4.37a.07.07 0 0 0-.032.028C.533 9.046-.32 13.58.099 18.058a.082.082 0 0 0 .031.056 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.873-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.1 13.1 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.126-.094.252-.192.372-.291a.074.074 0 0 1 .078-.01c3.928 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .079.01c.12.099.246.197.373.291a.077.077 0 0 1-.006.128 12.3 12.3 0 0 1-1.873.891.076.076 0 0 0-.04.107c.36.698.772 1.363 1.225 1.993a.076.076 0 0 0 .084.028 19.84 19.84 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.029zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z\"/></svg>';
 function escapeHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function getGuildId(){ return new URL(window.location.href).searchParams.get('guild'); }
 function avatarSeed(id){ const s=[...String(id||'')].reduce((a,c)=>a+c.charCodeAt(0),0); return ACCENTS[s%ACCENTS.length]; }
@@ -195,11 +162,11 @@ function initialsOf(name){ return String(name||'').replace(/[^A-Za-z0-9À-ỹ]/g
 
 function showToast(msg, kind='ok'){
   const wrap = document.getElementById('toast');
-  const colors = { ok:'#5BA868', err:'#c46868', info:'#7a9eb5' };
+  const colors = { ok:'#7fd18b', err:'#ff7a7a', info:'#9fd8ff' };
   const c = colors[kind] || colors.ok;
   const el = document.createElement('div');
-  el.className = 'mono text-[12px] px-4 py-2.5 rounded-[10px] mb-2 pointer-events-auto';
-  el.style.cssText = `background:${c}18;border:1px solid ${c}55;color:${c};box-shadow:0 16px 40px -16px ${c}99;animation:fadeUp 200ms ease-out`;
+  el.className = 'k-toast-i';
+  el.style.setProperty('--tc', c);
   el.textContent = msg;
   wrap.appendChild(el);
   setTimeout(()=>{ el.style.opacity='0'; el.style.transition='opacity 200ms'; setTimeout(()=>el.remove(), 220); }, 3000);
@@ -233,8 +200,8 @@ async function loadGuildHeader(){
     if (!chip) return;
     const initial = (user.displayName || user.username || '?').slice(0,1).toUpperCase();
     chip.innerHTML = (user.avatarUrl
-      ? `<img src="${user.avatarUrl}" alt="" style="width:26px;height:26px;border-radius:9999px;object-fit:cover;border:1px solid rgba(255,255,255,0.08)" />`
-      : `<span class="w-[26px] h-[26px] rounded-full grid place-items-center text-[11px] font-extrabold" style="background:#E0454522;color:#E04545">${initial}</span>`)
+      ? `<img src="${user.avatarUrl}" alt="" />`
+      : `<span aria-hidden="true">${initial}</span>`)
       + `<span class="max-w-[96px] truncate">${escapeHtml(user.displayName || user.username || '—')}</span>`
       + `<span class="text-mute text-[9px]">▾</span>`;
   }).catch(()=>{});
@@ -284,10 +251,15 @@ async function loadMemory(){
       forbidden:'Bạn không có quyền MANAGE_GUILD trên server này.',
     }[d.error] || 'Không có quyền truy cập.';
     document.querySelector('main > div').innerHTML =
-      `<div class="rounded-[14px] border border-line bg-panel p-10 text-center max-w-xl mx-auto mt-16">
-        <div class="text-[16px] font-medium text-ink mb-3">${escapeHtml(reason)}</div>
-        <a href="/api/auth/discord/start" class="mono inline-flex items-center gap-2 h-10 px-5 rounded-[10px] uppercase tracking-label text-[11px] font-bold text-bg mt-3" style="background:#5865F2">đăng nhập với Discord</a>
-        <a href="servers.html" class="mono inline-flex items-center gap-2 h-10 px-5 rounded-[10px] uppercase tracking-label text-[11px] text-mute hover:text-ink mt-3 ml-2 border border-line">← danh sách server</a>
+      `<div class="k-say max-w-xl mx-auto mt-16">
+        <span class="k-tag">KATAS SAYS:</span>
+        <p class="k-kicker">${r.status} · access locked</p>
+        <div class="text-[16px] leading-relaxed text-ink mt-3">${escapeHtml(reason)}</div>
+        <div class="flex flex-wrap gap-5 mt-7" style="padding:0 6px 6px 3px">
+          <a href="/api/auth/discord/start" class="k-sbtn k-pri" style="height:44px;padding:0 16px">${DISCORD_SVG}đăng nhập với Discord</a>
+          <a href="servers.html" class="k-sbtn" style="height:44px;padding:0 16px">← danh sách server</a>
+        </div>
+        <span class="k-more k-bob" aria-hidden="true"></span>
       </div>`;
     return;
   }
@@ -305,8 +277,8 @@ async function loadMemory(){
 }
 
 function factsPreview(facts, max){
-  if (!facts || !facts.length) return '<span class="text-mute2">chưa học được gì</span>';
-  const shown = facts.slice(0, max).map(f => `<span class="inline-block mono text-[10px] px-2 py-1 rounded-[6px] mr-1.5 mb-1.5" style="background:rgba(245,237,224,0.05);border:1px solid rgba(245,237,224,0.10);color:rgba(245,237,224,0.7)">${escapeHtml(f)}</span>`).join('');
+  if (!facts || !facts.length) return '<span class="mono text-[12px] text-mute2">chưa học được gì</span>';
+  const shown = facts.slice(0, max).map(f => `<span class="mem-fact mono">${escapeHtml(f)}</span>`).join('');
   const more = facts.length > max ? `<span class="mono text-[10px] text-mute2">+${facts.length - max} nữa</span>` : '';
   return shown + more;
 }
@@ -315,12 +287,12 @@ function cardHtml(m){
   const accent = avatarSeed(m.userId);
   const name = m.displayName || m.username || ('?' + m.userId.slice(-4));
   const av = m.avatarUrl
-    ? `<img src="${m.avatarUrl}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='grid'" style="width:44px;height:44px;border-radius:12px;object-fit:cover;flex:none;border:1px solid rgba(255,255,255,0.08)" /><div style="display:none;width:44px;height:44px;border-radius:12px;background:${accent}33;place-items:center;font-size:14px;font-weight:800;color:${accent};flex:none" class="mono">${initialsOf(name)}</div>`
-    : `<div style="display:grid;width:44px;height:44px;border-radius:12px;background:${accent}33;place-items:center;font-size:14px;font-weight:800;color:${accent};flex:none" class="mono">${initialsOf(name)}</div>`;
+    ? `<img src="${m.avatarUrl}" alt="" loading="lazy" class="mem-av" onerror="this.style.display='none';this.nextElementSibling.style.display='grid'" /><div class="mem-av" aria-hidden="true" style="display:none;background:${accent}">${initialsOf(name)}</div>`
+    : `<div class="mem-av" aria-hidden="true" style="background:${accent}">${initialsOf(name)}</div>`;
   const lockBadge = m.lockedName
-    ? `<span class="mono text-[9px] tracking-label uppercase px-2 py-0.5 rounded-full" style="background:#D4A85818;border:1px solid #D4A85840;color:#D4A858">🔒 ${escapeHtml(m.lockedName)}</span>` : '';
+    ? `<span class="k-badge" style="background:#ffd25e"><svg width="10" height="11" viewBox="0 0 5 6" shape-rendering="crispEdges" aria-hidden="true" style="display:inline-block"><path d="M1 0h3v1h1v2H4V1H1v2H0V1h1zM0 3h5v3H0z" fill="currentColor"/></svg> ${escapeHtml(m.lockedName)}</span>` : '';
   const noteBadge = m.ownerNotes
-    ? `<span class="mono text-[9px] tracking-label uppercase px-2 py-0.5 rounded-full" style="background:#7a9eb518;border:1px solid #7a9eb540;color:#7a9eb5">◈ ghi chú</span>` : '';
+    ? `<span class="k-badge" style="background:#9fd8ff">◈ ghi chú</span>` : '';
   const editing = EDITING === m.userId;
 
   const view = `
@@ -339,7 +311,7 @@ function cardHtml(m){
           <div>${factsPreview(m.facts, 6)}</div>
         </div>
       </div>
-      <button data-edit="${m.userId}" class="mono text-[10px] tracking-label uppercase px-3 py-2 rounded-[9px] border border-line text-mute hover:text-ink flex-none">✎ sửa</button>
+      <button data-edit="${m.userId}" class="k-sbtn flex-none" style="height:38px;padding:0 12px;margin:3px 6px 0 0">✎ sửa</button>
     </div>`;
 
   const edit = `
@@ -352,35 +324,35 @@ function cardHtml(m){
         </div>
 
         <div class="mb-4">
-          <div class="mono text-[10px] tracking-label uppercase text-mute mb-1.5" style="font-weight:800">tên khoá</div>
-          <input data-in-name="${m.userId}" value="${escapeHtml(m.lockedName || '')}" maxlength="64" placeholder="${escapeHtml(name)}" class="w-full rounded-[10px] h-10 px-3 text-[13px] text-ink mono focus:outline-none placeholder:text-mute2" style="background:#0e0b0a;border:1px solid #2c2522" />
+          <label class="mem-lab" for="mem-name-${m.userId}">tên khoá</label>
+          <input id="mem-name-${m.userId}" data-in-name="${m.userId}" value="${escapeHtml(m.lockedName || '')}" maxlength="64" placeholder="${escapeHtml(name)}" class="w-full h-11 px-3 text-[13px] text-ink mono focus:outline-none" />
           <div class="mono text-[10px] text-mute2 mt-1.5">Bot LUÔN gọi đúng tên này. Để trống = bỏ khoá, dùng tên Discord + tự học.</div>
         </div>
 
         <div class="mb-4">
-          <div class="mono text-[10px] tracking-label uppercase text-mute mb-1.5" style="font-weight:800">ghi chú tính cách</div>
-          <textarea data-in-notes="${m.userId}" rows="4" maxlength="500" placeholder="Mô tả tính cách / bối cảnh người này…" class="w-full rounded-[10px] p-3 text-[12.5px] text-ink mono leading-relaxed resize-y focus:outline-none placeholder:text-mute2" style="background:#0e0b0a;border:1px solid #2c2522">${escapeHtml(m.ownerNotes || '')}</textarea>
+          <label class="mem-lab" for="mem-notes-${m.userId}">ghi chú tính cách</label>
+          <textarea id="mem-notes-${m.userId}" data-in-notes="${m.userId}" rows="4" maxlength="500" placeholder="Mô tả tính cách / bối cảnh người này…" class="w-full p-3 text-[13px] text-ink mono leading-relaxed resize-y focus:outline-none">${escapeHtml(m.ownerNotes || '')}</textarea>
           <div class="mono text-[10px] text-mute2 mt-1.5"><span data-notes-count="${m.userId}">${(m.ownerNotes||'').length}</span> / 500 ký tự · Bot coi đây là nguồn đáng tin nhất.</div>
         </div>
 
         <div class="mb-4">
           <div class="flex items-center gap-2.5 mb-1.5">
             <span class="mono text-[10px] tracking-label uppercase text-mute" style="font-weight:800">bot tự học (facts · ${m.facts.length})</span>
-            ${m.facts.length ? `<button data-clear-facts="${m.userId}" class="mono text-[9px] tracking-label uppercase text-err hover:text-red">✕ xoá hết facts</button>` : ''}
+            ${m.facts.length ? `<button data-clear-facts="${m.userId}" class="k-sk text-[11px] uppercase text-err hover:underline" style="background:transparent;border:0;cursor:pointer">✕ xoá hết facts</button>` : ''}
           </div>
           <div>${factsPreview(m.facts, 50)}</div>
           <div class="mono text-[10px] text-mute2 mt-1.5">Facts do bot tự học từ chat. Dashboard không sửa tay được — chỉ xoá.</div>
         </div>
 
-        <div class="flex items-center gap-2.5">
-          <button data-save="${m.userId}" class="mono" style="background:#D4A858;color:#0d0a08;padding:10px 22px;border-radius:10px;font-size:10px;letter-spacing:.16em;font-weight:800;text-transform:uppercase;cursor:pointer;border:none">▸ lưu</button>
-          <button data-cancel="${m.userId}" class="mono text-[10px] tracking-label uppercase px-4 py-2.5 rounded-[10px] border border-line text-mute hover:text-ink">huỷ</button>
+        <div class="flex flex-wrap items-center gap-5" style="padding:3px 6px 6px 3px">
+          <button data-save="${m.userId}" class="k-sbtn k-pri" style="height:40px;padding:0 18px">▸ lưu</button>
+          <button data-cancel="${m.userId}" class="k-sbtn" style="height:40px;padding:0 16px">huỷ</button>
           <span data-status="${m.userId}" class="mono text-[11px] text-mute2"></span>
         </div>
       </div>
     </div>`;
 
-  return `<div class="mem-card rounded-[14px] border ${editing ? 'border-gold/40' : 'border-line'} p-5" style="background:#131010" data-card="${m.userId}" data-name="${escapeHtml(name.toLowerCase())} ${escapeHtml((m.username||'').toLowerCase())} ${m.userId}">${editing ? edit : view}</div>`;
+  return `<div class="mem-card bg-panel k-pxd" style="${editing ? 'background:var(--paper-2)' : ''}" data-card="${m.userId}" data-name="${escapeHtml(name.toLowerCase())} ${escapeHtml((m.username||'').toLowerCase())} ${m.userId}">${editing ? edit : view}</div>`;
 }
 
 function renderList(){
@@ -392,9 +364,10 @@ function renderList(){
       })
     : MEM_ITEMS;
   if (!items.length){
-    list.innerHTML = `<div class="rounded-[14px] border border-line p-8 text-center" style="background:#131010">
-      <div class="mono text-[11px] text-mute">${MEM_ITEMS.length ? 'Không có ai khớp tìm kiếm.' : 'Chưa có dữ liệu trí nhớ nào cho server này.'}</div>
-      ${MEM_ITEMS.length ? '' : '<div class="mono text-[10px] text-mute2 mt-2">Bot tạo bản ghi khi người dùng nhắn với bot.</div>'}
+    list.innerHTML = `<div class="k-px bg-panel p-10 text-center">
+      <p class="k-kicker">NO SAVE DATA</p>
+      <div class="mono text-[13px] text-ink mt-3">${MEM_ITEMS.length ? 'Không có ai khớp tìm kiếm.' : 'Chưa có dữ liệu trí nhớ nào cho server này.'}</div>
+      ${MEM_ITEMS.length ? '' : '<div class="mono text-[12px] text-mute mt-2">Bot tạo bản ghi khi người dùng nhắn với bot.</div>'}
     </div>`;
     return;
   }

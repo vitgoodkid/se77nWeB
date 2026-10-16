@@ -8,84 +8,74 @@
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Pixelify+Sans:wght@500;700&family=Silkscreen:wght@400;700&family=VT323&display=swap" rel="stylesheet" />
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
+  // B · Pixel Lobby palette: colour channels come from _shell.js (light + dark).
   tailwind.config = { theme: { extend: {
-    colors: { bg:'#0d0a08', panel:'#15110d', panel2:'#1c1813', line:'rgba(255,255,255,0.08)', line2:'rgba(255,255,255,0.14)', ink:'#f5ede0', mute:'rgba(245,237,224,0.5)', mute2:'rgba(245,237,224,0.3)', red:'#E04545', green:'#5BA868', gold:'#D4A858', purple:'#8a4fff' },
-    fontFamily: { sans:['Geist','system-ui','sans-serif'], mono:['"JetBrains Mono"','ui-monospace','monospace'] },
+    colors: {
+      bg:'rgb(var(--c-bg) / <alpha-value>)', panel:'rgb(var(--c-panel) / <alpha-value>)', panel2:'rgb(var(--c-panel2) / <alpha-value>)',
+      ink:'rgb(var(--c-ink) / <alpha-value>)', red:'rgb(var(--c-red) / <alpha-value>)', green:'rgb(var(--c-green) / <alpha-value>)',
+      gold:'rgb(var(--c-gold) / <alpha-value>)', info:'rgb(var(--c-info) / <alpha-value>)', warn:'rgb(var(--c-warn) / <alpha-value>)',
+      err:'rgb(var(--c-err) / <alpha-value>)', purple:'rgb(var(--c-purple) / <alpha-value>)',
+      line:'var(--c-line)', line2:'var(--c-line2)', mute:'var(--c-mute)', mute2:'var(--c-mute2)',
+    },
+    fontFamily: { sans:['"JetBrains Mono"','ui-monospace','monospace'], mono:['"JetBrains Mono"','ui-monospace','monospace'], pixel:['"Pixelify Sans"','monospace'], sk:['Silkscreen','monospace'] },
     letterSpacing: { kicker:'0.22em', label:'0.18em', tag:'0.12em' },
   }}};
 </script>
 <style>
-  html, body { background: #0d0a08; color: #f5ede0; font-family: Geist, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
-  .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
-  .glow77 { text-shadow: 0 0 6px #E04545cc, 0 0 18px #E0454566, 0 0 36px #E0454533; }
-  .ambient { background-image:
-      radial-gradient(60% 50% at 18% 12%, #8a4fff20 0%, transparent 65%),
-      radial-gradient(50% 45% at 90% 88%, #D4A85820 0%, transparent 70%); }
-  .grain { background-image: radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px); background-size: 3px 3px; }
-  ::-webkit-scrollbar { width: 8px; height: 8px; }
-  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
-  .field { width: 100%; background: rgba(13,10,8,0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px 14px; color: #f5ede0; font-family: Geist, system-ui, sans-serif; font-size: 14px; line-height: 1.55; }
-  .field:focus { border-color: rgba(138,79,255,0.5); outline: none; }
+  /* tavern · play — B · Pixel Lobby chrome over the tavern's purple/gold glow.
+     Palette, fonts and the k-* kit come from _shell.js. */
+  :root { --ring4: 0 -4px 0 0 var(--ink),0 4px 0 0 var(--ink),-4px 0 0 0 var(--ink),4px 0 0 0 var(--ink);
+          --ring3: 0 -3px 0 0 var(--ink),0 3px 0 0 var(--ink),-3px 0 0 0 var(--ink),3px 0 0 0 var(--ink); }
+  /* the tavern's own atmosphere (the shell hides generic ambient layers) */
+  .tv-ambient { display: block !important; background-image:
+      radial-gradient(60% 50% at 18% 12%, rgba(185,162,255,.22) 0%, transparent 65%),
+      radial-gradient(50% 45% at 90% 88%, rgba(255,210,94,.16) 0%, transparent 70%); }
+  [data-theme="dark"] .tv-ambient { background-image:
+      radial-gradient(60% 50% at 18% 12%, rgba(138,79,255,.28) 0%, transparent 65%),
+      radial-gradient(50% 45% at 90% 88%, rgba(212,168,88,.16) 0%, transparent 70%); }
+  .field { width: 100%; padding: 10px 14px; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 14px; line-height: 1.55; color: var(--text); background: var(--field); border: 0; box-shadow: var(--ring3); }
+  .field:focus { outline: none; background: var(--paper); box-shadow: 0 -3px 0 0 #e04545,0 3px 0 0 #e04545,-3px 0 0 0 #e04545,3px 0 0 0 #e04545; }
   textarea.field { resize: none; }
-  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 38px; padding: 0 18px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.12); font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(245,237,224,0.7); background: transparent; cursor: pointer; transition: all 120ms ease; }
-  .btn:hover { color: #f5ede0; border-color: rgba(255,255,255,0.25); background: rgba(245,237,224,0.04); }
-  .btn-primary { background: rgba(138,79,255,0.15); border-color: rgba(138,79,255,0.45); color: #f5ede0; }
-  .btn-primary:hover { background: rgba(138,79,255,0.25); }
-  .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
-  .msg { padding: 14px 18px; border-radius: 12px; line-height: 1.65; font-size: 14.5px; max-width: 880px; }
-  .msg-player { margin-left: auto; background: rgba(245,237,224,0.04); border: 1px solid rgba(245,237,224,0.08); }
-  .msg-narrator { margin-right: auto; background: rgba(138,79,255,0.05); border: 1px solid rgba(138,79,255,0.15); }
-  .msg-ooc { font-style: italic; color: rgba(245,237,224,0.55); background: transparent; border: 1px dashed rgba(245,237,224,0.10); }
-  .msg-refusal { font-style: italic; color: #E04545; background: rgba(224,69,69,0.05); border: 1px solid rgba(224,69,69,0.20); }
-  .msg-meta { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(245,237,224,0.30); margin-bottom: 6px; }
-  .suggestions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-  .sugg {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 6px 12px; border-radius: 999px;
-    background: rgba(138,79,255,0.06);
-    border: 1px solid rgba(138,79,255,0.25);
-    color: rgba(245,237,224,0.85);
-    font-family: Geist, system-ui, sans-serif; font-size: 12.5px;
-    cursor: pointer; transition: all 140ms ease;
-    line-height: 1.3;
-  }
-  .sugg:hover {
-    background: rgba(138,79,255,0.18);
-    border-color: rgba(138,79,255,0.55);
-    color: #f5ede0;
-    box-shadow: 0 0 18px rgba(138,79,255,0.35);
-    transform: translateY(-1px);
-  }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 44px; padding: 0 18px; border: 0; cursor: pointer; text-decoration: none;
+    font-family: var(--k-sk); font-size-adjust: var(--k-fsa); font-size: 12px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: var(--text); background: var(--paper);
+    box-shadow: var(--ring3), 4px 5px 0 3px var(--ink); transition: transform 60ms, box-shadow 60ms; }
+  .btn:hover { transform: translate(-1px,-1px); }
+  .btn:active { transform: translate(4px,5px); box-shadow: var(--ring3); }
+  .btn-primary { color: #1b1410; background: #b9a2ff; }
+  .btn { white-space: nowrap; }
+  #transcript.space-y-3 > :not([hidden]) ~ :not([hidden]) { margin-top: 26px; }
+  #transcript > .msg-narrator:not(:first-child) { margin-top: 40px; }
+  .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+  .msg { max-width: 880px; padding: 16px 20px; font-size: 14.5px; line-height: 1.65; }
+  .msg-player { margin-left: auto; background: var(--paper-2); box-shadow: var(--ring3); }
+  .msg-narrator { position: relative; margin-right: auto; margin-top: 30px; padding-top: 26px; background: var(--paper); box-shadow: var(--ring4), 8px 8px 0 4px var(--shadow); }
+  .msg-narrator > .msg-meta:first-child { position: absolute; left: 14px; top: -14px; margin: 0; padding: 5px 10px; color: var(--strip-text); background: var(--strip); }
+  .msg-ooc { font-style: italic; color: var(--muted); background: transparent; box-shadow: none; border: 3px dashed var(--rule); }
+  .msg-refusal { font-style: italic; color: #1b1410; background: #ff7a7a; box-shadow: var(--ring3); }
+  .msg-meta { margin-bottom: 8px; font-family: var(--k-sk); font-size-adjust: var(--k-fsa); font-size: 10px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: var(--muted); }
+  .msg img { box-shadow: var(--ring3); }
+  .suggestions { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 16px; padding: 3px 6px 6px 3px; }
+  .sugg { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border: 0; cursor: pointer; line-height: 1.3; text-align: left;
+    font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12.5px; color: var(--text); background: var(--paper-2); box-shadow: var(--ring3), 4px 5px 0 3px var(--ink); transition: transform 60ms, box-shadow 60ms; }
+  .sugg:hover { background: #b9a2ff; color: #1b1410; transform: translate(-1px,-1px); }
+  .sugg:active { transform: translate(4px,5px); box-shadow: var(--ring3); }
   .sugg:disabled { opacity: 0.45; cursor: wait; }
-  .sugg-num {
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
-    font-size: 10px; letter-spacing: 0.18em;
-    color: #8a4fff; font-weight: 700;
-  }
-  .typing-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #8a4fff; margin: 0 2px; animation: dot 1.2s infinite; }
-  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
-  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
-  @keyframes dot { 0%, 60%, 100% { opacity: 0.25; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-4px); } }
+  .sugg-num { font-family: var(--k-sk); font-size-adjust: var(--k-fsa); font-size: 11px; font-weight: 700; color: inherit; }
+  .typing-dot { display: inline-block; width: 8px; height: 8px; margin: 0 3px; background: #b9a2ff; box-shadow: 0 0 0 1px var(--ink); animation: dot 0.9s steps(2) infinite; }
+  .typing-dot:nth-child(2) { animation-delay: 0.3s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.6s; }
+  @keyframes dot { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
+  #world-cover-wrap { border: 0 !important; box-shadow: var(--ring4), 8px 8px 0 4px var(--shadow); }
+  .tp-dock { background: var(--paper) !important; border-top: 4px solid var(--ink); }
 
-  /* ── Mobile (≤768px): compact header + tighter padding so nothing overflows ── */
+  /* ── Mobile (≤768px): compact padding so nothing overflows ── */
   @media (max-width: 768px) {
-    header { padding-left: 14px; padding-right: 14px; }
     #hdr-breadcrumb { display: none; }
-    .hdr-logo { font-size: 22px !important; }
-    .hdr-kata, .hdr-sub { display: none; }
-    #kata-header-actions { gap: 7px !important; }
-    /* theme chip → colour dot + caret only */
-    #kata-theme-btn button { padding-left: 8px !important; padding-right: 8px !important; gap: 4px !important; }
-    #kata-theme-btn button > span:nth-child(2) { display: none; }
-    #kata-lang-btn span { padding-left: 6px; padding-right: 6px; }
-    /* user chip → avatar only */
-    #kata-user-chip { padding-right: 3px !important; }
-    #kata-user-name { display: none; }
     main { padding-left: 16px !important; padding-right: 16px !important; }
-    #world-title { font-size: 22px !important; }
+    #world-title { font-size: 26px !important; }
     footer .max-w-5xl { padding-left: 16px !important; padding-right: 16px !important; }
     footer .btn { padding: 0 12px; }
   }
@@ -95,19 +85,19 @@
 <script src="_strings.js"></script>
 <script src="_shell.js"></script>
 
-<div aria-hidden class="fixed inset-0 z-0 pointer-events-none ambient"></div>
-<div aria-hidden class="fixed inset-0 z-0 pointer-events-none grain opacity-40"></div>
+<div aria-hidden class="fixed inset-0 z-0 pointer-events-none tv-ambient"></div>
 
-<header class="fixed top-0 inset-x-0 h-16 z-50 flex items-center justify-between px-6 backdrop-blur-md border-b border-line" style="background:rgba(13,10,8,0.7)">
+<header class="fixed top-0 inset-x-0 h-16 z-50 flex items-center justify-between px-6">
   <div class="flex items-center gap-5">
-    <a href="/" class="flex flex-col items-start gap-1 leading-none" title="Về se77n.com">
-      <div class="hdr-logo mono text-[24px] font-extrabold tracking-[-0.025em]">se<span class="text-red glow77">77</span>n<span class="hdr-kata text-mute font-normal"> / kata</span></div>
-      <div class="hdr-sub mono text-[9px] uppercase tracking-kicker text-mute">tavern · play</div>
+    <a href="/" class="k-logo hdr-logo" title="Về se77n.com">
+      <span class="k-word">se<span class="k-77">77</span>n<span class="k-sfx hdr-kata">/ kata</span></span>
+      <span class="k-sub hdr-sub">tavern · play</span>
     </a>
-    <div id="hdr-breadcrumb" class="flex items-center gap-2 ml-3 mono text-[10px] tracking-label uppercase">
-      <a href="index.html" class="text-mute hover:text-ink">se77n</a><span class="text-mute2">/</span>
-      <a href="index.html" class="text-mute hover:text-ink">kata</a><span class="text-mute2">/</span>
-      <a href="tavern.html" class="text-mute hover:text-ink">tavern</a><span class="text-mute2">/</span>
+    <a href="/" class="k-lobby" aria-label="Back to the se77n lobby"><svg width="9" height="15" viewBox="0 0 3 5" shape-rendering="crispEdges" aria-hidden="true"><path d="M2 0h1v5H2V4H1V3H0V2h1V1h1z" fill="currentColor"/></svg><span class="k-lobby-t">LOBBY</span></a>
+    <div id="hdr-breadcrumb" class="k-bc flex items-center gap-2 mono text-[10px] tracking-label uppercase">
+      <a href="index.html" class="text-mute hover:text-ink">se77n</a><span class="text-mute2">›</span>
+      <a href="index.html" class="text-mute hover:text-ink">kata</a><span class="text-mute2">›</span>
+      <a href="tavern.html" class="text-mute hover:text-ink">tavern</a><span class="text-mute2">›</span>
       <span class="text-ink">play · <span id="bc-name">…</span></span>
     </div>
   </div>
@@ -116,18 +106,21 @@
 
 <main class="relative z-10 pt-20 pb-32 max-w-5xl mx-auto px-6">
 
-  <div id="auth-warning" class="hidden mb-6 p-5 border border-line rounded-[12px] bg-panel">
-    <div class="mono text-[10px] uppercase tracking-kicker text-red mb-2">không thể tải</div>
-    <div id="auth-warning-msg" class="text-[14px] text-mute">—</div>
-    <a id="auth-login-btn" href="/api/auth/discord/start" class="hidden mt-4 btn">đăng nhập discord</a>
+  <div id="auth-warning" class="hidden k-say mb-12">
+    <span class="k-tag">KATAS SAYS:</span>
+    <div class="k-kicker text-red">không thể tải</div>
+    <div id="auth-warning-msg" class="mono text-[15px] text-ink mt-3">—</div>
+    <a id="auth-login-btn" href="/api/auth/discord/start" class="hidden mt-6 btn btn-primary">đăng nhập discord</a>
+    <span class="k-more k-bob" aria-hidden="true"></span>
   </div>
 
-  <div id="world-header" class="mb-4">
+  <div id="world-header" class="mb-10">
     <div class="mono text-[10px] uppercase tracking-kicker text-purple mb-2">TAVERN / PLAY</div>
-    <div id="world-title" class="mono text-[28px] leading-tight font-extrabold tracking-[-0.03em] lowercase">loading<span class="text-purple glow77">.</span></div>
-    <div id="world-meta" class="mono text-[11px] text-mute mt-2">—</div>
-    <div class="mono text-[10px] text-mute2 mt-3">
-      💡 Web turn KHÔNG cross-post sang Discord. Chọn 1 venue cho 1 session — mỗi message gửi tại đây chỉ lưu vào session log + bot không gửi gì lên Discord channel.
+    <div id="world-title" class="text-[38px] leading-tight lowercase" style="font-family:var(--k-pf);font-size-adjust:var(--k-fsa);font-weight:700">loading<span class="text-purple glow77">.</span></div>
+    <div id="world-meta" class="mono text-[13px] text-mute mt-2">—</div>
+    <div class="flex items-start gap-3 mono text-[12px] text-mute mt-4 max-w-3xl">
+      <span class="k-badge flex-none" style="background:#ffd25e">TIP</span>
+      <span>Web turn KHÔNG cross-post sang Discord. Chọn 1 venue cho 1 session — mỗi message gửi tại đây chỉ lưu vào session log + bot không gửi gì lên Discord channel.</span>
     </div>
   </div>
 
@@ -135,13 +128,14 @@
 
 </main>
 
-<footer class="fixed bottom-0 inset-x-0 z-40 border-t border-line backdrop-blur-md" style="background:rgba(13,10,8,0.85)">
+<footer class="tp-dock fixed bottom-0 inset-x-0 z-40">
   <div class="max-w-5xl mx-auto px-6 py-4">
-    <form id="turn-form" class="flex items-end gap-3">
+    <form id="turn-form" class="flex items-end gap-5" style="padding:3px 8px 8px 3px">
+      <label for="turn-input" class="sr-only">Player turn</label>
       <textarea id="turn-input" class="field" rows="2" placeholder="Player turn… (((wrap in double parens for OOC director note)))" maxlength="4000"></textarea>
       <button type="submit" id="turn-send" class="btn btn-primary">send →</button>
     </form>
-    <div id="turn-hint" class="mono text-[9px] text-mute2 mt-2">Enter to send · Shift+Enter for newline · ((text)) = OOC instruction (no LLM call)</div>
+    <div id="turn-hint" class="mono text-[10px] text-mute2 mt-2">Enter to send · Shift+Enter for newline · ((text)) = OOC instruction (no LLM call)</div>
   </div>
 </footer>
 
@@ -226,7 +220,7 @@ function renderMessage(m, opts = {}) {
   // While the scene illustration is rendering, show a subtle placeholder
   // (sits between the prose and the option buttons).
   const imgPending = (m._imgPending && !m.imageUrl)
-    ? `<div class="mono text-[10px] text-mute2 mt-3" style="opacity:.85">🎨 đang vẽ minh hoạ…</div>`
+    ? `<div class="mono text-[11px] text-mute2 mt-3 flex items-center gap-2"><span class="typing-dot"></span>đang vẽ minh hoạ…</div>`
     : '';
   // Suggestions are rendered ONLY on the latest narrator message — when
   // the player advances the story, older suggestions disappear (clicking a
@@ -271,7 +265,7 @@ function paintWorldData(data, { preview = false } = {}) {
   if (Array.isArray(data.messages)) messages = data.messages;
   elTitle.innerHTML = `${escapeHtml(world.name)}<span class="text-purple glow77">.</span>`;
   elBcName.textContent = world.name;
-  elMeta.textContent = `${world.mode} · ${world.difficulty} · ${world.participation}${world.isLocked ? ' · 🔒 locked' : ''}`;
+  elMeta.textContent = `${world.mode} · ${world.difficulty} · ${world.participation}${world.isLocked ? ' · locked' : ''}`;
 
   const header = document.getElementById('world-header');
   let coverWrap = document.getElementById('world-cover-wrap');
@@ -279,7 +273,7 @@ function paintWorldData(data, { preview = false } = {}) {
     if (!coverWrap) {
       coverWrap = document.createElement('div');
       coverWrap.id = 'world-cover-wrap';
-      coverWrap.style.cssText = 'margin-top:16px;border-radius:12px;overflow:hidden;border:1px solid rgba(138,79,255,0.20);max-width:520px';
+      coverWrap.style.cssText = 'margin-top:24px;overflow:hidden;max-width:520px';
       header.appendChild(coverWrap);
     }
     coverWrap.innerHTML = `<img src="${escapeHtml(world.coverImageUrl)}" alt="" style="width:100%;display:block" />`;

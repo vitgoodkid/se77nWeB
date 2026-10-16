@@ -8,159 +8,140 @@
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Pixelify+Sans:wght@500;700&family=Silkscreen:wght@400;700&family=VT323&display=swap" rel="stylesheet" />
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
+  // B · Pixel Lobby palette: colour channels come from _shell.js (light + dark).
   tailwind.config = { theme: { extend: {
-    colors: { bg:'#0d0a08', panel:'#15110d', panel2:'#1c1813', line:'rgba(255,255,255,0.08)', line2:'rgba(255,255,255,0.14)', ink:'#f5ede0', mute:'rgba(245,237,224,0.5)', mute2:'rgba(245,237,224,0.3)', red:'#E04545', green:'#5BA868', gold:'#D4A858' },
-    fontFamily: { sans:['Geist','system-ui','sans-serif'], mono:['"JetBrains Mono"','ui-monospace','monospace'] },
+    colors: {
+      bg:'rgb(var(--c-bg) / <alpha-value>)', panel:'rgb(var(--c-panel) / <alpha-value>)', panel2:'rgb(var(--c-panel2) / <alpha-value>)',
+      ink:'rgb(var(--c-ink) / <alpha-value>)', red:'rgb(var(--c-red) / <alpha-value>)', green:'rgb(var(--c-green) / <alpha-value>)',
+      gold:'rgb(var(--c-gold) / <alpha-value>)', info:'rgb(var(--c-info) / <alpha-value>)', warn:'rgb(var(--c-warn) / <alpha-value>)',
+      err:'rgb(var(--c-err) / <alpha-value>)', purple:'rgb(var(--c-purple) / <alpha-value>)',
+      line:'var(--c-line)', line2:'var(--c-line2)', mute:'var(--c-mute)', mute2:'var(--c-mute2)',
+    },
+    fontFamily: { sans:['"JetBrains Mono"','ui-monospace','monospace'], mono:['"JetBrains Mono"','ui-monospace','monospace'], pixel:['"Pixelify Sans"','monospace'], sk:['Silkscreen','monospace'] },
     letterSpacing: { kicker:'0.22em', label:'0.18em', tag:'0.12em' },
   }}};
 </script>
 <style>
-  html, body { background: #0d0a08; color: #ece6df; font-family: 'JetBrains Mono', ui-monospace, monospace; -webkit-font-smoothing: antialiased; }
-  .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
-  .glow77 { text-shadow: 0 0 6px color-mix(in srgb, var(--accent, #E04545) 80%, transparent), 0 0 18px color-mix(in srgb, var(--accent, #E04545) 40%, transparent); }
-  ::-webkit-scrollbar { width: 10px; height: 10px; }
-  ::-webkit-scrollbar-thumb { background: #2a2422; border-radius: 99px; border: 2px solid #0d0a08; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  textarea::placeholder, input::placeholder { color: #57504b; }
+  /* admin · page pieces in the B arcade style. Chrome, palette (--c-*, --paper,
+     --ink…) and the k-* kit come from _shell.js; the class names below are the
+     ones the admin templates already use. */
   textarea:focus, input:focus { outline: none; }
-
-  @keyframes ddIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
-  @keyframes toastIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-  @keyframes pageIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-  .page-in { animation: pageIn .25s ease; }
+  .page-in { animation: k-rise .4s steps(4) backwards; }
 
   /* ── cards ─────────────────────────────────────────────── */
-  .card { background: #131010; border: 1px solid #272120; border-radius: 13px; transition: border-color .2s, transform .2s, box-shadow .2s; }
-  .card:hover { border-color: #3a302c; }
-  .card-lift:hover { transform: translateY(-2px); }
-  .card-row:hover { transform: translateY(-2px); box-shadow: 0 14px 36px rgba(0,0,0,.35); }
-  .card-log:hover { transform: translateX(4px); }
+  .card { background: var(--paper); box-shadow: 0 -4px 0 0 var(--ink),0 4px 0 0 var(--ink),-4px 0 0 0 var(--ink),4px 0 0 0 var(--ink),10px 10px 0 4px var(--shadow); transition: transform .1s steps(2); }
+  .card-row { box-shadow: 0 -3px 0 0 var(--ink),0 3px 0 0 var(--ink),-3px 0 0 0 var(--ink),3px 0 0 0 var(--ink),6px 7px 0 3px var(--shadow); }
+  .card-lift:hover, .card-row:hover { transform: translate(-2px,-3px); }
 
-  /* ── nav ───────────────────────────────────────────────── */
-  .navitem { display: flex; align-items: center; justify-content: space-between; padding: 11px 12px; border-radius: 8px; font-size: 10.5px; letter-spacing: .18em; font-weight: 800; text-transform: uppercase; color: #8a7f78; cursor: pointer; background: transparent; border-left: 2px solid transparent; transition: all .18s; }
-  .navitem:hover { background: #15100f; color: #ece6df; transform: translateX(3px); }
-  .navitem.on { color: #f3ede6; background: #1a1312; border-left-color: var(--accent); }
-  .navitem .navdot { width: 6px; height: 6px; border-radius: 99px; background: transparent; }
-  .navitem.on .navdot { background: var(--accent); }
+  /* ── nav: the shell draws the SELECT STAGE rows ─────────── */
+  .navitem .navdot { display: none; }
 
   /* ── chips (filter pills) ──────────────────────────────── */
-  .chip { padding: 9px 18px; border-radius: 99px; font-family: inherit; font-size: 10px; letter-spacing: .18em; font-weight: 800; cursor: pointer; border: 1px solid #2c2522; background: transparent; color: #8a7f78; transition: all .18s; }
-  .chip:hover { transform: translateY(-2px); color: #ece6df; }
-  .chip.on { background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
+  .chip { display:inline-flex; align-items:center; height:36px; padding:0 14px; border:0; cursor:pointer; font-family:var(--k-sk);font-size-adjust:var(--k-fsa); font-size:11px; font-weight:700; letter-spacing:.03em; color:var(--text); background:var(--paper);
+    box-shadow: 0 -3px 0 0 var(--ink),0 3px 0 0 var(--ink),-3px 0 0 0 var(--ink),3px 0 0 0 var(--ink); transition: background .08s steps(2); }
+  .chip:hover { background: var(--paper-2); }
+  .chip.on { background: var(--ink); color: var(--paper); }
+  [data-theme="dark"] .chip.on { background: var(--strip-text); color: #1b1410; }
 
   /* ── buttons ───────────────────────────────────────────── */
-  .btn-accent { background: var(--accent); color: var(--accent-fg, #fff); padding: 15px 32px; border-radius: 11px; font-family: inherit; font-weight: 800; letter-spacing: .18em; font-size: 11.5px; border: none; cursor: pointer; transition: transform .18s, box-shadow .18s, background .6s; }
-  .btn-accent:hover { transform: translateY(-2px); box-shadow: 0 12px 32px color-mix(in srgb, var(--accent) 35%, transparent); }
-  .btn-accent:active { transform: translateY(0); }
-  .btn-ghost { background: transparent; color: #8a7f78; padding: 15px 28px; border-radius: 11px; font-family: inherit; font-weight: 800; letter-spacing: .18em; font-size: 11.5px; border: 1px solid #2c2522; cursor: pointer; transition: all .18s; }
-  .btn-ghost:hover { border-color: #57504b; color: #ece6df; transform: translateY(-2px); }
-  .btn-manage { padding: 11px 18px; border-radius: 9px; background: transparent; border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); color: var(--accent); font-family: inherit; font-size: 10px; font-weight: 800; letter-spacing: .16em; cursor: pointer; transition: all .18s; white-space: nowrap; text-decoration: none; display: inline-block; }
-  .btn-manage:hover { background: var(--accent); color: var(--accent-fg, #fff); transform: translateX(3px); box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 35%, transparent); }
-  .btn-join { padding: 11px 16px; border-radius: 9px; background: transparent; border: 1px solid #2c2522; color: #8a7f78; font-family: inherit; font-size: 10px; font-weight: 800; letter-spacing: .16em; cursor: pointer; transition: all .18s; white-space: nowrap; }
-  .btn-join:hover { border-color: color-mix(in srgb, var(--accent) 50%, transparent); color: #ece6df; transform: translateY(-1px); }
+  .btn-accent, .btn-ghost, .btn-manage, .btn-join, .btn-step, .btn-use { display:inline-flex; align-items:center; justify-content:center; gap:8px; border:0; cursor:pointer; font-family:var(--k-sk);font-size-adjust:var(--k-fsa); font-weight:700; letter-spacing:.03em; text-transform:uppercase; text-decoration:none; white-space:nowrap; transition: transform 60ms, box-shadow 60ms; }
+  .btn-accent { height:48px; padding:0 24px; font-size:12px; color:#1b1410; background:var(--ka); box-shadow: 0 -4px 0 0 var(--ink),0 4px 0 0 var(--ink),-4px 0 0 0 var(--ink),4px 0 0 0 var(--ink),6px 8px 0 4px var(--ink); }
+  .btn-accent:hover { transform: translate(-2px,-2px); }
+  .btn-accent:active { transform: translate(6px,8px); box-shadow: 0 -4px 0 0 var(--ink),0 4px 0 0 var(--ink),-4px 0 0 0 var(--ink),4px 0 0 0 var(--ink); }
+  .btn-ghost, .btn-manage, .btn-join, .btn-step { color:var(--text); background:var(--paper); box-shadow: 0 -3px 0 0 var(--ink),0 3px 0 0 var(--ink),-3px 0 0 0 var(--ink),3px 0 0 0 var(--ink),4px 5px 0 3px var(--ink); }
+  .btn-ghost { height:48px; padding:0 22px; font-size:12px; }
+  .btn-manage, .btn-join { height:36px; padding:0 12px; font-size:11px; }
+  .btn-manage { color:#1b1410; background:var(--ka); }
+  .btn-step { width:40px; height:40px; font-size:16px; font-family:'JetBrains Mono',monospace; }
+  .btn-ghost:hover, .btn-manage:hover, .btn-join:hover, .btn-step:hover { transform: translate(-1px,-1px); }
+  .btn-ghost:active, .btn-manage:active, .btn-join:active, .btn-step:active { transform: translate(4px,5px); box-shadow: 0 -3px 0 0 var(--ink),0 3px 0 0 var(--ink),-3px 0 0 0 var(--ink),3px 0 0 0 var(--ink); }
   .btn-join:disabled { opacity: .5; cursor: default; transform: none; }
-  .btn-step { width: 40px; height: 40px; border-radius: 10px; background: #0e0b0a; border: 1px solid #2c2522; color: #8a7f78; font-family: inherit; font-size: 17px; cursor: pointer; transition: all .15s; }
-  .btn-step:hover { border-color: color-mix(in srgb, var(--accent) 50%, transparent); color: #ece6df; transform: translateY(-1px); }
-  .btn-use { padding: 0 18px; border-radius: 8px; border: none; color: #0b0908; font-family: inherit; font-size: 10.5px; font-weight: 800; letter-spacing: .16em; cursor: pointer; transition: transform .15s, box-shadow .15s; }
-  .btn-use:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(0,0,0,.4); }
+  .btn-use { height:38px; padding:0 14px; font-size:11px; color:#1b1410!important; background:var(--ka)!important; }
 
   /* ── settings fields ───────────────────────────────────── */
-  .fld-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 22px; border-bottom: 1px solid #1d1817; }
-  .fld-title { font-size: 14.5px; font-weight: 800; letter-spacing: .14em; color: #f3ede6; }
-  .fld-desc { font-size: 11.5px; color: #6b6058; margin-top: 6px; }
-  .fld-status { font-size: 9px; letter-spacing: .16em; font-weight: 800; border-radius: 99px; padding: 3px 9px; border: 1px solid #332a26; color: #6b5f58; transition: all .25s; }
-  .fld-status.on { color: var(--accent); border-color: var(--accent); }
-  .fld-body { padding: 18px 22px 20px; opacity: .4; pointer-events: none; transition: opacity .25s; }
+  .fld-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 22px; border-bottom: 3px dashed var(--rule); }
+  .fld-title { font-family:var(--k-sk);font-size-adjust:var(--k-fsa); font-size: 13px; font-weight: 700; letter-spacing: .03em; color: var(--text); }
+  .fld-desc { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .fld-status { font-family:var(--k-sk);font-size-adjust:var(--k-fsa); font-size: 10px; font-weight: 700; padding: 3px 7px; color: var(--text); background: var(--paper-2); box-shadow: 0 0 0 2px var(--ink); }
+  .fld-status.on { color: #1b1410; background: #ff7a7a; }
+  .fld-body { padding: 20px 22px 22px; opacity: .45; pointer-events: none; transition: opacity .15s steps(2); }
   .fld-body.on { opacity: 1; pointer-events: auto; }
-  .tgl { width: 46px; height: 25px; flex: none; border-radius: 99px; border: 1px solid #332a26; background: #1f1a18; position: relative; cursor: pointer; transition: all .25s; }
-  .tgl-knob { position: absolute; top: 3px; left: 3px; width: 17px; height: 17px; border-radius: 99px; background: #6b5f58; transform: translateX(0); transition: transform .25s cubic-bezier(.4,0,.2,1), background .25s; }
-  .tgl.on { background: var(--accent); border-color: var(--accent); }
-  .tgl.on .tgl-knob { transform: translateX(21px); background: var(--accent-fg, #fff); }
+  .tgl { width: 52px; height: 28px; flex: none; position: relative; cursor: pointer; background: var(--paper-2); box-shadow: 0 -3px 0 0 var(--ink),0 3px 0 0 var(--ink),-3px 0 0 0 var(--ink),3px 0 0 0 var(--ink); }
+  .tgl-knob { position: absolute; top: 5px; left: 5px; width: 18px; height: 18px; background: var(--ink); transition: transform .12s steps(3); }
+  [data-theme="dark"] .tgl-knob { background: var(--muted); }
+  .tgl.on { background: #7fd18b; }
+  .tgl.on .tgl-knob { transform: translateX(24px); background: #1b1410; }
 
-  .inp { width: 100%; background: #0e0b0a; border: 1px solid #2c2522; border-radius: 10px; padding: 14px 16px; font-family: inherit; font-size: 12.5px; line-height: 1.7; color: #ddd6cf; transition: border-color .2s, box-shadow .2s; }
-  .inp:focus { border-color: color-mix(in srgb, var(--accent) 50%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 8%, transparent); }
+  .inp { width: 100%; padding: 13px 14px; font-family: inherit; font-size: 13px; line-height: 1.7; color: var(--text); background: var(--field); border: 0;
+    box-shadow: 0 -3px 0 0 var(--ink),0 3px 0 0 var(--ink),-3px 0 0 0 var(--ink),3px 0 0 0 var(--ink); }
+  .inp:focus { background: var(--paper); box-shadow: 0 -3px 0 0 #e04545,0 3px 0 0 #e04545,-3px 0 0 0 #e04545,3px 0 0 0 #e04545; }
   textarea.inp { resize: vertical; }
 
   /* ── model dropdown ────────────────────────────────────── */
-  .dd-trigger { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; background: #0e0b0a; border: 1px solid #2c2522; border-radius: 10px; padding: 14px 16px; font-family: inherit; font-size: 13.5px; color: #ece6df; cursor: pointer; transition: border-color .2s, box-shadow .2s; text-align: left; }
-  .dd-trigger:hover { border-color: color-mix(in srgb, var(--accent) 45%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 7%, transparent); }
-  .dd-panel { position: absolute; top: calc(100% + 8px); left: 0; right: 0; z-index: 40; background: #100d0c; border: 1px solid #332a26; border-radius: 12px; box-shadow: 0 28px 70px rgba(0,0,0,.65); animation: ddIn .16s ease; overflow: hidden; }
-  .dd-panel.up { top: auto; bottom: calc(100% + 8px); }
-  .dd-tab { padding: 7px 16px; border-radius: 8px; font-family: inherit; font-size: 10px; letter-spacing: .18em; font-weight: 800; cursor: pointer; border: 1px solid #2c2522; background: transparent; color: #6b5f58; transition: all .15s; }
-  .dd-tab:hover { color: #ece6df; }
-  .dd-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 11px 13px; border-radius: 8px; border: 1px solid transparent; color: #ddd6cf; font-size: 12.5px; cursor: pointer; transition: background .12s, transform .12s; }
-  .dd-item:hover { background: #1c1614; transform: translateX(3px); }
+  .dd-trigger { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 14px; font-family: inherit; font-size: 13.5px; color: var(--text); background: var(--field); border: 0; cursor: pointer; text-align: left;
+    box-shadow: 0 -3px 0 0 var(--ink),0 3px 0 0 var(--ink),-3px 0 0 0 var(--ink),3px 0 0 0 var(--ink); }
+  .dd-trigger:hover { background: var(--paper); }
+  .dd-trigger > span:first-child > span:first-child { width: 10px !important; height: 10px !important; box-shadow: 0 0 0 2px var(--ink); }
+  .dd-panel { position: absolute; top: calc(100% + 14px); left: 0; right: 0; z-index: 40; background: var(--paper); overflow: hidden; animation: k-rise .16s steps(3);
+    box-shadow: 0 -4px 0 0 var(--ink),0 4px 0 0 var(--ink),-4px 0 0 0 var(--ink),4px 0 0 0 var(--ink),10px 10px 0 4px var(--shadow); }
+  .dd-panel.up { top: auto; bottom: calc(100% + 14px); }
+  .dd-panel > div:first-child { gap: 10px !important; padding: 12px 14px !important; border-bottom: 3px dashed var(--rule) !important; }
+  .dd-panel > div:last-child { gap: 14px !important; padding: 12px 14px !important; border-top: 3px dashed var(--rule) !important; background: var(--paper-2) !important; }
+  .dd-panel input[data-ddcustom] { background: var(--field) !important; border: 0 !important; color: var(--text) !important; box-shadow: 0 -3px 0 0 var(--ink),0 3px 0 0 var(--ink),-3px 0 0 0 var(--ink),3px 0 0 0 var(--ink) !important; }
+  .dd-tab { height: 32px; padding: 0 12px; font-family:var(--k-sk);font-size-adjust:var(--k-fsa); font-size: 10px; font-weight: 700; letter-spacing: .03em; cursor: pointer; border: 0; color: var(--text); background: var(--paper);
+    box-shadow: 0 -2px 0 0 var(--ink),0 2px 0 0 var(--ink),-2px 0 0 0 var(--ink),2px 0 0 0 var(--ink); }
+  .dd-tab:hover { background: var(--paper-2); }
+  .dd-tab[style*="background"] { background: var(--ink) !important; color: var(--paper) !important; }
+  [data-theme="dark"] .dd-tab[style*="background"] { background: var(--strip-text) !important; color: #1b1410 !important; }
+  .dd-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; color: var(--text); font-size: 12.5px; cursor: pointer; }
+  .dd-item:hover { background: var(--paper-2); }
+  .dd-item[style*="background"] { background: var(--ink) !important; color: var(--paper) !important; }
+  .dd-item[style*="background"] span { color: inherit !important; }
+  [data-theme="dark"] .dd-item[style*="background"] { background: var(--strip-text) !important; color: #1b1410 !important; }
 
-  .provider-pill { font-size: 9px; color: #57504b; letter-spacing: .16em; flex: none; border: 1px solid #2c2522; border-radius: 99px; padding: 3px 8px; }
-  .ovr-pill { font-size: 10px; letter-spacing: .14em; font-weight: 800; color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); border-radius: 99px; padding: 7px 14px; }
+  .provider-pill, .tag-pill { flex: none; padding: 3px 7px; font-family:var(--k-sk);font-size-adjust:var(--k-fsa); font-size: 10px; font-weight: 700; letter-spacing: .03em; color: var(--text); background: var(--paper-2); box-shadow: 0 0 0 2px var(--ink); }
+  .ovr-pill { padding: 6px 10px; font-family:var(--k-sk);font-size-adjust:var(--k-fsa); font-size: 11px; font-weight: 700; color: #1b1410; background: #ff7a7a; box-shadow: 0 -3px 0 0 var(--ink),0 3px 0 0 var(--ink),-3px 0 0 0 var(--ink),3px 0 0 0 var(--ink); }
 
-  .tag-pill { font-size: 8.5px; letter-spacing: .18em; font-weight: 800; border-radius: 99px; padding: 3px 9px; border: 1px solid #2c2522; }
+  .bar-track { height: 12px; margin-top: 8px; background: var(--paper); border: 2px solid var(--ink); overflow: hidden; }
+  .bar-fill { height: 100%; background-image: repeating-linear-gradient(90deg, transparent 0 8px, var(--paper) 8px 10px) !important; transition: width .4s steps(6); }
 
-  .bar-track { height: 4px; border-radius: 99px; background: #1d1817; margin-top: 7px; overflow: hidden; }
-  .bar-fill { height: 100%; border-radius: 99px; transition: width .5s ease; }
-
-  .stat-label { font-size: 9.5px; letter-spacing: .22em; color: #8a7f78; font-weight: 800; }
-  .micro-label { font-size: 8.5px; letter-spacing: .2em; color: #57504b; font-weight: 800; }
+  .stat-label { font-family:var(--k-sk);font-size-adjust:var(--k-fsa); font-size: 11px; font-weight: 700; letter-spacing: .03em; color: var(--muted); }
+  .micro-label { font-family:var(--k-sk);font-size-adjust:var(--k-fsa); font-size: 10px; font-weight: 700; letter-spacing: .03em; color: var(--muted); }
 
   #toast-wrap { position: fixed; bottom: 24px; right: 24px; z-index: 90; }
-  .toast { background: #102019; border: 1px solid #2c5a44; color: #5BA868; padding: 13px 20px; border-radius: 11px; font-size: 12px; font-weight: 700; animation: toastIn .22s ease; box-shadow: 0 18px 44px rgba(0,0,0,.55); }
-  .toast.warn { background: #201210; border-color: #5a342c; color: #E04545; }
+  .toast { display:flex; align-items:center; gap:10px; padding: 12px 16px; font-family:var(--k-sk);font-size-adjust:var(--k-fsa); font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text); background: var(--paper); animation: kdToastIn .16s steps(4);
+    box-shadow: 0 -3px 0 0 var(--ink),0 3px 0 0 var(--ink),-3px 0 0 0 var(--ink),3px 0 0 0 var(--ink),6px 7px 0 3px var(--shadow); }
+  .toast::before { content:''; width:12px; height:12px; flex:none; background:#7fd18b; box-shadow:0 0 0 2px var(--ink); }
+  .toast.warn::before { background:#ff7a7a; }
 
-  .guild-chip { display: inline-flex; align-items: center; gap: 7px; border: 1px solid #2c2522; border-radius: 99px; padding: 4px 11px; min-width: 0; }
+  .guild-chip { display: inline-flex; align-items: center; gap: 7px; padding: 4px 11px; min-width: 0; box-shadow: 0 0 0 2px var(--rule); }
 
-  /* ===================== MOBILE (≤768px) =====================
-     The .hdr-logo class on the header logo opts this page OUT of
-     _shell.js's generic drawer chrome — we render our own phone layout:
-     sidebar → horizontal tab-chip bar, single-column content. */
+  /* global logs terminal */
+  .adm-term { padding: 20px 22px 6px; }
+  .adm-term .log-thread { padding-bottom: 22px; border-bottom: 3px dashed #43362b; }
+
   @media (max-width: 768px) {
-    header { padding-left: 14px !important; padding-right: 14px !important; }
     .adm-sub, .adm-bc { display: none !important; }
-    #kata-header-actions { gap: 6px !important; }
-    #kata-header-actions > * { transform: scale(0.9); transform-origin: right center; }
-    #kata-user-name { display: none !important; }
-    #kata-theme-btn button > span:nth-child(2) { display: none !important; }
-
-    /* sidebar → sticky horizontal tab-chip rail under the header */
-    aside {
-      top: 58px !important; left: 0 !important; right: 0 !important; bottom: auto !important;
-      width: auto !important; height: auto !important;
-      border-right: none !important; border-bottom: 1px solid #1d1817 !important;
-      overflow-x: auto !important; overflow-y: hidden !important; -webkit-overflow-scrolling: touch;
-    }
-    aside::-webkit-scrollbar { height: 0; }
-    aside nav { flex-direction: row !important; padding: 12px 14px 11px !important; gap: 8px !important; min-height: 0 !important; }
-    .navitem { flex: 0 0 auto; justify-content: center; white-space: nowrap;
-      border-left: none !important; border: 1px solid #2c2522 !important; border-radius: 999px !important;
-      padding: 10px 16px !important; font-size: 10px !important; }
-    .navitem.on { background: color-mix(in srgb, var(--accent) 14%, transparent) !important;
-      border-color: color-mix(in srgb, var(--accent) 45%, transparent) !important; color: var(--accent) !important; transform: none !important; }
-    .navitem:hover { transform: none !important; }
-    .navitem .navdot { display: none !important; }
-    aside > div { display: none !important; }   /* MY SERVERS footer */
-
-    /* main: drop sidebar offset, clear fixed header + tab rail */
-    main { padding-left: 0 !important; padding-top: 116px !important; }
     main > div { padding: 16px 16px 96px !important; max-width: 100% !important; }
     main > div > div:first-child { margin-bottom: 18px !important; }
-    main h1.mono { font-size: 27px !important; margin: 8px 0 6px !important; }
-    #page-counts { font-size: 11px !important; }
+    #page-counts { font-size: 12px !important; }
 
     /* collapse multi-column grids; keep the 3 stat tiles compact 3-up */
-    main .grid { grid-template-columns: 1fr !important; gap: 12px !important; }
-    main .grid.grid-cols-3 { grid-template-columns: 1fr 1fr 1fr !important; gap: 9px !important; }
-    main .grid.grid-cols-3 .card { padding: 13px 12px !important; }
-    main .grid.grid-cols-3 .card > div:last-child { font-size: 22px !important; margin-top: 6px !important; }
-    main .grid.grid-cols-3 .stat-label { font-size: 8px !important; letter-spacing: .14em !important; }
+    main .grid { grid-template-columns: 1fr !important; gap: 22px !important; }
+    main .grid.grid-cols-3 { grid-template-columns: 1fr 1fr 1fr !important; gap: 14px !important; }
+    main .grid.grid-cols-3 .card { padding: 13px 10px !important; }
+    main .grid.grid-cols-3 .card > div:last-child { font-size: 20px !important; margin-top: 6px !important; }
+    main .grid.grid-cols-3 .stat-label { font-size: 9px !important; }
 
-    /* logs (v2 conversation): let bubbles use the full width on phones so the
-       member/bot text isn't crammed into a narrow column */
+    /* logs: let bubbles use the full width on phones */
     .log-thread .log-side { max-width: 100% !important; }
+    .adm-term { padding: 14px 14px 4px; }
 
     /* settings: action buttons stretch full-width */
-    #settings-save, #settings-reload { flex: 1; padding: 14px 0 !important; text-align: center; }
+    #settings-save, #settings-reload { flex: 1; }
 
     .btn-accent:hover, .btn-ghost:hover, .card-row:hover, .card-log:hover, .card-lift:hover { transform: none !important; }
   }
@@ -170,42 +151,46 @@
 <script src="_strings.js"></script>
 <script src="_shell.js"></script>
 
-<header class="fixed top-0 inset-x-0 z-50 flex items-center justify-between px-6 backdrop-blur-md" style="height:58px;background:rgba(13,10,8,0.82);border-bottom:1px solid #1d1817">
+<header class="fixed top-0 inset-x-0 z-50 flex items-center justify-between px-6" style="height:58px">
   <div class="flex items-center" style="gap:22px">
-    <a href="/" class="hdr-logo flex flex-col items-start leading-none" title="Về se77n.com" style="gap:2px">
-      <div class="mono font-extrabold" style="font-size:17px;letter-spacing:-0.02em;color:#f3ede6">se<span class="glow77" style="color:var(--accent);transition:color .6s">77</span>n <span style="color:#57504b;font-weight:400">/</span> <span style="color:#b9b0a8">kata</span></div>
-      <div class="adm-sub mono" style="font-size:8.5px;letter-spacing:.26em;color:#57504b">EXPERIMENT <span style="color:var(--accent);transition:color .6s">007</span> · ADMIN</div>
+    <a href="/" class="k-logo hdr-logo" title="Về se77n.com">
+      <span class="k-word">se<span class="k-77">77</span>n<span class="k-sfx">/ kata</span></span>
+      <span class="k-sub adm-sub">EXPERIMENT 007 · ADMIN</span>
     </a>
-    <div class="adm-bc mono" style="font-size:10px;letter-spacing:.2em;color:#57504b">ADMIN <span style="color:var(--accent);transition:color .6s">·</span> <span id="bc-tab" style="color:#b9b0a8">SERVERS</span></div>
+    <a href="/" class="k-lobby" aria-label="Back to the se77n lobby"><svg width="9" height="15" viewBox="0 0 3 5" shape-rendering="crispEdges" aria-hidden="true"><path d="M2 0h1v5H2V4H1V3H0V2h1V1h1z" fill="currentColor"/></svg><span class="k-lobby-t">LOBBY</span></a>
+    <div class="k-bc adm-bc flex items-center gap-2 mono text-[10px] tracking-label uppercase"><span class="text-mute">ADMIN</span><span class="text-mute2">›</span><span id="bc-tab" class="text-ink">SERVERS</span></div>
+    <span class="k-badge adm-bc" style="background:#ffd25e">OWNER</span>
   </div>
   <div id="kata-header-actions" class="flex items-center gap-2.5"></div>
 </header>
 
-<aside class="fixed left-0 bottom-0 z-40 border-r overflow-y-auto" style="top:58px;width:232px;border-color:#1d1817;background:rgba(13,10,8,0.6);backdrop-filter:blur(12px)">
-  <nav class="flex flex-col mono" style="padding:26px 14px 20px;gap:3px;min-height:calc(100% - 60px)">
-    <a data-tab="servers" class="navitem"><span data-i18n="admin.tab.servers">ALL SERVERS</span><span class="navdot"></span></a>
-    <a data-tab="logs" class="navitem"><span data-i18n="admin.tab.logs">GLOBAL LOGS</span><span class="navdot"></span></a>
-    <a data-tab="cost" class="navitem"><span data-i18n="admin.tab.cost">GLOBAL COST</span><span class="navdot"></span></a>
-    <a data-tab="settings" class="navitem"><span data-i18n="admin.tab.settings">GLOBAL SETTINGS</span><span class="navdot"></span></a>
+<aside class="fixed left-0 bottom-0 z-40 overflow-y-auto" style="top:58px;width:232px">
+  <nav class="flex flex-col mono">
+    <a data-tab="servers" class="navitem"><span aria-hidden="true">▤</span><span class="flex-1" data-i18n="admin.tab.servers">ALL SERVERS</span><span class="navdot"></span></a>
+    <a data-tab="logs" class="navitem"><span aria-hidden="true">✉</span><span class="flex-1" data-i18n="admin.tab.logs">GLOBAL LOGS</span><span class="navdot"></span></a>
+    <a data-tab="cost" class="navitem"><span aria-hidden="true">$</span><span class="flex-1" data-i18n="admin.tab.cost">GLOBAL COST</span><span class="navdot"></span></a>
+    <a data-tab="settings" class="navitem"><span aria-hidden="true">⚙</span><span class="flex-1" data-i18n="admin.tab.settings">GLOBAL SETTINGS</span><span class="navdot"></span></a>
   </nav>
   <div style="padding:0 14px 20px">
-    <a href="servers.html" class="mono block" style="padding:11px 12px;border-radius:8px;font-size:10.5px;letter-spacing:.18em;font-weight:700;text-transform:uppercase;color:#57504b;transition:all .18s" onmouseover="this.style.color='#ece6df';this.style.transform='translateX(-3px)'" onmouseout="this.style.color='#57504b';this.style.transform=''" data-i18n="btn.back-my-servers">← MY SERVERS</a>
+    <a href="servers.html" class="mono block text-[11px] tracking-label uppercase text-mute hover:text-ink" style="padding:11px 12px" data-i18n="btn.back-my-servers">← MY SERVERS</a>
   </div>
 </aside>
 
 <main class="relative z-10 pl-[244px]" style="padding-top:58px">
-  <div style="max-width:1180px;margin:0 auto;padding:44px 40px 120px">
+  <div style="max-width:1180px;margin:0 auto;padding:44px 0 120px">
 
-    <div style="margin-bottom:30px">
-      <div class="mono" style="font-size:10px;letter-spacing:.26em;color:var(--accent);font-weight:800;transition:color .6s">OWNER · ADMIN / <span id="page-tag">SERVERS</span></div>
-      <h1 class="mono" style="font-size:38px;margin:10px 0 8px;color:#f3ede6;font-weight:800;letter-spacing:-.02em;line-height:1"><span id="page-title">All Servers</span><span style="color:var(--accent);transition:color .6s">.</span></h1>
-      <p id="page-counts" class="mono" style="margin:0;font-size:12.5px;color:#8a7f78">—</p>
+    <div style="margin-bottom:36px">
+      <div class="mono text-[10px] uppercase tracking-kicker text-mute flex items-center gap-3"><span class="dot-pulse w-2 h-2 bg-green"></span><span>OWNER · ADMIN / <span id="page-tag">SERVERS</span></span></div>
+      <h1 style="font-size:42px;margin:12px 0 10px;line-height:1"><span id="page-title">All Servers</span><span style="color:#e04545">.</span></h1>
+      <p id="page-counts" class="mono text-[13px] text-mute" style="margin:0">—</p>
     </div>
 
-    <div id="auth-warning" class="hidden card" style="margin-bottom:24px;padding:20px 22px">
-      <div class="mono" style="font-size:10px;letter-spacing:.22em;color:var(--accent);font-weight:800;margin-bottom:8px;text-transform:uppercase" data-i18n="err.generic">KHÔNG THỂ TẢI</div>
-      <div id="auth-warning-msg" class="mono" style="font-size:13px;color:#8a7f78">—</div>
-      <a id="auth-login-btn" href="/api/auth/discord/start" class="hidden mono mt-4 inline-block btn-manage" data-i18n="kata.login">ĐĂNG NHẬP DISCORD</a>
+    <div id="auth-warning" class="hidden k-say" style="margin-bottom:40px">
+      <span class="k-tag">KATAS SAYS:</span>
+      <div class="k-kicker text-red" data-i18n="err.generic">KHÔNG THỂ TẢI</div>
+      <div id="auth-warning-msg" class="mono text-[15px] text-ink mt-3">—</div>
+      <a id="auth-login-btn" href="/api/auth/discord/start" class="hidden k-sbtn k-pri mt-6" style="height:44px;padding:0 18px" data-i18n="kata.login">ĐĂNG NHẬP DISCORD</a>
+      <span class="k-more k-bob" aria-hidden="true"></span>
     </div>
 
     <div id="content"></div>
@@ -282,7 +267,7 @@ function fmtNum(n) { return Number(n ?? 0).toLocaleString(); }
 
 // Deterministic muted tile color per id — same trick the design used with
 // hardcoded swatches, derived from the snowflake so it's stable.
-const TILE_COLORS = ['#4a3358','#2e4438','#50392b','#56303a','#2b3d52','#583636','#403328','#43314f','#23404f','#3a3a30'];
+const TILE_COLORS = ['#ff7a7a','#ffd25e','#7fd18b','#9fd8ff','#b9a2ff','#ff9ad5','#66d9d2','#ffa764'];
 function tileColor(id) {
   let h = 0;
   const s = String(id ?? '?');
@@ -292,12 +277,12 @@ function tileColor(id) {
 
 function avatarTile(url, name, id, size, radius) {
   const ini = escapeHtml(String(name ?? '?').slice(0, 2).toUpperCase());
-  const fallback = `<span style="width:${size}px;height:${size}px;border-radius:${radius}px;background:${tileColor(id)};display:none;place-items:center;font-size:${Math.round(size*0.3)}px;font-weight:800;color:rgba(255,255,255,.85);flex:none">${ini}</span>`;
+  const fallback = `<span aria-hidden="true" style="width:${size}px;height:${size}px;border-radius:${radius}px;background:${tileColor(id)};display:none;place-items:center;font-size:${Math.round(size*0.34)}px;font-weight:700;font-family:var(--k-pf);font-size-adjust:var(--k-fsa);color:#1b1410;box-shadow:0 0 0 2px var(--ink);flex:none">${ini}</span>`;
   if (url) {
-    return `<img src="${escapeHtml(url)}" alt="" style="width:${size}px;height:${size}px;border-radius:${radius}px;object-fit:cover;flex:none" onerror="this.style.display='none';this.nextElementSibling.style.display='grid'" />` +
+    return `<img src="${escapeHtml(url)}" alt="" style="width:${size}px;height:${size}px;border-radius:${radius}px;object-fit:cover;flex:none;box-shadow:0 0 0 2px var(--ink)" onerror="this.style.display='none';this.nextElementSibling.style.display='grid'" />` +
       fallback;
   }
-  return `<span style="width:${size}px;height:${size}px;border-radius:${radius}px;background:${tileColor(id)};display:grid;place-items:center;font-size:${Math.round(size*0.3)}px;font-weight:800;color:rgba(255,255,255,.85);flex:none">${ini}</span>`;
+  return `<span aria-hidden="true" style="width:${size}px;height:${size}px;border-radius:${radius}px;background:${tileColor(id)};display:grid;place-items:center;font-size:${Math.round(size*0.34)}px;font-weight:700;font-family:var(--k-pf);font-size-adjust:var(--k-fsa);color:#1b1410;box-shadow:0 0 0 2px var(--ink);flex:none">${ini}</span>`;
 }
 
 async function fetchJson(url) {
@@ -334,7 +319,7 @@ function showToast(msg, warn) {
 
 /* ==================== ALL SERVERS ==================== */
 async function renderServers() {
-  elContent.innerHTML = '<div class="mono" style="font-size:11px;color:#57504b">loading…</div>';
+  elContent.innerHTML = '<div class="k-kicker py-6">loading…</div>';
   const data = await fetchJson('/api/kata/admin/servers');
   if (!data) return;
   clearAuthWarn();
@@ -386,9 +371,9 @@ async function renderServers() {
   }
 
   const statCard = (label, value, color) => `
-    <div class="card card-lift" style="padding:20px 22px">
+    <div class="card card-lift" style="padding:20px 24px 22px">
       <div class="stat-label">${label}</div>
-      <div style="font-size:30px;font-weight:800;color:${color};margin-top:10px">${value}</div>
+      <div class="k-kpi-v">${color === '#D4A858' ? '<svg class="k-coin" width="26" height="26" viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true"><path d="M2 0h4v1h1v1h1v4H7v1H6v1H2V7H1V6H0V2h1V1h1z" fill="#ffc93c" stroke="#1b1410" stroke-width="0.5"/><rect x="4" y="2" width="1" height="4" fill="#c98a12"/></svg>' : ''}${value}</div>
     </div>`;
 
   const rowsHtml = data.servers.map((s) => `
@@ -398,7 +383,7 @@ async function renderServers() {
         <div class="flex items-baseline" style="gap:10px">
           <span style="font-size:14px;font-weight:700;color:#f3ede6;white-space:nowrap">${escapeHtml(s.name)}</span>
           <span style="font-size:10px;color:#57504b;overflow:hidden;text-overflow:ellipsis">${escapeHtml(s.guildId)}</span>
-          ${s.isActive ? '' : '<span class="tag-pill" style="color:#E04545;border-color:rgba(224,69,69,.4)">LEFT</span>'}
+          ${s.isActive ? '' : '<span class="tag-pill" style="background:#ff7a7a;color:#1b1410">LEFT</span>'}
         </div>
         <div style="font-size:11px;color:#6b6058;margin-top:4px">members ${fmtNum(s.memberCount ?? '?')} · joined ${escapeHtml(fmtTime(s.joinedAt))}</div>
       </div>
@@ -416,12 +401,12 @@ async function renderServers() {
   `).join('');
 
   elContent.innerHTML = `<div class="page-in">
-    <div class="grid grid-cols-3" style="gap:16px;margin-bottom:26px">
+    <div class="grid grid-cols-3" style="gap:32px;margin-bottom:44px">
       ${statCard('GUILDS', data.servers.length, '#f3ede6')}
       ${statCard('COST · 30D', fmtUSD2(totalCost), '#D4A858')}
       ${statCard('EVENTS · 30D', fmtNum(totalEvents), '#f3ede6')}
     </div>
-    <div class="flex flex-col" style="gap:12px">${rowsHtml}</div>
+    <div class="flex flex-col" style="gap:22px">${rowsHtml}</div>
   </div>`;
 }
 
@@ -439,8 +424,11 @@ async function renderLogs() {
     `<button data-logtype="${t}" class="chip mono${t===type?' on':''}">${t.toUpperCase()}</button>`
   ).join('');
   elContent.innerHTML = `<div class="page-in">
-    <div class="flex" style="gap:8px;margin-bottom:22px">${chips}</div>
-    <div id="log-list" class="mono" style="font-size:11px;color:#57504b">loading…</div>
+    <div class="flex flex-wrap" style="gap:14px;margin-bottom:30px;padding:3px">${chips}</div>
+    <section class="k-screen k-px" aria-label="Global logs">
+      <div class="adm-term"><div id="log-list" class="k-kicker" style="color:#c9bca6;padding:12px 0 20px">loading…</div></div>
+      <div class="k-prompt" style="padding:4px 22px 20px" aria-hidden="true"><b>kata@se77n:~$</b><i>tail -f logs --all --type ${escapeHtml(type)}</i><span class="k-cursor k-blink" style="color:#fffaf0"></span></div>
+    </section>
   </div>`;
   elContent.querySelectorAll('[data-logtype]').forEach(b => b.addEventListener('click', () => {
     const u = new URL(location.href); u.searchParams.set('logtype', b.dataset.logtype); history.replaceState(null, '', u);
@@ -459,7 +447,7 @@ async function renderLogs() {
   if (!listEl) return;
 
   if (data.items.length === 0) {
-    listEl.outerHTML = '<div class="mono" style="font-size:12px;letter-spacing:.18em;color:#57504b;padding:32px 0;text-align:center">— NO EVENTS —</div>';
+    listEl.outerHTML = '<div class="k-kicker" style="color:#c9bca6;padding:32px 0;text-align:center">— NO EVENTS —</div>';
     return;
   }
 
@@ -560,7 +548,7 @@ function logBotSide(replyHtml, meta) {
       <div style="display:inline-block;text-align:left;background:rgba(212,168,88,.08);border:1px solid rgba(212,168,88,.28);border-radius:16px 4px 16px 16px;padding:13px 17px;font-size:13.5px;line-height:1.55;color:#ddd6cf;word-break:break-word;white-space:pre-wrap">${replyHtml}</div>
       ${meta.length > 0 ? `<div class="flex items-center" style="justify-content:flex-end;flex-wrap:wrap;gap:12px;margin:8px 6px 0 0;font-size:10px;color:#57504b">${meta.join('')}</div>` : ''}
     </div>
-    <span style="width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,#D4A858,#8a6a2e);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#1a1408;flex:none" title="KataS">K</span>
+    <span style="width:32px;height:32px;background:#ffd25e;box-shadow:0 0 0 2px #1b1410;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#1b1410;flex:none" title="KataS">K</span>
   </div>`;
 }
 
@@ -578,7 +566,7 @@ function logBotReply(type, r) {
 // (e.g. fal / elevenlabs-tts-multilingual-v2) — UI aggregates whatever Mongo returns.
 // `yunwu` kept ONLY as a legend colour for historical cost rows (the provider
 // was removed from the bot 2026-08-23; TTL purges those rows after 90 days).
-const SERVICE_COLORS = { fal: '#D4A858', nanogpt: '#8a7f78', '9router': '#E04545', openrouter: '#7a9eb5', tavily: '#8a7f78', google: '#5BA868', yunwu: '#5f6a63' };
+const SERVICE_COLORS = { fal: '#ffd25e', nanogpt: '#d8cdb9', '9router': '#ff7a7a', openrouter: '#9fd8ff', tavily: '#ffa764', google: '#7fd18b', yunwu: '#c9bca6' };
 
 async function renderCost() {
   const range = params.get('range') || '30d';
@@ -587,10 +575,10 @@ async function renderCost() {
   ).join('');
   elContent.innerHTML = `<div class="page-in">
     <div class="flex items-center justify-between" style="gap:12px;margin-bottom:18px;flex-wrap:wrap">
-      <div class="mono" style="font-size:10px;color:#57504b;letter-spacing:.08em">chi tiết cost · image · video · history chỉ giữ ≤ 90 ngày</div>
-      <div class="flex" style="gap:6px">${chips}</div>
+      <div class="mono text-[12px] text-mute">chi tiết cost · image · video · history chỉ giữ ≤ 90 ngày</div>
+      <div class="flex" style="gap:14px;padding:3px">${chips}</div>
     </div>
-    <div id="cost-body" class="mono" style="font-size:11px;color:#57504b">loading…</div>
+    <div id="cost-body" class="k-kicker py-6">loading…</div>
   </div>`;
   elContent.querySelectorAll('[data-range]').forEach(b => b.addEventListener('click', () => {
     const u = new URL(location.href); u.searchParams.set('range', b.dataset.range); history.replaceState(null, '', u);
@@ -605,36 +593,34 @@ async function renderCost() {
   const bodyEl = document.getElementById('cost-body');
   if (!bodyEl) return;
 
-  const deltaColor = data.totalDelta > 0 ? '#E04545' : '#5BA868';
+  const deltaColor = data.totalDelta > 0 ? 'var(--k-red)' : 'var(--k-green)';
   const deltaSign = data.totalDelta > 0 ? '↑' : (data.totalDelta < 0 ? '↓' : '·');
 
   const svcTotal = Math.max(data.total, 0.0001);
   const svcRows = data.byService.map((s) => {
     const pct = Math.max(2, Math.round((s.cost / svcTotal) * 100));
-    const color = SERVICE_COLORS[s.service] || '#8a7f78';
-    return `<div style="margin-bottom:12px">
+    const color = SERVICE_COLORS[s.service] || '#d8cdb9';
+    return `<div style="margin-bottom:14px">
       <div class="flex items-baseline" style="gap:10px">
         <span style="font-size:12.5px;font-weight:700;color:#ece6df">${escapeHtml(s.service)}</span>
         <span class="flex-1"></span>
         <span style="font-size:12.5px;font-weight:800;color:#D4A858">${fmtUSD2(s.cost)}</span>
         <span style="font-size:10.5px;color:#57504b">· ${fmtNum(s.count)}</span>
       </div>
-      <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${color}"></div></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background-color:${color}"></div></div>
     </div>`;
   }).join('');
 
   const topRows = data.byGuild.slice(0, 5).map((g, i) => `
     <div class="flex items-center" style="gap:10px;padding:6px 0">
-      <span style="font-size:9px;color:var(--accent);font-weight:800;width:14px">0${i + 1}</span>
+      <span class="k-kicker" style="width:22px">0${i + 1}</span>
       <span style="font-size:12px;color:#ddd6cf;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(g.name)}</span>
       <span class="flex-1"></span>
       <span style="font-size:12px;font-weight:800;color:#D4A858">${fmtUSD2(g.cost)}</span>
     </div>`).join('');
 
   const guildRows = data.byGuild.map((g) => `
-    <div class="flex items-center" style="gap:12px;padding:10px 12px;border-radius:10px;border:1px solid transparent;transition:all .15s"
-      onmouseover="this.style.background='#1a1513';this.style.borderColor='#2c2522';this.style.transform='translateX(3px)'"
-      onmouseout="this.style.background='';this.style.borderColor='transparent';this.style.transform=''">
+    <div class="flex items-center" style="gap:12px;padding:12px 4px;border-bottom:3px dashed var(--rule)">
       ${avatarTile(g.iconUrl, g.name, g.guildId, 32, 8)}
       <div style="min-width:0">
         <div style="font-size:12.5px;font-weight:700;color:#ece6df;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(g.name)}</div>
@@ -648,22 +634,22 @@ async function renderCost() {
   const maxCmd = Math.max(...data.byCommand.map((c) => c.cost), 0.0001);
   const cmdRows = data.byCommand.map((c) => {
     const pct = Math.max(1, Math.round((c.cost / maxCmd) * 100));
-    return `<div style="padding:7px 10px;border-radius:8px;transition:background .15s" onmouseover="this.style.background='#1a1513'" onmouseout="this.style.background=''">
+    return `<div style="padding:10px 4px;border-bottom:3px dashed var(--rule)">
       <div class="flex items-baseline" style="gap:10px">
         <span style="font-size:12px;font-weight:700;color:#ece6df">${escapeHtml(c.command || '?')}</span>
         <span class="flex-1"></span>
         <span style="font-size:11.5px;font-weight:800;color:#D4A858">${fmtUSD(c.cost)}</span>
         <span style="font-size:10px;color:#57504b;width:38px;text-align:right">· ${fmtNum(c.count)}</span>
       </div>
-      <div class="bar-track" style="height:3px;margin-top:6px"><div class="bar-fill" style="width:${pct}%;background:color-mix(in srgb, #D4A858 75%, transparent)"></div></div>
+      <div class="bar-track" style="height:10px;margin-top:8px"><div class="bar-fill" style="width:${pct}%;background-color:#ffd25e"></div></div>
     </div>`;
   }).join('');
 
   bodyEl.outerHTML = `<div>
-    <div class="grid" style="grid-template-columns:1fr 1.3fr 1fr;gap:16px;margin-bottom:22px">
+    <div class="grid" style="grid-template-columns:1fr 1.3fr 1fr;gap:32px;margin-bottom:44px">
       <div class="card card-lift" style="padding:20px 22px">
         <div class="stat-label">TOTAL · ${range.toUpperCase()}</div>
-        <div style="font-size:36px;font-weight:800;color:#D4A858;margin-top:12px">${fmtUSD2(data.total)}</div>
+        <div class="k-kpi-v" style="font-size:40px;margin-top:14px"><svg class="k-coin" width="30" height="30" viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true"><path d="M2 0h4v1h1v1h1v4H7v1H6v1H2V7H1V6H0V2h1V1h1z" fill="#ffc93c" stroke="#1b1410" stroke-width="0.5"/><rect x="4" y="2" width="1" height="4" fill="#c98a12"/></svg>${fmtUSD2(data.total)}</div>
         <div style="font-size:11px;color:${deltaColor};margin-top:8px">${deltaSign} ${Math.abs(data.totalDelta)}% vs prior ${range}</div>
       </div>
       <div class="card card-lift" style="padding:20px 22px">
@@ -675,14 +661,14 @@ async function renderCost() {
         ${topRows}
       </div>
     </div>
-    <div class="grid" style="grid-template-columns:1.15fr 1fr;gap:16px">
+    <div class="grid" style="grid-template-columns:1.15fr 1fr;gap:32px">
       <div class="card" style="padding:20px 22px">
         <div class="stat-label" style="margin-bottom:14px">GUILDS (${data.byGuild.length})</div>
-        <div class="flex flex-col" style="gap:8px">${guildRows}</div>
+        <div class="flex flex-col">${guildRows}</div>
       </div>
       <div class="card" style="padding:20px 22px">
         <div class="stat-label" style="margin-bottom:14px">COMMANDS (${data.byCommand.length})</div>
-        <div class="flex flex-col" style="gap:4px">${cmdRows}</div>
+        <div class="flex flex-col">${cmdRows}</div>
       </div>
     </div>
   </div>`;
@@ -720,7 +706,7 @@ const VIDEO_MODELS_BY_PROVIDER = {
     'bytedance/seedance-2.0/text-to-video',
   ],
 };
-const PROVIDER_ACCENT = { '9ROUTER': '#D4A858', OPENROUTER: '#7a9eb5', FAL: '#a78bfa', 'FAL.AI': '#D4A858', NANOGPT: '#8a7f78' };
+const PROVIDER_ACCENT = { '9ROUTER': '#ffd25e', OPENROUTER: '#9fd8ff', FAL: '#b9a2ff', 'FAL.AI': '#ffd25e', NANOGPT: '#d8cdb9' };
 
 const SETTINGS_FIELDS = [
   { key: 'systemPrompt', type: 'textarea', title: 'SYSTEM PROMPT', desc: 'Persona mặc định của bot trên mọi guild', rows: 7, placeholder: '(trống — bot không dùng prompt phụ)' },
@@ -854,7 +840,7 @@ function pickModel(field, value) {
 }
 
 async function renderSettings() {
-  elContent.innerHTML = '<div class="mono" style="font-size:11px;color:#57504b">loading…</div>';
+  elContent.innerHTML = '<div class="k-kicker py-6">loading…</div>';
   const data = await fetchJson('/api/kata/admin/global-config');
   if (!data) return;
   clearAuthWarn();
@@ -922,12 +908,12 @@ async function renderSettings() {
   // RATE LIMIT + ALLOWED CHANNELS share one grid row per the design.
   const rateCard = cards[4], chanCard = cards[5];
   elContent.innerHTML = `<div class="page-in">
-    <div class="flex justify-end" style="margin-bottom:18px"><span id="ovr-count" class="ovr-pill mono">0/${SETTINGS_FIELDS.length} OVERRIDE</span></div>
-    <div class="flex flex-col" style="gap:18px">
+    <div class="flex justify-end" style="margin-bottom:26px;padding:3px"><span id="ovr-count" class="ovr-pill mono">0/${SETTINGS_FIELDS.length} OVERRIDE</span></div>
+    <div class="flex flex-col" style="gap:40px">
       ${cards[0]}${cards[1]}${cards[2]}${cards[3]}
-      <div class="grid" style="grid-template-columns:1fr 1.4fr;gap:18px">${rateCard}${chanCard}</div>
+      <div class="grid" style="grid-template-columns:1fr 1.4fr;gap:36px">${rateCard}${chanCard}</div>
     </div>
-    <div class="flex items-center" style="gap:14px;margin-top:34px">
+    <div class="flex flex-wrap items-center" style="gap:24px;margin-top:44px;padding:4px 10px 10px 4px">
       <button id="settings-save" class="btn-accent mono">SAVE CHANGES</button>
       <button id="settings-reload" class="btn-ghost mono">RELOAD</button>
       <span id="dirty-flag" class="mono" style="font-size:11px;color:#D4A858;letter-spacing:.1em;display:none">● chưa lưu</span>

@@ -1,5 +1,7 @@
-// Shared shell for /kata pages: header chrome (3 buttons + user chip),
-// theme controller (palette synced with se77n main app), and i18n.
+// Shared shell for /kata pages: the "B · Pixel Lobby" skin (theme tokens +
+// pixel chrome, both light and dark), header chrome (lang / mode / palette /
+// user chip), theme controller (palette synced with se77n main app), i18n,
+// and the dialog / toast / model-picker primitives.
 //
 // Loaded after _strings.js. Reads window.KATA_STRINGS as the i18n table.
 //
@@ -11,8 +13,13 @@
 //   3. Tagging static Vietnamese strings with `data-i18n="key"`. Shell
 //      swaps text content on lang change.
 //
+// Look: every page shares one skin, injected below (injectSkin). Tailwind
+// configs on the pages point their colours at the --c-* channels defined
+// here, so utility classes (bg-panel, text-ink, text-mute…) follow the B
+// palette in both themes. Pages add their own B pieces with the k-* classes.
+//
 // Cross-page state lives in localStorage so navigation preserves it AND
-// se77n.com main app reads/writes the same keys (theme.lockIdx).
+// se77n.com main app reads/writes the same keys (theme.lockIdx, kata.theme).
 
 (function () {
   'use strict';
@@ -35,23 +42,22 @@
   var LS_MODE = 'kata.theme';            // 'light' | 'dark' — shared with cost.html + main app
 
   // Pre-paint: set data-theme on <html> the instant this (render-blocking,
-  // top-of-body) script runs, before the rest of the body is parsed — so
-  // light mode applies without a flash of dark content.
+  // top-of-body) script runs, before the rest of the body is parsed — so the
+  // right theme applies without a flash. Default is light, like the main app.
   (function applyModeEarly() {
     try {
       var m = localStorage.getItem(LS_MODE);
       if (m !== 'light' && m !== 'dark') {
         var q = new URLSearchParams(location.search).get('theme');
-        m = (q === 'light' || q === 'dark') ? q : 'dark';
+        m = (q === 'light' || q === 'dark') ? q : 'light';
       }
       document.documentElement.setAttribute('data-theme', m);
     } catch (_) {
-      document.documentElement.setAttribute('data-theme', 'dark');
+      document.documentElement.setAttribute('data-theme', 'light');
     }
-    // Inject the light-mode overrides now (head already exists; this script is
-    // render-blocking and runs before the body content paints) so light pages
-    // never flash dark while waiting for boot()/DOMContentLoaded.
-    try { injectLightOverlay(); } catch (_) {}
+    // Inject the skin now (head already exists; this script is render-blocking
+    // and runs before the body content paints) so pages never flash unstyled.
+    try { ensureFonts(); injectSkin(); } catch (_) {}
   })();
 
   // ── State ───────────────────────────────────────────────────────
@@ -66,8 +72,8 @@
   function readMode() {
     try {
       var v = localStorage.getItem(LS_MODE);
-      return v === 'light' ? 'light' : (v === 'dark' ? 'dark' : (document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark'));
-    } catch (_) { return 'dark'; }
+      return v === 'light' ? 'light' : (v === 'dark' ? 'dark' : (document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light'));
+    } catch (_) { return 'light'; }
   }
   function writeMode(m) {
     try { localStorage.setItem(LS_MODE, m); } catch (_) {}
@@ -82,7 +88,6 @@
     writeMode(m);
     applyMode();
     rerenderHeader();
-    repaintAmbient();
     document.dispatchEvent(new CustomEvent('kata:mode-change', { detail: { mode: m } }));
   }
 
@@ -141,7 +146,10 @@
     document.dispatchEvent(new CustomEvent('kata:lang-change', { detail: { lang: lang } }));
   }
 
-  // ── Theme ───────────────────────────────────────────────────────
+  // ── Theme (colour palette) ──────────────────────────────────────
+  // The palette only tints small accents in the B skin (palette swatch, the
+  // accent dot after page titles); the arcade palette itself stays fixed so
+  // text keeps its contrast in both modes.
   function activeIdx() {
     return state.lockIdx == null ? state.rotIdx : state.lockIdx;
   }
@@ -157,7 +165,6 @@
     root.style.setProperty('--ambient-b', String(b));
     root.style.setProperty('--accent', hex);
     root.style.setProperty('--accent-2', hex2);
-    repaintAmbient();
     document.dispatchEvent(new CustomEvent('kata:theme-change', { detail: { idx: activeIdx(), hex: hex } }));
   }
   function startRotation() {
@@ -187,230 +194,421 @@
     rerenderThemeButton();
   }
 
-  // ── CSS overlay so existing tailwind classes follow --accent ────
-  // The kata pages use tailwind CDN with a fixed `red` color compiled in.
-  // We can't change tailwind output at runtime, but we can add overrides
-  // for the specific classes used as accents. This is a small surface —
-  // about 8 utility classes — and covers every accent on every page.
+  // ── Fonts ───────────────────────────────────────────────────────
+  // Pages link the fonts in <head>; this is a safety net so the pixel faces
+  // load even on a page whose <link> predates the B skin.
+  function ensureFonts() {
+    if (document.getElementById('kata-b-fonts')) return;
+    var links = document.querySelectorAll('link[href*="fonts.googleapis.com/css2"]');
+    for (var i = 0; i < links.length; i++) {
+      if (/Pixelify/.test(links[i].href) && /Silkscreen/.test(links[i].href) && /VT323/.test(links[i].href)) return;
+    }
+    var l = document.createElement('link');
+    l.id = 'kata-b-fonts';
+    l.rel = 'stylesheet';
+    l.href = 'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Pixelify+Sans:wght@500;700&family=Silkscreen:wght@400;700&family=VT323&display=swap';
+    document.head.appendChild(l);
+  }
+
+  // ── Small overlay: accent utilities + page-local duplicates ─────
   function injectAccentOverlay() {
     if (document.getElementById('kata-accent-overlay')) return;
     var s = document.createElement('style');
     s.id = 'kata-accent-overlay';
     s.textContent = [
       ':root { --accent: #E04545; --accent-2: #5BA868; --ambient-r: 224; --ambient-g: 69; --ambient-b: 69; }',
-      // Solid red usages
-      '.text-red { color: var(--accent) !important; }',
-      '.bg-red { background-color: var(--accent) !important; }',
-      '.border-red { border-color: var(--accent) !important; }',
-      '.fill-red { fill: var(--accent) !important; }',
-      '.stroke-red { stroke: var(--accent) !important; }',
-      // Glow used on logo and accent dots
-      '.glow77 { text-shadow: 0 0 6px color-mix(in srgb, var(--accent) 80%, transparent), 0 0 18px color-mix(in srgb, var(--accent) 40%, transparent), 0 0 36px color-mix(in srgb, var(--accent) 20%, transparent); }',
-      // Ambient breathe animation, mirrors src/styles.css
-      '@keyframes kata-ambient { 0%,100% { opacity: 0.55; } 50% { opacity: 0.85; } }',
-      // The 3 fixed full-viewport background layers we paint in
-      // injectAmbientLayers(). z-index:-1 so they stay above body's own
-      // background paint but below every other element on the page,
-      // including elements that are themselves position:fixed (header,
-      // sidebar) — without forcing position:relative on the whole page,
-      // which would break those fixed elements and push content down.
-      '#kata-ambient-base, #kata-ambient-grain, #kata-ambient-pulse { position: fixed; inset: 0; pointer-events: none; z-index: -1; }',
-      '#kata-ambient-base { transition: background-image 1.2s ease; }',
-      '#kata-ambient-grain { background-image: radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px); background-size: 3px 3px; opacity: 0.5; }',
-      '#kata-ambient-pulse { animation: kata-ambient 4s ease-in-out infinite; }',
-      // The kata pages set bg-bg on <body>, which would paint OVER our
-      // z-index:-1 layers. Make body's background transparent and move
-      // the solid colour to <html> instead — html paints below body, so
-      // the negative-z-index layers sit between the two and are visible.
-      'html { background-color: #0d0a08; }',
-      'body { background-color: transparent !important; }',
-      // cost.html ships its own light/dark button; the shell now provides a
+      // Solid fills that used to follow the palette now keep the arcade red.
+      '.bg-red { background-color: #e04545 !important; }',
+      '.fill-red { fill: #e04545 !important; }',
+      '.stroke-red { stroke: #e04545 !important; }',
+      // cost.html ships its own light/dark button; the shell provides a
       // unified one in the header actions, so hide the page-local duplicate.
       '#themeToggle { display: none !important; }',
-      // ── Mobile: light/dark + colour-theme buttons become icon-only so the
-      //    header action cluster stops overflowing onto the se77n/kata logo.
-      //    Injected here (always runs in boot) so it covers every page,
-      //    including the .hdr-logo pages that setupMobileChrome() skips.
-      '@media (max-width: 768px) {',
-      '  #kata-mode-btn > span:last-child { display: none !important; }',       // "LIGHT"/"DARK" text
-      '  #kata-mode-btn { width: 34px !important; padding-left: 0 !important; padding-right: 0 !important; justify-content: center !important; gap: 0 !important; }',
-      '  #kata-theme-btn button > span:nth-child(2) { display: none !important; }', // colour name / AUTO
-      '  #kata-theme-btn button { padding-left: 9px !important; padding-right: 9px !important; gap: 5px !important; }',
-      '  #kata-user-name { display: none !important; }',                        // keep avatar only
-      '}',
     ].join('\n');
     document.head.appendChild(s);
   }
 
-  // ── Light-mode overlay ─────────────────────────────────────────
-  // Every kata page hardcodes a dark palette (tailwind config + inline
-  // styles). Rather than refactor 11 pages, we flip the whole site from one
-  // place: when <html data-theme="light">, remap the dark tokens to the
-  // light palette. Inline literals are matched by attribute-substring with a
-  // property prefix (`background:` / `color:` / `solid `) so we only ever
-  // touch the intended property and never a gradient stop or box-shadow.
-  function injectLightOverlay() {
-    if (document.getElementById('kata-light-overlay')) return;
-    var R = [];
-    var L = '[data-theme="light"] ';
-
-    // expose the design palette as variables for pages that opt in
-    R.push('[data-theme="light"]{--bg:#f3eee4;--fg-rgb:33,28,22;--panel:#ffffff;--panel2:#faf6ee;--chrome-rgb:248,244,237;}');
-    R.push('[data-theme="dark"]{--bg:#0d0a08;--fg-rgb:245,237,224;--panel:#15110d;--panel2:#1c1813;--chrome-rgb:13,10,8;}');
-
-    // base chrome
-    R.push('html[data-theme="light"]{background-color:#f3eee4 !important;}');
-    R.push(L + 'body{color:#211c16 !important;}');
-    R.push(L + '#kata-ambient-grain{background-image:radial-gradient(rgba(33,28,22,0.05) 1px,transparent 1px) !important;}');
-    // page-local grain (tavern / cost) uses white dots — flip to dark
-    R.push(L + '.grain{background-image:radial-gradient(rgba(33,28,22,0.05) 1px,transparent 1px) !important;}');
-    // tavern's WebGL backdrop canvas is opaque dark; fade it so the light bg shows
-    R.push(L + '#bg{opacity:0.12 !important;}');
-
-    // tailwind utility classes used across pages
-    R.push(L + '.bg-bg{background-color:#f3eee4 !important;}');
-    R.push(L + '.bg-panel{background-color:#ffffff !important;}');
-    R.push(L + '.bg-panel2{background-color:#faf6ee !important;}');
-    R.push(L + '.text-ink{color:#211c16 !important;}');
-    R.push(L + '.text-mute{color:rgba(33,28,22,0.55) !important;}');
-    R.push(L + '.text-mute2{color:rgba(33,28,22,0.40) !important;}');
-    R.push(L + '.border-line{border-color:rgba(33,28,22,0.12) !important;}');
-    R.push(L + '.border-line2{border-color:rgba(33,28,22,0.18) !important;}');
-    R.push(L + '.text-gold{color:#ad7f31 !important;}');
-    R.push(L + '.text-green{color:#3d8a4f !important;}');
-
-    // solid inline surface fills
-    var BG = {
-      '#0d0a08':'#f3eee4', '#0d0a09':'#f3eee4',
-      '#15110d':'#ffffff', '#131010':'#ffffff', '#13100f':'#ffffff', '#100d0c':'#ffffff',
-      '#1c1813':'#faf6ee', '#1c1614':'#faf6ee', '#1a1312':'#f3ece0', '#1a1513':'#f3ece0', '#16120f':'#faf6ee',
-      '#0e0b0a':'#ffffff', '#0b0908':'#ffffff', '#0a0807':'#f0ebe1',
-    };
-    Object.keys(BG).forEach(function (h) {
-      R.push(L + '[style*="background:' + h + '" i]{background-color:' + BG[h] + ' !important;}');
-      R.push(L + '[style*="background-color:' + h + '" i]{background-color:' + BG[h] + ' !important;}');
-    });
-    // translucent chrome rgba(13,10,8,A) → light chrome (keep alpha)
-    ['0.5','0.55','0.6','0.7','0.72','0.78','0.82','0.84','0.85','0.92','0.95','0.96'].forEach(function (a) {
-      R.push(L + '[style*="background:rgba(13,10,8,' + a + ')" i]{background-color:rgba(248,244,237,' + a + ') !important;}');
-    });
-    // translucent panels rgba(21,17,13,A) → white panel
-    ['0.4','0.45','0.5','0.55','0.62','0.7','0.85','0.88','0.92'].forEach(function (a) {
-      R.push(L + '[style*="background:rgba(21,17,13,' + a + ')" i]{background-color:rgba(255,255,255,' + a + ') !important;}');
-    });
-    // faint fg overlays used as active-button backgrounds
-    ['0.10','0.07','0.05','0.04'].forEach(function (a) {
-      R.push(L + '[style*="background:rgba(245,237,224,' + a + ')" i]{background-color:rgba(33,28,22,0.06) !important;}');
-    });
-
-    // inline ink text
-    var TX = { '#f5ede0':'#211c16', '#f3ede6':'#211c16', '#ece6df':'#26201a', '#ddd6cf':'#3a322a', '#cfc7bf':'#4a4036', '#b9b0a8':'#6b6258' };
-    Object.keys(TX).forEach(function (h) { R.push(L + '[style*="color:' + h + '" i]{color:' + TX[h] + ' !important;}'); });
-    R.push(L + '[style*="color:#D4A858" i]{color:#ad7f31 !important;}');
-    R.push(L + '[style*="color:#5BA868" i]{color:#3d8a4f !important;}');
-    // muted inline text rgba(245,237,224,A) → dark (same alpha)
-    ['0.3','0.32','0.35','0.4','0.45','0.5','0.55','0.6','0.65','0.7','0.75','0.85'].forEach(function (a) {
-      R.push(L + '[style*="color:rgba(245,237,224,' + a + ')" i]{color:rgba(33,28,22,' + a + ') !important;}');
-    });
-
-    // dark solid borders → light
-    ['#2c2522','#272120','#1d1817','#332a26','#1f1a18','#3a302c','#2a2422','#2c2421'].forEach(function (h) {
-      R.push(L + '[style*="solid ' + h + '" i]{border-color:rgba(33,28,22,0.14) !important;}');
-      R.push(L + '[style*="border-color:' + h + '" i]{border-color:rgba(33,28,22,0.14) !important;}');
-    });
-    // white borders → dark tint (scale alpha up a touch for visibility)
-    ['0.02','0.03','0.04','0.05','0.06','0.08','0.09','0.10','0.12','0.14','0.15','0.18','0.25','0.3'].forEach(function (a) {
-      var da = Math.min(0.3, parseFloat(a) * 1.5 + 0.02).toFixed(2);
-      R.push(L + '[style*="solid rgba(255,255,255,' + a + ')" i]{border-color:rgba(33,28,22,' + da + ') !important;}');
-      R.push(L + '[style*="border-color:rgba(255,255,255,' + a + ')" i]{border-color:rgba(33,28,22,' + da + ') !important;}');
-    });
-
-    // ── Surfaces defined in page CSS classes (the inline overlay can't reach
-    //    class rules). Flip card/panel/input surfaces to light + their text to
-    //    dark. Nav active/hover and the hover highlights deliberately STAY dark
-    //    (dark bg + light text) — that's the legible "selected/hover" treatment.
-    ['.card', '.row', '.set-card', '.resolved', '.dd-panel'].forEach(function (c) {
-      R.push(L + c + '{background-color:#ffffff !important;border-color:rgba(33,28,22,0.12) !important;}');
-    });
-    ['.field', '.inp', '.dd-trigger', '.btn-step', '.set-segnav', '.msg-bubble', '.rv-prompt', '.rv-rrow', '.rv-cnode'].forEach(function (c) {
-      R.push(L + c + '{background-color:#faf6ee !important;border-color:rgba(33,28,22,0.12) !important;}');
-    });
-    R.push(L + '.bar-track{background-color:rgba(33,28,22,0.08) !important;}');
-    R.push(L + '.tgl{background-color:rgba(33,28,22,0.10) !important;border-color:rgba(33,28,22,0.18) !important;}');
-    R.push(L + '.card:hover, ' + L + '.row:hover{border-color:rgba(33,28,22,0.24) !important;}');
-    // class-defined light text → dark (nav/hover excluded so they stay legible)
-    ['.fld-title', '.set-sec-h', '.rv-rv', '.rv-sv', '.rv-title', '.dd-item', '.dd-trigger', '.field', '.inp', '.chain-model', '.set-narr-t'].forEach(function (c) {
-      R.push(L + c + '{color:#211c16 !important;}');
-    });
-    // Nav active/hover deliberately STAYS a dark pill — keep its text LIGHT
-    // (these rows lean on .text-ink which the overlay above flipped to dark).
-    R.push(L + '.navrow.on, ' + L + '.navrow.on .flex-1, ' + L + '.navitem.on{color:#f5ede0 !important;}');
-    // Content-row hover → a subtle light highlight so the (now dark) text stays readable.
-    ['.dd-item:hover', '.act-row:hover'].forEach(function (c) {
-      R.push(L + c + '{background-color:rgba(33,28,22,0.05) !important;}');
-    });
-
-    // JS-built header controls set their colour via el.style.color = '#f5ede0',
-    // which the browser serialises to rgb(245, 237, 224) — so the inline
-    // [style*="color:#f5ede0"] flips above never match them and the lang / mode
-    // / theme / user buttons stayed near-white on the light chrome (invisible).
-    // Override them by id (stylesheet !important beats the non-important inline).
-    R.push(L + '#kata-lang-btn, ' + L + '#kata-lang-btn span, ' + L + '#kata-mode-btn, ' +
-      L + '#kata-theme-btn button, ' + L + '#kata-user-chip{color:#211c16 !important;}');
-    // active language pill: its inline highlight is rgba(245,237,224,.10) (light
-    // on light) → flip to a dark tint so the selected language reads.
-    R.push(L + '#kata-lang-btn span[style*="background"]{background-color:rgba(33,28,22,0.10) !important;}');
-
+  // ── The B skin ──────────────────────────────────────────────────
+  // One stylesheet for every page, both themes. Neutrals are variables, so
+  // [data-theme] on <html> flips the whole dashboard. Legacy literal dark
+  // colours inside page templates are remapped by attribute-substring on the
+  // intended property only (source form, e.g. `background:#131010`).
+  function injectSkin() {
+    if (document.getElementById('kata-b-skin')) return;
     var s = document.createElement('style');
-    s.id = 'kata-light-overlay';
-    s.textContent = R.join('\n');
+    s.id = 'kata-b-skin';
+    s.textContent = skinCss();
     document.head.appendChild(s);
   }
 
-  // ── Ambient background layers ──────────────────────────────────
-  // Paints three fixed full-viewport backgrounds behind the page content,
-  // mirroring AmbientBackground in se77n/src/App.jsx. Layer 1 is the soft
-  // gradient driven by the active palette (changes when theme changes),
-  // layer 2 is a static dotted grain, layer 3 is a bottom radial that
-  // pulses via the kata-ambient keyframe.
-  function injectAmbientLayers() {
-    if (!document.getElementById('kata-ambient-base')) {
-      var base = document.createElement('div');
-      base.id = 'kata-ambient-base';
-      base.setAttribute('aria-hidden', 'true');
-      document.body.insertBefore(base, document.body.firstChild);
-    }
-    if (!document.getElementById('kata-ambient-grain')) {
-      var grain = document.createElement('div');
-      grain.id = 'kata-ambient-grain';
-      grain.setAttribute('aria-hidden', 'true');
-      document.body.insertBefore(grain, document.body.firstChild);
-    }
-    if (!document.getElementById('kata-ambient-pulse')) {
-      var pulse = document.createElement('div');
-      pulse.id = 'kata-ambient-pulse';
-      pulse.setAttribute('aria-hidden', 'true');
-      document.body.insertBefore(pulse, document.body.firstChild);
-    }
-  }
+  function skinCss() {
+    var RING4 = '0 -4px 0 0 var(--ink),0 4px 0 0 var(--ink),-4px 0 0 0 var(--ink),4px 0 0 0 var(--ink)';
+    var RING3 = '0 -3px 0 0 var(--ink),0 3px 0 0 var(--ink),-3px 0 0 0 var(--ink),3px 0 0 0 var(--ink)';
+    var RINGR = '0 -3px 0 0 #e04545,0 3px 0 0 #e04545,-3px 0 0 0 #e04545,3px 0 0 0 #e04545';
+    var PX = RING4 + ',10px 10px 0 4px var(--shadow)';
+    var PXD = RING3 + ',6px 7px 0 3px var(--shadow)';
+    var SB = RING3 + ',4px 5px 0 3px var(--ink)';
+    var SB_DOWN = RING3 + ',0 0 0 3px var(--ink)';
+    var PB = RING4 + ',6px 8px 0 4px var(--ink)';
+    var PB_HOVER = RING4 + ',8px 10px 0 4px var(--ink)';
+    var PB_DOWN = RING4 + ',0 0 0 4px var(--ink)';
+    // Pixel faces go through variables so Vietnamese (html[lang="vi"]) can swap
+    // them out — Pixelify Sans / Silkscreen have no Vietnamese glyphs.
+    var SK = 'var(--k-sk)';
+    var PF = 'var(--k-pf)';
+    var MONO = "'JetBrains Mono',ui-monospace,monospace";
+    // ▶ cursor drawn as a 3×5 pixel sprite
+    var STEP = 'polygon(0 0,34% 0,34% 20%,67% 20%,67% 40%,100% 40%,100% 60%,67% 60%,67% 80%,34% 80%,34% 100%,0 100%)';
+    var R = [];
 
-  function repaintAmbient() {
-    var idx = activeIdx();
-    var c1 = TRACKS[idx].palette[0];
-    var c2 = TRACKS[idx].palette[1] || '#5BA868';
-    var base = document.getElementById('kata-ambient-base');
-    var pulse = document.getElementById('kata-ambient-pulse');
-    if (base) {
-      base.style.backgroundImage =
-        'radial-gradient(60% 50% at 18% 12%, ' + c1 + '26 0%, transparent 65%),' +
-        'radial-gradient(50% 45% at 90% 88%, ' + c2 + '28 0%, transparent 70%),' +
-        'radial-gradient(35% 30% at 60% 50%, #D4A85810 0%, transparent 75%),' +
-        'linear-gradient(180deg, rgba(91,168,104,0.02) 0%, transparent 50%)';
-    }
-    if (pulse) {
-      pulse.style.background =
-        'radial-gradient(600px circle at 50% 100%, ' + c1 + '11, transparent 70%)';
-    }
+    // ── tokens (values mirror src/styles.css) ──
+    R.push(':root,[data-theme="light"]{' +
+      '--cream:#f3eee4;--paper:#fffaf0;--paper-2:#f7f0e3;--ink:#1b1410;--on-accent:#1b1410;' +
+      '--rule:#d8cdb9;--strip:#1b1410;--strip-2:#2e251d;--strip-text:#fffaf0;--shadow:rgba(27,20,16,.18);' +
+      '--dot:rgba(27,20,16,.09);--field:#f3eee4;--text:#1b1410;--muted:#5c5046;--muted-2:#6f6356;' +
+      '--ka:#b9a2ff;--k-red:#b42828;--k-green:#2f7a3d;--k-gold:#7d5a0f;--k-info:#2f5f86;--k-purple:#5f43b8;' +
+      '--c-bg:243 238 228;--c-panel:255 250 240;--c-panel2:247 240 227;--c-ink:27 20 16;' +
+      '--c-red:180 40 40;--c-green:47 122 61;--c-gold:125 90 15;--c-info:47 95 134;--c-warn:125 90 15;--c-err:180 40 40;--c-purple:95 67 184;' +
+      '--c-line:rgba(27,20,16,.2);--c-line2:rgba(27,20,16,.38);--c-mute:#5c5046;--c-mute2:#6f6356;' +
+      '--kh:81px;color-scheme:light;' +
+      "--k-pf:'Pixelify Sans','JetBrains Mono',ui-monospace,monospace;--k-sk:'Silkscreen','JetBrains Mono',ui-monospace,monospace;--k-fsa:none}");
+    // VI mode (Pixelify / Silkscreen have no Vietnamese glyphs, and VT323's tone
+    // marks blur below ~22px): big display titles (h1/h2, hero titles) use VT323;
+    // every smaller pixel-styled bit falls back to bold JetBrains Mono.
+    R.push('html[lang="vi"]{--k-pf:\'JetBrains Mono\',ui-monospace,monospace;--k-sk:\'JetBrains Mono\',ui-monospace,monospace;--k-fsa:none}');
+    R.push('html[lang="vi"] :is(h1,h2,.k-disp){font-family:\'VT323\',\'JetBrains Mono\',monospace!important;font-weight:400!important;font-size-adjust:.62!important;line-height:1.3!important;letter-spacing:.02em!important}');
+    R.push('[data-theme="dark"]{' +
+      '--cream:#17110d;--paper:#261d16;--paper-2:#2e241b;--ink:#050302;' +
+      '--rule:#3d3127;--strip:#0b0806;--strip-2:#261d16;--shadow:rgba(0,0,0,.5);' +
+      '--dot:rgba(255,250,240,.05);--field:#17110d;--text:#fffaf0;--muted:#c9bca6;--muted-2:#a99b85;' +
+      '--k-red:#ff7a7a;--k-green:#7fd18b;--k-gold:#ffd25e;--k-info:#9fd8ff;--k-purple:#b9a2ff;' +
+      '--c-bg:23 17 13;--c-panel:38 29 22;--c-panel2:46 36 27;--c-ink:255 250 240;' +
+      '--c-red:255 122 122;--c-green:127 209 139;--c-gold:255 210 94;--c-info:159 216 255;--c-warn:255 210 94;--c-err:255 122 122;--c-purple:185 162 255;' +
+      '--c-line:rgba(255,250,240,.14);--c-line2:rgba(255,250,240,.3);--c-mute:#c9bca6;--c-mute2:#a99b85;' +
+      'color-scheme:dark}');
+    // Dark "screen" surface (terminals, bot status) — same in both themes.
+    R.push('.k-screen{' +
+      '--c-bg:27 20 16;--c-panel:46 37 29;--c-panel2:46 37 29;--c-ink:255 250 240;' +
+      '--c-red:255 122 122;--c-green:127 209 139;--c-gold:255 210 94;--c-info:159 216 255;--c-warn:255 210 94;--c-err:255 122 122;--c-purple:185 162 255;' +
+      '--c-line:rgba(255,250,240,.16);--c-line2:rgba(255,250,240,.3);--c-mute:#c9bca6;--c-mute2:#a99b85;' +
+      '--text:#fffaf0;--muted:#c9bca6;--muted-2:#a99b85;--paper:#2e251d;--paper-2:#2e251d;--field:#2e251d;--rule:#43362b;--cream:#1b1410;' +
+      '--k-red:#ff7a7a;--k-green:#7fd18b;--k-gold:#ffd25e;--k-info:#9fd8ff;--k-purple:#b9a2ff;' +
+      'background-color:#1b1410!important;color:#fffaf0}');
+    R.push('[data-theme="dark"] .k-screen{background-color:#0b0806!important}');
+
+    // ── page ground ──
+    R.push('html{background-color:var(--cream)!important}');
+    R.push('body{background-color:var(--cream)!important;background-image:radial-gradient(var(--dot) 1.2px,transparent 1.6px)!important;background-size:16px 16px!important;color:var(--text)!important;font-family:' + MONO + '!important;-webkit-font-smoothing:antialiased}');
+    R.push('*:not(.k-round),*::before,*::after{border-radius:0!important}');
+    R.push('.k-round{border-radius:999px!important}');
+    R.push('.hidden{display:none!important}');
+    R.push('#kata-ambient-base,#kata-ambient-grain,#kata-ambient-pulse,.ambient,.grain,.bg-stack{display:none!important}');
+    // Tavern nebula in light mode: screen-blend so the dark base vanishes into the cream
+    // and only the glow / dust shows (a faded dark canvas would just grey the page).
+    R.push('html[data-theme="light"] canvas#bg{opacity:1!important;mix-blend-mode:screen}');
+    R.push('::selection{background:#b9a2ff;color:#1b1410}');
+    R.push(':focus-visible{outline:3px solid #e04545!important;outline-offset:2px}');
+    R.push('::-webkit-scrollbar{width:12px;height:12px}');
+    R.push('::-webkit-scrollbar-track{background:var(--paper-2)}');
+    R.push('::-webkit-scrollbar-thumb{background:var(--ink)!important;border:3px solid var(--paper-2)!important;border-radius:0!important}');
+    R.push('::-webkit-scrollbar-thumb:hover{background:#e04545!important}');
+
+    // ── type ──
+    R.push(':where(.font-sans,.mono){font-family:' + MONO + '}');
+    R.push('h1,h2,h3,.k-pf{font-family:' + PF + '!important;font-size-adjust:var(--k-fsa);font-weight:700!important;letter-spacing:0!important}');
+    R.push('.k-sk,.tracking-kicker,.tracking-label,.tracking-tag,' +
+      '[style*="letter-spacing:.1"],[style*="letter-spacing:.2"],[style*="letter-spacing:.3"],' +
+      '[style*="letter-spacing:0.1"],[style*="letter-spacing:0.2"],[style*="letter-spacing:0.3"],' +
+      '[style*="letter-spacing: 0.1"],[style*="letter-spacing: 0.2"],[style*="letter-spacing: 0.3"]' +
+      '{font-family:' + SK + '!important;font-size-adjust:var(--k-fsa);letter-spacing:.03em!important;font-weight:700}');
+    R.push('.text-\\[8px\\],.text-\\[8\\.5px\\],.text-\\[9px\\],.text-\\[9\\.5px\\]{font-size:10px!important}');
+    R.push('.glow77{text-shadow:none!important}');
+    R.push('.dot-pulse{animation:k-blink 1.2s steps(1) infinite!important}');
+
+    // ── legacy literal colours → B variables (both themes) ──
+    var BG = {
+      '#0d0a08': 'var(--cream)', '#0d0a09': 'var(--cream)', '#08050a': 'var(--cream)',
+      '#15110d': 'var(--paper)', '#131010': 'var(--paper)', '#13100f': 'var(--paper)', '#100d0c': 'var(--paper)', '#0b0908': 'var(--paper)',
+      '#1c1813': 'var(--paper-2)', '#1c1614': 'var(--paper-2)', '#1a1312': 'var(--paper-2)', '#1a1513': 'var(--paper-2)',
+      '#16120f': 'var(--paper-2)', '#0a0807': 'var(--paper-2)', '#15100f': 'var(--paper-2)', '#1d1817': 'var(--paper-2)',
+      '#0e0b0a': 'var(--field)',
+    };
+    Object.keys(BG).forEach(function (h) {
+      R.push('[style*="background:' + h + '" i],[style*="background-color:' + h + '" i]{background-color:' + BG[h] + '!important;background-image:none!important}');
+    });
+    ['13,10,8', '21,17,13', '8,5,10'].forEach(function (rgb) {
+      R.push('[style*="background:rgba(' + rgb + '," i]{background-color:var(--paper)!important;background-image:none!important}');
+    });
+    R.push('[style*="background:rgba(245,237,224,0.0" i],[style*="background:rgba(245,237,224,0.1" i],[style*="background:rgba(255,255,255,0.0" i],[style*="background:rgba(255,255,255,0.1" i]{background-color:var(--paper-2)!important}');
+    var TX = {
+      '#f5ede0': 'var(--text)', '#f3ede6': 'var(--text)', '#ece6df': 'var(--text)', '#ddd6cf': 'var(--text)', '#f5e8e8': 'var(--text)', '#cfc7bf': 'var(--text)',
+      '#b9b0a8': 'var(--muted)', '#8a7f78': 'var(--muted)', '#6b6058': 'var(--muted)', '#6b5f58': 'var(--muted)', '#57504b': 'var(--muted)',
+      '#7a7068': 'var(--muted)', '#4a423d': 'var(--muted)', '#3a322e': 'var(--muted)', '#6b6258': 'var(--muted)',
+      '#D4A858': 'var(--k-gold)', '#c9a653': 'var(--k-gold)', '#5BA868': 'var(--k-green)', '#E04545': 'var(--k-red)', '#c46868': 'var(--k-red)',
+      '#7a9eb5': 'var(--k-info)', '#8a4fff': 'var(--k-purple)', '#a87aff': 'var(--k-purple)',
+    };
+    // Match `color:` only as its own declaration (not inside background-color / border-color).
+    Object.keys(TX).forEach(function (h) {
+      R.push('[style^="color:' + h + '" i],[style*=";color:' + h + '" i],[style*="; color:' + h + '" i]{color:' + TX[h] + '!important}');
+    });
+    R.push('[style^="color:rgba(245,237,224" i],[style*=";color:rgba(245,237,224" i]{color:var(--muted)!important}');
+    R.push('[style^="color:rgba(245,237,224,0.9" i],[style*=";color:rgba(245,237,224,0.9" i],[style^="color:rgba(245,237,224,0.8" i],[style*=";color:rgba(245,237,224,0.8" i]{color:var(--text)!important}');
+    ['#2c2522', '#272120', '#1d1817', '#332a26', '#1f1a18', '#3a302c', '#2a2422', '#2c2421', '#4a3a2a', '#2c5a44', '#5a342c'].forEach(function (h) {
+      R.push('[style*="solid ' + h + '" i],[style*="border-color:' + h + '" i]{border-color:var(--c-line)!important}');
+    });
+    R.push('[style*="solid rgba(255,255,255," i],[style*="border-color:rgba(255,255,255," i]{border-color:var(--c-line)!important}');
+    // Tinted status pills / notes → solid arcade fills with ink text.
+    var PILL = {
+      '#ff7a7a': ['#E0454518', '#E0454522', '#E0454514', '#c4686818', '#c4686810', 'rgba(224,69,69,0.1', 'rgba(224,69,69,0.05'],
+      '#ffd25e': ['#D4A85818', '#D4A85822', '#c9a65318'],
+      '#9fd8ff': ['#7a9eb518'],
+      '#7fd18b': ['#5BA86818', 'rgba(91,168,104,0.1'],
+    };
+    Object.keys(PILL).forEach(function (fill) {
+      var sel = PILL[fill].map(function (h) { return '[style*="background:' + h + '" i]'; }).join(',');
+      R.push(sel + '{background:' + fill + '!important;color:#1b1410!important;border:2px solid var(--ink)!important}');
+    });
+
+    // ── header (HUD) ──
+    R.push('body>header.fixed,header.kata-nav{height:72px!important;background:var(--paper)!important;border:0!important;border-bottom:4px solid var(--ink)!important;' +
+      'backdrop-filter:none!important;-webkit-backdrop-filter:none!important;box-shadow:none!important;color:var(--text)!important;padding-left:28px!important;padding-right:28px!important}');
+    R.push('body>header.fixed::after,header.kata-nav::after{content:"";position:absolute;left:0;right:0;top:100%;height:6px;background:var(--ka);border-bottom:3px solid var(--ink);pointer-events:none}');
+    R.push('body>header.fixed>div:first-child{gap:22px!important;min-width:0}');
+    R.push('.k-logo{display:flex!important;flex-direction:column;align-items:flex-start;gap:5px;color:var(--text)!important;text-decoration:none!important;flex-shrink:0;line-height:1}');
+    R.push('.k-logo .k-word{font-family:' + PF + ';font-size-adjust:var(--k-fsa);font-size:30px;font-weight:700;line-height:1;white-space:nowrap;color:var(--text)}');
+    R.push('.k-logo .k-77{color:#e04545;text-shadow:3px 3px 0 var(--ink)}');
+    R.push('.k-logo .k-sfx{color:var(--muted);font-size:20px;margin-left:8px}');
+    R.push('.k-logo .k-sub{font-family:' + SK + ';font-size-adjust:var(--k-fsa);font-size:10px;font-weight:700;letter-spacing:.05em;color:var(--muted);white-space:nowrap;text-transform:uppercase}');
+    R.push('.k-lobby{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 12px;flex-shrink:0;font-family:' + SK + ';font-size-adjust:var(--k-fsa);font-size:11px;font-weight:700;letter-spacing:.03em;white-space:nowrap;' +
+      'color:var(--text)!important;background:var(--paper);text-decoration:none!important;box-shadow:' + SB + ';transition:transform 60ms,box-shadow 60ms}');
+    R.push('.k-lobby:hover{transform:translate(-1px,-1px)}');
+    R.push('.k-lobby:active{transform:translate(4px,5px);box-shadow:' + SB_DOWN + '}');
+    R.push('.k-bc{font-family:' + SK + '!important;font-size-adjust:var(--k-fsa);font-size:11px!important;gap:8px!important;margin-left:0!important}');
+    R.push('.k-bc a{color:var(--muted)!important;text-decoration:none}.k-bc a:hover{color:var(--text)!important;text-decoration:underline}');
+    R.push('.k-live{display:inline-flex!important;align-items:center;gap:8px!important;height:30px;padding:0 10px;margin-left:0!important;flex-shrink:0;background:#7fd18b!important;color:#1b1410!important;box-shadow:' + RING3 + ';font-family:' + SK + '!important;font-size-adjust:var(--k-fsa);font-size:11px!important}');
+    R.push('.k-live>span:first-child{width:8px!important;height:8px!important;background:#1b1410!important;box-shadow:none!important}');
+
+    // ── header actions (built below) ──
+    R.push('#kata-header-actions{display:flex;align-items:center;gap:14px!important}');
+    R.push('#kata-header-actions>*{transform:none!important}');
+    R.push('.k-hbtn{position:relative;display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 11px;border:0!important;background:var(--paper)!important;color:var(--text)!important;' +
+      'font-family:' + SK + '!important;font-size-adjust:var(--k-fsa);font-size:11px!important;font-weight:700;letter-spacing:.03em!important;text-transform:uppercase;cursor:pointer;box-shadow:' + RING3 + ';' +
+      'text-decoration:none!important;white-space:nowrap;transition:background 80ms steps(2)}');
+    R.push('.k-hbtn:hover{background:var(--paper-2)!important}');
+    R.push('.k-lang{padding:0!important;gap:0!important}');
+    R.push('.k-lang .k-seg{display:grid;place-items:center;height:100%;padding:0 10px;color:var(--text)}');
+    R.push('.k-lang .k-seg.on{background:var(--ink);color:var(--paper)}');
+    R.push('[data-theme="dark"] .k-lang .k-seg.on{background:var(--strip-text);color:#1b1410}');
+    R.push('.k-mode svg,.k-hbtn svg{display:block;flex:none}');
+    R.push('.k-hl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}');
+    R.push('.k-sw{display:inline-block;width:14px;height:14px;flex:none;box-shadow:0 0 0 2px var(--ink)}');
+    R.push('.k-caret{font-size:9px;color:var(--muted)}');
+    R.push('.k-user{padding:0 12px 0 5px!important}');
+    R.push('.k-user>img,.k-user>span:first-child{width:28px!important;height:28px!important;flex:none;object-fit:cover;display:grid!important;place-items:center;' +
+      'background:#ff7a7a!important;color:#1b1410!important;font-family:' + PF + '!important;font-size-adjust:var(--k-fsa);font-size:15px!important;font-weight:700;border:0!important;box-shadow:0 0 0 2px var(--ink)!important}');
+    R.push('.k-user>span:nth-child(2){max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-transform:none;font-family:' + MONO + ';font-size:12px}');
+    R.push('.k-user>span:nth-child(3){color:var(--muted)!important}');
+
+    // ── menus (palette, account) ──
+    R.push('.k-menu{position:absolute;right:0;top:calc(100% + 14px);z-index:120;min-width:210px;max-width:80vw;padding:8px;background:var(--paper);color:var(--text);box-shadow:' + PX + ';' +
+      'font-family:' + MONO + ';text-transform:none;letter-spacing:0;cursor:default;text-align:left;white-space:normal}');
+    R.push('.k-menu-row{display:flex;align-items:center;gap:10px;width:100%;min-height:38px;padding:0 10px;border:0;background:transparent;color:var(--text);' +
+      'font-family:' + SK + ';font-size-adjust:var(--k-fsa);font-size:11px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;cursor:pointer;text-align:left}');
+    R.push('.k-menu-row:hover{background:var(--paper-2)}');
+    R.push('.k-menu-row.on{background:var(--ink);color:var(--paper)}');
+    R.push('[data-theme="dark"] .k-menu-row.on{background:var(--strip-text);color:#1b1410}');
+    R.push('.k-menu-row .k-cur{margin-left:auto;width:9px;height:15px;flex:none;background:var(--ka);clip-path:' + STEP + ';visibility:hidden}');
+    R.push('.k-menu-row.on .k-cur{visibility:visible}');
+    R.push('.k-menu-foot{margin-top:6px;padding:9px 10px 3px;border-top:3px dashed var(--rule);font-family:' + SK + ';font-size-adjust:var(--k-fsa);font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase}');
+    R.push('.k-menu-kicker{font-family:' + SK + ';font-size-adjust:var(--k-fsa);font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;margin:2px 2px 8px}');
+    R.push('.k-menu-name{font-size:14px;font-weight:700;color:var(--text);margin:0 2px}');
+    R.push('.k-menu-mail{font-size:11px;color:var(--muted);margin:4px 2px 0;word-break:break-all}');
+
+    // ── SELECT STAGE side menu ──
+    R.push('body>aside.fixed{top:calc(var(--kh) + 30px)!important;left:28px!important;bottom:28px!important;width:244px!important;background:var(--paper)!important;' +
+      'border:0!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;box-shadow:' + PX + '!important;overflow-y:auto;overflow-x:hidden;color:var(--text);z-index:40}');
+    R.push('body>aside.fixed::before{content:"SELECT STAGE";content:"SELECT STAGE"/"";display:flex;align-items:center;position:sticky;top:0;z-index:3;flex:none;height:34px;padding:0 14px;' +
+      'background:var(--strip);color:var(--strip-text);font-family:' + SK + ';font-size-adjust:var(--k-fsa);font-size:11px;font-weight:700;letter-spacing:.06em}');
+    R.push('body>aside.fixed>div:first-child{border-bottom:3px dashed var(--rule)!important;border-top:0!important}');
+    R.push('body>aside.fixed>div:last-child:not(:first-child){border-top:3px dashed var(--rule)!important;margin-top:8px;padding-top:12px!important}');
+    R.push('body>aside.fixed nav{display:flex!important;flex-direction:column!important;gap:6px!important;padding:14px 14px 12px!important;min-height:0!important}');
+    var NAVI = '.navrow,.navitem,body>aside nav a[data-tab]';
+    R.push(NAVI + '{position:relative;display:flex!important;align-items:center!important;gap:10px!important;min-height:42px;margin:0!important;padding:0 12px!important;' +
+      'border:0!important;background:transparent!important;color:var(--text)!important;box-shadow:none!important;font-family:' + SK + '!important;font-size-adjust:var(--k-fsa);font-size:12px!important;font-weight:700!important;' +
+      'letter-spacing:.03em!important;line-height:1.3!important;text-transform:uppercase;text-decoration:none!important;cursor:pointer;transform:none!important;transition:background 80ms steps(2)!important;padding-top:8px!important;padding-bottom:8px!important}');
+    R.push(NAVI.split(',').map(function (x) { return x + '::before'; }).join(',') + '{content:"";flex:none;width:9px;height:15px;background:var(--ka);clip-path:' + STEP + ';visibility:hidden}');
+    R.push(NAVI.split(',').map(function (x) { return x + ':hover'; }).join(',') + '{background:var(--cream)!important}');
+    var NAVON = '.navrow.on,.navitem.on,body>aside nav a[data-tab].tab-active,body>aside nav a[data-tab].on';
+    R.push(NAVON + '{background:var(--strip)!important;color:var(--strip-text)!important}');
+    R.push(NAVON.split(',').map(function (x) { return x + '::before'; }).join(',') + '{visibility:visible}');
+    R.push(NAVON.split(',').map(function (x) { return x + ' *'; }).join(',') + '{color:#c9bca6!important;background:transparent!important;border-color:transparent!important}');
+    R.push(NAVON.split(',').map(function (x) { return x + '>span:first-child'; }).join(',') + '{color:var(--ka)!important}');
+    R.push('.navrow>span:first-child,.navitem>span:first-child{color:var(--muted)}');
+    R.push('.navrow .flex-1,.navitem .flex-1,.navitem>span[style*="flex:1"]{min-width:0}');
+    R.push('.navrow>span:last-child:not(.flex-1),.navitem>span:last-child:not(.flex-1){flex:none}');
+    R.push('#kata-guild-icon{width:64px!important;height:64px!important;background:var(--ka)!important;color:#1b1410!important;border:0!important;box-shadow:' + RING3 + '!important;font-family:' + PF + '!important;font-size-adjust:var(--k-fsa);font-size:24px!important;overflow:hidden}');
+    R.push('#kata-guild-icon img{width:64px!important;height:64px!important}');
+    R.push('#kata-guild-name{font-family:' + MONO + '!important;font-size:14px!important}');
+
+    // ── main column offsets for the fixed chrome ──
+    R.push('body>main[class*="pl-["]{padding-left:308px!important;padding-right:44px!important}');
+    R.push('body>main.pt-20{padding-top:calc(var(--kh) + 40px)!important}');
+    R.push('body>main[style*="padding-top:58px"]{padding-top:var(--kh)!important}');
+    R.push('#toast{top:calc(var(--kh) + 18px)!important}');
+
+    // ── generic content: panels, cards, inputs, buttons ──
+    var PANEL = 'main .border.rounded-\\[12px\\],main .border.rounded-\\[13px\\],main .border.rounded-\\[14px\\],main .border.rounded-\\[16px\\]';
+    R.push(PANEL + '{border:0!important;background-color:var(--paper)!important;background-image:none!important;box-shadow:' + PX + '!important}');
+    R.push('main a.border.rounded-\\[14px\\],main article.rounded-\\[14px\\],main .mem-card{box-shadow:' + PXD + '!important}');
+    R.push('main .grid.gap-3{gap:24px!important}');
+    R.push('main .space-y-2>:not([hidden])~:not([hidden]),main .space-y-2\\.5>:not([hidden])~:not([hidden]){margin-top:22px!important}');
+    var FIELD = 'main input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]):not([type=file]),main textarea,main select,.k-field';
+    R.push(FIELD + '{background-color:var(--field)!important;color:var(--text)!important;border:0!important;box-shadow:' + RING3 + '!important;outline:none!important;font-family:' + MONO + '}');
+    R.push(FIELD.split(',').map(function (x) { return x + ':focus'; }).join(',') + '{background-color:var(--paper)!important;box-shadow:' + RINGR + '!important}');
+    R.push('input::placeholder,textarea::placeholder{color:var(--muted)!important;opacity:.8!important}');
+    R.push('main input[class*="h-8"],main input[class*="h-9"]{height:40px!important}');
+    R.push('main .flex.gap-2:has(>input,>button,>.relative>input){gap:14px!important}');
+    var BTN = 'main :is(button,a)[class*="h-8"].border,main :is(button,a)[class*="h-9"].border,main :is(button,a)[class*="h-10"].border,.k-sbtn';
+    R.push(BTN + '{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0!important;background:var(--paper)!important;color:var(--text)!important;' +
+      'font-family:' + SK + '!important;font-size-adjust:var(--k-fsa);font-size:11px!important;font-weight:700;letter-spacing:.03em!important;text-transform:uppercase;text-decoration:none!important;cursor:pointer;' +
+      'box-shadow:' + SB + '!important;transition:transform 60ms,box-shadow 60ms}');
+    R.push(BTN.split(',').map(function (x) { return x + ':hover'; }).join(',') + '{transform:translate(-1px,-1px)}');
+    R.push(BTN.split(',').map(function (x) { return x + ':active'; }).join(',') + '{transform:translate(4px,5px);box-shadow:' + SB_DOWN + '!important}');
+    R.push('main button[class*="h-8"],main button[class*="h-9"],main a[class*="h-9"].border{height:40px!important}');
+    // Primary actions (legacy red / accent / Discord-blurple fills) → kata purple, ink text.
+    var PRI = ':is(button,a)[style*="background:#E04545" i],:is(button,a)[style*="background:var(--accent" i],:is(button,a)[style*="background:#5865F2" i],.k-pri';
+    R.push(PRI + '{background:var(--ka)!important;color:#1b1410!important;border:0!important;box-shadow:' + SB + '!important;font-family:' + SK + '!important;font-size-adjust:var(--k-fsa);letter-spacing:.03em!important;' +
+      'text-transform:uppercase;text-decoration:none!important;transition:transform 60ms,box-shadow 60ms}');
+    R.push(PRI.split(',').map(function (x) { return x + ':hover'; }).join(',') + '{transform:translate(-1px,-1px)}');
+    R.push(PRI.split(',').map(function (x) { return x + ':active'; }).join(',') + '{transform:translate(4px,5px);box-shadow:' + SB_DOWN + '!important}');
+    // Inside a dark screen: cream input wells, flat terminal buttons.
+    R.push('body .k-screen :is(input,textarea,select){background-color:#f3eee4!important;color:#1b1410!important;box-shadow:none!important}');
+    R.push('body .k-screen :is(input,textarea,select):focus{background-color:#fffaf0!important;box-shadow:' + RINGR + '!important}');
+    R.push('body .k-screen :is(input,textarea)::placeholder{color:#6f6356!important}');
+    R.push('body .k-screen :is(button,a):is(.border,.k-sbtn){background:#2e251d!important;color:#fffaf0!important;box-shadow:none!important}');
+    R.push('body .k-screen :is(button,a):is(.border,.k-sbtn):hover{background:#43362b!important}');
+    R.push('body .k-screen :is(button,a):is(.border,.k-sbtn):active{transform:translate(2px,3px)}');
+    R.push('body .k-screen .k-pri{background:var(--ka)!important;color:#1b1410!important;box-shadow:none!important}');
+    R.push('main footer.grid{border-top:3px dashed var(--rule)!important;font-family:' + SK + '!important;font-size-adjust:var(--k-fsa);font-size:11px!important}');
+    R.push('.border-line\\/60{border-color:var(--rule)!important}');
+
+    // ── k-* building blocks (pages use these directly) ──
+    R.push('.k-px{box-shadow:' + PX + '}');
+    R.push('.k-pxs{box-shadow:' + RING3 + '}');
+    R.push('.k-pxd{box-shadow:' + PXD + '}');
+    R.push('.k-pbtn{cursor:pointer;border:0;box-shadow:' + PB + ';transition:transform 60ms,box-shadow 60ms}');
+    R.push('.k-pbtn:hover{transform:translate(-2px,-2px);box-shadow:' + PB_HOVER + '}');
+    R.push('.k-pbtn:active{transform:translate(6px,8px);box-shadow:' + PB_DOWN + '}');
+    R.push('.k-chip{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:36px;padding:0 14px;border:0!important;background:var(--paper)!important;color:var(--text)!important;' +
+      'box-shadow:' + RING3 + '!important;font-family:' + SK + '!important;font-size-adjust:var(--k-fsa);font-size:11px!important;font-weight:700;letter-spacing:.03em!important;text-transform:uppercase;cursor:pointer;transform:none!important;transition:background 80ms steps(2)}');
+    R.push('.k-chip:hover{background:var(--paper-2)!important}');
+    R.push('.k-chip.on,.k-chip[aria-pressed="true"]{background:var(--ink)!important;color:var(--paper)!important}');
+    R.push('[data-theme="dark"] .k-chip.on,[data-theme="dark"] .k-chip[aria-pressed="true"]{background:var(--strip-text)!important;color:#1b1410!important}');
+    R.push('.k-tag{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;background:var(--strip);color:var(--strip-text);font-family:' + SK + ';font-size-adjust:var(--k-fsa);font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}');
+    R.push('.k-badge{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;padding:3px 7px;font-family:' + SK + ';font-size-adjust:var(--k-fsa);font-size:10px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:#1b1410;background:#ffd25e;box-shadow:' + RING3 + '}');
+    R.push('.k-kicker{font-family:' + SK + ';font-size-adjust:var(--k-fsa);font-size:11px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--muted)}');
+    R.push('.k-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}');
+    R.push('.k-kpi{padding:20px 24px 22px;min-width:0}');
+    R.push('.k-kpi+.k-kpi{border-left:3px dashed var(--rule)}');
+    R.push('.k-kpi-l{margin:0;font-family:' + SK + ';font-size-adjust:var(--k-fsa);font-size:11px;font-weight:700;letter-spacing:.03em;color:var(--muted);text-transform:uppercase}');
+    R.push('.k-kpi-v{display:flex;align-items:center;gap:10px;margin:12px 0 0;font-family:' + PF + ';font-size-adjust:var(--k-fsa);font-size:34px;font-weight:700;line-height:1;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}');
+    R.push('.k-kpi-n{margin:8px 0 0;font-size:12px;color:var(--muted)}');
+    R.push('.k-hp{height:18px;background:var(--paper);border:3px solid var(--ink);overflow:hidden}');
+    R.push('.k-hp>span{display:block;height:100%;background:repeating-linear-gradient(90deg,var(--a,#b9a2ff) 0 10px,transparent 10px 12px);transition:width .4s steps(6)}');
+    R.push('.k-say{position:relative;padding:40px 30px 34px;background:var(--paper);box-shadow:' + PX + '}');
+    R.push('.k-say>.k-tag:first-child{position:absolute;left:18px;top:-18px}');
+    R.push('.k-say .k-more{position:absolute;right:22px;bottom:16px;width:20px;height:14px;background:#e04545;clip-path:polygon(0 0,100% 0,100% 33%,80% 33%,80% 67%,60% 67%,60% 100%,40% 100%,40% 67%,20% 67%,20% 33%,0 33%)}');
+    R.push('.k-cursor{display:inline-block;width:10px;height:18px;vertical-align:-3px;background:currentColor}');
+    R.push('.k-prompt{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-size:13px}');
+    R.push('.k-prompt b{color:#7fd18b}');
+    R.push('.k-prompt i{font-style:normal;color:#c9bca6}');
+    R.push('.k-bricks{height:44px;background-color:#c9733e;background-image:linear-gradient(#8e4a22 4px,transparent 4px),linear-gradient(90deg,#8e4a22 4px,transparent 4px);background-size:32px 24px;border-top:8px solid #5bbf6a;box-shadow:inset 0 4px 0 var(--ink)}');
+    R.push('.k-blink{animation:k-blink 1s steps(1) infinite}');
+    R.push('.k-bob{animation:k-bob 1s steps(2) infinite}');
+    R.push('.k-rise{animation:k-rise .4s steps(4) backwards}');
+    R.push('.k-coin{animation:k-coin .9s steps(4) infinite}');
+    R.push('@keyframes k-blink{50%{opacity:0}}');
+    R.push('@keyframes k-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}');
+    R.push('@keyframes k-rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}');
+    R.push('@keyframes k-coin{0%,100%{transform:scaleX(1)}50%{transform:scaleX(.15)}}');
+
+    // ── dialogs + toasts ──
+    R.push('.k-dlg-ov{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(27,20,16,.55);animation:kdFadeIn 120ms steps(3)}');
+    R.push('[data-theme="dark"] .k-dlg-ov{background:rgba(0,0,0,.7)}');
+    R.push('.k-dlg{position:relative;width:100%;min-width:300px;max-width:520px;padding:40px 26px 22px;background:var(--paper);color:var(--text);box-shadow:' + PX + ';font-family:' + MONO + ';animation:kdPop 160ms steps(4)}');
+    R.push('.k-dlg>.k-tag{position:absolute;left:18px;top:-17px}');
+    R.push('.k-dlg-msg{font-size:14px;line-height:1.6;color:var(--text);white-space:pre-wrap}');
+    R.push('.k-dlg .k-field{display:block;width:100%;margin-top:16px;padding:11px 12px;font-size:14px;line-height:1.5}');
+    R.push('.k-dlg-actions{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:18px;margin-top:24px;padding:0 6px 6px 0}');
+    R.push('.k-dlg-btn{height:40px;padding:0 16px}');
+    R.push('.k-dlg-btn.k-danger{background:#ff7a7a!important}');
+    R.push('.k-toast{position:fixed;bottom:24px;right:24px;z-index:1100;display:flex;align-items:center;gap:10px;max-width:min(420px,calc(100vw - 48px));padding:12px 16px;background:var(--paper);color:var(--text);' +
+      'box-shadow:' + PXD + ';font-family:' + SK + ';font-size-adjust:var(--k-fsa);font-size:11px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;animation:kdToastIn 160ms steps(4)}');
+    R.push('.k-toast::before,.k-toast-i::before{content:"";flex:none;width:12px;height:12px;background:var(--tc,#b9a2ff);box-shadow:0 0 0 2px var(--ink)}');
+    // page-local stacked toasts (#toast / #toast-wrap containers)
+    R.push('.k-toast-i{display:flex;align-items:center;gap:10px;max-width:420px;margin:0 0 16px;padding:11px 14px;background:var(--paper);color:var(--text);box-shadow:' + PXD + ';' +
+      'font-family:' + SK + ';font-size-adjust:var(--k-fsa);font-size:11px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;pointer-events:auto;animation:kdToastIn 160ms steps(4)}');
+    R.push('@keyframes kdFadeIn{from{opacity:0}to{opacity:1}}');
+    R.push('@keyframes kdFadeOut{from{opacity:1}to{opacity:0}}');
+    R.push('@keyframes kdPop{from{transform:translateY(8px);opacity:0}to{transform:none;opacity:1}}');
+    R.push('@keyframes kdToastIn{from{transform:translateY(16px);opacity:0}to{transform:none;opacity:1}}');
+    R.push('@keyframes kdToastOut{from{transform:none;opacity:1}to{transform:translateY(8px);opacity:0}}');
+
+    // ── model picker ──
+    R.push('.k-mp{position:absolute;z-index:1100;min-width:340px;padding:10px;background:var(--paper);color:var(--text);box-shadow:' + PX + ';font-family:' + MONO + '}');
+    R.push('.k-mp-tabs{display:flex;flex-wrap:wrap;gap:10px;padding:3px 3px 12px;margin-bottom:10px;border-bottom:3px dashed var(--rule)}');
+    R.push('.k-mp-tabs .k-chip{height:30px;padding:0 10px;font-size:10px!important}');
+    R.push('.k-mp-list{max-height:280px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;margin-bottom:12px}');
+    R.push('.k-mp-row{display:block;width:100%;padding:9px 10px;border:0;background:transparent;color:var(--text);font-family:' + MONO + ';font-size:12px;text-align:left;cursor:pointer}');
+    R.push('.k-mp-row:hover{background:var(--paper-2)}');
+    R.push('.k-mp-row.on{background:var(--ink);color:var(--paper)}');
+    R.push('[data-theme="dark"] .k-mp-row.on{background:var(--strip-text);color:#1b1410}');
+    R.push('.k-mp-row.k-mp-def{color:var(--muted);font-size:11px;border-bottom:3px dashed var(--rule);margin-bottom:4px}');
+    R.push('.k-mp-row.k-mp-def.on{color:var(--paper)}');
+    R.push('.k-mp-custom{display:flex;gap:14px;padding:3px 6px 6px 3px}');
+    R.push('.k-mp-custom .k-field{flex:1;min-width:0;height:38px;padding:0 10px;font-size:12px}');
+    R.push('.k-mp-custom .k-sbtn{height:38px;padding:0 14px}');
+
+    // ── tablet: breadcrumb gives way first ──
+    R.push('@media (max-width:1500px){.k-bc{display:none!important}}');
+    R.push('@media (max-width:1180px){.k-logo .k-sub,.k-live{display:none!important}}');
+    R.push('@media (max-width:980px){#kata-theme-btn .k-hbtn>span:nth-child(2){display:none!important}}');
+
+    // ── phone ──
+    R.push('@media (max-width:768px){' +
+      ':root{--kh:73px}' +
+      'body>header.fixed,header.kata-nav{height:64px!important;padding-left:12px!important;padding-right:12px!important;gap:10px}' +
+      'body>header.fixed>div:first-child{gap:12px!important}' +
+      '.k-logo .k-word{font-size:22px}.k-logo .k-sfx,.k-logo .k-sub{display:none!important}' +
+      '.k-lobby{width:36px;padding:0;justify-content:center}.k-lobby .k-lobby-t{display:none}' +
+      '.k-bc,.k-live{display:none!important}' +
+      '#kata-header-actions{gap:10px!important}' +
+      '.k-hbtn{height:34px;padding:0 8px}.k-lang .k-seg{padding:0 7px}' +
+      '.k-mode .k-hl,#kata-theme-btn .k-hbtn>span:nth-child(2),#kata-user-name,.k-user>span:nth-child(2),.k-user>span:nth-child(3){display:none!important}' +
+      '.k-user{padding:0 3px!important}' +
+      'body>aside.fixed:not(.k-drawer){top:var(--kh)!important;left:0!important;right:0!important;bottom:auto!important;width:auto!important;height:auto!important;display:flex!important;flex-direction:row!important;' +
+      'overflow-x:auto!important;overflow-y:hidden!important;box-shadow:none!important;border-bottom:3px solid var(--ink)!important;background:var(--paper)!important}' +
+      'body>aside.fixed:not(.k-drawer)::before,body>aside.fixed:not(.k-drawer)>div{display:none!important}' +
+      'body>aside.fixed:not(.k-drawer) nav{flex-direction:row!important;gap:12px!important;padding:12px 14px!important}' +
+      'body>aside.fixed:not(.k-drawer) :is(.navrow,.navitem,nav a[data-tab]){flex:0 0 auto;min-height:36px;padding:0 12px!important;background:var(--paper)!important;box-shadow:' + RING3 + '!important;font-size:11px!important}' +
+      'body>aside.fixed:not(.k-drawer) :is(.navrow,.navitem,nav a[data-tab])::before{display:none}' +
+      'body>aside.fixed:not(.k-drawer) :is(.navrow.on,.navitem.on,nav a[data-tab].tab-active,nav a[data-tab].on){background:var(--strip)!important}' +
+      'body>aside.fixed:not(.k-drawer) nav>div{display:none!important}' +
+      'body>main[class*="pl-["]{padding-left:16px!important;padding-right:16px!important}' +
+      'body:has(>aside.fixed:not(.k-drawer))>main[class*="pl-["]{padding-top:calc(var(--kh) + 86px)!important}' +
+      'body>main.pt-20:not([class*="pl-["]){padding-top:calc(var(--kh) + 26px)!important}' +
+      'body>main[class*="px-8"]{padding-left:16px!important;padding-right:16px!important}' +
+      'main h1:not([data-text]){font-size:30px!important}' +
+      '.k-kpis{grid-template-columns:minmax(0,1fr)}.k-kpi+.k-kpi{border-left:0;border-top:3px dashed var(--rule)}' +
+      '.k-menu{position:fixed;left:12px;right:12px;top:calc(var(--kh) + 10px);min-width:0}' +
+      '.k-toast{left:16px;right:16px;bottom:16px}' +
+      '}');
+    R.push('@media (min-width:769px) and (max-width:1100px){.k-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.k-kpi:nth-child(3){border-left:0}.k-kpi:nth-child(n+3){border-top:3px dashed var(--rule)}}');
+
+    // ── motion off ──
+    R.push('.still *,.still *::before,.still *::after{animation:none!important;transition:none!important}');
+    R.push('@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}');
+    return R.join('\n');
   }
 
   // ── Header chrome ───────────────────────────────────────────────
@@ -426,7 +624,6 @@
     slot.appendChild(buildUserChip());
     slot.style.display = 'flex';
     slot.style.alignItems = 'center';
-    slot.style.gap = '10px';
   }
   function rerenderThemeButton() {
     var existing = document.getElementById('kata-theme-btn');
@@ -434,60 +631,49 @@
     existing.parentElement.replaceChild(buildThemeButton(), existing);
   }
 
-  // Light / dark toggle — pill with a swatch + LIGHT/DARK label.
+  var SUN_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square" aria-hidden="true"><rect x="8" y="8" width="8" height="8"></rect><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"></path></svg>';
+  var MOON_SVG = '<svg width="18" height="18" viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true"><path d="M3 0h3v1H4v1H3v3h1v1h3v1H6v1H3V7H2V6H1V2h1V1h1z" fill="currentColor"></path></svg>';
+
+  // Light / dark toggle — square pixel button with a sun / moon sprite.
   function buildModeButton() {
     var btn = document.createElement('button');
     btn.type = 'button';
     btn.id = 'kata-mode-btn';
-    btn.className = 'mono h-8 px-3 rounded-full border border-line text-[10px] font-bold flex items-center gap-2';
-    btn.style.letterSpacing = '0.14em';
-    btn.style.textTransform = 'uppercase';
+    btn.className = 'k-hbtn k-mode';
     btn.title = 'Light / dark';
-    var sw = document.createElement('span');
-    sw.style.cssText = 'width:12px;height:12px;border-radius:999px;flex:none;box-shadow:0 0 0 1px rgba(127,127,127,0.35)';
-    sw.style.background = state.mode === 'light' ? '#f3eee4' : '#0d0a08';
-    var lbl = document.createElement('span');
-    lbl.textContent = state.mode === 'light' ? 'light' : 'dark';
-    btn.appendChild(sw);
-    btn.appendChild(lbl);
+    btn.setAttribute('aria-label', 'Light or dark mode');
+    btn.setAttribute('aria-pressed', state.mode === 'dark' ? 'true' : 'false');
+    btn.innerHTML = (state.mode === 'light' ? SUN_SVG : MOON_SVG) +
+      '<span class="k-hl">' + (state.mode === 'light' ? 'light' : 'dark') + '</span>';
     btn.addEventListener('click', function () {
       setMode(state.mode === 'light' ? 'dark' : 'light');
     });
     return btn;
   }
 
+  // Language — one button, two segments; the active one is inked.
   function buildLangButton() {
     var btn = document.createElement('button');
     btn.type = 'button';
     btn.id = 'kata-lang-btn';
-    btn.className = 'mono h-8 rounded-full border border-line px-1 text-[10px] font-bold flex items-center';
-    btn.style.letterSpacing = '0.18em';
-    btn.style.textTransform = 'uppercase';
+    btn.className = 'k-hbtn k-lang';
+    btn.setAttribute('aria-label', 'Language: ' + (state.lang === 'en' ? 'English' : 'Tiếng Việt'));
     var en = document.createElement('span');
-    en.className = 'px-2 py-1 rounded-full';
+    en.className = 'k-seg' + (state.lang === 'en' ? ' on' : '');
     en.textContent = 'EN';
-    var dot = document.createElement('span');
-    dot.className = 'text-mute2 text-[9px]';
-    dot.textContent = '·';
     var vi = document.createElement('span');
-    vi.className = 'px-2 py-1 rounded-full';
+    vi.className = 'k-seg' + (state.lang === 'vi' ? ' on' : '');
     vi.textContent = 'VI';
-    if (state.lang === 'en') {
-      en.style.background = 'rgba(245,237,224,0.10)';
-      en.style.color = '#f5ede0';
-      vi.style.color = 'rgba(245,237,224,0.5)';
-    } else {
-      vi.style.background = 'rgba(245,237,224,0.10)';
-      vi.style.color = '#f5ede0';
-      en.style.color = 'rgba(245,237,224,0.5)';
-    }
     btn.appendChild(en);
-    btn.appendChild(dot);
     btn.appendChild(vi);
     btn.addEventListener('click', function () {
       setLang(state.lang === 'vi' ? 'en' : 'vi');
     });
     return btn;
+  }
+
+  function swatchBg(idx) {
+    return idx == null ? 'conic-gradient(#E04545,#5BA868,#D4A858,#E04545)' : TRACKS[idx].palette[0];
   }
 
   function buildThemeButton() {
@@ -497,26 +683,19 @@
 
     var btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = 'mono h-8 px-3 rounded-full border border-line text-[10px] font-bold flex items-center gap-2';
-    btn.style.letterSpacing = '0.18em';
-    btn.style.textTransform = 'uppercase';
-    btn.style.color = '#f5ede0';
+    btn.className = 'k-hbtn k-pal';
+    btn.setAttribute('aria-haspopup', 'true');
+    btn.setAttribute('aria-expanded', 'false');
+    btn.setAttribute('aria-label', 'Colour palette');
 
     var dot = document.createElement('span');
-    dot.style.width = '12px';
-    dot.style.height = '12px';
-    dot.style.borderRadius = '9999px';
-    dot.style.border = '1px solid rgba(255,255,255,.1)';
-    if (state.lockIdx == null) {
-      dot.style.background = 'conic-gradient(#E04545,#5BA868,#D4A858,#E04545)';
-    } else {
-      dot.style.background = TRACKS[state.lockIdx].palette[0];
-    }
+    dot.className = 'k-sw';
+    dot.style.background = swatchBg(state.lockIdx);
     var label = document.createElement('span');
     label.textContent = state.lockIdx == null ? t('theme.auto') : t(TRACKS[state.lockIdx].i18n);
     var caret = document.createElement('span');
-    caret.className = 'text-mute text-[9px]';
-    caret.textContent = '▾';
+    caret.className = 'k-caret';
+    caret.textContent = '▼';
     btn.appendChild(dot);
     btn.appendChild(label);
     btn.appendChild(caret);
@@ -526,6 +705,7 @@
     function closeMenu() {
       if (menu && menu.parentElement) menu.parentElement.removeChild(menu);
       menu = null;
+      btn.setAttribute('aria-expanded', 'false');
       document.removeEventListener('click', onOutside, true);
     }
     function onOutside(e) {
@@ -538,6 +718,7 @@
       if (menu) { closeMenu(); return; }
       menu = buildThemeMenu();
       wrap.appendChild(menu);
+      btn.setAttribute('aria-expanded', 'true');
       setTimeout(function () { document.addEventListener('click', onOutside, true); }, 0);
     });
 
@@ -546,79 +727,43 @@
 
   function buildThemeMenu() {
     var box = document.createElement('div');
-    box.style.position = 'absolute';
-    box.style.right = '0';
-    box.style.top = 'calc(100% + 6px)';
-    box.style.minWidth = '180px';
-    box.style.background = 'rgba(13,10,8,0.95)';
-    box.style.border = '1px solid rgba(255,255,255,0.08)';
-    box.style.borderRadius = '10px';
-    box.style.padding = '6px';
-    box.style.zIndex = '100';
-    box.style.backdropFilter = 'blur(8px)';
-    box.style.boxShadow = '0 8px 24px rgba(0,0,0,0.4)';
+    box.className = 'k-menu';
+    box.setAttribute('role', 'menu');
 
-    var options = [{ idx: null, i18n: 'theme.auto', swatch: null }].concat(
+    var options = [{ idx: null, i18n: 'theme.auto' }].concat(
       TRACKS.map(function (track, i) {
-        return { idx: i, i18n: track.i18n, swatch: track.palette[0] };
+        return { idx: i, i18n: track.i18n };
       }),
     );
     options.forEach(function (opt) {
       var row = document.createElement('button');
       row.type = 'button';
-      row.style.display = 'flex';
-      row.style.alignItems = 'center';
-      row.style.gap = '10px';
-      row.style.width = '100%';
-      row.style.padding = '8px 10px';
-      row.style.background = 'transparent';
-      row.style.border = 'none';
-      row.style.borderRadius = '6px';
-      row.style.cursor = 'pointer';
-      row.style.fontFamily = '"JetBrains Mono", ui-monospace, monospace';
-      row.style.fontSize = '11px';
-      row.style.letterSpacing = '0.18em';
-      row.style.textTransform = 'uppercase';
-      row.style.color = state.lockIdx === opt.idx ? '#f5ede0' : 'rgba(245,237,224,0.6)';
+      row.setAttribute('role', 'menuitemradio');
+      row.setAttribute('aria-checked', state.lockIdx === opt.idx ? 'true' : 'false');
+      row.className = 'k-menu-row' + (state.lockIdx === opt.idx ? ' on' : '');
 
       var sw = document.createElement('span');
-      sw.style.width = '12px';
-      sw.style.height = '12px';
-      sw.style.borderRadius = '9999px';
-      sw.style.border = '1px solid rgba(255,255,255,0.12)';
-      sw.style.background = opt.swatch || 'conic-gradient(#E04545,#5BA868,#D4A858,#E04545)';
+      sw.className = 'k-sw';
+      sw.style.background = swatchBg(opt.idx);
       var lbl = document.createElement('span');
       lbl.textContent = t(opt.i18n);
-      lbl.style.flex = '1';
-      lbl.style.textAlign = 'left';
-      var sel = document.createElement('span');
-      sel.style.color = 'var(--accent)';
-      sel.style.fontSize = '12px';
-      sel.textContent = state.lockIdx === opt.idx ? '●' : '';
+      var cur = document.createElement('span');
+      cur.className = 'k-cur';
+      cur.setAttribute('aria-hidden', 'true');
 
       row.appendChild(sw);
       row.appendChild(lbl);
-      row.appendChild(sel);
-      row.addEventListener('mouseenter', function () { row.style.background = 'rgba(245,237,224,0.04)'; });
-      row.addEventListener('mouseleave', function () { row.style.background = 'transparent'; });
+      row.appendChild(cur);
       row.addEventListener('click', function (e) {
         e.stopPropagation();
         setLockIdx(opt.idx);
         if (box.parentElement) box.parentElement.removeChild(box);
-        document.removeEventListener('click', function () {}, true);
       });
       box.appendChild(row);
     });
 
     var sub = document.createElement('div');
-    sub.style.padding = '6px 10px 4px';
-    sub.style.fontFamily = '"JetBrains Mono", ui-monospace, monospace';
-    sub.style.fontSize = '9px';
-    sub.style.letterSpacing = '0.22em';
-    sub.style.textTransform = 'uppercase';
-    sub.style.color = 'rgba(245,237,224,0.3)';
-    sub.style.borderTop = '1px solid rgba(255,255,255,0.06)';
-    sub.style.marginTop = '4px';
+    sub.className = 'k-menu-foot';
     sub.textContent = state.lockIdx == null ? t('theme.rotating') : t('theme.locked');
     box.appendChild(sub);
     return box;
@@ -632,23 +777,15 @@
     var a = document.createElement('a');
     a.id = 'kata-user-chip';
     a.href = '/api/auth/discord/start';
-    a.className = 'h-8 pl-1 pr-3 rounded-full border border-line flex items-center gap-2 mono text-[11px]';
-    a.style.color = '#f5ede0';
-    a.style.textDecoration = 'none';
+    a.className = 'k-hbtn k-user';
     a.style.position = 'relative';
     a.style.cursor = 'pointer';
 
     var initialBubble = document.createElement('span');
-    initialBubble.className = 'w-[26px] h-[26px] rounded-full grid place-items-center text-[11px] font-extrabold';
-    initialBubble.style.background = 'rgba(224,69,69,0.13)';
-    initialBubble.style.color = 'var(--accent)';
     initialBubble.textContent = '?';
+    initialBubble.setAttribute('aria-hidden', 'true');
     var name = document.createElement('span');
     name.id = 'kata-user-name';
-    name.style.maxWidth = '120px';
-    name.style.overflow = 'hidden';
-    name.style.textOverflow = 'ellipsis';
-    name.style.whiteSpace = 'nowrap';
     name.textContent = t('kata.guest');
     a.appendChild(initialBubble);
     a.appendChild(name);
@@ -688,43 +825,32 @@
     var u = (window.__kataMe && window.__kataMe.user) || {};
     var vi = state.lang === 'vi';
     var box = document.createElement('div');
-    box.style.cssText = [
-      'position:absolute', 'right:0', 'top:calc(100% + 8px)', 'z-index:120',
-      'min-width:220px', 'max-width:80vw',
-      'background:rgba(13,10,8,0.96)', 'border:1px solid rgba(255,255,255,0.10)',
-      'border-radius:12px', 'padding:12px', 'backdrop-filter:blur(8px)',
-      'box-shadow:0 16px 40px rgba(0,0,0,0.5)',
-    ].join(';');
+    box.className = 'k-menu';
+    box.style.padding = '14px';
+    box.style.minWidth = '230px';
 
     var kicker = document.createElement('div');
-    kicker.style.cssText = 'font-family:"JetBrains Mono",ui-monospace,monospace;font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:rgba(245,237,224,0.5);margin-bottom:8px';
+    kicker.className = 'k-menu-kicker';
     kicker.textContent = (vi ? 'Đã đăng nhập' : 'Signed in') + (u.provider ? ' · ' + String(u.provider).toUpperCase() : '');
     box.appendChild(kicker);
 
     var nm = document.createElement('div');
-    nm.style.cssText = 'font-family:"JetBrains Mono",ui-monospace,monospace;font-size:13px;font-weight:700;color:#f5ede0';
+    nm.className = 'k-menu-name';
     nm.textContent = u.displayName || u.username || '—';
     box.appendChild(nm);
 
     if (u.email) {
       var em = document.createElement('div');
-      em.style.cssText = 'font-family:"JetBrains Mono",ui-monospace,monospace;font-size:10px;color:rgba(245,237,224,0.5);margin-top:3px;word-break:break-all';
+      em.className = 'k-menu-mail';
       em.textContent = u.email;
       box.appendChild(em);
     }
 
     var out = document.createElement('button');
     out.type = 'button';
+    out.className = 'k-sbtn';
     out.textContent = '↩ ' + (vi ? 'Đăng xuất' : 'Sign out');
-    out.style.cssText = [
-      'margin-top:12px', 'width:100%', 'text-align:left',
-      'padding:10px 12px', 'border-radius:8px',
-      'background:transparent', 'border:1px solid rgba(255,255,255,0.10)',
-      'color:#f5ede0', 'cursor:pointer',
-      'font-family:"JetBrains Mono",ui-monospace,monospace', 'font-size:11px', 'letter-spacing:0.08em',
-    ].join(';');
-    out.addEventListener('mouseenter', function () { out.style.background = 'rgba(224,69,69,0.12)'; out.style.borderColor = 'rgba(224,69,69,0.4)'; out.style.color = '#E04545'; });
-    out.addEventListener('mouseleave', function () { out.style.background = 'transparent'; out.style.borderColor = 'rgba(255,255,255,0.10)'; out.style.color = '#f5ede0'; });
+    out.style.cssText = 'margin:16px 5px 5px 3px;width:calc(100% - 8px);height:38px;justify-content:flex-start;padding:0 12px';
     out.addEventListener('click', function (e) {
       e.preventDefault();
       e.stopPropagation();
@@ -756,18 +882,14 @@
     a.removeAttribute('href');
     a.style.cursor = 'pointer';
     var bubble = a.firstChild;
-    var name = document.getElementById('kata-user-name') || a.querySelector('#kata-user-name') || a.lastChild;
+    // A page may have re-rendered the chip itself; then it already shows the name.
+    var name = document.getElementById('kata-user-name') || a.querySelector('#kata-user-name');
     var label = user.displayName || user.username || '—';
-    name.textContent = label;
+    if (name) name.textContent = label;
     if (user.avatarUrl) {
       var img = document.createElement('img');
       img.src = user.avatarUrl;
       img.alt = '';
-      img.style.width = '26px';
-      img.style.height = '26px';
-      img.style.borderRadius = '9999px';
-      img.style.objectFit = 'cover';
-      img.style.border = '1px solid rgba(255,255,255,0.08)';
       a.replaceChild(img, bubble);
     } else {
       bubble.textContent = label.slice(0, 1).toUpperCase();
@@ -851,7 +973,6 @@
     const placeholder = opts.placeholder || '';
     const hiddenInput = opts.hiddenInput;
     const labelEl = opts.labelEl;
-    const accent = window.KataShell.getAccent();
     const currentValue = (hiddenInput && hiddenInput.value) || '';
 
     let activeProvider = providers[0];
@@ -860,52 +981,36 @@
     }
 
     const pop = document.createElement('div');
-    pop.style.cssText = [
-      'position:absolute', 'z-index:1100', 'min-width:340px',
-      'background:rgba(13,10,8,0.95)', 'border:1px solid rgba(255,255,255,0.10)',
-      'border-radius:10px', 'padding:8px',
-      'backdrop-filter:blur(8px)',
-      'box-shadow:0 8px 24px rgba(0,0,0,0.45)',
-    ].join(';');
+    pop.className = 'k-mp';
 
     const r = triggerBtn.getBoundingClientRect();
     pop.style.left = (r.left + window.scrollX) + 'px';
-    pop.style.top = (r.bottom + window.scrollY + 6) + 'px';
-    pop.style.width = Math.max(r.width, 340) + 'px';
+    pop.style.top = (r.bottom + window.scrollY + 12) + 'px';
+    pop.style.width = Math.min(Math.max(r.width, 340), window.innerWidth - 24) + 'px';
 
     function render() {
       pop.innerHTML = '';
       const tabs = document.createElement('div');
-      tabs.style.cssText = 'display:flex;gap:4px;margin-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.06);padding-bottom:6px';
+      tabs.className = 'k-mp-tabs';
       for (const p of providers) {
-        const t = document.createElement('button');
-        t.type = 'button';
-        t.textContent = p;
-        t.style.cssText = [
-          'font-family:"JetBrains Mono", ui-monospace, monospace',
-          'font-size:10px', 'letter-spacing:0.18em', 'text-transform:uppercase',
-          'padding:6px 12px', 'border-radius:6px', 'border:none', 'cursor:pointer',
-          p === activeProvider ? 'background:rgba(245,237,224,0.10);color:#f5ede0' : 'background:transparent;color:rgba(245,237,224,0.5)',
-        ].join(';');
-        t.addEventListener('click', () => { activeProvider = p; render(); });
-        tabs.appendChild(t);
+        const tb = document.createElement('button');
+        tb.type = 'button';
+        tb.textContent = p;
+        tb.className = 'k-chip' + (p === activeProvider ? ' on' : '');
+        tb.setAttribute('aria-pressed', p === activeProvider ? 'true' : 'false');
+        tb.addEventListener('click', () => { activeProvider = p; render(); });
+        tabs.appendChild(tb);
       }
       pop.appendChild(tabs);
 
       const list = byProvider[activeProvider] || [];
       const wrap = document.createElement('div');
-      wrap.style.cssText = 'max-height:280px;overflow-y:auto;margin-bottom:8px;display:flex;flex-direction:column;gap:2px';
+      wrap.className = 'k-mp-list';
 
       const def = document.createElement('button');
       def.type = 'button';
       def.textContent = `(use default · ${placeholder || '—'})`;
-      def.style.cssText = [
-        'font-family:"JetBrains Mono", ui-monospace, monospace',
-        'font-size:11px', 'text-align:left',
-        'background:rgba(13,10,8,0.6)', 'border:1px solid rgba(255,255,255,0.10)',
-        'border-radius:6px', 'padding:9px 12px', 'cursor:pointer',
-        !currentValue ? `border-color:${accent};color:#f5ede0` : 'color:rgba(245,237,224,0.5)',
-      ].join(';');
+      def.className = 'k-mp-row k-mp-def' + (!currentValue ? ' on' : '');
       def.addEventListener('click', () => apply(''));
       wrap.appendChild(def);
 
@@ -913,37 +1018,22 @@
         const row = document.createElement('button');
         row.type = 'button';
         row.textContent = m.includes(':') ? m.split(':').slice(1).join(':') : m;
-        const isCur = m === currentValue;
-        row.style.cssText = [
-          'font-family:"JetBrains Mono", ui-monospace, monospace',
-          'font-size:12px', 'text-align:left', 'cursor:pointer',
-          'background:' + (isCur ? `${accent}11` : 'rgba(13,10,8,0.6)'),
-          'border:1px solid ' + (isCur ? accent : 'rgba(255,255,255,0.08)'),
-          'border-radius:6px', 'padding:9px 12px', 'color:#f5ede0',
-        ].join(';');
+        row.className = 'k-mp-row' + (m === currentValue ? ' on' : '');
         row.addEventListener('click', () => apply(m));
         wrap.appendChild(row);
       }
       pop.appendChild(wrap);
 
       const custom = document.createElement('div');
-      custom.style.cssText = 'display:flex;gap:6px';
+      custom.className = 'k-mp-custom';
       const inp = document.createElement('input');
       inp.type = 'text';
+      inp.className = 'k-field';
+      inp.setAttribute('aria-label', 'custom model id');
       inp.placeholder = 'custom model id (vd: 9router:kr/...)';
-      inp.style.cssText = [
-        'font-family:"JetBrains Mono", ui-monospace, monospace', 'font-size:11px', 'flex:1',
-        'background:rgba(13,10,8,0.6)', 'border:1px solid rgba(255,255,255,0.10)',
-        'border-radius:8px', 'padding:8px 12px', 'color:#f5ede0', 'outline:none',
-      ].join(';');
       const setBtn = document.createElement('button');
       setBtn.type = 'button'; setBtn.textContent = 'use';
-      setBtn.style.cssText = [
-        'font-family:"JetBrains Mono", ui-monospace, monospace',
-        'font-size:10px', 'letter-spacing:0.18em', 'text-transform:uppercase',
-        'padding:8px 14px', 'border-radius:8px', 'border:1px solid ' + accent + '70',
-        'background:' + accent + '20', 'color:#f5ede0', 'cursor:pointer', 'font-weight:700',
-      ].join(';');
+      setBtn.className = 'k-sbtn k-pri';
       setBtn.addEventListener('click', () => { const v = inp.value.trim(); if (v) apply(v); });
       inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); setBtn.click(); } });
       custom.appendChild(inp); custom.appendChild(setBtn);
@@ -973,23 +1063,9 @@
     setTimeout(() => document.addEventListener('click', onOutside, true), 0);
   }
 
-  function ensureDialogStyles() {
-    if (document.getElementById('kata-dialog-styles')) return;
-    var s = document.createElement('style');
-    s.id = 'kata-dialog-styles';
-    s.textContent = [
-      '@keyframes kdFadeIn { from { opacity:0 } to { opacity:1 } }',
-      '@keyframes kdFadeOut { from { opacity:1 } to { opacity:0 } }',
-      '@keyframes kdPop { from { transform: translateY(8px) scale(0.98); opacity:0 } to { transform: translateY(0) scale(1); opacity:1 } }',
-      '@keyframes kdToastIn { from { transform: translateY(20px); opacity:0 } to { transform: translateY(0); opacity:1 } }',
-      '@keyframes kdToastOut { from { transform: translateY(0); opacity:1 } to { transform: translateY(8px); opacity:0 } }',
-    ].join('\n');
-    document.head.appendChild(s);
-  }
-
   // ── Dialog implementation (vanilla, no deps) ──────────────────
-  // Matches the kata palette: panel bg, mono kicker, ink button. Returns
-  // a promise:
+  // An RPG dialog box: paper panel + ink name plate on its top edge, pixel
+  // buttons. Returns a promise:
   //   alert   → resolves null (always)
   //   confirm → resolves true (ok) | false (cancel)
   //   prompt  → resolves string | null (cancel)
@@ -997,28 +1073,14 @@
 
   function openDialog(opts) {
     return new Promise(function (resolve) {
-      var accent = window.KataShell.getAccent();
       var overlay = document.createElement('div');
       overlay.setAttribute('data-kata-dialog', '');
-      overlay.style.cssText = [
-        'position:fixed', 'inset:0', 'z-index:1000',
-        'background:rgba(13,10,8,0.78)', 'backdrop-filter:blur(8px)',
-        'display:flex', 'align-items:center', 'justify-content:center',
-        'padding:24px', 'animation:kdFadeIn 140ms ease',
-        'font-family:Geist, system-ui, sans-serif',
-      ].join(';');
+      overlay.className = 'k-dlg-ov';
 
       var panel = document.createElement('div');
-      panel.style.cssText = [
-        'min-width:340px', 'max-width:520px', 'width:100%',
-        'background:linear-gradient(180deg, rgba(28,24,19,0.95), rgba(21,17,13,0.95))',
-        'border:1px solid rgba(255,255,255,0.10)',
-        'border-radius:14px',
-        'box-shadow:0 24px 60px rgba(0,0,0,0.55)',
-        'padding:22px 22px 18px',
-        'color:#f5ede0',
-        'animation:kdPop 160ms cubic-bezier(.2,.9,.3,1.05)',
-      ].join(';');
+      panel.className = 'k-dlg';
+      panel.setAttribute('role', opts.kind === 'alert' ? 'alertdialog' : 'dialog');
+      panel.setAttribute('aria-modal', 'true');
 
       var titleLabel = opts.title || (
         opts.kind === 'confirm' ? 'Xác nhận' :
@@ -1026,16 +1088,13 @@
         'Thông báo'
       );
       var kicker = document.createElement('div');
-      kicker.style.cssText = [
-        'font-family:"JetBrains Mono", ui-monospace, monospace',
-        'font-size:10px', 'letter-spacing:0.22em', 'text-transform:uppercase',
-        'color:' + accent, 'margin-bottom:10px',
-      ].join(';');
+      kicker.className = 'k-tag';
       kicker.textContent = titleLabel;
       panel.appendChild(kicker);
+      panel.setAttribute('aria-label', titleLabel);
 
       var msg = document.createElement('div');
-      msg.style.cssText = 'font-size:14px; line-height:1.55; color:rgba(245,237,224,0.92); white-space:pre-wrap';
+      msg.className = 'k-dlg-msg';
       msg.textContent = opts.message || '';
       panel.appendChild(msg);
 
@@ -1043,68 +1102,37 @@
       if (opts.kind === 'prompt') {
         input = document.createElement('input');
         input.type = 'text';
+        input.className = 'k-field';
         input.value = opts.defaultValue || '';
         input.placeholder = opts.placeholder || '';
-        input.style.cssText = [
-          'width:100%', 'margin-top:14px',
-          'background:rgba(13,10,8,0.65)',
-          'border:1px solid rgba(255,255,255,0.10)',
-          'border-radius:8px', 'padding:9px 12px',
-          'color:#f5ede0',
-          'font-family:Geist, system-ui, sans-serif', 'font-size:14px',
-          'outline:none',
-        ].join(';');
-        input.addEventListener('focus', function () { input.style.borderColor = accent + '88'; });
-        input.addEventListener('blur',  function () { input.style.borderColor = 'rgba(255,255,255,0.10)'; });
+        input.setAttribute('aria-label', titleLabel);
         panel.appendChild(input);
       } else if (opts.kind === 'longprompt') {
         input = document.createElement('textarea');
+        input.className = 'k-field';
         input.value = opts.defaultValue || '';
         input.placeholder = opts.placeholder || '';
         input.rows = opts.rows || 4;
-        input.style.cssText = [
-          'width:100%', 'margin-top:14px',
-          'background:rgba(13,10,8,0.65)',
-          'border:1px solid rgba(255,255,255,0.10)',
-          'border-radius:8px', 'padding:10px 12px',
-          'color:#f5ede0',
-          'font-family:Geist, system-ui, sans-serif', 'font-size:14px',
-          'line-height:1.5', 'resize:vertical', 'outline:none',
-        ].join(';');
-        input.addEventListener('focus', function () { input.style.borderColor = accent + '88'; });
-        input.addEventListener('blur',  function () { input.style.borderColor = 'rgba(255,255,255,0.10)'; });
+        input.style.resize = 'vertical';
+        input.setAttribute('aria-label', titleLabel);
         panel.appendChild(input);
       }
 
       var actions = document.createElement('div');
-      actions.style.cssText = 'display:flex; justify-content:flex-end; gap:8px; margin-top:18px';
+      actions.className = 'k-dlg-actions';
 
       function btn(label, primary, danger) {
         var b = document.createElement('button');
         b.type = 'button';
         b.textContent = label;
-        var bg = 'transparent';
-        var bd = 'rgba(255,255,255,0.12)';
-        var col = 'rgba(245,237,224,0.7)';
-        if (primary) { bg = 'rgba(255,255,255,0.04)'; bd = accent + '70'; col = '#f5ede0'; }
-        if (danger)  { col = '#E04545'; bd = 'rgba(224,69,69,0.35)'; }
-        b.style.cssText = [
-          'display:inline-flex', 'align-items:center', 'justify-content:center',
-          'height:34px', 'padding:0 18px', 'border-radius:999px',
-          'border:1px solid ' + bd, 'background:' + bg, 'color:' + col,
-          'font-family:"JetBrains Mono", ui-monospace, monospace',
-          'font-size:11px', 'letter-spacing:0.18em', 'text-transform:uppercase',
-          'cursor:pointer', 'transition:all 120ms ease',
-        ].join(';');
-        b.addEventListener('mouseenter', function () { b.style.background = 'rgba(245,237,224,0.06)'; });
-        b.addEventListener('mouseleave', function () { b.style.background = bg; });
+        b.className = 'k-sbtn k-dlg-btn' + (primary ? ' k-pri' : '') + (danger ? ' k-danger' : '');
         return b;
       }
 
       function close(result) {
         if (closed) return;
         closed = true;
-        overlay.style.animation = 'kdFadeOut 120ms ease forwards';
+        overlay.style.animation = 'kdFadeOut 120ms steps(3) forwards';
         setTimeout(function () {
           if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
         }, 130);
@@ -1165,34 +1193,23 @@
         }
       });
       document.body.appendChild(overlay);
-      ensureDialogStyles();
       if (input) setTimeout(function () { input.focus(); input.select && input.select(); }, 30);
+      else setTimeout(function () { var f = actions.lastChild; if (f && f.focus) f.focus(); }, 30);
     });
   }
 
   // Toast (fire-and-forget). Replaces in-line `flash()` helpers.
   function showToast(message, opts) {
     opts = opts || {};
-    ensureDialogStyles();
-    var accent = window.KataShell.getAccent();
-    var color = opts.kind === 'error' ? '#E04545' : opts.kind === 'success' ? '#5BA868' : accent;
-    var bg = opts.kind === 'error' ? 'rgba(224,69,69,0.12)' : opts.kind === 'success' ? 'rgba(91,168,104,0.12)' : (accent + '22');
-    var bd = opts.kind === 'error' ? 'rgba(224,69,69,0.35)' : opts.kind === 'success' ? 'rgba(91,168,104,0.35)' : (accent + '55');
+    var color = opts.kind === 'error' ? '#ff7a7a' : opts.kind === 'success' ? '#7fd18b' : '#b9a2ff';
     var el = document.createElement('div');
+    el.className = 'k-toast';
+    el.setAttribute('role', 'status');
+    el.style.setProperty('--tc', color);
     el.textContent = message;
-    el.style.cssText = [
-      'position:fixed', 'bottom:24px', 'right:24px', 'z-index:1100',
-      'background:' + bg, 'border:1px solid ' + bd, 'color:#f5ede0',
-      'padding:10px 16px', 'border-radius:999px',
-      'font-family:"JetBrains Mono", ui-monospace, monospace',
-      'font-size:11px', 'letter-spacing:0.18em', 'text-transform:uppercase',
-      'animation:kdToastIn 180ms ease',
-      'box-shadow:0 8px 24px rgba(0,0,0,0.35)',
-    ].join(';');
-    void color;
     document.body.appendChild(el);
     setTimeout(function () {
-      el.style.animation = 'kdToastOut 180ms ease forwards';
+      el.style.animation = 'kdToastOut 180ms steps(3) forwards';
       setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 200);
     }, opts.durationMs || 2400);
   }
@@ -1210,25 +1227,12 @@
       '.kata-nav-toggle { display: none; }',
       '#kata-nav-scrim { display: none; }',
       '@media (max-width: 768px) {',
-      '  header { padding-left: 14px !important; padding-right: 14px !important; }',
-      '  header > div:first-child { gap: 10px !important; }',
       '  header > div:first-child > a:not([href="/"]) { display: none !important; }',
-      '  .kata-nav-toggle { display: inline-grid; place-items: center; width: 36px; height: 36px; border-radius: 9px; border: 1px solid rgba(255,255,255,0.08); background: transparent; color: #f5ede0; cursor: pointer; flex: 0 0 auto; }',
-      '  .kata-bc { display: none !important; }',
-      '  .kata-logo > div:first-child { font-size: 22px !important; letter-spacing: -0.025em; }',
-      '  .kata-logo > div:nth-child(2) { display: none !important; }',
-      '  .kata-logo span.font-normal { display: none !important; }',
-      '  #kata-header-actions { gap: 7px !important; }',
-      '  #kata-theme-btn button { padding-left: 8px !important; padding-right: 8px !important; gap: 4px !important; }',
-      '  #kata-theme-btn button > span:nth-child(2) { display: none !important; }',
-      '  #kata-lang-btn span { padding-left: 6px; padding-right: 6px; }',
-      '  #kata-user-chip { padding-right: 3px !important; }',
-      '  #kata-user-name { display: none !important; }',
-      '  aside.kata-drawer { transform: translateX(-100%); transition: transform 240ms cubic-bezier(.22,1,.36,1); width: 280px; max-width: 86vw; box-shadow: 0 24px 60px rgba(0,0,0,0.6); }',
+      '  .kata-nav-toggle { display: inline-grid; place-items: center; width: 36px; height: 36px; border: 0; background: var(--paper); color: var(--text); cursor: pointer; flex: 0 0 auto; box-shadow: 0 -3px 0 0 var(--ink),0 3px 0 0 var(--ink),-3px 0 0 0 var(--ink),3px 0 0 0 var(--ink); }',
+      '  aside.kata-drawer { transform: translateX(-110%); transition: transform 200ms steps(5); width: 280px; max-width: 86vw; }',
       '  body.kata-nav-open aside.kata-drawer { transform: none; }',
-      '  #kata-nav-scrim { position: fixed; inset: 0; z-index: 39; background: rgba(0,0,0,0.55); }',
+      '  #kata-nav-scrim { position: fixed; inset: 0; z-index: 39; background: rgba(27,20,16,0.55); }',
       '  body.kata-nav-open #kata-nav-scrim { display: block; }',
-      '  main.kata-shifted { padding-left: 16px !important; padding-right: 16px !important; }',
       '  main .grid { grid-template-columns: 1fr !important; }',
       '}',
     ].join('\n');
@@ -1237,26 +1241,16 @@
     st.textContent = css;
     document.head.appendChild(st);
 
-    var header = document.querySelector('header');
-    if (header) {
-      var bc = header.querySelector('.ml-3');         // breadcrumb block
-      if (bc) bc.classList.add('kata-bc');
-      var logo = header.querySelector('a[href="/"]'); // se77n / kata logo
-      if (logo) logo.classList.add('kata-logo');
-    }
-
-    var main = document.querySelector('main');
-    if (main && /pl-\[/.test(main.className)) main.classList.add('kata-shifted');
-
     // Turn the fixed sidebar into an off-canvas drawer with a hamburger.
+    var header = document.querySelector('header');
     var aside = document.querySelector('aside');
     if (aside && header) {
-      aside.classList.add('kata-drawer');
+      aside.classList.add('kata-drawer', 'k-drawer');
       var btn = document.createElement('button');
       btn.id = 'kata-nav-toggle-btn';
       btn.className = 'kata-nav-toggle';
       btn.setAttribute('aria-label', 'menu');
-      btn.innerHTML = '<svg width="14" height="12" viewBox="0 0 14 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><line x1="1" y1="2" x2="13" y2="2"/><line x1="1" y1="6" x2="13" y2="6"/><line x1="1" y1="10" x2="9" y2="10"/></svg>';
+      btn.innerHTML = '<svg width="16" height="14" viewBox="0 0 16 14" shape-rendering="crispEdges" aria-hidden="true"><path d="M0 0h16v3H0zM0 5.5h16v3H0zM0 11h10v3H0z" fill="currentColor"/></svg>';
       var left = header.firstElementChild;
       if (left) left.insertBefore(btn, left.firstChild);
       else header.insertBefore(btn, header.firstChild);
@@ -1276,9 +1270,9 @@
   // ── Boot ────────────────────────────────────────────────────────
   function boot() {
     injectAccentOverlay();
-    injectLightOverlay();
+    ensureFonts();
+    injectSkin();
     applyMode();
-    injectAmbientLayers();
     paint();
     if (state.lockIdx == null) startRotation();
     rerenderHeader();
