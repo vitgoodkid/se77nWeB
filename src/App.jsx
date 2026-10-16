@@ -253,6 +253,9 @@ function AppDesktop() {
 
   const activeFeature = FEATURES.find((f) => f.id === route) || MERGED_ROUTE_META[route];
   const isHome = route === 'home';
+  // The AI playground fills the viewport with its thread + composer, so it gets
+  // a slim level header and no footer to give the conversation more height.
+  const isChat = route === 'ai';
 
   return (
     <div style={{
@@ -263,7 +266,7 @@ function AppDesktop() {
 
       <TopBar phase={phase} geo={geo} nav={nav} ambient={ambient} />
       <ModuleTabs route={route} nav={nav} />
-      {!isHome && <LevelHeader route={route} nav={nav} feature={activeFeature} />}
+      {!isHome && <LevelHeader route={route} nav={nav} feature={activeFeature} compact={isChat} />}
 
       <main style={{ position: 'relative', flex: '1 1 0', minHeight: 0, overflow: 'hidden' }}>
         {/* One scroller per level, parent of the module root: modules that
@@ -295,7 +298,7 @@ function AppDesktop() {
         </div>
       </main>
 
-      <Footer phase={phase} />
+      {!isChat && <Footer phase={phase} />}
 
       <ChatFab open={chatOpen}
         hidden={route === 'ai'}
@@ -890,7 +893,7 @@ function NavSocials() {
 // ─────────────────────────────────────────────────────────────
 // Level header (replaces the breadcrumbs)
 // ─────────────────────────────────────────────────────────────
-function LevelHeader({ route, nav, feature }) {
+function LevelHeader({ route, nav, feature, compact = false }) {
   const { t } = useLang();
   const merged = !!MERGED_ROUTE_META[route];
   const f = feature || {};
@@ -899,10 +902,10 @@ function LevelHeader({ route, nav, feature }) {
     fontSize: 11, background: COLORS.paper, color: COLORS.text, whiteSpace: 'nowrap',
   };
   return (
-    <section className="sh-wrap" style={{ flex: 'none', paddingTop: 14, paddingBottom: 4 }}>
+    <section className="sh-wrap" style={{ flex: 'none', paddingTop: compact ? 10 : 14, paddingBottom: compact ? 2 : 4 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 18, minWidth: 0 }}>
-          <IconTile id={route} accent={ACCENTS[route]} size={52} />
+          <IconTile id={route} accent={ACCENTS[route]} size={compact ? 40 : 52} />
           <div style={{ minWidth: 0 }}>
             <p className="sk" style={{ margin: '0 0 5px', fontSize: 11, lineHeight: 1.2, color: COLORS.muted, whiteSpace: 'nowrap' }}>
               WORLD {EXPERIMENT_NUMBER} ›{' '}
@@ -912,8 +915,8 @@ function LevelHeader({ route, nav, feature }) {
                 <>LEVEL {f.short}</>
               )}
             </p>
-            <h1 className="pf" style={{ margin: 0, fontSize: 28, lineHeight: 1, letterSpacing: 0 }}>{f.label}</h1>
-            {f.blurb && (
+            <h1 className="pf" style={{ margin: 0, fontSize: compact ? 22 : 28, lineHeight: 1, letterSpacing: 0 }}>{f.label}</h1>
+            {f.blurb && !compact && (
               <p title={f.blurb} style={{
                 margin: '5px 0 0', fontSize: 13, lineHeight: 1.35, color: COLORS.muted,
                 whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
