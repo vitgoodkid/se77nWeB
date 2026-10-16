@@ -7,6 +7,7 @@ import {
 } from './lib.jsx';
 import { PixelCoin, PixelHeart, PixelCloud, PixelArrow, ModuleIcon, IconTile, DialogBox, PxButton, Badge } from './ui/arcade.jsx';
 import MobileShell from './MobileShell.jsx';
+import SideDecor from './SideDecor.jsx';
 
 const AIPlayground       = lazy(() => import('./featuresA.jsx').then((m) => ({ default: m.AIPlayground })));
 const Toolbox            = lazy(() => import('./featuresA.jsx').then((m) => ({ default: m.Toolbox })));
@@ -116,6 +117,9 @@ const SHELL_CSS = `
 .sh-cart:hover .sh-go, .sh-cart:focus-visible .sh-go { transform: translateX(4px); }
 /* Wide screens: use the room instead of leaving empty side bands. */
 @media (min-width: 1500px) {
+  :root { --sd-g: clamp(120px, calc((100vw - 1400px) / 2 + 60px), 300px); }
+  .sh-wrap { max-width: min(1720px, calc(100vw - 2 * var(--sd-g))); }
+  .sh-route { padding-left: max(calc(var(--sd-g) + 24px), calc((100% - 1624px) / 2)); padding-right: max(calc(var(--sd-g) + 24px), calc((100% - 1624px) / 2)); }
   .sh-hero { gap: 72px; }
   .sh-hero-h { font-size: 66px; }
   .sh-scene { height: 500px !important; }
@@ -320,6 +324,7 @@ function AppDesktop() {
         onOpen={() => setChatOpen(true)}
         onClose={() => setChatOpen(false)}
         ambient={ambient} nav={nav} />
+      <SideDecor top={170} bottom={isChat ? 0 : 68} />
       <AuthErrorToast />
     </div>
   );
@@ -1195,7 +1200,7 @@ function HomeView({ nav, ambient, phase }) {
 
       {/* ── Markets marquee ── */}
       <div role="region" aria-label="Markets ticker" style={{
-        position: 'relative', display: 'flex', alignItems: 'center', height: 58, overflow: 'hidden',
+        position: 'relative', zIndex: 2, display: 'flex', alignItems: 'center', height: 58, overflow: 'hidden',
         background: COLORS.strip, color: COLORS.stripText,
         borderTop: `4px solid ${COLORS.ink}`, borderBottom: `4px solid ${COLORS.ink}`,
       }}>
