@@ -1,0 +1,151 @@
+/* ══════════════════════════════════════════════════════════════
+   Stylist (route 07) — "B · Pixel Lobby" RPG equip screen.
+   Pairs with arcade.css (.px .pxs .pbtn .sbtn .chip-px .lift .ribs).
+   Neutrals come from the theme variables; #ff9ad5 is the Stylist
+   accent and always carries ink (#1b1410) text. Motion is CSS-only
+   and stops under .still / prefers-reduced-motion (global rules).
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Stage path (Character → Wardrobe → Compose → Lookbook) ── */
+.sty-stages { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 12px; padding: 4px; }
+.sty-stage {
+  display: flex; align-items: center; gap: 11px;
+  min-height: 58px; padding: 8px 16px 8px 8px;
+  border: 0; cursor: pointer; text-align: left; font-family: inherit;
+}
+.sty-arr { flex-shrink: 0; }
+
+/* ── Icon buttons (pin / exclude / edit / delete / retry / zoom) ── */
+.sty-ibtn {
+  display: grid; place-items: center; flex-shrink: 0;
+  width: 30px; height: 30px; padding: 0; border: 0; cursor: pointer;
+  color: var(--text); background: var(--paper);
+  box-shadow: 0 -3px 0 0 var(--ink), 0 3px 0 0 var(--ink), -3px 0 0 0 var(--ink), 3px 0 0 0 var(--ink);
+  transition: background 80ms steps(2);
+}
+.sty-ibtn:hover { background: var(--paper-2); }
+.sty-ibtn.on, .sty-ibtn.on:hover { color: #1b1410; background: #ff9ad5; }
+.sty-ibtn.xon, .sty-ibtn.xon:hover { color: var(--paper); background: var(--ink); }
+[data-theme="dark"] .sty-ibtn.xon,
+[data-theme="dark"] .sty-ibtn.xon:hover { color: #1b1410; background: #fffaf0; }
+.sty-ibtn.danger:hover { color: #1b1410; background: #ff7a7a; }
+
+/* ── Inventory grid + slot media well ── */
+.sty-inv {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(158px, 1fr));
+  gap: 26px 22px; padding: 4px 6px 6px 4px;
+}
+.sty-med {
+  position: relative; aspect-ratio: 1 / 1; overflow: hidden;
+  background: var(--field); border-bottom: 3px solid var(--ink);
+}
+.sty-med.pin { background: #ff9ad5; }
+.sty-med > .sty-img {
+  position: absolute; left: 7px; top: 7px; display: block;
+  width: calc(100% - 14px); height: calc(100% - 14px); object-fit: cover; cursor: zoom-in;
+}
+.sty-med.xcl > .sty-img { opacity: 0.4; }
+.sty-med.xcl::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--text) 22%, transparent) 0 4px, transparent 4px 10px);
+}
+.sty-state {
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 10px; padding: 34px 10px 12px; text-align: center;
+}
+.sty-tag { position: absolute; left: 7px; top: 7px; z-index: 1; padding: 3px 6px; font-size: 9px; text-transform: uppercase; }
+.sty-tools { position: absolute; right: 7px; top: 7px; z-index: 1; display: flex; gap: 8px; }
+
+/* ── Pixel loading bar (styling / rendering) ── */
+.sty-bar {
+  position: relative; display: block; width: 70%; max-width: 220px; height: 14px; overflow: hidden;
+  border: 3px solid var(--text); background: var(--paper);
+}
+.sty-bar.dark { border-color: #fffaf0; background: transparent; }
+.sty-bar > i {
+  position: absolute; left: 0; top: 0; bottom: 0; width: 30%;
+  background: repeating-linear-gradient(90deg, #ff9ad5 0 6px, transparent 6px 8px);
+  animation: sty-load 1.4s steps(6) infinite;
+}
+@keyframes sty-load { from { transform: translateX(-100%); } to { transform: translateX(340%); } }
+
+/* ── Dark portrait / render frames ── */
+.sty-screen {
+  position: relative; overflow: hidden;
+  background-color: var(--strip);
+  background-image: repeating-linear-gradient(0deg, rgba(255, 250, 240, 0.06) 0 2px, transparent 2px 5px);
+}
+.sty-corner { position: absolute; z-index: 2; width: 12px; height: 12px; border: 0 solid #ff9ad5; pointer-events: none; }
+.sty-corner.tl { left: 6px; top: 6px; border-left-width: 3px; border-top-width: 3px; }
+.sty-corner.tr { right: 6px; top: 6px; border-right-width: 3px; border-top-width: 3px; }
+.sty-corner.bl { left: 6px; bottom: 6px; border-left-width: 3px; border-bottom-width: 3px; }
+.sty-corner.br { right: 6px; bottom: 6px; border-right-width: 3px; border-bottom-width: 3px; }
+
+/* ── Outfit pieces (tap to swap) ── */
+.sty-pc {
+  display: grid; place-items: center; flex-shrink: 0; padding: 0; border: 0; cursor: pointer;
+  background: var(--field); transition: background 80ms steps(2);
+}
+.sty-pc.alt { background: var(--paper); }
+.sty-pc:hover { background: var(--paper-2); }
+.sty-pc[aria-pressed="true"], .sty-pc[aria-pressed="true"]:hover { background: #ff9ad5; }
+
+/* ── Favourite star ── */
+.sty-star {
+  display: grid; place-items: center; flex-shrink: 0;
+  width: 38px; height: 38px; padding: 0; border: 0; cursor: pointer;
+  color: var(--muted); background: var(--paper);
+  box-shadow: 0 -3px 0 0 var(--ink), 0 3px 0 0 var(--ink), -3px 0 0 0 var(--ink), 3px 0 0 0 var(--ink);
+  transition: background 80ms steps(2);
+}
+.sty-star:hover { background: var(--paper-2); }
+.sty-star.on, .sty-star.on:hover { color: #1b1410; background: #ffd25e; }
+
+/* ── Collapsible toggles + text links ── */
+.sty-tog {
+  display: inline-flex; align-items: center; gap: 10px; align-self: flex-start;
+  min-height: 34px; padding: 0; border: 0; cursor: pointer;
+  font-size: 13px; color: var(--text); background: transparent;
+}
+.sty-tog:hover { text-decoration: underline; text-underline-offset: 4px; }
+.sty-link {
+  padding: 0; border: 0; cursor: pointer; background: transparent;
+  font-size: 11px; color: var(--text); text-decoration: underline; text-underline-offset: 3px;
+}
+.sty-link:hover { color: var(--red); }
+
+/* Category counts inside filter chips */
+.sty-cnt { color: var(--muted); }
+.chip-px.on .sty-cnt { color: #ff9ad5; }
+[data-theme="dark"] .chip-px.on .sty-cnt { color: inherit; }
+
+/* ── Compose columns, loadouts grid, save slots ── */
+.sty-cmp { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 34px 44px; }
+.sty-cmp > * { flex: 1 1 280px; min-width: 0; display: flex; flex-direction: column; gap: 20px; }
+.sty-cmp > :first-child { flex-grow: 1.35; }
+
+.sty-looks {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  gap: 44px 34px; align-items: start; padding: 4px 14px 14px 4px;
+}
+.sty-slot { border-bottom: 3px dashed var(--rule); }
+.sty-slot:last-child { border-bottom: 0; }
+
+/* ── Phone ── */
+@media (max-width: 640px) {
+  .sty-stages { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; width: 100%; }
+  .sty-stages .sty-arr { display: none; }
+  .sty-stage { padding-right: 8px; }
+  .sty-ctas { width: 100%; }
+  .sty-ctas > * { flex: 1 1 0; }
+  .sty-inv { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 18px; }
+  .sty-looks { grid-template-columns: minmax(0, 1fr); gap: 40px; padding-right: 12px; }
+}
+
+/* Compose: optional settings columns sit in a dashed inset box */
+.sty-cmp > .sty-opt { padding: 14px 16px 18px; border: 3px dashed var(--rule); background: var(--paper-2); }
+
+/* Lightbox (portalled to <body>, outside #root's global motion rules) */
+.sty-lb { animation: fadeIn 160ms steps(4); }
+.still .sty-lb { animation: none; }
+@media (prefers-reduced-motion: reduce) { .sty-lb { animation: none; } }

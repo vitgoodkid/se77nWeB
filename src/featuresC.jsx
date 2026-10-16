@@ -9,16 +9,31 @@
 // All AI goes through /api/agent (detect/classify/mix) and /api/image (catalog
 // re-render, character, lookbook) — no new serverless functions. Image bytes
 // cache on-device (IndexedDB); only small metadata syncs via useSyncedData.
+//
+// Look: "B · Pixel Lobby" RPG equip screen — a stage path, the character as a
+// dark portrait frame with equip slots (pinned pieces), the wardrobe as an
+// inventory grid, mixed sets as loadout cards and saved looks as save slots.
+// Real photos stay real images inside pixel frames. Pixel classes come from
+// arcade.css plus the sty-* rules in featuresC.arcade.css.
 
-import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
+import './featuresC.arcade.css';
+import { Fragment, useState, useRef, useCallback, useMemo, useEffect, useId } from 'react';
 import {
-  COLORS, Panel, Btn, Kicker, Pill, Field,
+  COLORS, ACCENTS,
   useLang, useSyncedData, useMediaQuery, compressImage, usePasteImage,
 } from './lib.jsx';
+import { createPortal } from 'react-dom';
+import { DialogBox, PixelArrow } from './ui/arcade.jsx';
 import { useCachedImage, idbPut, idbGet, idbDel } from './lib/idb.js';
 
 const CATEGORIES = ['top', 'bottom', 'outer', 'shoes', 'accessory'];
-const ACCENT = COLORS.gold;
+const ACCENT = ACCENTS.stylist;    // Stylist pink — accent fills always carry ink text
+const ON_ACCENT = COLORS.onAccent; // ink text on any accent fill (both themes)
+const GOLD = ACCENTS.crypto;       // #ffd25e
+const GREEN = ACCENTS.tools;       // #7fd18b
+const SALMON = ACCENTS.ai;         // #ff7a7a — errors / excluded
+const DIM = '#c9bca6';             // muted text on the always-dark screens
+const SCANLINES = 'repeating-linear-gradient(0deg, rgba(255, 250, 240, 0.06) 0 2px, transparent 2px 5px)';
 
 const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 const opt = (arr) => arr.map((v) => ({ v, label: cap(v) }));
@@ -139,48 +154,222 @@ async function renderImage(body) {
   return pollImage(await safeJson(res, 'image'));
 }
 
-// ── Tiny UI atoms ──────────────────────────────────────────────
-function Chip({ active, onClick, children, accent = ACCENT, title }) {
+// ── Pixel icons ────────────────────────────────────────────────
+// Tiny bitmaps ('#' = ink pixel) → one crisp SVG path each. Rendered at
+// whole multiples of the grid (7px grid → 14 / 21px) so pixels stay square.
+function bitmap(rows) {
+  let d = '';
+  rows.forEach((row, y) => row.replace(/#+/g, (run, x) => { d += `M${x} ${y}h${run.length}v1H${x}z`; return run; }));
+  return { d, w: rows[0].length, h: rows.length };
+}
+const PIX = {
+  spark: bitmap(['...#...', '...#...', '..###..', '#######', '..###..', '...#...', '...#...']),
+  diamond: bitmap(['...#...', '..#.#..', '.#...#.', '#.....#', '.#...#.', '..#.#..', '...#...']),
+  plus: bitmap(['...#...', '...#...', '...#...', '#######', '...#...', '...#...', '...#...']),
+  check: bitmap(['.......', '......#', '.....##', '#...##.', '##.##..', '.###...', '..#....']),
+  close: bitmap(['#.....#', '##...##', '.##.##.', '..###..', '.##.##.', '##...##', '#.....#']),
+  star: bitmap(['....#....', '....#....', '...###...', '#########', '.#######.', '..#####..', '..##.##..', '.##...##.', '.#.....#.']),
+  pin: bitmap(['.#####.', '..###..', '..###..', '.#####.', '#######', '...#...', '...#...']),
+  ban: bitmap(['#######', '#....##', '#...#.#', '#..#..#', '#.#...#', '##....#', '#######']),
+  edit: bitmap(['.....##', '....###', '...###.', '..###..', '.###...', '.##....', '#......']),
+  retry: bitmap(['.####.#', '#....##', '#...###', '#......', '#.....#', '#.....#', '.#####.']),
+  download: bitmap(['...#...', '...#...', '.#.#.#.', '..###..', '...#...', '.......', '#######']),
+  upload: bitmap(['#######', '.......', '...#...', '..###..', '.#.#.#.', '...#...', '...#...']),
+  shuffle: bitmap(['.....#.', '#######', '.....#.', '.......', '.#.....', '#######', '.#.....']),
+  expand: bitmap(['###.###', '#.....#', '#.....#', '.......', '#.....#', '#.....#', '###.###']),
+  bang: bitmap(['###', '###', '###', '###', '...', '###', '###']),
+};
+function Pix({ name, size = 14, color = 'currentColor', className, style }) {
+  const b = PIX[name];
   return (
-    <button onClick={onClick} title={title} className="mono" style={{
-      padding: '6px 11px', borderRadius: 999, cursor: 'pointer', fontSize: 11,
-      letterSpacing: '0.04em', whiteSpace: 'nowrap',
-      border: '1px solid ' + (active ? accent + '88' : COLORS.line),
-      background: active ? accent + '1a' : 'transparent',
-      color: active ? accent : COLORS.muted,
-    }}>{children}</button>
+    <svg className={className} width={Math.round((size * b.w) / b.h)} height={size} viewBox={`0 0 ${b.w} ${b.h}`}
+      shapeRendering="crispEdges" aria-hidden="true" style={{ display: 'block', flexShrink: 0, ...style }}>
+      <path d={b.d} fill={color} />
+    </svg>
   );
 }
-function ChipRow({ options, value, onChange, accent = ACCENT, nullable }) {
+
+// Garment sprites for the five real categories (16px grid).
+const CAT_PATH = {
+  top: 'M4 2h3v1h2V2h3v1h2v1h1v3h-2v7H3V7H1V4h1V3h2z',
+  bottom: 'M4 1h8v3h1v11H9V7H7v8H3V4h1z',
+  outer: 'M4 1h3v2h2V1h3v1h2v2h1v5h-2v6H3V9H1V4h1V2h2z',
+  shoes: 'M2 6h5v2h2v1h3v1h2v1h1v3H1V6z',
+  accessory: 'M2 6h12v9H2z',
+};
+const CAT_DETAIL = {
+  top: 'M10 6h2v1h-2z',
+  bottom: 'M4 3h8v1H4z',
+  outer: 'M7.5 3h1v12h-1z',
+  shoes: 'M1 13h14v1H1zM5 8h1v1H5z',
+  accessory: 'M5 2h6v4h-1V3H6v3H5zM7 9h2v2H7z',
+};
+function CatIcon({ cat, size = 32, fill = 'none', stroke = 'currentColor', detail = 'none' }) {
   return (
-    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+    <svg width={size} height={size} viewBox="0 0 16 16" shapeRendering="crispEdges" aria-hidden="true" style={{ display: 'block', flexShrink: 0 }}>
+      <path d={CAT_PATH[cat] || CAT_PATH.top} fill={fill} stroke={stroke} strokeWidth="0.8" />
+      <path d={CAT_DETAIL[cat] || CAT_DETAIL.top} fill={detail} />
+    </svg>
+  );
+}
+
+// Placeholder model sprite shown before a character exists. Equipped (pinned)
+// categories light up in accent colours.
+function Silhouette({ equipped, height = 200 }) {
+  const has = (c) => equipped.some((it) => it.category === c);
+  const off = '#5c5046';
+  const skin = DIM;
+  const top = has('top') ? ACCENT : off;
+  const outer = has('outer') ? GOLD : null;
+  return (
+    <svg className="bob" width={height / 2} height={height} viewBox="0 0 12 24" shapeRendering="crispEdges" aria-hidden="true" style={{ display: 'block' }}>
+      <path d="M4 0h4v1h1v4H8v1H4V5H3V1h1z" fill={skin} />
+      <path d="M5 6h2v1H5z" fill={skin} />
+      <path d="M1 7h2v7H1zM9 7h2v7H9z" fill={outer || top} stroke="#fffaf0" strokeWidth="0.2" />
+      <path d="M1 14h2v1H1zM9 14h2v1H9z" fill={skin} />
+      <path d="M3 7h6v7H3z" fill={top} stroke="#fffaf0" strokeWidth="0.2" />
+      <path d="M3 14h6v6H7v-4H5v4H3z" fill={has('bottom') ? '#7aa8ff' : off} stroke="#fffaf0" strokeWidth="0.2" />
+      {outer && <path d="M3 7h2v8H3zM7 7h2v8H7z" fill={outer} stroke="#fffaf0" strokeWidth="0.2" />}
+      <path d="M2 20h3v2H2zM7 20h3v2H7z" fill={has('shoes') ? GREEN : off} stroke="#fffaf0" strokeWidth="0.2" />
+      {has('accessory') && <path d="M10 15h2v3h-2z" fill="#ffa764" stroke="#fffaf0" strokeWidth="0.2" />}
+    </svg>
+  );
+}
+
+// ── Tiny UI atoms ──────────────────────────────────────────────
+function Chip({ active, onClick, children, title, mini }) {
+  return (
+    <button type="button" onClick={onClick} title={title} aria-pressed={!!active}
+      className={'chip-px sk' + (active ? ' on' : '')} style={{
+        display: 'inline-flex', alignItems: 'center', gap: 7, whiteSpace: 'nowrap',
+        minHeight: mini ? 26 : 34, padding: mini ? '0 7px' : '0 12px', fontSize: mini ? 9 : 11,
+      }}>{children}</button>
+  );
+}
+function ChipRow({ options, value, onChange, nullable, label, mini }) {
+  return (
+    <div role="group" aria-label={label} style={{ display: 'flex', gap: mini ? 9 : 12, flexWrap: 'wrap', padding: 3 }}>
       {options.map((o) => (
-        <Chip key={o.v} active={value === o.v} accent={accent}
+        <Chip key={o.v} mini={mini} active={value === o.v}
           onClick={() => onChange(nullable && value === o.v ? null : o.v)}>{o.label}</Chip>
       ))}
     </div>
   );
 }
-function IconBtn({ onClick, title, children, active, danger }) {
-  const c = danger ? COLORS.red : active ? ACCENT : COLORS.muted;
+function IconBtn({ onClick, title, children, active, excl, danger, size = 30 }) {
   return (
-    <button onClick={onClick} title={title} aria-label={title} className="mono" style={{
-      width: 26, height: 26, borderRadius: 7, padding: 0, cursor: 'pointer',
-      border: '1px solid ' + (active ? ACCENT + '66' : COLORS.line),
-      background: active ? ACCENT + '14' : 'transparent', color: c,
-      display: 'grid', placeItems: 'center', fontSize: 12, flexShrink: 0,
+    <button type="button" onClick={onClick} title={title} aria-label={title}
+      aria-pressed={active === undefined ? undefined : !!active}
+      className={'sty-ibtn' + (active ? (excl ? ' xon' : ' on') : '') + (danger ? ' danger' : '')}
+      style={{ width: size, height: size }}>{children}</button>
+  );
+}
+// Small pressable pixel button. fill = accent (ink text); ink = dark strip fill.
+function SBtn({ onClick, children, fill, ink, disabled, title, style }) {
+  return (
+    <button type="button" onClick={onClick} disabled={disabled} title={title} className="sk sbtn" style={{
+      display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+      minHeight: 38, padding: '0 13px', fontSize: 11, lineHeight: 1.2, whiteSpace: 'nowrap', textTransform: 'uppercase',
+      background: ink ? COLORS.strip : fill || COLORS.paper,
+      color: ink ? COLORS.stripText : fill ? ON_ACCENT : COLORS.text,
+      ...style,
     }}>{children}</button>
   );
 }
-function CachedImg({ cacheKey, url, alt, style, onClick }) {
+function BtnRow({ children, style }) {
+  return <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '14px 16px', padding: '3px 8px 8px 3px', ...style }}>{children}</div>;
+}
+function Lbl({ htmlFor, children }) {
+  return <label htmlFor={htmlFor} className="sk" style={{ display: 'block', marginBottom: 9, fontSize: 10, color: COLORS.muted, textTransform: 'uppercase' }}>{children}</label>;
+}
+function GroupLbl({ children, style }) {
+  return <div className="sk" style={{ marginBottom: 9, fontSize: 10, color: COLORS.muted, textTransform: 'uppercase', ...style }}>{children}</div>;
+}
+function PxInput({ id, value, onChange, placeholder, onKeyDown, small, inputMode }) {
+  return (
+    <input id={id} type="text" inputMode={inputMode} value={value} onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder} onKeyDown={onKeyDown} className="field mono" style={{
+        display: 'block', width: '100%', minWidth: 0,
+        height: small ? 32 : 44, padding: small ? '0 8px' : '0 13px', fontSize: small ? 12 : 13,
+      }} />
+  );
+}
+// Paper panel with an ink name plate straddling its top edge.
+function Plate({ label, children, pad = '36px 26px 28px', style, ariaLabel }) {
+  return (
+    <section aria-label={ariaLabel || (typeof label === 'string' ? label : undefined)}
+      style={{ position: 'relative', marginTop: 16, minWidth: 0, ...style }}>
+      <div className="px" style={{ position: 'relative', padding: pad, background: COLORS.paper }}>
+        <span className="sk" style={{
+          position: 'absolute', left: 18, top: -16, zIndex: 2, maxWidth: 'calc(100% - 36px)',
+          padding: '7px 12px', fontSize: 11, color: COLORS.stripText, background: COLORS.strip,
+          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textTransform: 'uppercase',
+        }}>{label}</span>
+        {children}
+      </div>
+    </section>
+  );
+}
+function SectionHead({ kicker, title, right }) {
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, marginBottom: 30 }}>
+      <div>
+        <div className="sk" style={{ marginBottom: 9, fontSize: 12, color: COLORS.muted, textTransform: 'uppercase' }}>{kicker}</div>
+        <h2 className="pf" style={{ margin: 0, fontSize: 34, lineHeight: 1, color: COLORS.text }}>{title}</h2>
+      </div>
+      {right}
+    </div>
+  );
+}
+function EmptyBox({ icon, title, hint, action, framed }) {
+  return (
+    <div style={{
+      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, padding: '42px 20px', textAlign: 'center',
+      border: framed ? '3px dashed ' + COLORS.rule : 0,
+    }}>
+      {icon}
+      <div className="sk" style={{ fontSize: 16, color: COLORS.text, textTransform: 'uppercase' }}>{title}</div>
+      {hint && <p style={{ margin: 0, maxWidth: 380, fontSize: 13, lineHeight: 1.55, color: COLORS.muted }}>{hint}</p>}
+      {action && <div style={{ padding: '4px 8px 8px 4px' }}>{action}</div>}
+    </div>
+  );
+}
+function TagList({ tags, empty }) {
+  if (!tags.length) return <p style={{ margin: 0, fontSize: 12, lineHeight: 1.55, color: COLORS.muted }}>{empty}</p>;
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, padding: 3 }}>
+      {tags.map((x, i) => (
+        <span key={i} className="sk pxs" style={{ padding: '4px 8px', fontSize: 10, color: COLORS.text, background: COLORS.field, textTransform: 'uppercase' }}>{x}</span>
+      ))}
+    </div>
+  );
+}
+function Toggle({ open, onClick, children }) {
+  return (
+    <button type="button" className="sk sty-tog" aria-expanded={open} onClick={onClick}>
+      <span style={{ display: 'grid', placeItems: 'center', width: 15 }}>
+        <PixelArrow dir={open ? 'down' : 'right'} size={9} color="currentColor" />
+      </span>
+      {children}
+    </button>
+  );
+}
+function CachedImg({ cacheKey, url, alt, style, onClick, className }) {
   const src = useCachedImage(cacheKey, url);
-  if (!src) return <div style={{ ...style, background: COLORS.panel2, display: 'grid', placeItems: 'center', color: COLORS.muted, fontSize: 10 }} className="mono" onClick={onClick}>—</div>;
-  return <img src={src} alt={alt || ''} style={style} loading="lazy" onClick={onClick} />;
+  if (!src) {
+    return (
+      <div className={className} onClick={onClick} style={{ ...style, background: COLORS.field, color: COLORS.muted, display: 'grid', placeItems: 'center' }}>
+        <Pix name="diamond" size={14} />
+      </div>
+    );
+  }
+  return <img className={className} src={src} alt={alt || ''} style={style} loading="lazy" onClick={onClick} />;
 }
 
 // Full-screen image viewer — click an image (item / character / lookbook) to
-// open; click anywhere or press Esc to close.
+// open; click anywhere or press Esc to close. Pixel modal: pink mat, ink plate.
 function Lightbox({ data, onClose }) {
+  const { lang } = useLang();
   useEffect(() => {
     if (!data) return;
     const onKey = (e) => { if (e.key === 'Escape') onClose(); };
@@ -188,26 +377,39 @@ function Lightbox({ data, onClose }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [data, onClose]);
   if (!data) return null;
-  return (
-    <div onClick={onClose} style={{
-      position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,0.88)',
-      display: 'grid', placeItems: 'center', padding: 20, cursor: 'zoom-out',
-      animation: 'fadeIn 160ms ease-out',
+  return createPortal(
+    <div role="dialog" aria-modal="true" aria-label={data.alt || 'image'} onClick={onClose} className="sty-lb" style={{
+      position: 'fixed', inset: 0, zIndex: 100, display: 'grid', placeItems: 'center', padding: '64px 20px 24px',
+      backgroundColor: 'rgba(27, 20, 16, 0.9)', backgroundImage: SCANLINES,
+      cursor: 'zoom-out',
     }}>
-      <CachedImg cacheKey={data.cacheKey} url={data.url} alt={data.alt}
-        style={{ maxWidth: '96vw', maxHeight: '92vh', objectFit: 'contain', borderRadius: 8, display: 'block' }} />
-      <button onClick={onClose} aria-label="close" className="mono" style={{
-        position: 'fixed', top: 16, right: 16, width: 40, height: 40, borderRadius: 999,
-        background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.25)',
-        color: '#fff', cursor: 'pointer', fontSize: 18,
-      }}>✕</button>
-    </div>
+      <div style={{ position: 'relative', maxWidth: '100%' }}>
+        <span className="sk" style={{
+          position: 'absolute', left: 14, top: -15, zIndex: 1, maxWidth: 'calc(100% - 28px)', padding: '6px 11px',
+          fontSize: 11, color: COLORS.stripText, background: COLORS.strip, textTransform: 'uppercase',
+          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+        }}>{data.alt || 'image'}</span>
+        <div className="px" style={{ padding: 10, background: ACCENT }}>
+          <CachedImg cacheKey={data.cacheKey} url={data.url} alt={data.alt}
+            style={{ maxWidth: 'calc(96vw - 64px)', maxHeight: 'calc(100vh - 170px)', objectFit: 'contain', display: 'block', background: '#fffaf0' }} />
+        </div>
+        <div className="sk" style={{ marginTop: 18, textAlign: 'center', fontSize: 10, color: DIM }}>
+          {lang === 'vi' ? 'BẤM BẤT KỲ ĐÂU · ESC ĐỂ ĐÓNG' : 'CLICK ANYWHERE · ESC TO CLOSE'}
+        </div>
+      </div>
+      <button type="button" onClick={onClose} aria-label="close" className="sbtn" style={{
+        position: 'fixed', top: 16, right: 20, display: 'grid', placeItems: 'center', width: 44, height: 44, padding: 0,
+        color: ON_ACCENT, background: ACCENT,
+      }}><Pix name="close" size={14} /></button>
+    </div>,
+    document.body,
   );
 }
 
-// ── Wardrobe item card ─────────────────────────────────────────
+// ── Wardrobe item card (inventory slot) ────────────────────────
 function ItemCard({ item, pinned, excluded, onEdit, onDelete, onRetry, onTogglePin, onToggleExclude, onZoom }) {
   const { t } = useLang();
+  const uid = useId();
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(item.name);
   const [cat, setCat] = useState(item.category);
@@ -218,68 +420,96 @@ function ItemCard({ item, pinned, excluded, onEdit, onDelete, onRetry, onToggleP
   const save = () => { onEdit(item.id, { name: name.trim() || 'item', category: cat, color: color.trim() }); setEditing(false); };
 
   return (
-    <div style={{
-      position: 'relative', borderRadius: 12, overflow: 'hidden',
-      border: '1px solid ' + (pinned ? ACCENT + '88' : excluded ? COLORS.red + '66' : COLORS.line),
-      background: COLORS.panel, opacity: excluded ? 0.55 : 1,
-    }}>
-      <div style={{ aspectRatio: '1 / 1', background: COLORS.panel2, position: 'relative' }}>
+    <article className="pxs" aria-label={item.name} style={{ display: 'flex', flexDirection: 'column', minWidth: 0, background: COLORS.paper }}>
+      <div className={'sty-med' + (pinned ? ' pin' : '') + (excluded ? ' xcl' : '')}>
         {processing ? (
-          <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center' }}>
-            <span className="mono" style={{ fontSize: 10, color: ACCENT, letterSpacing: '0.16em' }}>◇ {t('stylist.processing')}</span>
+          <div className="sty-state">
+            <span style={{ opacity: 0.45, color: COLORS.muted }}><CatIcon cat={item.category} size={48} /></span>
+            <span className="sk blink" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 10, color: COLORS.text, textTransform: 'uppercase' }}>
+              <Pix name="diamond" size={14} />{t('stylist.processing')}
+            </span>
+            <span className="sty-bar" aria-hidden="true"><i /></span>
           </div>
         ) : error ? (
-          <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', padding: 10, textAlign: 'center' }}>
-            <span className="mono" style={{ fontSize: 10, color: COLORS.red }}>⚠ {item.error || 'failed'}</span>
+          <div className="sty-state">
+            <Pix name="bang" size={21} color={COLORS.red} />
+            <span className="sk" style={{ maxWidth: '100%', padding: '3px 6px', fontSize: 9, lineHeight: 1.4, color: ON_ACCENT, background: SALMON, overflowWrap: 'anywhere' }}>
+              {item.error || 'failed'}
+            </span>
           </div>
         ) : (
-          <CachedImg cacheKey={'item:' + item.id} url={item.itemUrl} alt={item.name}
-            onClick={() => onZoom && onZoom('item:' + item.id, item.itemUrl, item.name)}
-            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', cursor: 'zoom-in' }} />
+          <CachedImg className="sty-img" cacheKey={'item:' + item.id} url={item.itemUrl} alt={item.name}
+            onClick={() => onZoom && onZoom('item:' + item.id, item.itemUrl, item.name)} />
         )}
-        <div style={{ position: 'absolute', top: 6, right: 6, display: 'flex', gap: 4 }}>
-          {error && <IconBtn onClick={() => onRetry(item)} title={t('stylist.retry')}>↻</IconBtn>}
-          <IconBtn onClick={() => onDelete(item)} title={t('stylist.delete')} danger>✕</IconBtn>
+        {pinned && <span className="sk sty-tag" style={{ color: COLORS.stripText, background: COLORS.strip }}>{t('stylist.pinned')}</span>}
+        {excluded && <span className="sk sty-tag" style={{ color: ON_ACCENT, background: SALMON }}>{t('stylist.excluded')}</span>}
+        <div className="sty-tools">
+          {error && <IconBtn size={26} onClick={() => onRetry(item)} title={t('stylist.retry')}><Pix name="retry" size={14} /></IconBtn>}
+          <IconBtn size={26} danger onClick={() => onDelete(item)} title={t('stylist.delete')}><Pix name="close" size={14} /></IconBtn>
         </div>
       </div>
 
       {editing ? (
-        <div style={{ padding: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <Field value={name} onChange={setName} placeholder="name" style={{ fontSize: 12, padding: '8px 10px' }} />
-          <ChipRow options={CATEGORIES.map((c) => ({ v: c, label: t('stylist.cat.' + c) }))} value={cat} onChange={setCat} />
-          <Field value={color} onChange={setColor} placeholder="color" style={{ fontSize: 12, padding: '8px 10px' }} />
-          <div style={{ display: 'flex', gap: 6 }}>
-            <Btn variant="solid" color={ACCENT} onClick={save} style={{ flex: 1 }}>{t('stylist.save')}</Btn>
-            <Btn variant="ghost" onClick={() => setEditing(false)}>{t('stylist.cancel')}</Btn>
-          </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '12px 10px 12px' }}>
+          <label htmlFor={uid + 'n'} className="sr">name</label>
+          <PxInput id={uid + 'n'} small value={name} onChange={setName} placeholder="name" />
+          <ChipRow mini label="category" options={CATEGORIES.map((c) => ({ v: c, label: t('stylist.cat.' + c) }))} value={cat} onChange={setCat} />
+          <label htmlFor={uid + 'c'} className="sr">color</label>
+          <PxInput id={uid + 'c'} small value={color} onChange={setColor} placeholder="color" />
+          <BtnRow style={{ gap: 12 }}>
+            <SBtn fill={ACCENT} onClick={save} style={{ minHeight: 30, padding: '0 9px', fontSize: 10 }}>{t('stylist.save')}</SBtn>
+            <SBtn onClick={() => setEditing(false)} style={{ minHeight: 30, padding: '0 9px', fontSize: 10 }}>{t('stylist.cancel')}</SBtn>
+          </BtnRow>
         </div>
       ) : (
-        <div style={{ padding: '8px 10px' }}>
-          <div style={{ fontSize: 12, color: COLORS.text, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.name}</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '10px 10px 12px' }}>
+          <span title={item.name} style={{ overflow: 'hidden', fontSize: 13, fontWeight: 700, color: COLORS.text, whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{item.name}</span>
           {!processing && (
             <>
-              <div style={{ marginTop: 5, display: 'flex', alignItems: 'center', gap: 6 }}>
-                <Pill color={ACCENT}>{t('stylist.cat.' + item.category)}</Pill>
-                {item.color && <span className="mono" style={{ fontSize: 9, color: COLORS.muted }}>{item.color}</span>}
-              </div>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                <span className="sk" style={{ flexShrink: 0, padding: '3px 6px', fontSize: 9, color: ON_ACCENT, background: ACCENT, textTransform: 'uppercase' }}>{t('stylist.cat.' + item.category)}</span>
+                {item.color && <span style={{ overflow: 'hidden', fontSize: 11, color: COLORS.muted, whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{item.color}</span>}
+              </span>
               {!error && (
-                <div style={{ marginTop: 8, display: 'flex', gap: 4 }}>
-                  <IconBtn onClick={() => onTogglePin(item.id)} active={pinned} title={t('stylist.pin')}>📌</IconBtn>
-                  <IconBtn onClick={() => onToggleExclude(item.id)} active={excluded} title={t('stylist.exclude')}>🚫</IconBtn>
-                  <IconBtn onClick={() => { setName(item.name); setCat(item.category); setColor(item.color || ''); setEditing(true); }} title={t('stylist.edit')}>✎</IconBtn>
+                <div style={{ display: 'flex', gap: 10, padding: '5px 3px 3px' }}>
+                  <IconBtn onClick={() => onTogglePin(item.id)} active={pinned} title={t('stylist.pin')}><Pix name="pin" size={14} /></IconBtn>
+                  <IconBtn onClick={() => onToggleExclude(item.id)} active={excluded} excl title={t('stylist.exclude')}><Pix name="ban" size={14} /></IconBtn>
+                  <IconBtn onClick={() => { setName(item.name); setCat(item.category); setColor(item.color || ''); setEditing(true); }} title={t('stylist.edit')}><Pix name="edit" size={14} /></IconBtn>
                 </div>
               )}
             </>
           )}
         </div>
       )}
+    </article>
+  );
+}
+
+// ── Character panel (portrait frame + equip slots + player file) ──
+function EquipSlot({ cat, item, n, label, size }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, minWidth: 0 }}>
+      <span className="pxs" role="img" title={item ? item.name : label}
+        aria-label={label + ': ' + (item ? item.name : '—')} style={{
+          position: 'relative', display: 'grid', placeItems: 'center', width: size, height: size,
+          color: COLORS.muted, background: item ? ACCENT : COLORS.field,
+        }}>
+        {item
+          ? <CachedImg cacheKey={'item:' + item.id} url={item.itemUrl} alt="" style={{ width: size - 10, height: size - 10, objectFit: 'cover', display: 'block' }} />
+          : <span style={{ opacity: 0.7 }}><CatIcon cat={cat} size={32} /></span>}
+        {n > 1 && (
+          <span className="sk" style={{ position: 'absolute', right: -9, bottom: -9, padding: '2px 4px', fontSize: 9, color: COLORS.stripText, background: COLORS.strip }}>+{n - 1}</span>
+        )}
+      </span>
+      <span className="sk" style={{ maxWidth: size + 16, fontSize: 9, lineHeight: 1.3, textAlign: 'center', color: COLORS.muted, textTransform: 'uppercase' }}>{label}</span>
     </div>
   );
 }
 
-// ── Character panel ────────────────────────────────────────────
-function CharacterPanel({ character, busy, onCreate, onEdit, onRemove, isMobile, onZoom }) {
-  const { t } = useLang();
+function CharacterPanel({ character, busy, onCreate, onEdit, onRemove, isMobile, onZoom, equipped = [] }) {
+  const { t, lang } = useLang();
+  const tt = (en, vi) => (lang === 'vi' ? vi : en);
+  const uid = useId();
   const [open, setOpen] = useState(false); // edit form open
   const [photos, setPhotos] = useState([]); // 1..4 reference photos (face angles)
   const [name, setName] = useState('');
@@ -304,177 +534,346 @@ function CharacterPanel({ character, busy, onCreate, onEdit, onRemove, isMobile,
     setSkinTone(character?.skinTone || null); setTweak(''); setPhotos([]); setOpen(true);
   };
 
+  // Equip slots: pinned (ready) pieces per real category.
+  const slotSize = isMobile ? 52 : 60;
+  const slots = CATEGORIES.map((c) => {
+    const its = equipped.filter((it) => it.category === c);
+    return { c, item: its[0] || null, n: its.length };
+  });
+  const equipCount = slots.filter((s) => s.item).length;
+  const slotEl = (s) => <EquipSlot key={s.c} cat={s.c} item={s.item} n={s.n} label={t('stylist.cat.' + s.c)} size={slotSize} />;
+  const charName = character ? (character.name || t('stylist.charDefault')) : null;
+
+  const portrait = (
+    <div className="sty-screen" style={{ display: 'flex', flexDirection: 'column', height: isMobile ? 262 : 312 }}>
+      <span className="sty-corner tl" aria-hidden="true" />
+      <span className="sty-corner tr" aria-hidden="true" />
+      <span className="sty-corner bl" aria-hidden="true" style={{ bottom: 34 }} />
+      <span className="sty-corner br" aria-hidden="true" style={{ bottom: 34 }} />
+      <span className="sk" aria-hidden="true" style={{ position: 'absolute', left: 14, top: 13, zIndex: 2, padding: '2px 5px', fontSize: 10, color: ON_ACCENT, background: ACCENT }}>P1</span>
+      <div style={{ position: 'relative', flex: 1, minHeight: 0, display: 'grid', placeItems: 'center', padding: 12 }}>
+        {character ? (
+          <CachedImg cacheKey={'char:' + character.id} url={character.charUrl} alt={character.name || 'character'}
+            onClick={() => onZoom && onZoom('char:' + character.id, character.charUrl, character.name || 'character')}
+            style={{ position: 'absolute', left: 12, top: 12, width: 'calc(100% - 24px)', height: 'calc(100% - 24px)', objectFit: 'cover', objectPosition: 'center top', display: 'block', cursor: 'zoom-in' }} />
+        ) : (
+          <>
+            <Silhouette equipped={equipped} height={isMobile ? 156 : 188} />
+            <span aria-hidden="true" style={{ position: 'absolute', left: '50%', bottom: 14, width: 80, height: 6, marginLeft: -40, background: 'rgba(255, 250, 240, 0.14)' }} />
+          </>
+        )}
+      </div>
+      <div className="sk" style={{
+        flexShrink: 0, height: 34, padding: '0 12px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: 10, color: character ? COLORS.stripText : DIM, borderTop: '3px solid ' + ACCENT,
+        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textTransform: 'uppercase',
+      }}>{character ? charName : tt('No model yet', 'Chưa có nhân vật')}</div>
+    </div>
+  );
+
+  const equipScreen = (
+    <div style={{ display: 'grid', gridTemplateColumns: `${slotSize + 6}px minmax(0, 1fr) ${slotSize + 6}px`, gap: isMobile ? 12 : 16, alignItems: 'start' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, paddingTop: 3 }}>
+        {slots.slice(0, 3).map(slotEl)}
+      </div>
+      {portrait}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, paddingTop: 3 }}>
+        {slots.slice(3).map(slotEl)}
+        <div className="sk" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, width: '100%', paddingTop: 10, borderTop: '3px dashed ' + COLORS.rule }}>
+          <span style={{ fontSize: 9, color: COLORS.muted }}>{tt('EQUIP', 'TRANG BỊ')}</span>
+          <span style={{ fontSize: 15, color: COLORS.text }}>{equipCount}/{CATEGORIES.length}</span>
+        </div>
+      </div>
+    </div>
+  );
+
   const photoStrip = (
-    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+    <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', padding: 3 }}>
       {photos.map((p, i) => (
-        <div key={i} style={{ position: 'relative', width: 80, height: 104, borderRadius: 10, overflow: 'hidden', border: '1px solid ' + ACCENT + '88' }}>
-          <img src={p.dataUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          <button onClick={() => setPhotos((ps) => ps.filter((_, j) => j !== i))} aria-label="remove" style={{
-            position: 'absolute', top: 3, right: 3, width: 20, height: 20, borderRadius: 6, border: 'none',
-            background: 'rgba(0,0,0,0.55)', color: '#fff', cursor: 'pointer', fontSize: 11, lineHeight: 1, padding: 0,
-          }}>✕</button>
+        <div key={i} className="pxs" style={{ position: 'relative', width: 72, height: 96, background: COLORS.field }}>
+          <img src={p.dataUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+          <button type="button" onClick={() => setPhotos((ps) => ps.filter((_, j) => j !== i))} aria-label="remove" className="sty-ibtn danger"
+            style={{ position: 'absolute', top: -6, right: -6, width: 22, height: 22 }}><Pix name="close" size={7} /></button>
         </div>
       ))}
       {photos.length < 4 && (
-        <button onClick={() => fileRef.current?.click()} aria-label="add photo" style={{
-          width: 80, height: 104, borderRadius: 10, overflow: 'hidden', cursor: 'pointer', padding: 0,
-          border: '1px dashed ' + COLORS.line, background: COLORS.panel2, color: COLORS.muted, fontSize: 22,
-          display: 'grid', placeItems: 'center',
+        <button type="button" onClick={() => fileRef.current?.click()} aria-label="add photo" className="chip-px" style={{
+          position: 'relative', width: 72, height: 96, padding: 0, overflow: 'hidden', display: 'grid', placeItems: 'center', color: COLORS.text,
         }}>
           {photos.length === 0 && character
-            ? <CachedImg cacheKey={'char:' + character.id} url={character.charUrl} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.45 }} />
-            : '＋'}
+            ? <CachedImg cacheKey={'char:' + character.id} url={character.charUrl} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.45 }} />
+            : null}
+          <span style={{ position: 'relative', display: 'grid', placeItems: 'center', width: 32, height: 32, color: ON_ACCENT, background: ACCENT }}><Pix name="plus" size={14} /></span>
         </button>
       )}
     </div>
   );
 
+  const busyLabel = (
+    <><Pix name="diamond" size={14} />{t('stylist.charCreating')}<span className="dots-step" aria-hidden="true"><i /><i /><i /></span></>
+  );
   const form = (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 520 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <input ref={fileRef} type="file" accept="image/*" multiple onChange={pickPhotos} style={{ display: 'none' }} />
-      {photoStrip}
-      <div className="mono" style={{ fontSize: 10, color: COLORS.muted, lineHeight: 1.5 }}>{t('stylist.charPhotosHint')}</div>
-      <Field value={name} onChange={setName} placeholder={t('stylist.charNamePh')} />
-      <Field value={height} onChange={(v) => setHeight(v.replace(/\D/g, '').slice(0, 3))} placeholder={t('stylist.charHeightPh')} />
+      {!character && <p style={{ margin: 0, maxWidth: 560, fontSize: 13, lineHeight: 1.6, color: COLORS.muted }}>{t('stylist.charHint')}</p>}
       <div>
-        <div className="mono" style={{ fontSize: 9, color: COLORS.muted, letterSpacing: '0.16em', marginBottom: 5 }}>{t('stylist.gender')}</div>
-        <ChipRow options={GENDERS} value={gender} onChange={setGender} nullable />
+        <GroupLbl>{tt('Reference photos', 'Ảnh tham chiếu')}</GroupLbl>
+        {photoStrip}
+        <p style={{ margin: '10px 0 0', fontSize: 11, lineHeight: 1.5, color: COLORS.muted }}>{t('stylist.charPhotosHint')}</p>
       </div>
-      <div>
-        <div className="mono" style={{ fontSize: 9, color: COLORS.muted, letterSpacing: '0.16em', marginBottom: 5 }}>{t('stylist.body')}</div>
-        <ChipRow options={BODY} value={bodyType} onChange={setBodyType} nullable />
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '18px 22px' }}>
+        <div style={{ flex: '1 1 200px', minWidth: 0, padding: 3 }}>
+          <Lbl htmlFor={uid + 'name'}>{tt('Name', 'Tên')}</Lbl>
+          <PxInput id={uid + 'name'} value={name} onChange={setName} placeholder={t('stylist.charNamePh')} />
+        </div>
+        <div style={{ flex: '1 1 200px', minWidth: 0, padding: 3 }}>
+          <Lbl htmlFor={uid + 'height'}>{tt('Height', 'Chiều cao')}</Lbl>
+          <PxInput id={uid + 'height'} inputMode="numeric" value={height} onChange={(v) => setHeight(v.replace(/\D/g, '').slice(0, 3))} placeholder={t('stylist.charHeightPh')} />
+        </div>
       </div>
-      <div>
-        <div className="mono" style={{ fontSize: 9, color: COLORS.muted, letterSpacing: '0.16em', marginBottom: 5 }}>{t('stylist.skin')}</div>
-        <ChipRow options={SKIN} value={skinTone} onChange={setSkinTone} nullable />
-      </div>
-      {character && <Field value={tweak} onChange={setTweak} placeholder={t('stylist.charTweakPh')} />}
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      <div><GroupLbl>{t('stylist.gender')}</GroupLbl><ChipRow options={GENDERS} value={gender} onChange={setGender} nullable label={t('stylist.gender')} /></div>
+      <div><GroupLbl>{t('stylist.body')}</GroupLbl><ChipRow options={BODY} value={bodyType} onChange={setBodyType} nullable label={t('stylist.body')} /></div>
+      <div><GroupLbl>{t('stylist.skin')}</GroupLbl><ChipRow options={SKIN} value={skinTone} onChange={setSkinTone} nullable label={t('stylist.skin')} /></div>
+      {character && (
+        <div style={{ padding: 3 }}>
+          <Lbl htmlFor={uid + 'tweak'}>{tt('Tweak', 'Tinh chỉnh')}</Lbl>
+          <PxInput id={uid + 'tweak'} value={tweak} onChange={setTweak} placeholder={t('stylist.charTweakPh')} />
+        </div>
+      )}
+      <BtnRow style={{ gap: '16px 20px', padding: '4px 12px 12px 4px' }}>
         {character ? (
-          <Btn variant="solid" color={ACCENT} disabled={busy}
-            onClick={() => onEdit({ photos, name, height, gender, bodyType, skinTone, tweak })}>
-            {busy ? '◇ ' + t('stylist.charCreating') : '✦ ' + t('stylist.charRegen')}
-          </Btn>
+          <button type="button" className="sk pbtn" disabled={busy}
+            onClick={() => onEdit({ photos, name, height, gender, bodyType, skinTone, tweak })}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 10, minHeight: 48, padding: '0 18px', fontSize: 13, textTransform: 'uppercase', color: ON_ACCENT, background: ACCENT }}>
+            {busy ? busyLabel : <><Pix name="spark" size={14} />{t('stylist.charRegen')}</>}
+          </button>
         ) : (
-          <Btn variant="solid" color={ACCENT} disabled={busy || !photos.length || !height}
-            onClick={() => onCreate({ photos, name, height, gender, bodyType, skinTone })}>
-            {busy ? '◇ ' + t('stylist.charCreating') : '✦ ' + t('stylist.charCreate')}
-          </Btn>
+          <button type="button" className="sk pbtn" disabled={busy || !photos.length || !height}
+            onClick={() => onCreate({ photos, name, height, gender, bodyType, skinTone })}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 10, minHeight: 48, padding: '0 18px', fontSize: 13, textTransform: 'uppercase', color: ON_ACCENT, background: ACCENT }}>
+            {busy ? busyLabel : <><Pix name="spark" size={14} />{t('stylist.charCreate')}</>}
+          </button>
         )}
-        {character && <Btn variant="ghost" onClick={() => { setOpen(false); resetForm(); }}>{t('stylist.cancel')}</Btn>}
-      </div>
+        {character && <SBtn onClick={() => { setOpen(false); resetForm(); }} style={{ minHeight: 44 }}>{t('stylist.cancel')}</SBtn>}
+      </BtnRow>
     </div>
   );
 
-  return (
-    <Panel padding={isMobile ? 14 : 18}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-        <Kicker>{t('stylist.character')}</Kicker>
-        {character && !open && (
-          <div style={{ display: 'flex', gap: 6 }}>
-            <Btn variant="ghost" onClick={startEdit}>✎ {t('stylist.edit')}</Btn>
-            <Btn variant="ghost" onClick={onRemove}>{t('stylist.charRemove')}</Btn>
-          </div>
-        )}
-      </div>
+  const stat = (label, value, i) => (
+    <div key={label} style={{
+      minWidth: 0, padding: i % 2 ? '14px 0 14px 18px' : '14px 0',
+      borderBottom: i < 2 ? '3px dashed ' + COLORS.rule : 0, borderLeft: i % 2 ? '3px dashed ' + COLORS.rule : 0,
+    }}>
+      <dt className="sk" style={{ fontSize: 10, color: COLORS.muted }}>{label}</dt>
+      <dd className="sk" style={{ margin: '7px 0 0', fontSize: 15, color: COLORS.text, textTransform: 'uppercase', overflowWrap: 'anywhere' }}>{value}</dd>
+    </div>
+  );
 
-      {character && !open ? (
-        <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-          <CachedImg cacheKey={'char:' + character.id} url={character.charUrl} alt={character.name || 'character'}
-            onClick={() => onZoom && onZoom('char:' + character.id, character.charUrl, character.name || 'character')}
-            style={{ width: 84, height: 112, borderRadius: 10, objectFit: 'cover', border: '1px solid ' + COLORS.line, flexShrink: 0, cursor: 'zoom-in' }} />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: COLORS.text }}>{character.name || t('stylist.charDefault')}</div>
-            <div style={{ marginTop: 7, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              {character.height && <Pill color={ACCENT}>{character.height} cm</Pill>}
-              {character.gender && <Pill color={ACCENT}>{cap(character.gender)}</Pill>}
-              {character.bodyType && <Pill color={ACCENT}>{cap(character.bodyType)}</Pill>}
-              {character.skinTone && <Pill color={ACCENT}>{cap(character.skinTone)} skin</Pill>}
-            </div>
-          </div>
-        </div>
-      ) : (
-        <>
-          {!character && <div style={{ fontSize: 13, color: COLORS.muted, lineHeight: 1.5, maxWidth: 480, marginBottom: 12 }}>{t('stylist.charHint')}</div>}
-          {form}
-        </>
-      )}
-    </Panel>
+  const dossier = character && (
+    <Plate label={tt('Player file', 'Hồ sơ')} pad={isMobile ? '32px 18px 20px' : '38px 28px 28px'}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', justifyContent: 'space-between', gap: '8px 14px', paddingBottom: 14, borderBottom: '3px dashed ' + COLORS.rule }}>
+        <span className="pf" style={{ fontSize: isMobile ? 26 : 32, lineHeight: 1.1, color: COLORS.text, overflowWrap: 'anywhere' }}>{charName}</span>
+        <span className="sk" style={{ fontSize: 10, color: COLORS.muted }}>{tt('PINNED = EQUIPPED', 'GHIM = TRANG BỊ')}</span>
+      </div>
+      <dl style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', margin: '0 0 18px' }}>
+        {[
+          [tt('HEIGHT', 'CHIỀU CAO'), character.height ? character.height + ' cm' : '—'],
+          [t('stylist.gender'), character.gender ? cap(character.gender) : '—'],
+          [t('stylist.body'), character.bodyType ? cap(character.bodyType) : '—'],
+          [t('stylist.skin'), character.skinTone ? cap(character.skinTone) : '—'],
+        ].map(([l, v], i) => stat(l, v, i))}
+      </dl>
+      <BtnRow>
+        <SBtn onClick={startEdit}><Pix name="edit" size={14} />{t('stylist.edit')}</SBtn>
+        <SBtn onClick={onRemove}><Pix name="close" size={14} />{t('stylist.charRemove')}</SBtn>
+      </BtnRow>
+    </Plate>
+  );
+
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', gap: isMobile ? '40px 0' : '44px 40px' }}>
+      <Plate label={t('stylist.character')} ariaLabel="character" pad={isMobile ? '32px 14px 22px' : '38px 22px 26px'}
+        style={{ flex: '1 1 440px', maxWidth: isMobile ? 'none' : 560 }}>
+        {equipScreen}
+      </Plate>
+
+      <div style={{ flex: '999 1 380px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 44 }}>
+        {character && !open ? dossier : (
+          <Plate label={character ? tt('Edit character', 'Sửa nhân vật') : tt('New character', 'Tạo nhân vật')} pad={isMobile ? '32px 16px 20px' : '38px 28px 26px'}>
+            {form}
+          </Plate>
+        )}
+        <DialogBox>
+          <p style={{ margin: 0, paddingRight: 18, fontSize: 13, lineHeight: 1.65, color: COLORS.text }}>
+            {tt('Pin a piece in the wardrobe to equip it — every mixed outfit must include it. Exclude keeps a piece out of the mix. Paste an image anywhere to add it to the wardrobe.',
+              'Ghim một món trong tủ đồ để trang bị — mọi bộ phối đều phải có món đó. Loại trừ giữ món đó ngoài bộ phối. Dán ảnh ở bất kỳ đâu để thêm vào tủ đồ.')}
+          </p>
+        </DialogBox>
+      </div>
+    </div>
   );
 }
 
-// ── Outfit set card ────────────────────────────────────────────
-function SetCard({ set, items, isSaved, busyLookbook, onRenderLookbook, onSwap, onSave, onDelete, onDownload, onMoreLikeThis, onToggleFav, onZoom }) {
-  const { t } = useLang();
+// ── Outfit set card — loadout (suggestion) or save slot (saved) ──
+function SetCard({ set, items, isSaved, busyLookbook, onRenderLookbook, onSwap, onSave, onDelete, onDownload, onMoreLikeThis, onToggleFav, onZoom, index = 0, lookTag, isMobile }) {
+  const { t, lang } = useLang();
+  const tt = (en, vi) => (lang === 'vi' ? vi : en);
   const [swapFor, setSwapFor] = useState(null);
   const setItems = set.itemIds.map((id) => items.find((it) => it.id === id)).filter(Boolean);
   const swapTarget = swapFor ? items.find((it) => it.id === swapFor) : null;
   const candidates = swapTarget
     ? items.filter((it) => it.itemUrl && it.status !== 'error' && it.category === swapTarget.category && !set.itemIds.includes(it.id))
     : [];
+  const num = String(index + 1).padStart(2, '0');
+  const zoomLook = () => onZoom && onZoom('look:' + set.id, set.lookbookUrl, set.name);
 
-  return (
-    <Panel padding={14} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
-        <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text }}>{set.name}</div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          {isSaved && (
-            <button onClick={() => onToggleFav(set)} title={t('stylist.favourite')} aria-label="favourite"
-              style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: set.fav ? ACCENT : COLORS.muted, fontSize: 15, padding: 0 }}>
-              {set.fav ? '★' : '☆'}
+  const pieces = (size) => (
+    <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', padding: 3 }}>
+      {setItems.map((it) => (
+        <button key={it.id} type="button" className="sty-pc pxs" onClick={() => setSwapFor(swapFor === it.id ? null : it.id)}
+          title={t('stylist.swap')} aria-label={t('stylist.swap') + ': ' + it.name} aria-pressed={swapFor === it.id}
+          style={{ width: size, height: size }}>
+          <CachedImg cacheKey={'item:' + it.id} url={it.itemUrl} alt={it.name}
+            style={{ width: size - 10, height: size - 10, objectFit: 'cover', display: 'block' }} />
+        </button>
+      ))}
+    </div>
+  );
+
+  const swapPanel = swapTarget && (
+    <div style={{ padding: 12, background: COLORS.field, border: '3px dashed ' + COLORS.rule }}>
+      <div className="sk" style={{ marginBottom: 10, fontSize: 10, color: COLORS.muted, textTransform: 'uppercase' }}>
+        {t('stylist.swapWith')} · {t('stylist.cat.' + swapTarget.category)}
+      </div>
+      {candidates.length ? (
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', padding: 3 }}>
+          {candidates.map((it) => (
+            <button key={it.id} type="button" className="sty-pc alt pxs" onClick={() => { onSwap(swapTarget.id, it.id); setSwapFor(null); }}
+              title={it.name} aria-label={t('stylist.swapWith') + ' ' + it.name} style={{ width: 52, height: 52 }}>
+              <CachedImg cacheKey={'item:' + it.id} url={it.itemUrl} alt={it.name}
+                style={{ width: 44, height: 44, objectFit: 'cover', display: 'block' }} />
             </button>
+          ))}
+        </div>
+      ) : <div style={{ fontSize: 12, color: COLORS.muted }}>{t('stylist.swapNone')}</div>}
+    </div>
+  );
+
+  const rationale = set.rationale && <p style={{ margin: 0, fontSize: 12, lineHeight: 1.6, color: COLORS.muted }}>{set.rationale}</p>;
+
+  const renderLabel = busyLookbook
+    ? <><Pix name="diamond" size={14} />{t('stylist.rendering')}</>
+    : set.lookbookUrl
+      ? <><Pix name="retry" size={14} />{t('stylist.regenerate')}</>
+      : <><Pix name="spark" size={14} />{t('stylist.renderLookbook')}</>;
+  const actions = (
+    <BtnRow>
+      <SBtn fill={ACCENT} onClick={() => onRenderLookbook(set)} disabled={busyLookbook}>{renderLabel}</SBtn>
+      {set.lookbookUrl && <SBtn onClick={() => onDownload(set)}><Pix name="download" size={14} />{t('stylist.download')}</SBtn>}
+      {onMoreLikeThis && <SBtn onClick={() => onMoreLikeThis(set)}><Pix name="spark" size={14} />{t('stylist.moreLikeThis')}</SBtn>}
+      {onSave && <SBtn ink onClick={() => onSave(set)}><Pix name="check" size={14} />{t('stylist.saveSet')}</SBtn>}
+      {onDelete && <SBtn onClick={() => onDelete(set)}><Pix name="close" size={14} />{t('stylist.delete')}</SBtn>}
+    </BtnRow>
+  );
+
+  const renderingOverlay = busyLookbook && (
+    <div style={{
+      position: 'absolute', inset: 0, zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+      gap: 12, padding: 10, textAlign: 'center', background: 'rgba(27, 20, 16, 0.8)',
+    }}>
+      <span className="sk blink" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 12, color: ACCENT, textTransform: 'uppercase' }}>
+        <Pix name="diamond" size={14} />{t('stylist.rendering')}
+      </span>
+      <span className="sty-bar dark" aria-hidden="true"><i /></span>
+      {lookTag && !isSaved && <span className="sk" style={{ fontSize: 9, color: DIM }}>{tt('ASYNC RENDER', 'RENDER BẤT ĐỒNG BỘ')} · {lookTag}</span>}
+    </div>
+  );
+
+  // ── Save slot (saved looks) ──
+  if (isSaved) {
+    const tw = isMobile ? 84 : 112;
+    return (
+      <article className="sty-slot" aria-label={set.name} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', gap: '18px 24px', padding: '24px 0' }}>
+        <div className="sty-screen" style={{ flexShrink: 0, display: 'grid', placeItems: 'center', width: tw, height: Math.round(tw * 4 / 3) }}>
+          {set.lookbookUrl ? (
+            <CachedImg cacheKey={'look:' + set.id} url={set.lookbookUrl} alt="lookbook" onClick={zoomLook}
+              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block', cursor: 'zoom-in' }} />
+          ) : !busyLookbook && (
+            <span className="sk" style={{ fontSize: 9, lineHeight: 1.5, textAlign: 'center', color: DIM }}>{tt('NO', 'CHƯA')}<br />{tt('RENDER', 'RENDER')}</span>
           )}
-          <Pill color={ACCENT}>{setItems.length} {t('stylist.pieces')}</Pill>
-        </div>
-      </div>
-
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        {setItems.map((it) => (
-          <button key={it.id} onClick={() => setSwapFor(swapFor === it.id ? null : it.id)} title={t('stylist.swap')}
-            style={{ padding: 0, border: '1px solid ' + (swapFor === it.id ? ACCENT + '88' : COLORS.line), borderRadius: 8, background: 'transparent', cursor: 'pointer', lineHeight: 0 }}>
-            <CachedImg cacheKey={'item:' + it.id} url={it.itemUrl} alt={it.name}
-              style={{ width: 58, height: 58, borderRadius: 7, objectFit: 'cover', display: 'block' }} />
-          </button>
-        ))}
-      </div>
-
-      {swapTarget && (
-        <div style={{ border: '1px solid ' + COLORS.line, borderRadius: 10, padding: 10, background: COLORS.panel2 }}>
-          <div className="mono" style={{ fontSize: 9, color: COLORS.muted, letterSpacing: '0.16em', marginBottom: 8 }}>
-            {t('stylist.swapWith')} · {t('stylist.cat.' + swapTarget.category)}
-          </div>
-          {candidates.length ? (
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {candidates.map((it) => (
-                <button key={it.id} onClick={() => { onSwap(swapTarget.id, it.id); setSwapFor(null); }} title={it.name}
-                  style={{ padding: 0, border: '1px solid ' + COLORS.line, borderRadius: 8, background: 'transparent', cursor: 'pointer', lineHeight: 0 }}>
-                  <CachedImg cacheKey={'item:' + it.id} url={it.itemUrl} alt={it.name}
-                    style={{ width: 52, height: 52, borderRadius: 7, objectFit: 'cover', display: 'block' }} />
-                </button>
-              ))}
+          {busyLookbook && (
+            <div style={{ position: 'absolute', inset: 0, zIndex: 1, display: 'grid', placeItems: 'center', background: 'rgba(27, 20, 16, 0.78)' }}>
+              <Pix name="diamond" size={21} color={ACCENT} className="blink" />
             </div>
-          ) : <div style={{ fontSize: 11, color: COLORS.muted }}>{t('stylist.swapNone')}</div>}
+          )}
+          <span className="sk" style={{ position: 'absolute', left: 0, top: 0, zIndex: 2, padding: '3px 6px', fontSize: 9, color: ON_ACCENT, background: ACCENT }}>
+            {tt('SLOT', 'Ô')} {num}
+          </span>
         </div>
-      )}
 
-      {set.rationale && <div style={{ fontSize: 12, color: COLORS.muted, lineHeight: 1.5 }}>{set.rationale}</div>}
+        <div style={{ flex: '1 1 260px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14 }}>
+            <div style={{ minWidth: 0 }}>
+              <h3 className="pf" style={{ margin: 0, fontSize: isMobile ? 19 : 22, lineHeight: 1.15, color: COLORS.text, overflowWrap: 'anywhere' }}>{set.name}</h3>
+              <div className="sk" style={{ marginTop: 7, fontSize: 10, color: COLORS.muted, textTransform: 'uppercase' }}>
+                {setItems.length} {t('stylist.pieces')}{set.occasion ? ' · ' + set.occasion : ''}
+              </div>
+            </div>
+            <div style={{ padding: 3 }}>
+              <button type="button" onClick={() => onToggleFav(set)} title={t('stylist.favourite')} aria-label="favourite" aria-pressed={!!set.fav}
+                className={'sty-star' + (set.fav ? ' on' : '')}><Pix name="star" size={18} /></button>
+            </div>
+          </div>
+          {rationale}
+          <div>
+            <GroupLbl>{t('stylist.swap')}</GroupLbl>
+            {pieces(isMobile ? 46 : 52)}
+          </div>
+          {swapPanel}
+          {actions}
+        </div>
+      </article>
+    );
+  }
 
-      {set.lookbookUrl && (
-        <CachedImg cacheKey={'look:' + set.id} url={set.lookbookUrl} alt="lookbook"
-          onClick={() => onZoom && onZoom('look:' + set.id, set.lookbookUrl, set.name)}
-          style={{ width: '100%', borderRadius: 10, border: '1px solid ' + COLORS.line, display: 'block', cursor: 'zoom-in' }} />
-      )}
-
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        <Btn variant="tinted" color={ACCENT} onClick={() => onRenderLookbook(set)} disabled={busyLookbook}>
-          {busyLookbook ? '◇ ' + t('stylist.rendering') : set.lookbookUrl ? '↻ ' + t('stylist.regenerate') : '✦ ' + t('stylist.renderLookbook')}
-        </Btn>
-        {set.lookbookUrl && <Btn variant="ghost" onClick={() => onDownload(set)}>↓ {t('stylist.download')}</Btn>}
-        {onMoreLikeThis && <Btn variant="ghost" onClick={() => onMoreLikeThis(set)}>✦ {t('stylist.moreLikeThis')}</Btn>}
-        {onSave && <Btn variant="solid" color={ACCENT} onClick={() => onSave(set)}>✓ {t('stylist.saveSet')}</Btn>}
-        {onDelete && <Btn variant="ghost" onClick={() => onDelete(set)}>{t('stylist.delete')}</Btn>}
+  // ── Loadout card (suggested looks) ──
+  return (
+    <article className="px rise" aria-label={set.name} style={{ display: 'flex', flexDirection: 'column', minWidth: 0, background: COLORS.paper, animationDelay: index * 90 + 'ms' }}>
+      <div className="sk ribs" style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, minHeight: 44, padding: '0 14px',
+        fontSize: 12, color: ON_ACCENT, backgroundColor: ACCENT, borderBottom: '4px solid ' + COLORS.ink, textTransform: 'uppercase',
+      }}>
+        <span>{tt('Loadout', 'Bộ')} {num}</span>
+        <span style={{ padding: '3px 7px', fontSize: 10, background: '#fffaf0', border: '3px solid #1b1410' }}>{setItems.length} {t('stylist.pieces')}</span>
       </div>
-    </Panel>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '18px 18px 20px' }}>
+        <div>
+          <h3 className="pf" style={{ margin: 0, fontSize: 23, lineHeight: 1.1, color: COLORS.text, overflowWrap: 'anywhere' }}>{set.name}</h3>
+          {set.occasion && <div className="sk" style={{ marginTop: 8, fontSize: 10, color: COLORS.muted, textTransform: 'uppercase' }}>{tt('For', 'Cho')}: {set.occasion}</div>}
+        </div>
+        <div>
+          <GroupLbl>{t('stylist.swap')}</GroupLbl>
+          {pieces(isMobile ? 56 : 60)}
+        </div>
+        {swapPanel}
+        {rationale}
+        {(set.lookbookUrl || busyLookbook) && (
+          <div className="sty-screen" style={{ padding: 10 }}>
+            <span className="sk" style={{ position: 'absolute', left: 16, top: 16, zIndex: 2, padding: '4px 8px', fontSize: 10, color: ON_ACCENT, background: ACCENT }}>LOOKBOOK</span>
+            {set.lookbookUrl && (
+              <button type="button" className="sty-ibtn" onClick={zoomLook} aria-label={tt('Open full size', 'Xem cỡ lớn')} title={tt('Open full size', 'Xem cỡ lớn')}
+                style={{ position: 'absolute', right: 19, top: 19, zIndex: 2 }}><Pix name="expand" size={14} /></button>
+            )}
+            {set.lookbookUrl
+              ? <CachedImg cacheKey={'look:' + set.id} url={set.lookbookUrl} alt="lookbook" onClick={zoomLook}
+                  style={{ width: '100%', display: 'block', cursor: 'zoom-in' }} />
+              : <div style={{ height: 230 }} />}
+            {renderingOverlay}
+          </div>
+        )}
+        {actions}
+      </div>
+    </article>
   );
 }
 
@@ -713,195 +1112,119 @@ export function Stylist() {
   }), [items, filterCat, query]);
   const sortedSets = useMemo(() => [...sets].sort((a, b) => (b.fav ? 1 : 0) - (a.fav ? 1 : 0)), [sets]);
 
+  // ── Presentation-only derived values ──
+  const equipped = useMemo(() => readyItems.filter((it) => pinned.has(it.id)), [readyItems, pinned]);
+  const labelOf = (list, v) => (list.find((o) => o.v === v) || {}).label || v;
+  const lookTag = `${lookOpts.ratio} · ${labelOf(SCENES, lookOpts.scene)} · ${labelOf(FRAMINGS, lookOpts.framing)}`;
+  const pad2 = (n) => String(n).padStart(2, '0');
+  const ids = { search: 'sty-search', occ: 'sty-occasion', weather: 'sty-weather', color: 'sty-colormood' };
+  const platePad = isMobile ? '32px 16px 22px' : '38px 28px 30px';
+
+  const stages = [
+    { id: 'character', n: '01', label: tt('Character', 'Nhân vật'), meta: character ? tt('1 model', '1 nhân vật') : tt('none', 'chưa có'), c: ACCENT },
+    { id: 'wardrobe', n: '02', label: tt('Wardrobe', 'Tủ đồ'), meta: items.length + ' ' + tt('items', 'món'), c: GOLD },
+    { id: 'compose', n: '03', label: tt('Compose', 'Phối đồ'), meta: readyItems.length >= 2 ? tt('Ready', 'Sẵn sàng') : tt('need 2+', 'cần 2+'), c: GREEN },
+    { id: 'lookbook', n: '04', label: tt('Lookbook', 'Kết quả'), meta: sets.length + ' ' + tt('looks', 'look'), c: ACCENT },
+  ];
+
   return (
     <div style={isMobile
-      ? { display: 'flex', flexDirection: 'column', gap: 16 }
-      : { height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 16, paddingRight: 4 }}>
+      ? { display: 'flex', flexDirection: 'column', gap: 30, padding: '6px 2px 8px' }
+      : { height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 34, padding: '8px 24px 28px 8px' }}>
 
-      {/* ── Hero ── */}
-      <section style={{
-        position: 'relative', overflow: 'hidden', borderRadius: 22,
-        border: '1px solid ' + COLORS.line, background: COLORS.panel,
-        padding: isMobile ? '24px 20px' : '34px 36px 30px', boxShadow: '0 1px 2px rgba(0,0,0,0.18)',
-      }}>
-        <div aria-hidden style={{
-          position: 'absolute', inset: 0, pointerEvents: 'none',
-          background: 'radial-gradient(70% 90% at 88% 95%, ' + COLORS.red + '1a 0%, transparent 62%), radial-gradient(50% 70% at 10% 0%, ' + COLORS.gold + '14 0%, transparent 60%)',
-        }} />
-        <div aria-hidden className="mono" style={{
-          position: 'absolute', bottom: -56, right: -10, fontSize: 220, lineHeight: 1, fontWeight: 800,
-          color: 'rgba(245,237,224,0.04)', pointerEvents: 'none', userSelect: 'none',
-        }}>07</div>
-
-        <div style={{ position: 'relative', display: 'grid', gap: isMobile ? 22 : 34, gridTemplateColumns: isMobile ? '1fr' : '1.15fr .85fr', alignItems: 'center' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14, flexWrap: 'wrap' }}>
-              <span className="mono" style={{ fontSize: 10, letterSpacing: '0.22em', color: COLORS.red, display: 'flex', alignItems: 'center', gap: 7 }}>
-                <span style={{ width: 6, height: 6, borderRadius: 999, background: COLORS.red, animation: 'pulse 1.6s infinite' }} />07 · STYLIST
-              </span>
-              <span className="mono" style={{ fontSize: 8.5, letterSpacing: '0.2em', padding: '3px 8px', borderRadius: 999, border: '1px solid ' + COLORS.line, color: COLORS.muted }}>NANO · IMG ENGINE</span>
-            </div>
-            <h1 className="mono" style={{ margin: 0, fontSize: isMobile ? 38 : 52, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 0.98, color: COLORS.text }}>
-              {tt('AI Stylist', 'Stylist AI')}<span style={{ color: COLORS.red }}>.</span>
-            </h1>
-            <p style={{ margin: '13px 0 0', maxWidth: 470, fontSize: 14, color: COLORS.muted, lineHeight: 1.6 }}>
-              {tt('Build a model from your photos, digitize your wardrobe, then let AI mix & render full looks.',
-                'Tạo nhân vật từ ảnh của bạn, số hoá tủ đồ, rồi để AI phối & render trọn bộ look.')}
-            </p>
-
-            {/* pipeline — live counts, click to jump */}
-            <div style={{ display: 'flex', alignItems: 'stretch', flexWrap: 'wrap', margin: '24px 0 26px' }}>
-              {[
-                { id: 'character', n: '01', icon: '🧍', label: tt('Character', 'Nhân vật'), meta: character ? tt('1 model', '1 nhân vật') : tt('none', 'chưa có'), c: COLORS.red },
-                { id: 'wardrobe', n: '02', icon: '👕', label: tt('Wardrobe', 'Tủ đồ'), meta: items.length + ' ' + tt('items', 'món'), c: COLORS.gold },
-                { id: 'compose', n: '03', icon: '✦', label: tt('Compose', 'Phối đồ'), meta: readyItems.length >= 2 ? tt('Ready', 'Sẵn sàng') : tt('need 2+', 'cần 2+'), c: COLORS.green },
-                { id: 'lookbook', n: '04', icon: '🖼️', label: tt('Lookbook', 'Kết quả'), meta: sets.length + ' ' + tt('looks', 'look'), c: COLORS.red },
-              ].map((p, i, arr) => {
-                const a = p.id === area;
-                return (
-                  <div key={p.id} onClick={() => setArea(p.id)} className="st-press" style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 5, padding: '11px 15px', borderRadius: 12, minWidth: 92, background: a ? p.c + '14' : COLORS.panel2, border: '1px solid ' + (a ? p.c + '99' : COLORS.line) }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                        <span className="mono" style={{ fontSize: 9, fontWeight: 800, color: a ? p.c : COLORS.muted }}>{p.n}</span>
-                        <span style={{ fontSize: 13 }}>{p.icon}</span>
-                      </div>
-                      <div className="mono" style={{ fontSize: 11, fontWeight: 700, color: a ? p.c : COLORS.text }}>{p.label}</div>
-                      <div className="mono" style={{ fontSize: 9, color: COLORS.muted }}>{p.meta}</div>
-                    </div>
-                    {i < arr.length - 1 && <span className="mono" style={{ padding: '0 7px', color: COLORS.muted, opacity: 0.5 }}>→</span>}
-                  </div>
-                );
-              })}
-            </div>
-
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-              <button onClick={() => setArea('compose')} className="mono st-press" style={{
-                padding: '13px 24px', borderRadius: 12, cursor: 'pointer', fontSize: 12, fontWeight: 700, letterSpacing: '0.06em',
-                textTransform: 'uppercase', background: COLORS.red, border: '1px solid ' + COLORS.red, color: '#fff',
-                display: 'flex', alignItems: 'center', gap: 9, boxShadow: '0 10px 26px -10px ' + COLORS.red + '99',
-              }}>✦ {tt('Compose a look', 'Phối một bộ')}</button>
-              <button onClick={() => setArea('character')} className="mono st-press" style={{
-                padding: '13px 20px', borderRadius: 12, cursor: 'pointer', fontSize: 12, fontWeight: 700, letterSpacing: '0.06em',
-                textTransform: 'uppercase', background: 'transparent', border: '1px solid ' + COLORS.line, color: COLORS.text,
-                display: 'flex', alignItems: 'center', gap: 8,
-              }}>🧍 {tt('Build character', 'Tạo nhân vật')}</button>
-            </div>
-          </div>
-
-          {/* stage — real character image if present, else placeholder */}
-          {!isMobile && (
-            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 290 }}>
-              {character ? (
-                <CachedImg cacheKey={'char:' + character.id} url={character.charUrl} alt={character.name || 'character'}
-                  onClick={() => openZoom('char:' + character.id, character.charUrl, character.name || 'character')}
-                  style={{ width: 208, height: 282, borderRadius: 18, objectFit: 'cover', border: '1px solid ' + COLORS.line, cursor: 'zoom-in', boxShadow: '0 24px 50px -22px rgba(0,0,0,0.5)' }} />
-              ) : (
-                <div onClick={() => setArea('character')} style={{
-                  width: 208, height: 282, borderRadius: 18, border: '1px dashed ' + COLORS.line, background: COLORS.panel2,
-                  position: 'relative', overflow: 'hidden', cursor: 'pointer', display: 'grid', placeItems: 'center',
-                }}>
-                  <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(80% 70% at 50% 18%, ' + COLORS.gold + '29 0%, transparent 65%)' }} />
-                  <span style={{ fontSize: 92, opacity: 0.5 }}>🧍</span>
-                  <span className="mono" style={{ position: 'absolute', bottom: 12, left: 12, fontSize: 8, letterSpacing: '0.14em', color: COLORS.muted, background: 'rgba(13,10,8,0.5)', padding: '4px 8px', borderRadius: 7 }}>+ {tt('BUILD MODEL', 'TẠO NHÂN VẬT')}</span>
-                </div>
-              )}
-              {[
-                { glyph: '🧥', name: tt('Overcoat', 'Áo khoác'), tag: 'OUTER', tagColor: COLORS.gold, pos: { top: 4, left: -22 }, dur: '4.2s', delay: '0s', rot: '-4deg' },
-                { glyph: '👕', name: tt('Top', 'Áo'), tag: 'READY', tagColor: COLORS.green, pos: { bottom: 40, right: -26 }, dur: '5s', delay: '.6s', rot: '3deg' },
-                { glyph: '👟', name: tt('Shoes', 'Giày'), tag: 'READY', tagColor: COLORS.green, pos: { bottom: -6, left: 10 }, dur: '4.6s', delay: '1.1s', rot: '2deg' },
-              ].map((hc, i) => (
-                <div key={i} style={{
-                  position: 'absolute', ...hc.pos, display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 11,
-                  background: COLORS.panel, border: '1px solid ' + COLORS.line, boxShadow: '0 12px 26px -14px rgba(0,0,0,0.45)',
-                  animation: 'st-float ' + hc.dur + ' ease-in-out infinite', animationDelay: hc.delay, '--rot': hc.rot,
-                }}>
-                  <span style={{ fontSize: 18 }}>{hc.glyph}</span>
-                  <div>
-                    <div className="mono" style={{ fontSize: 10, fontWeight: 700, color: COLORS.text }}>{hc.name}</div>
-                    <div className="mono" style={{ fontSize: 8, letterSpacing: '0.1em', color: hc.tagColor }}>{hc.tag}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+      {/* ── Stage path (switches area) + quick actions ── */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '16px 24px' }}>
+        <nav aria-label={tt('Stylist stages', 'Các bước Stylist')} className="sty-stages">
+          {stages.map((s, i) => {
+            const a = s.id === area;
+            return (
+              <Fragment key={s.id}>
+                <button type="button" onClick={() => setArea(s.id)} aria-current={a ? 'step' : undefined} className="sty-stage pxs lift"
+                  style={{ background: a ? COLORS.strip : COLORS.paper, color: a ? COLORS.stripText : COLORS.text }}>
+                  <span className="sk" style={{
+                    display: 'grid', placeItems: 'center', flexShrink: 0, width: 36, height: 36, fontSize: 12,
+                    color: ON_ACCENT, background: s.c, border: '3px solid ' + ON_ACCENT,
+                  }}>{s.n}</span>
+                  <span style={{ display: 'flex', flexDirection: 'column', gap: 5, minWidth: 0 }}>
+                    <span className="sk" style={{ fontSize: 12, textTransform: 'uppercase' }}>{s.label}</span>
+                    <span className="sk" style={{ fontSize: 10, color: a ? ACCENT : COLORS.muted, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{s.meta}</span>
+                  </span>
+                </button>
+                {i < stages.length - 1 && <PixelArrow className="sty-arr" dir="right" size={10} color={COLORS.muted} />}
+              </Fragment>
+            );
+          })}
+        </nav>
+        <div className="sty-ctas" style={{ display: 'flex', flexWrap: 'wrap', gap: '14px 18px', marginLeft: 'auto', padding: '4px 10px 10px 4px' }}>
+          <SBtn onClick={() => setArea('character')} style={{ minHeight: 44, padding: '0 14px' }}>{tt('Build character', 'Tạo nhân vật')}</SBtn>
+          <button type="button" className="sk pbtn" onClick={() => setArea('compose')} style={{
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10, minHeight: 44, padding: '0 18px',
+            fontSize: 12, whiteSpace: 'nowrap', textTransform: 'uppercase', color: ON_ACCENT, background: ACCENT,
+          }}><Pix name="spark" size={14} />{tt('Compose a look', 'Phối một bộ')}</button>
         </div>
-      </section>
-
-      {/* ── Area tabs — normal flow so content below only grows downward
-             and never rides up to cover the hero ── */}
-      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', borderBottom: '1px solid ' + COLORS.line, paddingBottom: 12 }}>
-        {[
-          { id: 'character', icon: '🧍', label: tt('Character', 'Nhân vật'), short: '01', n: character ? 1 : 0 },
-          { id: 'wardrobe', icon: '👕', label: tt('Wardrobe', 'Tủ đồ'), short: '02', n: items.length },
-          { id: 'compose', icon: '✦', label: tt('Compose', 'Phối đồ'), short: '03', n: suggestions.length || null },
-          { id: 'lookbook', icon: '🖼️', label: tt('Lookbook', 'Kết quả'), short: '04', n: sets.length },
-        ].map((tb) => {
-          const a = tb.id === area;
-          return (
-            <button key={tb.id} onClick={() => setArea(tb.id)} className="mono st-tab st-press" style={{
-              display: 'flex', alignItems: 'center', gap: 9, padding: '9px 15px', borderRadius: 11, cursor: 'pointer',
-              fontSize: 12, fontWeight: 700, letterSpacing: '0.02em',
-              background: a ? COLORS.red + '14' : COLORS.panel, border: '1px solid ' + (a ? COLORS.red + '8c' : COLORS.line), color: a ? COLORS.text : COLORS.muted,
-            }}>
-              <span style={{ fontSize: 14 }}>{tb.icon}</span>{tb.label}
-              <span style={{ fontSize: 9, padding: '2px 6px', borderRadius: 999, background: a ? COLORS.red + '22' : 'rgba(245,237,224,0.07)', color: a ? COLORS.red : COLORS.muted }}>
-                {tb.n != null ? String(tb.n).padStart(2, '0') : tb.short}
-              </span>
-            </button>
-          );
-        })}
       </div>
+
+      {error && (
+        <div role="alert" className="pxs" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px 12px', margin: '0 3px', padding: '12px 14px', background: COLORS.paper }}>
+          <span className="sk" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, flexShrink: 0, padding: '3px 8px', fontSize: 10, color: ON_ACCENT, background: SALMON }}>
+            <Pix name="bang" size={10} />{tt('ERROR', 'LỖI')}
+          </span>
+          <span style={{ flex: '1 1 200px', minWidth: 0, fontSize: 12, lineHeight: 1.5, color: COLORS.text, overflowWrap: 'anywhere' }}>{error}</span>
+        </div>
+      )}
 
       {/* Character */}
       {area === 'character' && (
-      <div style={{ animation: 'fadeUp 200ms ease' }}>
-      <CharacterPanel character={character} busy={charBusy} isMobile={isMobile} onZoom={openZoom}
+      <div className="rise">
+      <CharacterPanel character={character} busy={charBusy} isMobile={isMobile} onZoom={openZoom} equipped={equipped}
         onCreate={createCharacter} onEdit={editCharacter} onRemove={removeCharacter} />
       </div>
       )}
 
-      {/* Wardrobe */}
+      {/* Wardrobe (inventory) */}
       {area === 'wardrobe' && (
-      <div style={{ animation: 'fadeUp 200ms ease' }}>
-      <Panel padding={isMobile ? 14 : 18}>
-        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
-          <div>
-            <Kicker style={{ marginBottom: 6 }}>{t('stylist.wardrobe')} · {String(items.length).padStart(2, '0')}</Kicker>
-            <div style={{ fontSize: 13, color: COLORS.muted, maxWidth: 460, lineHeight: 1.5 }}>{t('stylist.uploadHint')}</div>
-          </div>
-          <div>
+      <div className="rise">
+      <Plate label={`${tt('Inventory', 'Hành trang')} · ${t('stylist.wardrobe')} · ${pad2(items.length)}`} ariaLabel={t('stylist.wardrobe')} pad={platePad}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: '16px 24px', marginBottom: 22 }}>
+          <p style={{ flex: '1 1 300px', maxWidth: 540, margin: 0, fontSize: 13, lineHeight: 1.6, color: COLORS.muted }}>{t('stylist.uploadHint')}</p>
+          <div style={{ padding: '4px 10px 10px 4px' }}>
             <input ref={fileRef} type="file" accept="image/*" multiple onChange={onPickFile} style={{ display: 'none' }} />
-            <Btn variant="solid" color={ACCENT} onClick={() => fileRef.current?.click()}>＋ {t('stylist.upload')}</Btn>
+            <button type="button" className="sk pbtn" onClick={() => fileRef.current?.click()} style={{
+              display: 'inline-flex', alignItems: 'center', gap: 10, minHeight: 48, padding: '0 20px',
+              fontSize: 14, textTransform: 'uppercase', color: ON_ACCENT, background: ACCENT,
+            }}><Pix name="upload" size={14} />{t('stylist.upload')}</button>
           </div>
         </div>
 
         {items.length === 0 ? (
-          <div style={{ border: '1px dashed ' + COLORS.line, borderRadius: 12, padding: '36px 20px', textAlign: 'center', color: COLORS.muted, fontSize: 13 }}>
-            👗 {t('stylist.empty')}
-          </div>
+          <EmptyBox framed title="NO SAVE DATA" hint={t('stylist.empty')}
+            icon={<span style={{ color: COLORS.muted }}><CatIcon cat="top" size={48} /></span>}
+            action={<SBtn fill={ACCENT} onClick={() => fileRef.current?.click()}><Pix name="plus" size={14} />{t('stylist.upload')}</SBtn>} />
         ) : (
           <>
             {/* toolbar: search + category filter + stats */}
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', marginBottom: 10 }}>
-              <div style={{ flex: 1, minWidth: 160 }}>
-                <Field value={query} onChange={setQuery} placeholder={t('stylist.searchPh')} style={{ fontSize: 12, padding: '8px 12px' }} />
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '16px 22px', marginBottom: 16 }}>
+              <div style={{ flex: '1 1 200px', minWidth: 0, maxWidth: 380, padding: 3 }}>
+                <label htmlFor={ids.search} className="sr">{t('stylist.searchPh')}</label>
+                <PxInput id={ids.search} value={query} onChange={setQuery} placeholder={t('stylist.searchPh')} />
               </div>
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              <div role="group" aria-label="filter" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', padding: 3 }}>
                 <Chip active={!filterCat} onClick={() => setFilterCat(null)}>{t('stylist.all')}</Chip>
                 {CATEGORIES.map((c) => (
                   <Chip key={c} active={filterCat === c} onClick={() => setFilterCat(filterCat === c ? null : c)}>
-                    {t('stylist.cat.' + c)} {counts[c] || 0}
+                    {t('stylist.cat.' + c)} <span className="sty-cnt">{counts[c] || 0}</span>
                   </Chip>
                 ))}
               </div>
             </div>
             {CATEGORIES.some((c) => counts[c] === 0) && (
-              <div style={{ fontSize: 11, color: COLORS.muted, marginBottom: 10 }}>
-                {t('stylist.gapHint')} {CATEGORIES.filter((c) => counts[c] === 0).map((c) => t('stylist.cat.' + c)).join(', ')}
-              </div>
+              <p className="sk" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px 10px', margin: '0 0 22px 3px', fontSize: 10, color: COLORS.text, textTransform: 'uppercase' }}>
+                <span className="pxs" style={{ padding: '3px 8px', color: ON_ACCENT, background: GOLD }}>{t('stylist.gapHint')}</span>
+                {CATEGORIES.filter((c) => counts[c] === 0).map((c) => t('stylist.cat.' + c)).join(', ')}
+              </p>
             )}
 
-            <div style={{ display: 'grid', gap: 12, gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? 130 : 150}px, 1fr))` }}>
+            <div className="sty-inv">
               {shownItems.map((it) => (
                 <ItemCard key={it.id} item={it} onZoom={openZoom}
                   pinned={pinned.has(it.id)} excluded={excluded.has(it.id)}
@@ -909,137 +1232,180 @@ export function Stylist() {
                   onTogglePin={togglePin} onToggleExclude={toggleExclude} />
               ))}
             </div>
+            {shownItems.length === 0 && (
+              <p className="sk" style={{ margin: '8px 0 0', padding: '22px 12px', textAlign: 'center', fontSize: 11, color: COLORS.muted, border: '3px dashed ' + COLORS.rule }}>
+                {tt('NO MATCHING PIECES', 'KHÔNG CÓ MÓN PHÙ HỢP')}
+              </p>
+            )}
           </>
         )}
-      </Panel>
+      </Plate>
       </div>
       )}
 
       {/* Compose */}
       {area === 'compose' && (
-      <div style={{ animation: 'fadeUp 200ms ease', display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <Panel padding={isMobile ? 14 : 18}>
-        <Kicker style={{ marginBottom: 12 }}>{t('stylist.compose')}</Kicker>
-
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
-          {PRESETS.map((p) => <Chip key={p.k} onClick={() => setOccasion(p.occ)}>{t('stylist.preset.' + p.k)}</Chip>)}
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <Field value={occasion} onChange={setOccasion} placeholder={t('stylist.occasionPh')}
-            onKeyDown={(e) => { if (e.key === 'Enter') runMix(); }} />
-          <Btn variant="solid" color={ACCENT} onClick={() => runMix()} disabled={mixing || readyItems.length < 2}
-            style={{ alignSelf: 'flex-start', padding: '11px 24px', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-            {mixing ? '◇ ' + t('stylist.mixing') : '✦ ' + t('stylist.mix')}
-          </Btn>
-        </div>
-
-        {(pinned.size > 0 || excluded.size > 0) && (
-          <div style={{ marginTop: 10, fontSize: 11, color: COLORS.muted, display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-            {pinned.size > 0 && <span>📌 {t('stylist.pinned')} {pinned.size}</span>}
-            {excluded.size > 0 && <span>🚫 {t('stylist.excluded')} {excluded.size}</span>}
-            <button onClick={() => { setPinned(new Set()); setExcluded(new Set()); }} className="mono"
-              style={{ background: 'transparent', border: 'none', color: ACCENT, cursor: 'pointer', fontSize: 11 }}>{t('stylist.clear')}</button>
-          </div>
-        )}
-
-        {/* Advanced constraints (collapsed) */}
-        <button onClick={() => setAdvOpen((v) => !v)} className="mono"
-          style={{ marginTop: 12, background: 'transparent', border: 'none', color: COLORS.muted, cursor: 'pointer', fontSize: 11, letterSpacing: '0.14em', padding: 0 }}>
-          {advOpen ? '▾' : '▸'} {t('stylist.advanced')}
-        </button>
-        {advOpen && (
-          <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div className="rise" style={{ display: 'flex', flexDirection: 'column', gap: 56 }}>
+      <Plate label={t('stylist.compose')} pad={platePad}>
+        <div className="sty-cmp">
+          <div>
             <div>
-              <div className="mono" style={{ fontSize: 9, color: COLORS.muted, letterSpacing: '0.16em', marginBottom: 6 }}>{t('stylist.formality')}</div>
-              <ChipRow options={FORMALITY} value={constraints.formality} onChange={(v) => setConstraints((c) => ({ ...c, formality: v }))} nullable />
-            </div>
-            <div>
-              <div className="mono" style={{ fontSize: 9, color: COLORS.muted, letterSpacing: '0.16em', marginBottom: 6 }}>{t('stylist.season')}</div>
-              <ChipRow options={SEASONS} value={constraints.season} onChange={(v) => setConstraints((c) => ({ ...c, season: v }))} nullable />
-            </div>
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-              <div style={{ flex: 1, minWidth: 160 }}>
-                <Field value={constraints.weather} onChange={(v) => setConstraints((c) => ({ ...c, weather: v }))} placeholder={t('stylist.weatherPh')} style={{ fontSize: 12, padding: '9px 12px' }} />
-              </div>
-              <div style={{ flex: 1, minWidth: 160 }}>
-                <Field value={constraints.colorMood} onChange={(v) => setConstraints((c) => ({ ...c, colorMood: v }))} placeholder={t('stylist.colorPh')} style={{ fontSize: 12, padding: '9px 12px' }} />
+              <GroupLbl>{tt('Presets', 'Gợi ý nhanh')}</GroupLbl>
+              <div role="group" aria-label="presets" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', padding: 3 }}>
+                {PRESETS.map((p) => <Chip key={p.k} active={occasion === p.occ} onClick={() => setOccasion(p.occ)}>{t('stylist.preset.' + p.k)}</Chip>)}
               </div>
             </div>
+
+            <div aria-hidden="true" style={{ padding: '14px 16px', color: COLORS.stripText, background: COLORS.strip }}>
+              <div className="sk" style={{ marginBottom: 8, fontSize: 10, color: DIM }}>{tt('QUEST › OCCASION', 'NHIỆM VỤ › DỊP')}</div>
+              <div style={{ fontSize: 15, fontWeight: 700, lineHeight: 1.4, overflowWrap: 'anywhere' }}>
+                <span style={{ color: ACCENT }}>&gt;</span>{' '}
+                {occasion.trim() || <span style={{ fontWeight: 400, color: DIM }}>{tt('any occasion', 'dịp bất kỳ')}</span>}
+                <span className="blink" style={{ display: 'inline-block', width: 9, height: 16, marginLeft: 5, verticalAlign: -2, background: ACCENT }} />
+              </div>
+            </div>
+
+            <div style={{ padding: 3 }}>
+              <Lbl htmlFor={ids.occ}>{tt('Occasion', 'Dịp')}</Lbl>
+              <PxInput id={ids.occ} value={occasion} onChange={setOccasion} placeholder={t('stylist.occasionPh')}
+                onKeyDown={(e) => { if (e.key === 'Enter') runMix(); }} />
+            </div>
+
+            <div style={{ padding: '4px 12px 12px 4px' }}>
+              <button type="button" className="sk pbtn" onClick={() => runMix()} disabled={mixing || readyItems.length < 2} style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, width: '100%', minHeight: 64, padding: '0 18px',
+                fontSize: isMobile ? 16 : 18, textTransform: 'uppercase', color: ON_ACCENT, background: ACCENT,
+              }}>
+                {mixing
+                  ? <><Pix name="diamond" size={14} />{t('stylist.mixing')}<span className="dots-step" aria-hidden="true"><i /><i /><i /></span></>
+                  : <><Pix name="spark" size={21} />{t('stylist.mix')} {tt('outfit', 'đồ')}</>}
+              </button>
+            </div>
+
+            {(pinned.size > 0 || excluded.size > 0) && (
+              <div className="sk" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px 18px', fontSize: 11, color: COLORS.text, textTransform: 'uppercase' }}>
+                {pinned.size > 0 && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}><Pix name="pin" size={14} />{t('stylist.pinned')} {pinned.size}</span>}
+                {excluded.size > 0 && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}><Pix name="ban" size={14} />{t('stylist.excluded')} {excluded.size}</span>}
+                <button type="button" onClick={() => { setPinned(new Set()); setExcluded(new Set()); }} className="sk sty-link">{t('stylist.clear')}</button>
+              </div>
+            )}
+            {readyItems.length < 2 && <p style={{ margin: 0, fontSize: 12, lineHeight: 1.55, color: COLORS.muted }}>{t('stylist.needTwo')}</p>}
           </div>
-        )}
 
-        {/* Lookbook style (collapsed) */}
-        <button onClick={() => setStyleOpen((v) => !v)} className="mono"
-          style={{ marginTop: 10, background: 'transparent', border: 'none', color: COLORS.muted, cursor: 'pointer', fontSize: 11, letterSpacing: '0.14em', padding: 0 }}>
-          {styleOpen ? '▾' : '▸'} {t('stylist.lookStyle')}
-        </button>
-        {styleOpen && (
-          <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {[['pose', POSES, 'stylist.pose'], ['scene', SCENES, 'stylist.scene'], ['framing', FRAMINGS, 'stylist.framing'], ['ratio', RATIOS, 'stylist.ratio']].map(([key, options, label]) => (
-              <div key={key}>
-                <div className="mono" style={{ fontSize: 9, color: COLORS.muted, letterSpacing: '0.16em', marginBottom: 6 }}>{t(label)}</div>
-                <ChipRow options={options} value={lookOpts[key]} onChange={(v) => v && setLookOpts({ [key]: v })} />
+          {/* Advanced constraints (collapsed) */}
+          <div className="sty-opt">
+            <Toggle open={advOpen} onClick={() => setAdvOpen((v) => !v)}>{t('stylist.advanced')}</Toggle>
+            {advOpen ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+                <div>
+                  <GroupLbl>{t('stylist.formality')}</GroupLbl>
+                  <ChipRow options={FORMALITY} label={t('stylist.formality')} value={constraints.formality} onChange={(v) => setConstraints((c) => ({ ...c, formality: v }))} nullable />
+                </div>
+                <div>
+                  <GroupLbl>{t('stylist.season')}</GroupLbl>
+                  <ChipRow options={SEASONS} label={t('stylist.season')} value={constraints.season} onChange={(v) => setConstraints((c) => ({ ...c, season: v }))} nullable />
+                </div>
+                <div style={{ padding: 3 }}>
+                  <Lbl htmlFor={ids.weather}>{tt('Weather', 'Thời tiết')}</Lbl>
+                  <PxInput id={ids.weather} value={constraints.weather} onChange={(v) => setConstraints((c) => ({ ...c, weather: v }))} placeholder={t('stylist.weatherPh')} />
+                </div>
+                <div style={{ padding: 3 }}>
+                  <Lbl htmlFor={ids.color}>{tt('Color', 'Màu sắc')}</Lbl>
+                  <PxInput id={ids.color} value={constraints.colorMood} onChange={(v) => setConstraints((c) => ({ ...c, colorMood: v }))} placeholder={t('stylist.colorPh')} />
+                </div>
               </div>
-            ))}
+            ) : (
+              <TagList empty={tt('No constraints — AI decides.', 'Không ràng buộc — AI tự chọn.')}
+                tags={[constraints.formality, constraints.season, constraints.weather.trim(), constraints.colorMood.trim()].filter(Boolean).map(cap)} />
+            )}
           </div>
-        )}
 
-        {readyItems.length < 2 && <div style={{ marginTop: 10, fontSize: 12, color: COLORS.muted }}>{t('stylist.needTwo')}</div>}
-        {error && <div style={{ marginTop: 10, fontSize: 12, color: COLORS.red }}>⚠ {error}</div>}
-      </Panel>
+          {/* Lookbook style (collapsed) */}
+          <div className="sty-opt">
+            <Toggle open={styleOpen} onClick={() => setStyleOpen((v) => !v)}>{t('stylist.lookStyle')}</Toggle>
+            {styleOpen ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+                {[['pose', POSES, 'stylist.pose'], ['scene', SCENES, 'stylist.scene'], ['framing', FRAMINGS, 'stylist.framing'], ['ratio', RATIOS, 'stylist.ratio']].map(([key, options, label]) => (
+                  <div key={key}>
+                    <GroupLbl>{t(label)}</GroupLbl>
+                    <ChipRow options={options} label={t(label)} value={lookOpts[key]} onChange={(v) => v && setLookOpts({ [key]: v })} />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <TagList tags={[labelOf(POSES, lookOpts.pose), labelOf(SCENES, lookOpts.scene), labelOf(FRAMINGS, lookOpts.framing), lookOpts.ratio]} />
+            )}
+          </div>
+        </div>
+      </Plate>
 
-      {/* Suggestions */}
+      {/* Suggestions (loadouts) */}
+      {mixing && suggestions.length === 0 && (
+        <div className="sty-screen" role="status" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, padding: '36px 20px' }}>
+          <span className="sk blink" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 13, color: ACCENT, textTransform: 'uppercase' }}>
+            <Pix name="diamond" size={14} />{t('stylist.mixing')}
+          </span>
+          <span className="sty-bar dark" aria-hidden="true"><i /></span>
+        </div>
+      )}
       {suggestions.length > 0 && (
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-            <Kicker>{t('stylist.suggestions')}</Kicker>
-            <Btn variant="ghost" onClick={shuffle} disabled={mixing}>⟳ {t('stylist.shuffle')}</Btn>
-          </div>
-          <div style={{ display: 'grid', gap: 12, gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(300px, 1fr))' }}>
-            {suggestions.map((s) => (
-              <SetCard key={s.id} set={s} items={items} busyLookbook={!!lookbookBusy[s.id]} onZoom={openZoom}
+        <section aria-label={t('stylist.suggestions')}>
+          <SectionHead kicker={`${t('stylist.suggestions')} · ${pad2(suggestions.length)}`} title={tt('Loadouts', 'Bộ trang bị')}
+            right={<BtnRow><SBtn onClick={shuffle} disabled={mixing} style={{ minHeight: 42 }}><Pix name="shuffle" size={14} />{t('stylist.shuffle')}</SBtn></BtnRow>} />
+          <div className="sty-looks">
+            {suggestions.map((s, i) => (
+              <SetCard key={s.id} index={i} set={s} items={items} busyLookbook={!!lookbookBusy[s.id]} onZoom={openZoom} lookTag={lookTag} isMobile={isMobile}
                 onRenderLookbook={renderSuggestionLookbook} onSwap={(o, n) => swapSuggestion(s, o, n)}
                 onSave={saveSet} onDownload={downloadSet} onMoreLikeThis={moreLikeThis} />
             ))}
           </div>
-        </div>
+        </section>
       )}
 
       </div>
       )}
 
-      {/* Lookbook (saved sets) */}
+      {/* Lookbook (saved sets as save slots) */}
       {area === 'lookbook' && (
-      <div style={{ animation: 'fadeUp 200ms ease' }}>
+      <div className="rise">
         {sets.length > 0 ? (
-        <div>
-          <Kicker style={{ marginBottom: 10 }}>{t('stylist.saved')} · {String(sets.length).padStart(2, '0')}</Kicker>
-          <div style={{ display: 'grid', gap: 12, gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(300px, 1fr))' }}>
-            {sortedSets.map((s) => (
-              <SetCard key={s.id} set={s} items={items} isSaved busyLookbook={!!lookbookBusy[s.id]} onZoom={openZoom}
+        <section aria-label={t('stylist.saved')}>
+          <SectionHead kicker={`${t('stylist.saved')} · ${pad2(sets.length)}`} title="Lookbook"
+            right={<span className="sk" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 11, color: COLORS.muted }}><span className="pxs" style={{ display: 'grid', placeItems: 'center', width: 26, height: 26, color: ON_ACCENT, background: GOLD }}><Pix name="star" size={18} /></span>{tt('FAVOURITES FIRST', 'YÊU THÍCH LÊN ĐẦU')}</span>} />
+          <div className="px" style={{ padding: isMobile ? '2px 16px' : '4px 28px', background: COLORS.paper }}>
+            {sortedSets.map((s, i) => (
+              <SetCard key={s.id} index={i} set={s} items={items} isSaved busyLookbook={!!lookbookBusy[s.id]} onZoom={openZoom} isMobile={isMobile}
                 onRenderLookbook={renderSavedLookbook} onSwap={(o, n) => swapSaved(s, o, n)}
                 onDelete={deleteSet} onDownload={downloadSet} onToggleFav={toggleFav} onMoreLikeThis={moreLikeThis} />
             ))}
           </div>
-        </div>
+        </section>
         ) : (
-          <div style={{ border: '1px dashed ' + COLORS.line, borderRadius: 16, padding: '48px 24px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
-            <span style={{ fontSize: 44, opacity: 0.5 }}>🖼️</span>
-            <div className="mono" style={{ fontSize: 15, fontWeight: 700, color: COLORS.text }}>{tt('No looks yet', 'Chưa có look')}</div>
-            <p style={{ margin: 0, maxWidth: 380, fontSize: 12.5, color: COLORS.muted, lineHeight: 1.55 }}>
-              {tt('Compose an outfit and Mix, then save it — your looks land here.', 'Phối một bộ rồi lưu lại — các look sẽ hiện ở đây.')}
-            </p>
-            <Btn variant="solid" color={COLORS.red} onClick={() => setArea('compose')}>✦ {tt('Go to Compose', 'Tới Phối đồ')}</Btn>
-          </div>
+          <Plate label={t('stylist.saved')} pad={platePad}>
+            <EmptyBox title={tt('No looks yet', 'Chưa có look')}
+              icon={(
+                <svg width="48" height="48" viewBox="0 0 12 12" shapeRendering="crispEdges" aria-hidden="true">
+                  <path d="M1 1h10v10H1z" fill="none" stroke={COLORS.muted} strokeWidth="1" />
+                  <path d="M3 8h2V6h2v2h2v1H3z" fill={ACCENT} />
+                </svg>
+              )}
+              hint={tt('Compose an outfit and Mix, then save it — your looks land here.', 'Phối một bộ rồi lưu lại — các look sẽ hiện ở đây.')}
+              action={<SBtn fill={ACCENT} onClick={() => setArea('compose')}><Pix name="spark" size={14} />{tt('Go to Compose', 'Tới Phối đồ')}</SBtn>} />
+          </Plate>
         )}
       </div>
       )}
 
       {/* Footer */}
-      <footer className="mono" style={{ marginTop: 8, paddingTop: 16, borderTop: '1px solid ' + COLORS.line, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10, fontSize: 10, color: COLORS.muted, letterSpacing: '0.16em' }}>
+      <footer className="sk" style={{
+        display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 10,
+        marginTop: 4, paddingTop: 16, borderTop: '3px dashed ' + COLORS.rule, fontSize: 10, color: COLORS.muted,
+      }}>
         <span>SE77N · STYLIST · EXP 007</span>
-        <span style={{ color: COLORS.gold }}>◐ {tt('ASYNC RENDER', 'RENDER BẤT ĐỒNG BỘ')}</span>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: COLORS.greenInk }}>
+          <span className="blink" aria-hidden="true" style={{ width: 8, height: 8, background: 'currentColor' }} />
+          NANO · IMG ENGINE · {tt('ASYNC RENDER', 'RENDER BẤT ĐỒNG BỘ')}
+        </span>
       </footer>
 
       <Lightbox data={zoom} onClose={() => setZoom(null)} />
