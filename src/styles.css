@@ -102,6 +102,18 @@ body {
   font-weight: 700;
 }
 
+/* Vietnamese: Pixelify Sans and Silkscreen have no Vietnamese glyphs (ệ, ồ, ữ…),
+   so in VI mode the pixel faces swap to VT323, the one pixel face that has them.
+   font-size-adjust keeps its small x-height readable at the same sizes. */
+html[lang="vi"] #root :is(.pf, .sk, h1, h2, h3),
+html[lang="vi"] #root [style*="font-weight: 800"]:is([style*="font-size: 2"], [style*="font-size: 3"], [style*="font-size: 4"], [style*="font-size: 5"], [style*="font-size: 6"], [style*="font-size: 7"], [style*="font-size: 8"], [style*="font-size: 9"]),
+html[lang="vi"] #root .mono:is([style*="letter-spacing: 0.18em"], [style*="letter-spacing: 0.2em"], [style*="letter-spacing: 0.22em"], [style*="letter-spacing: 0.24em"], [style*="letter-spacing: 0.26em"], [style*="letter-spacing: 0.28em"], [style*="letter-spacing: 0.3em"]) {
+  font-family: 'VT323', 'JetBrains Mono', monospace;
+  font-weight: 400;
+  font-size-adjust: 0.62;
+  letter-spacing: 0.02em !important;
+}
+
 @keyframes ticker {
   from { transform: translateX(0); }
   to   { transform: translateX(-50%); }
