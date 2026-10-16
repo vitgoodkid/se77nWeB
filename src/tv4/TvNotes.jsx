@@ -2,8 +2,9 @@
 // Custom mini markdown renderer to avoid adding a runtime dep for ~5 syntax rules.
 // Note shape: { _id, tripId, dayIndex, date, content, pinId, updatedAt }
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { COLORS, Btn, Field, useMediaQuery } from '../lib.jsx';
+import { COLORS } from '../lib.jsx';
 import { tv4 } from './api.js';
+import { GOLD, CardTitle, Empty, Loading } from './kit.jsx';
 
 function tripDays(trip) {
   if (!trip?.startDate || !trip?.endDate) return 1;
@@ -28,7 +29,6 @@ function shortRelative(ts) {
 }
 
 export default function TvNotes({ trip }) {
-  const isMobile = useMediaQuery('(max-width: 768px)');
   const days = trip ? tripDays(trip) : 1;
   const [notes, setNotes] = useState([]);
   const [activeDay, setActiveDay] = useState(0);
@@ -138,15 +138,13 @@ export default function TvNotes({ trip }) {
   const html = useMemo(() => miniMarkdown(content), [content]);
 
   if (!trip) return (
-    <div style={{ padding: 24, color: COLORS.muted, fontSize: 12 }} className="mono">◇ no trip</div>
+    <div className="px" style={{ background: COLORS.paper }}>
+      <Empty title="NO TRIP" hint="Open a trip to write notes." />
+    </div>
   );
 
   return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: isMobile ? '1fr' : '140px minmax(0, 1fr) minmax(0, 1fr)',
-      gap: 12, height: '100%', minHeight: 480,
-    }}>
+    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', gap: 32 }}>
       <DayPicker
         days={days}
         active={activeDay}
@@ -156,31 +154,29 @@ export default function TvNotes({ trip }) {
         loading={loading}
       />
 
-      <Editor
-        content={content}
-        onChange={onChange}
-        savedAt={savedAt}
-        saving={saving}
-        activeDay={activeDay}
-        trip={trip}
-      />
+      <div className="tv-g2" style={{ flex: '999 1 520px', minWidth: 0, gap: 32, alignItems: 'stretch' }}>
+        <Editor
+          content={content}
+          onChange={onChange}
+          savedAt={savedAt}
+          saving={saving}
+          activeDay={activeDay}
+          trip={trip}
+        />
 
-      <Preview html={html} />
+        <Preview html={html} />
+      </div>
     </div>
   );
 }
 
 function DayPicker({ days, active, onSelect, noteByDay, trip, loading }) {
   return (
-    <aside style={{
-      background: COLORS.panel, border: '1px solid ' + COLORS.line,
-      borderRadius: 12, padding: 10,
-      display: 'flex', flexDirection: 'column', gap: 4, overflow: 'auto',
+    <nav aria-label="Note days" className="px" style={{
+      flex: '1 1 160px', minWidth: 0, background: COLORS.paper, padding: 16,
+      display: 'flex', flexDirection: 'column', gap: 12, maxHeight: 640, overflow: 'auto',
     }}>
-      <div className="mono" style={{
-        fontSize: 9, letterSpacing: '0.22em', color: COLORS.muted,
-        padding: '4px 8px', marginBottom: 4,
-      }}>DAYS</div>
+      <CardTitle style={{ marginBottom: 2 }}>DAYS</CardTitle>
       <DayButton
         on={active === -1}
         onClick={() => onSelect(-1)}
@@ -198,30 +194,28 @@ function DayPicker({ days, active, onSelect, noteByDay, trip, loading }) {
           hasNote={!!noteByDay[i]}
         />
       ))}
-      {loading && (
-        <div className="mono" style={{ fontSize: 9, color: COLORS.muted, padding: '4px 8px' }}>◇ loading…</div>
-      )}
-    </aside>
+      {loading && <Loading label="loading" style={{ padding: '4px 2px' }} />}
+    </nav>
   );
 }
 
 function DayButton({ on, onClick, label, date, hasNote }) {
   return (
     <button
+      type="button"
       onClick={onClick}
+      aria-pressed={on}
+      className="chip-px sk"
       style={{
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        padding: '7px 8px', borderRadius: 6,
-        background: on ? COLORS.gold + '14' : 'transparent',
-        border: '1px solid ' + (on ? COLORS.gold + '55' : 'transparent'),
-        color: on ? COLORS.gold : COLORS.text,
-        cursor: 'pointer', fontSize: 12, textAlign: 'left',
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8,
+        width: '100%', minHeight: 40, padding: '0 12px', fontSize: 11, textAlign: 'left',
+        margin: '0 3px', maxWidth: 'calc(100% - 6px)',
       }}
     >
-      <span className="mono" style={{ fontWeight: 600 }}>{label}</span>
-      <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        {hasNote && <span style={{ width: 6, height: 6, borderRadius: 999, background: COLORS.gold }} />}
-        <span className="mono" style={{ fontSize: 10, color: COLORS.muted }}>{date}</span>
+      <span>{label}</span>
+      <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        {hasNote && <span title="has note" aria-label="has note" style={{ width: 8, height: 8, background: GOLD, boxShadow: '0 0 0 2px currentColor' }} />}
+        <span className="tv-tn mono" style={{ fontSize: 11, fontWeight: 400 }}>{date}</span>
       </span>
     </button>
   );
@@ -230,33 +224,25 @@ function DayButton({ on, onClick, label, date, hasNote }) {
 function Editor({ content, onChange, savedAt, saving, activeDay, trip }) {
   const label = activeDay === -1 ? 'GENERAL NOTES' : `DAY ${activeDay + 1} · ${dayDate(trip, activeDay)}`;
   return (
-    <div style={{
-      background: COLORS.panel, border: '1px solid ' + COLORS.line,
-      borderRadius: 12, padding: 12, display: 'flex', flexDirection: 'column',
+    <div className="px" style={{
+      background: COLORS.paper, padding: 18, display: 'flex', flexDirection: 'column', gap: 12,
       minWidth: 0,
     }}>
-      <div style={{
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        marginBottom: 8,
-      }}>
-        <div className="mono" style={{ fontSize: 10, letterSpacing: '0.22em', color: COLORS.gold }}>
-          {label}
-        </div>
-        <div className="mono" style={{ fontSize: 10, color: COLORS.muted }}>
-          {saving ? '◇ saving…' : shortRelative(savedAt)}
-        </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '6px 10px' }}>
+        <label className="sk" htmlFor="tv-note-ed" style={{ fontSize: 12, color: COLORS.text }}>{label}</label>
+        <span className="sk" role="status" style={{ fontSize: 10, color: saving ? 'var(--tv-gold-ink)' : COLORS.muted, textTransform: 'uppercase' }}>
+          {saving ? 'saving…' : shortRelative(savedAt)}
+        </span>
       </div>
       <textarea
+        id="tv-note-ed"
         value={content}
         onChange={(e) => onChange(e.target.value)}
         placeholder="# headline\n\nWrite freely — # heading, **bold**, *italic*, [link](url), - list item, `code`"
+        className="mono field"
         style={{
-          flex: 1, minHeight: 320,
-          background: COLORS.bg, border: '1px solid ' + COLORS.line,
-          borderRadius: 8, padding: 12,
-          color: COLORS.text, fontSize: 13, lineHeight: 1.55,
-          resize: 'vertical',
-          fontFamily: 'inherit', outline: 'none',
+          flex: 1, width: '100%', minHeight: 340, padding: 12,
+          fontSize: 14, lineHeight: 1.6, resize: 'vertical',
         }}
       />
     </div>
@@ -265,23 +251,21 @@ function Editor({ content, onChange, savedAt, saving, activeDay, trip }) {
 
 function Preview({ html }) {
   return (
-    <div style={{
-      background: COLORS.panel, border: '1px solid ' + COLORS.line,
-      borderRadius: 12, padding: 16,
-      overflow: 'auto', minWidth: 0,
+    <section className="px" aria-label="Preview" style={{
+      background: COLORS.paper, padding: 18, overflow: 'auto', minWidth: 0,
+      display: 'flex', flexDirection: 'column', gap: 12,
     }}>
-      <div className="mono" style={{
-        fontSize: 10, letterSpacing: '0.22em', color: COLORS.muted, marginBottom: 10,
-      }}>PREVIEW</div>
+      <CardTitle>PREVIEW</CardTitle>
       {html ? (
         <div
-          style={{ color: COLORS.text, fontSize: 13, lineHeight: 1.65 }}
+          className="tv-md"
+          style={{ color: COLORS.text, fontSize: 14, lineHeight: 1.65 }}
           dangerouslySetInnerHTML={{ __html: html }}
         />
       ) : (
-        <div style={{ color: COLORS.muted, fontSize: 12 }}>—</div>
+        <div style={{ color: COLORS.muted, fontSize: 14 }}>—</div>
       )}
-    </div>
+    </section>
   );
 }
 
@@ -305,7 +289,7 @@ function miniMarkdown(src) {
     const h = line.match(/^(#{1,4})\s+(.*)$/);
     if (h) {
       const lvl = h[1].length;
-      out.push(`<h${lvl} style="margin:14px 0 6px; font-weight:700; font-size:${20 - lvl * 2}px;">${inline(h[2])}</h${lvl}>`);
+      out.push(`<h${lvl} style="margin:14px 0 6px; font-weight:700; font-size:${24 - lvl * 2}px;">${inline(h[2])}</h${lvl}>`);
       i++; continue;
     }
 
@@ -336,13 +320,13 @@ function miniMarkdown(src) {
 
 function inline(s) {
   return s
-    .replace(/`([^`]+)`/g, '<code style="background:rgba(245,237,224,0.08); padding:1px 4px; border-radius:3px; font-family:JetBrains Mono, monospace; font-size:0.9em;">$1</code>')
+    .replace(/`([^`]+)`/g, '<code style="font-size:0.9em;">$1</code>')
     .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
     .replace(/\*([^*]+)\*/g, '<em>$1</em>')
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, url) => {
       const safe = safeUrl(url);
       if (!safe) return label;
-      return `<a href="${safe}" target="_blank" rel="noreferrer noopener" style="color:#D4A858; text-decoration:underline;">${label}</a>`;
+      return `<a href="${safe}" target="_blank" rel="noreferrer noopener">${label}</a>`;
     });
 }
 

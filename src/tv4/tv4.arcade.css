@@ -1,0 +1,174 @@
+/* ══════════════════════════════════════════════════════════════
+   Travel (tv4) — "B · Pixel Lobby" overworld styles.
+   Only what inline styles can't express: hover/focus states, theme
+   tokens for the map "screen", responsive grids and the capital blink.
+   Shared pixel classes (.px .pxs .sbtn .chip-px …) live in arcade.css.
+   ══════════════════════════════════════════════════════════════ */
+:root,
+[data-theme="light"] {
+  --tv-gold: #ffd25e;
+  --tv-gold-ink: #8a6100;     /* gold that reads as text on paper */
+  --tv-red-ink: #b42828;      /* red that reads as text on paper */
+  --tv-sea: #9fd8ff;
+  --tv-sea-dot: rgba(27, 20, 16, 0.14);
+  --tv-land: #5bbf6a;
+  --tv-coast: #8fdc98;
+  --tv-backdrop: rgba(27, 20, 16, 0.55);
+  --tv-route: #1b1410;        /* routes / labels drawn on the map sea */
+  --tv-link: #1b1410;         /* stage-path connectors on the page ground */
+}
+[data-theme="dark"] {
+  --tv-gold-ink: #ffd25e;
+  --tv-red-ink: #ff7a7a;
+  --tv-sea: #21506b;
+  --tv-sea-dot: rgba(255, 250, 240, 0.08);
+  --tv-land: #3f9a4e;
+  --tv-coast: #2f6e3a;
+  --tv-backdrop: rgba(0, 0, 0, 0.62);
+  --tv-route: #fffaf0;
+  --tv-link: #8a7a66;
+}
+[data-theme="dark"] .tv-chk,
+[data-theme="dark"] .tv-switch { border-color: #8a7a66; }
+
+/* Silkscreen on real headings (beats the global pixel-font heading rule). */
+#root .tv4 .tv-skh,
+.tv-portal .tv-skh { font-family: 'Silkscreen', 'JetBrains Mono', monospace; letter-spacing: 0.02em; }
+
+/* Dialogs portal into <body> (outside #root): keep the app-wide pixel rules. */
+.tv-portal * { border-radius: 0 !important; }
+.tv-portal :is(h1, h2, h3) { font-family: 'Pixelify Sans', 'JetBrains Mono', monospace; font-weight: 700; }
+.tv-portal .tv-skh { font-family: 'Silkscreen', 'JetBrains Mono', monospace; }
+@media (prefers-reduced-motion: reduce) {
+  .tv-portal *, .tv-portal *::before, .tv-portal *::after { animation: none !important; transition: none !important; }
+}
+
+/* Gold tab numbers inside selected chips. */
+.chip-px .tv-tn { color: var(--muted); }
+.chip-px.on .tv-tn,
+.chip-px[aria-pressed="true"] .tv-tn { color: #ffd25e; }
+[data-theme="dark"] .chip-px.on .tv-tn,
+[data-theme="dark"] .chip-px[aria-pressed="true"] .tv-tn { color: #8a6100; }
+.chip-px:disabled { cursor: not-allowed; opacity: 0.45; }
+.chip-px:disabled:hover { background: var(--paper); }
+
+/* Compact segmented control: one ring around the group, filled = selected. */
+.tv-seg {
+  border: 0; cursor: pointer;
+  background: var(--paper); color: var(--text);
+  font-family: 'Silkscreen', 'JetBrains Mono', monospace; font-weight: 700;
+  transition: background 80ms steps(2);
+}
+.tv-seg:hover { background: var(--paper-2); }
+.tv-seg[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+[data-theme="dark"] .tv-seg[aria-pressed="true"] { background: var(--strip-text); color: #1b1410; }
+
+/* Clickable rows / cards */
+.tv-row { cursor: pointer; transition: background 80ms steps(2); }
+.tv-row:hover { background: var(--paper-2) !important; }
+.tv-card { cursor: pointer; transition: transform 100ms steps(2); }
+.tv-card:hover, .tv-card:focus-visible { transform: translate(-3px, -4px); }
+.tv-card:active { transform: translate(2px, 3px); }
+.tv-on { box-shadow: inset 8px 0 0 #ffd25e; }
+
+/* Dashed "add" tiles */
+.tv-add { cursor: pointer; transition: background 80ms steps(2); }
+.tv-add:hover { background: var(--paper) !important; }
+
+/* Menu items + quick actions */
+.tv-mi { cursor: pointer; }
+.tv-mi:hover, .tv-mi:focus-visible { background: var(--field) !important; }
+.tv-qa { cursor: pointer; transition: background 80ms steps(2); }
+.tv-qa:hover { background: var(--paper) !important; }
+.tv-qa .tv-go { display: inline-block; transition: transform 100ms steps(2); }
+.tv-qa:hover .tv-go { transform: translateX(4px); }
+
+/* Small icon buttons (×, copy, refresh) */
+.tv-x {
+  display: inline-grid; place-items: center; flex-shrink: 0;
+  width: 30px; height: 30px; padding: 0;
+  color: var(--muted); background: transparent; border: 0; cursor: pointer;
+}
+.tv-x:hover { color: var(--tv-red-ink); }
+
+/* Pixel checkbox */
+.tv-chk {
+  display: inline-grid; place-items: center; flex-shrink: 0;
+  width: 26px; height: 26px; padding: 0;
+  color: transparent; background: var(--paper);
+  border: 3px solid var(--ink); cursor: pointer;
+}
+.tv-chk:hover { background: var(--paper-2); }
+.tv-chk[aria-pressed="true"] { color: #1b1410; background: #7fd18b; }
+
+/* Pixel toggle switch */
+.tv-switch {
+  position: relative; flex-shrink: 0; width: 46px; height: 26px; padding: 0;
+  background: var(--field); border: 3px solid var(--ink); cursor: pointer;
+}
+.tv-switch > span {
+  position: absolute; top: 2px; left: 2px; width: 16px; height: 16px;
+  background: var(--ink); transition: transform 80ms steps(2);
+}
+.tv-switch[aria-pressed="true"] { background: #ffd25e; }
+.tv-switch[aria-pressed="true"] > span { transform: translateX(20px); background: #1b1410; }
+
+/* Map: flags + capitals */
+.tv-map svg { touch-action: manipulation; }
+.tv-pin { cursor: pointer; }
+.tv-pin .tv-lift { transition: transform 100ms steps(2); }
+.tv-pin:hover .tv-lift { transform: translateY(-4px); }
+@keyframes tv-cap { 0%, 64% { opacity: 1; } 65%, 100% { opacity: 0.2; } }
+.tv-cap { animation: tv-cap 1.8s steps(1) infinite; }
+
+/* Responsive grids (classes beat nothing inline — use !important at breakpoints) */
+.tv-g4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.tv-g5 { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.tv-g3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.tv-g2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.tv-kpi { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.tv-hud4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.tv-scroll { padding: 8px 14px 28px 8px; }
+.tv-mapframe { margin: 18px 18px 0; }
+.tv-daybody { min-height: 230px; }
+.tv-minimap { aspect-ratio: 16 / 7; }
+@media (max-width: 1100px) {
+  .tv-g4, .tv-g3, .tv-kpi { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+}
+@media (max-width: 760px) {
+  .tv-g4, .tv-g3, .tv-g2 { grid-template-columns: minmax(0, 1fr) !important; }
+  .tv-g5 { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+  .tv-g5 > *:nth-child(4) { border-left: 0 !important; }
+  .tv-g5 > *:nth-child(n+4) { border-top: 3px dashed var(--tv-sep, var(--rule)); }
+  .tv-kpi { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .tv-hud4 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .tv-hud4 > *:nth-child(3) { border-left: 0 !important; }
+  .tv-hud4 > *:nth-child(n+3) { border-top: 3px dashed var(--rule); }
+  .tv-kpi-v { font-size: 22px !important; }
+  .tv-scroll { padding: 4px 6px 20px 4px; }
+  .tv-mapframe { margin: 12px 10px 0; }
+  .tv-daybody { min-height: 0; }
+  .tv-minimap { aspect-ratio: 4 / 3; }
+  .tv-hide-sm { display: none !important; }
+  .tv-stack-sm { flex-direction: column !important; align-items: stretch !important; }
+  .tv-span2 { grid-column: auto !important; }
+  .tv-h2 { font-size: 28px !important; }
+}
+
+/* Day columns of the stage path scroll sideways on wide screens and
+   stack on phones. */
+.tv-days { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(196px, 1fr); gap: 24px; }
+@media (max-width: 760px) {
+  .tv-days { grid-auto-flow: row; grid-auto-columns: auto; grid-template-columns: minmax(0, 1fr); }
+  .tv-days .tv-link { display: none !important; }
+}
+
+/* Markdown preview */
+.tv-md h1, .tv-md h2, .tv-md h3, .tv-md h4 { line-height: 1.15; }
+.tv-md a { color: var(--text); text-decoration: underline; text-decoration-color: #e04545; text-decoration-thickness: 2px; }
+.tv-md code { font-family: 'JetBrains Mono', monospace; background: var(--field); padding: 1px 5px; box-shadow: 0 0 0 2px var(--rule); }
+.tv-md ul { list-style: square; }
+
+@media print {
+  .tv-noprint { display: none !important; }
+}

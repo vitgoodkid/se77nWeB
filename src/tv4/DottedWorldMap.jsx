@@ -1,21 +1,23 @@
-// Dotted-world SVG map — port of the old TravelArchive style for tv4.
+// Pixel-dot world SVG map for tv4 (the "overworld").
 // Renders:
-//   - Dotted continent silhouettes (deterministic, no GeoJSON)
-//   - Glow + pulse on world capital markers
-//   - User trip pins on top, click → onPinSelect / onMapRightClick for context menu
+//   - Pixel-dot continent silhouettes (deterministic, no GeoJSON), drawn as two
+//     <path>s (coast + inland) so the whole landmass is just two DOM nodes
+//   - Blinking gold pixel markers on world capitals
+//   - Trip home-base markers as pixel flags, user pins as pixel map pins;
+//     click → onPinSelect, right-click anywhere → onContextMenu (lat/lng + px)
 //
 // Coordinates use equirectangular projection: x = (lng+180)/360 * W,
 // y = (90-lat)/180 * H. Adjust H scale (×0.95 + small offset) so the dotted
 // landmasses fit nicely in the viewport.
 
 import { useMemo, useRef, useState } from 'react';
-import { COLORS } from '../lib.jsx';
+import { PIN_FILL } from './kit.jsx';
 
 const W = 1000;
 const H = 540;
 
 // Subset of world capitals — the most recognizable, kept short on purpose so the
-// pulse layer stays readable. Coords are rough.
+// blink layer stays readable. Coords are rough.
 const CAPITALS = [
   { id: 'tokyo',     name: 'Tokyo',       lat: 35.68, lng: 139.69 },
   { id: 'seoul',     name: 'Seoul',       lat: 37.57, lng: 126.98 },
@@ -49,15 +51,12 @@ const CAPITALS = [
   { id: 'auckland',  name: 'Auckland',    lat: -36.85, lng: 174.76 },
 ];
 
-const PIN_COLORS = {
-  see:      COLORS.green,
-  eat:      COLORS.gold,
-  move:     COLORS.red,
-  stay:     '#9bb4ff',
-  other:    COLORS.muted,
-  wishlist: 'rgba(212,168,88,0.35)',
-  ongoing:  COLORS.gold,
-};
+// Pixel map pin (5×7 grid): square head narrowing to a point at the bottom.
+const PIN_PATH = 'M1 0h3v1h1v3H4v1H3v2H2V5H1V4H0V1h1z';
+const PIN_SCALE = 2.6;
+// Pixel flag (6×7 grid): pole + pennant.
+const FLAG_PATH = 'M1 0h5v1H5v1h1v2H1z';
+const FLAG_SCALE = 3;
 
 function project(lat, lng) {
   const x = ((lng + 180) / 360) * W;
@@ -68,7 +67,7 @@ function project(lat, lng) {
 export default function DottedWorldMap({
   pins, trips, activeTripId, onPinSelect, onContextMenu,
 }) {
-  const dots = useMemo(() => makeDottedLandscape(W, H), []);
+  const land = useMemo(() => makePixelLand(W, H), []);
   const svgRef = useRef(null);
   const [hoverCap, setHoverCap] = useState(null);
   const [hoverPin, setHoverPin] = useState(null);
@@ -106,48 +105,31 @@ export default function DottedWorldMap({
     .filter((t) => !validPins.some((p) => p.tripId === t._id));
 
   const hoverLabel = hoverCap || hoverPin || hoverTrip;
+  const ink = { stroke: 'var(--ink)' };
+  const keySelect = (fn) => (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fn(); }
+  };
 
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
-      <style>{`
-        @keyframes tv4CapitalPulse {
-          0%, 100% { opacity: 0.4; transform: scale(1); }
-          50%      { opacity: 0.95; transform: scale(1.4); }
-        }
-      `}</style>
+    <div style={{ position: 'relative', width: '100%' }}>
       <svg
         ref={svgRef}
+        role="img"
+        aria-label="Pixel world map with capitals, trip flags and pins. Right-click to add a pin, plan a trip or set home."
         viewBox={`0 0 ${W} ${H}`}
         preserveAspectRatio="xMidYMid meet"
         onContextMenu={onSvgContextMenu}
-        style={{
-          width: '100%', height: '100%', display: 'block',
-          background: COLORS.bg,
-          cursor: 'crosshair',
-        }}
+        style={{ width: '100%', height: 'auto', display: 'block', cursor: 'crosshair' }}
       >
-        <defs>
-          <pattern id="tv4-grid" width="40" height="40" patternUnits="userSpaceOnUse">
-            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.025)" strokeWidth="1" />
-          </pattern>
-          <radialGradient id="tv4-capital-glow">
-            <stop offset="0%"  stopColor={COLORS.gold} stopOpacity="0.6" />
-            <stop offset="60%" stopColor={COLORS.gold} stopOpacity="0.15" />
-            <stop offset="100%" stopColor={COLORS.gold} stopOpacity="0" />
-          </radialGradient>
-        </defs>
+        {/* Continent silhouettes — pixel dots */}
+        <path d={land.coast} shapeRendering="crispEdges" style={{ fill: 'var(--tv-coast)' }} />
+        <path d={land.inland} shapeRendering="crispEdges" style={{ fill: 'var(--tv-land)' }} />
 
-        <rect width={W} height={H} fill="url(#tv4-grid)" />
-
-        {/* Continent silhouettes */}
-        {dots.map((d, i) => (
-          <circle key={i} cx={d[0]} cy={d[1]} r={d[2]} fill="rgba(245,237,224,0.16)" />
-        ))}
-
-        {/* Capitals — pulse glow + steady core */}
-        {CAPITALS.map((c) => {
+        {/* Capitals — blinking gold pixels */}
+        {CAPITALS.map((c, i) => {
           const [x, y] = project(c.lat, c.lng);
           const on = hoverCap?.id === c.id;
+          const s = on ? 11 : 7;
           return (
             <g
               key={c.id}
@@ -155,33 +137,42 @@ export default function DottedWorldMap({
               onMouseEnter={() => setHoverCap({ id: c.id, name: c.name, x, y })}
               onMouseLeave={() => setHoverCap(null)}
             >
-              <circle cx={x} cy={y} r="14" fill={`url(#tv4-capital-glow)`}
-                style={{
-                  transformOrigin: `${x}px ${y}px`,
-                  animation: `tv4CapitalPulse 2.6s ease-in-out infinite`,
-                  animationDelay: `${(c.lat + c.lng) % 2}s`,
-                }}
+              <rect x={x - 9} y={y - 9} width="18" height="18" fill="transparent" />
+              <rect
+                className={on ? undefined : 'tv-cap'}
+                x={x - s / 2} y={y - s / 2} width={s} height={s}
+                fill="#ffd25e" strokeWidth="1.8" shapeRendering="crispEdges"
+                style={{ ...ink, animationDelay: `${((i * 7) % 18) / 10}s` }}
               />
-              <circle cx={x} cy={y} r={on ? 3.2 : 2.2} fill={COLORS.gold} opacity="0.9" />
             </g>
           );
         })}
 
-        {/* Trip home-base markers — placeholders until a real pin lands */}
+        {/* Trip home-base markers — pixel flags until a real pin lands */}
         {tripMarkers.map((t) => {
           const [x, y] = project(t.homeBase.lat, t.homeBase.lng);
           const dim = activeTripId && t._id !== activeTripId;
+          const select = () => onPinSelect?.({ _id: `__trip_${t._id}`, tripId: t._id, name: t.title, lat: t.homeBase.lat, lng: t.homeBase.lng, type: 'other' });
           return (
             <g
               key={`trip-${t._id}`}
-              style={{ cursor: 'pointer', opacity: dim ? 0.35 : 1 }}
-              onClick={() => onPinSelect?.({ _id: `__trip_${t._id}`, tripId: t._id, name: t.title, lat: t.homeBase.lat, lng: t.homeBase.lng, type: 'other' })}
-              onMouseEnter={() => setHoverTrip({ name: t.title + ' · home', x, y })}
+              className="tv-pin"
+              role="button"
+              tabIndex={0}
+              aria-label={`Select trip ${t.title}`}
+              style={{ opacity: dim ? 0.35 : 1 }}
+              transform={`translate(${(x - FLAG_SCALE / 2).toFixed(1)} ${(y - 7 * FLAG_SCALE).toFixed(1)})`}
+              onClick={select}
+              onKeyDown={keySelect(select)}
+              onMouseEnter={() => setHoverTrip({ name: t.title + ' · home', x, y: y - 14 })}
               onMouseLeave={() => setHoverTrip(null)}
             >
-              <circle cx={x} cy={y} r="13" fill={COLORS.gold} opacity="0.12" />
-              <circle cx={x} cy={y} r="6"  fill="none" stroke={COLORS.gold} strokeWidth="1.5" strokeDasharray="3 2" />
-              <circle cx={x} cy={y} r="2.5" fill={COLORS.gold} />
+              <g className="tv-lift">
+                <g transform={`scale(${FLAG_SCALE})`} shapeRendering="crispEdges">
+                  <rect x="0" y="0" width="1" height="7" style={{ fill: 'var(--tv-route)' }} />
+                  <path d={FLAG_PATH} fill="#ffd25e" strokeWidth="0.3" style={{ stroke: '#1b1410' }} />
+                </g>
+              </g>
             </g>
           );
         })}
@@ -190,22 +181,35 @@ export default function DottedWorldMap({
         {validPins.map((p) => {
           const [x, y] = project(p.lat, p.lng);
           const dim = activeTripId && p.tripId !== activeTripId;
-          const col = PIN_COLORS[p.type] || PIN_COLORS.other;
+          const col = PIN_FILL[p.type] || PIN_FILL.other;
+          const wish = p.type === 'wishlist';
+          const select = () => onPinSelect?.(p);
           return (
             <g
               key={p._id}
-              style={{ cursor: 'pointer', opacity: dim ? 0.35 : 1 }}
-              onClick={() => onPinSelect?.(p)}
-              onMouseEnter={() => setHoverPin({ name: p.name || '—', x, y })}
+              className="tv-pin"
+              role="button"
+              tabIndex={0}
+              aria-label={`Pin ${p.name || ''}`}
+              style={{ opacity: dim ? 0.35 : 1 }}
+              transform={`translate(${(x - 2.5 * PIN_SCALE).toFixed(1)} ${(y - 7 * PIN_SCALE).toFixed(1)})`}
+              onClick={select}
+              onKeyDown={keySelect(select)}
+              onMouseEnter={() => setHoverPin({ name: p.name || '—', x, y: y - 12 })}
               onMouseLeave={() => setHoverPin(null)}
             >
-              <circle cx={x} cy={y} r="11" fill={col} opacity="0.18" />
-              <circle cx={x} cy={y} r="6"  fill={col} opacity="0.4" />
-              <circle cx={x} cy={y} r="3"  fill={col}>
-                {p.type === 'ongoing' && (
-                  <animate attributeName="r" values="3;4.6;3" dur="1.6s" repeatCount="indefinite" />
-                )}
-              </circle>
+              <g className={p.type === 'ongoing' ? 'bob' : undefined}>
+                <g className="tv-lift">
+                  <g transform={`scale(${PIN_SCALE})`} shapeRendering="crispEdges">
+                    <path
+                      d={PIN_PATH} fill={col} strokeWidth={wish ? 0.45 : 0.35}
+                      strokeDasharray={wish ? '0.6 0.4' : undefined}
+                      style={wish ? { stroke: '#c98a12' } : ink}
+                    />
+                    <rect x="2" y="2" width="1" height="1" style={{ fill: 'var(--ink)' }} />
+                  </g>
+                </g>
+              </g>
             </g>
           );
         })}
@@ -218,39 +222,35 @@ export default function DottedWorldMap({
 }
 
 function HoverLabel({ x, y, text }) {
-  // SVG text width is hard to measure pre-render; estimate at 6.4px per char.
-  const w = Math.max(40, text.length * 6.4 + 16);
+  // SVG text width is hard to measure pre-render; estimate per Silkscreen char.
+  const w = Math.max(40, text.length * 8.2 + 18);
   const pad = 10;
   // Flip to the left if too close to the right edge.
   const flip = x > W - w - pad;
   const lx = flip ? x - w - pad : x + pad;
-  const ly = y - 26;
+  const ly = Math.max(2, y - 28);
   return (
     <g pointerEvents="none">
-      <rect
-        x={lx} y={ly}
-        width={w} height={20} rx="4"
-        fill="rgba(13,10,8,0.92)"
-        stroke="rgba(212,168,88,0.6)"
-        strokeWidth="1"
-      />
+      <rect x={lx + 3} y={ly + 3} width={w} height={22} style={{ fill: 'var(--ink)', opacity: 0.35 }} />
+      <rect x={lx} y={ly} width={w} height={22} style={{ fill: 'var(--strip)' }} />
       <text
-        x={lx + w / 2} y={ly + 13}
+        x={lx + w / 2} y={ly + 15}
         textAnchor="middle"
-        fontFamily="JetBrains Mono, ui-monospace, monospace"
-        fontSize="10"
-        letterSpacing="1.4"
-        fill={COLORS.text}
+        fontFamily="Silkscreen, JetBrains Mono, monospace"
+        fontSize="11"
+        fontWeight="700"
+        fill="#fffaf0"
       >{text.toUpperCase()}</text>
     </g>
   );
 }
 
-// Deterministic dotted-landmass painter. No GeoJSON dep — uses a handful of
-// elliptical "regions" + holes to carve continents out of a uniform dot grid.
-function makeDottedLandscape(W, H) {
-  const out = [];
-  const step = 9;
+// Deterministic pixel-landmass painter. No GeoJSON dep — uses a handful of
+// elliptical "regions" + holes to carve continents out of a uniform pixel grid.
+// Returns two path strings: coast (outer rim) and inland cells.
+function makePixelLand(W, H) {
+  const step = 12;
+  const size = 9;
   // Each tuple: [cx, cy, rx, ry, density 0..1]
   // Loosely traced from a Mercator world map at our viewBox size.
   const regions = [
@@ -292,15 +292,15 @@ function makeDottedLandscape(W, H) {
     }
     return best;
   }
+  const coast = [];
+  const inland = [];
   for (let y = 0; y < H; y += step) {
     for (let x = 0; x < W; x += step) {
       const d = inRegion(x, y);
       if (d > 0.05) {
-        const jx = Math.sin(x * 0.31 + y * 0.17) * 2;
-        const jy = Math.cos(x * 0.13 + y * 0.29) * 2;
-        out.push([x + jx, y + jy, 1.1 + d * 0.6]);
+        (d < 0.22 ? coast : inland).push(`M${x} ${y}h${size}v${size}h-${size}z`);
       }
     }
   }
-  return out;
+  return { coast: coast.join(''), inland: inland.join('') };
 }

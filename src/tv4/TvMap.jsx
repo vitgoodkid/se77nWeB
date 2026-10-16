@@ -1,25 +1,21 @@
-// 01 MAP · Dotted-world SVG map + right drawer + pins + command palette.
+// 01 MAP · Pixel "overworld" map + trip drawer + pins + command palette.
 // Replaces the previous MapLibre raster engine with a deterministic SVG render
-// (see DottedWorldMap.jsx) that pulses world capitals in gold. Click → pan/select,
+// (see DottedWorldMap.jsx) that blinks world capitals in gold. Click → pan/select,
 // right-click → context menu (add pin / plan trip / set as home).
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { COLORS, Btn, Field, useMediaQuery } from '../lib.jsx';
+import { COLORS, Field } from '../lib.jsx';
+import { PxButton } from '../ui/arcade.jsx';
 import { tv4 } from './api.js';
 import DottedWorldMap from './DottedWorldMap.jsx';
+import {
+  GOLD, ON, PIN_FILL, PIN_LEGEND, statusFill,
+  CartHead, Empty, ErrorNote, FormRow, IconClose, IconSearch, Label, Overlay, PixelFlag,
+  PxDialog, PxSelect, Swatch, Tag, fieldStyle,
+} from './kit.jsx';
 
-const PIN_COLORS = {
-  see:      COLORS.green,
-  eat:      COLORS.gold,
-  move:     COLORS.red,
-  stay:     '#9bb4ff',
-  other:    COLORS.muted,
-  wishlist: 'rgba(212,168,88,0.35)',
-  ongoing:  COLORS.gold,
-};
+const PIN_COLORS = PIN_FILL;
 
 export default function TvMap({ trips, onOpenTrip, onRefreshTrips }) {
-  const isMobile = useMediaQuery('(max-width: 768px)');
-
   const [pins, setPins] = useState([]);
   const [activeTripId, setActiveTripId] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(true);
@@ -34,6 +30,10 @@ export default function TvMap({ trips, onOpenTrip, onRefreshTrips }) {
   const [newPinDraft, setNewPinDraft] = useState(null);
   const [newTripDraft, setNewTripDraft] = useState(null);
   const [enableClustering, setEnableClustering] = useState(true);
+  const frameRef = useRef(null);
+  // The SVG map has no camera; this ref stays null so the flyTo calls below are
+  // safe no-ops instead of throwing a ReferenceError.
+  const mapRef = useRef(null);
   // Inline toast — replaces native alert(), auto-dismisses after 3s.
   const [toast, setToast] = useState(null);
   useEffect(() => {
@@ -126,152 +126,207 @@ export default function TvMap({ trips, onOpenTrip, onRefreshTrips }) {
     setActiveTripId(trip._id);
   }, []);
 
+  const toggleEdit = () => {
+    if (!activeTripId && !editMode) { setToast({ kind: 'warn', text: 'Pick a trip first.' }); return; }
+    setEditMode((v) => !v);
+  };
+
+  // Keep the context menu inside the map frame.
+  const frameW = frameRef.current?.clientWidth || 0;
+  const frameH = frameRef.current?.clientHeight || 0;
+  const menuLeft = contextMenu ? (frameW && contextMenu.x + 250 > frameW ? Math.max(4, contextMenu.x - 250) : contextMenu.x) : 0;
+  const menuTop = contextMenu ? (frameH && contextMenu.y + 200 > frameH ? Math.max(4, contextMenu.y - 200) : contextMenu.y) : 0;
+
   return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: isMobile
-        ? '1fr'
-        : (drawerOpen ? '1fr 380px' : '1fr 0'),
-      gridTemplateRows: isMobile && drawerOpen ? '1fr auto' : '1fr',
-      height: '100%', position: 'relative',
-    }}>
-      <div style={{ position: 'relative', overflow: 'hidden' }}>
-        <DottedWorldMap
-          pins={pins}
-          trips={trips}
-          activeTripId={activeTripId}
-          onPinSelect={onPinSelect}
-          onContextMenu={onMapContextMenu}
-        />
+    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', gap: 32, padding: '6px 6px 12px' }}>
+      <section className="px" aria-labelledby="tv-map-h" style={{
+        flex: '999 1 600px', minWidth: 0, display: 'flex', flexDirection: 'column', background: COLORS.paper,
+      }}>
+        <CartHead id="tv-map-h" title="01 MAP · OVERWORLD" right={`${pins.length} PINS · ${trips.length} TRIPS`} />
 
-        {!drawerOpen && (
+        {/* Toolbar: search + edit pins (+ drawer re-open) */}
+        <div style={{
+          display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 18,
+          padding: '16px 22px 18px 16px', borderBottom: '3px dashed var(--rule)',
+        }}>
           <button
-            onClick={() => setDrawerOpen(true)}
-            className="mono"
+            type="button"
+            onClick={() => setPaletteOpen(true)}
+            className="pxs mono"
             style={{
-              position: 'absolute', top: 12, right: 12, zIndex: 5,
-              padding: '6px 12px', borderRadius: 8,
-              background: COLORS.panel, border: '1px solid ' + COLORS.line,
-              color: COLORS.muted, cursor: 'pointer',
-              fontSize: 10, letterSpacing: '0.18em',
-            }}
-          >SHOW DRAWER · [</button>
-        )}
-
-        {editMode && (
-          <div style={{
-            position: 'absolute', top: 12, left: 12, zIndex: 5,
-            display: 'flex', gap: 6, alignItems: 'center',
-            padding: '6px 10px', borderRadius: 999,
-            background: COLORS.red + '20', border: `1px solid ${COLORS.red}80`,
-            color: COLORS.red, fontFamily: 'JetBrains Mono, monospace',
-            fontSize: 11, letterSpacing: '0.14em',
-          }}>
-            ◉ EDIT MODE · click to add · ESC to finish
-            <button onClick={() => setEditMode(false)} style={{
-              marginLeft: 8, padding: '2px 8px', borderRadius: 6,
-              background: COLORS.red, color: COLORS.bg, border: 'none',
-              cursor: 'pointer', fontSize: 10, fontWeight: 700,
-            }}>DONE</button>
-          </div>
-        )}
-
-        {contextMenu && (
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              position: 'absolute', top: contextMenu.y, left: contextMenu.x, zIndex: 10,
-              background: COLORS.panel, border: '1px solid ' + COLORS.line,
-              borderRadius: 10, padding: 6, minWidth: 200,
-              boxShadow: '0 12px 30px rgba(0,0,0,0.4)',
+              flex: '1 1 240px', minWidth: 0, height: 44, padding: '0 12px',
+              display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left',
+              fontSize: 13, color: COLORS.muted, background: COLORS.field, border: 0, cursor: 'pointer',
             }}
           >
-            <CtxItem
-              label={`Add pin here (${contextMenu.lat.toFixed(2)}, ${contextMenu.lng.toFixed(2)})`}
-              onClick={() => {
-                if (!activeTripId) {
-                  setToast({ kind: 'warn', text: 'Pick a trip in the drawer before adding pins.' });
-                  setContextMenu(null);
-                  return;
-                }
-                setNewPinDraft({ lat: contextMenu.lat, lng: contextMenu.lng });
-                setContextMenu(null);
-              }}
-            />
-            <CtxItem
-              label="Plan a trip from here"
-              onClick={() => {
-                setNewTripDraft({ lat: contextMenu.lat, lng: contextMenu.lng });
-                setContextMenu(null);
-              }}
-            />
-            <CtxItem
-              label="Set as home"
-              onClick={async () => {
-                const { lat, lng } = contextMenu;
-                setContextMenu(null);
-                try {
-                  const { doc: existing } = await tv4.getSettings();
-                  const next = {
-                    ...(existing || {}),
-                    homeBase: { lat, lng, name: existing?.homeBase?.name || '' },
-                  };
-                  await tv4.saveSettings(next);
-                  setToast({ kind: 'ok', text: `Home base set · ${lat.toFixed(3)}°, ${lng.toFixed(3)}°` });
-                } catch (e) {
-                  setToast({ kind: 'err', text: 'Save failed: ' + (e.message || 'unknown') });
-                }
-              }}
-            />
-            <CtxItem label="Cancel" onClick={() => setContextMenu(null)} />
-          </div>
-        )}
-
-        {toast && (
-          <div
-            role="status"
+            <span style={{ color: COLORS.text, display: 'inline-flex' }}><IconSearch size={16} /></span>
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <span className="sk" style={{ fontSize: 11, color: COLORS.text }}>⌘K</span> · search trips, places, tags
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={toggleEdit}
+            aria-pressed={editMode}
+            title="Toggle edit pins (ESC to leave)"
+            className="sk sbtn"
             style={{
-              position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)',
-              zIndex: 20,
-              padding: '8px 14px', borderRadius: 999,
-              background: toast.kind === 'err' ? COLORS.red + '22'
-                       : toast.kind === 'ok'  ? COLORS.green + '22'
-                       : COLORS.gold + '22',
-              border: '1px solid ' + (toast.kind === 'err' ? COLORS.red + '80'
-                                  :   toast.kind === 'ok'  ? COLORS.green + '80'
-                                  :   COLORS.gold + '80'),
-              color: toast.kind === 'err' ? COLORS.red
-                  :  toast.kind === 'ok'  ? COLORS.green
-                  :  COLORS.gold,
-              fontFamily: 'JetBrains Mono, monospace',
-              fontSize: 11, letterSpacing: '0.14em',
-              boxShadow: '0 6px 20px rgba(0,0,0,0.4)',
-              whiteSpace: 'nowrap',
+              height: 40, padding: '0 14px', fontSize: 12,
+              color: editMode ? ON : COLORS.text, background: editMode ? '#ff7a7a' : COLORS.paper,
             }}
-          >{toast.text}</div>
-        )}
-      </div>
+          >EDIT PINS</button>
+          {!drawerOpen && (
+            <button
+              type="button"
+              onClick={() => setDrawerOpen(true)}
+              className="sk sbtn"
+              style={{ height: 40, padding: '0 14px', fontSize: 12, color: COLORS.text, background: COLORS.paper }}
+            >SHOW DRAWER · [</button>
+          )}
+        </div>
+
+        {/* The map "screen" */}
+        <div
+          ref={frameRef}
+          className="tv-map tv-mapframe"
+          style={{
+            position: 'relative',
+            backgroundColor: 'var(--tv-sea)',
+            backgroundImage: 'radial-gradient(var(--tv-sea-dot) 1px, transparent 1.4px)',
+            backgroundSize: '12px 12px',
+            border: '3px solid var(--ink)',
+          }}
+        >
+          <DottedWorldMap
+            pins={pins}
+            trips={trips}
+            activeTripId={activeTripId}
+            onPinSelect={onPinSelect}
+            onContextMenu={onMapContextMenu}
+          />
+
+          {editMode && (
+            <div className="sk pxs" role="status" style={{
+              position: 'absolute', top: 12, left: 12, zIndex: 5,
+              display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px 14px',
+              maxWidth: 'calc(100% - 30px)', padding: '8px 10px',
+              fontSize: 11, color: ON, background: '#ff7a7a',
+            }}>
+              <span>
+                <span className="blink" aria-hidden="true" style={{ display: 'inline-block', width: 8, height: 8, marginRight: 8, background: ON }} />
+                EDIT MODE · CLICK TO ADD · ESC TO FINISH
+              </span>
+              <button type="button" onClick={() => setEditMode(false)} className="sk" style={{
+                height: 28, padding: '0 10px', fontSize: 11, color: '#fffaf0', background: '#1b1410',
+                border: 0, cursor: 'pointer',
+              }}>DONE</button>
+            </div>
+          )}
+
+          {contextMenu && (
+            <div
+              role="menu"
+              aria-label="Map actions"
+              onClick={(e) => e.stopPropagation()}
+              className="pxs"
+              style={{
+                position: 'absolute', top: menuTop, left: menuLeft, zIndex: 10,
+                display: 'flex', flexDirection: 'column', minWidth: 230, padding: '6px 0',
+                background: COLORS.paper, color: COLORS.text,
+              }}
+            >
+              <Label as="p" style={{ margin: 0, padding: '6px 14px 8px', fontSize: 10, borderBottom: '3px dashed var(--rule)' }}>
+                {contextMenu.lat.toFixed(2)}° · {contextMenu.lng.toFixed(2)}°
+              </Label>
+              <CtxItem
+                label={`Add pin here (${contextMenu.lat.toFixed(2)}, ${contextMenu.lng.toFixed(2)})`}
+                onClick={() => {
+                  if (!activeTripId) {
+                    setToast({ kind: 'warn', text: 'Pick a trip in the drawer before adding pins.' });
+                    setContextMenu(null);
+                    return;
+                  }
+                  setNewPinDraft({ lat: contextMenu.lat, lng: contextMenu.lng });
+                  setContextMenu(null);
+                }}
+              />
+              <CtxItem
+                label="Plan a trip from here"
+                onClick={() => {
+                  setNewTripDraft({ lat: contextMenu.lat, lng: contextMenu.lng });
+                  setContextMenu(null);
+                }}
+              />
+              <CtxItem
+                label="Set as home"
+                onClick={async () => {
+                  const { lat, lng } = contextMenu;
+                  setContextMenu(null);
+                  try {
+                    const { doc: existing } = await tv4.getSettings();
+                    const next = {
+                      ...(existing || {}),
+                      homeBase: { lat, lng, name: existing?.homeBase?.name || '' },
+                    };
+                    await tv4.saveSettings(next);
+                    setToast({ kind: 'ok', text: `Home base set · ${lat.toFixed(3)}°, ${lng.toFixed(3)}°` });
+                  } catch (e) {
+                    setToast({ kind: 'err', text: 'Save failed: ' + (e.message || 'unknown') });
+                  }
+                }}
+              />
+              <CtxItem label="Cancel" muted onClick={() => setContextMenu(null)} />
+            </div>
+          )}
+
+          {toast && (
+            <div
+              role="status"
+              className="sk pxs"
+              style={{
+                position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)',
+                zIndex: 20, maxWidth: 'calc(100% - 30px)', padding: '8px 14px',
+                fontSize: 11, lineHeight: 1.4, textAlign: 'center', color: ON,
+                background: toast.kind === 'err' ? '#ff7a7a' : toast.kind === 'ok' ? '#7fd18b' : GOLD,
+              }}
+            >{toast.text}</div>
+          )}
+        </div>
+
+        {/* Map stats strip (always-dark HUD) */}
+        <StatsRow stats={stats} />
+
+        {/* Legend + right-click hint */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '16px 18px 20px' }}>
+          <p className="sk" style={{
+            display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px 14px',
+            margin: 0, fontSize: 10, color: COLORS.muted,
+          }}>
+            <span style={{ color: COLORS.text }}>PIN TYPES</span>
+            {PIN_LEGEND.map((t) => (
+              <span key={t.id} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <Swatch fill={PIN_FILL[t.id]} dashed={t.id === 'wishlist'} />{t.label}
+              </span>
+            ))}
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <span aria-hidden="true" style={{ width: 8, height: 8, background: GOLD, boxShadow: '0 0 0 2px var(--ink)' }} />CAPITAL
+            </span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <PixelFlag size={12} />TRIP HOME
+            </span>
+          </p>
+          <p style={{ margin: 0, fontSize: 12, lineHeight: 1.5, color: COLORS.muted }}>
+            <span className="sk" style={{ fontSize: 10, color: COLORS.text }}>RIGHT-CLICK MAP ›</span>{' '}
+            Add pin here · Plan a trip from here · Set as home
+          </p>
+        </div>
+      </section>
 
       {drawerOpen && (
-        <aside style={{
-          borderLeft: isMobile ? 'none' : '1px solid ' + COLORS.line,
-          borderTop: isMobile ? '1px solid ' + COLORS.line : 'none',
-          overflow: 'auto',
-          display: 'flex', flexDirection: 'column',
-          background: 'rgba(13,10,8,0.92)', backdropFilter: 'blur(10px)',
-          maxHeight: isMobile ? '50vh' : '100%',
+        <aside className="px" aria-labelledby="tv-drawer-h" style={{
+          flex: '1 1 320px', minWidth: 0, display: 'flex', flexDirection: 'column', background: COLORS.paper,
         }}>
-          <DrawerHeader
-            activeTrip={activeTrip}
-            onClose={() => setDrawerOpen(false)}
-            onSearch={() => setPaletteOpen(true)}
-            editMode={editMode}
-            onToggleEdit={() => {
-              if (!activeTripId && !editMode) { setToast({ kind: 'warn', text: 'Pick a trip first.' }); return; }
-              setEditMode((v) => !v);
-            }}
-          />
-          <StatsRow stats={stats} />
+          <DrawerHeader activeTrip={activeTrip} onClose={() => setDrawerOpen(false)} />
           {activeTrip ? (
             <ActiveTripPanel
               trip={activeTrip}
@@ -337,65 +392,50 @@ export default function TvMap({ trips, onOpenTrip, onRefreshTrips }) {
 }
 
 // ─── Drawer subviews ────────────────────────────────────────────
-function DrawerHeader({ activeTrip, onClose, onSearch, editMode, onToggleEdit }) {
+function DrawerHeader({ activeTrip, onClose }) {
   return (
-    <div style={{
-      padding: '14px 16px', borderBottom: '1px solid ' + COLORS.line,
-      display: 'flex', alignItems: 'center', gap: 8,
+    <div className="sk ribs" style={{
+      display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12,
+      minHeight: 32, padding: '4px 6px 4px 14px', fontSize: 12, color: ON, backgroundColor: GOLD,
+      borderBottom: '4px solid var(--ink)',
     }}>
+      <h3 id="tv-drawer-h" className="tv-skh" style={{ margin: 0, fontSize: 12, color: ON }}>
+        {activeTrip ? 'TRIP DRAWER · ACTIVE' : 'TRIP DRAWER · ALL'}
+      </h3>
       <button
-        onClick={onSearch}
-        className="mono"
-        style={{
-          flex: 1,
-          padding: '8px 12px', borderRadius: 8,
-          background: COLORS.bg, border: '1px solid ' + COLORS.line,
-          color: COLORS.muted, cursor: 'pointer', textAlign: 'left',
-          fontSize: 11, letterSpacing: '0.12em',
-        }}
-      >⌘K · search trips, places, tags</button>
-      <button
-        onClick={onToggleEdit}
-        title="Toggle edit pins (ESC to leave)"
-        className="mono"
-        style={{
-          padding: '6px 10px', borderRadius: 6,
-          background: editMode ? COLORS.red + '20' : 'transparent',
-          color: editMode ? COLORS.red : COLORS.muted,
-          border: '1px solid ' + (editMode ? COLORS.red + '60' : COLORS.line),
-          cursor: 'pointer', fontSize: 10, letterSpacing: '0.14em',
-        }}
-      >EDIT</button>
-      <button
+        type="button"
         onClick={onClose}
-        style={{
-          width: 32, height: 32, borderRadius: 8,
-          background: 'transparent', border: '1px solid ' + COLORS.line,
-          color: COLORS.muted, cursor: 'pointer', fontSize: 14,
-        }}
+        aria-label="Collapse drawer"
         title="Collapse [ "
-      >×</button>
+        style={{
+          display: 'grid', placeItems: 'center', width: 28, height: 28, padding: 0,
+          color: ON, background: 'transparent', border: '2px solid #1b1410', cursor: 'pointer',
+        }}
+      ><IconClose size={12} /></button>
     </div>
   );
 }
 
 function StatsRow({ stats }) {
   const cells = [
-    ['PLACES', stats.places, COLORS.gold],
-    ['DAYS',   stats.days,   COLORS.green],
-    ['KM',     stats.km,     COLORS.red],
-    ['SPEND',  stats.spend,  COLORS.text],
-    ['NOTES',  stats.notes,  COLORS.muted],
+    ['PLACES', stats.places, '#ffd25e'],
+    ['DAYS',   stats.days,   '#7fd18b'],
+    ['KM',     stats.km,     '#ff7a7a'],
+    ['SPEND',  stats.spend,  '#fffaf0'],
+    ['NOTES',  stats.notes,  '#c9bca6'],
   ];
   return (
-    <div style={{
-      display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)',
-      borderBottom: '1px solid ' + COLORS.line,
+    <div className="sk tv-g5 tv-mapframe" style={{
+      marginTop: 0, color: '#fffaf0', background: 'var(--strip)', '--tv-sep': '#5c5046',
+      border: '3px solid var(--ink)', borderTop: 0,
     }}>
-      {cells.map(([l, n, c]) => (
-        <div key={l} style={{ padding: '10px 6px', borderRight: '1px solid ' + COLORS.line, textAlign: 'center' }}>
-          <div className="mono" style={{ fontSize: 8, letterSpacing: '0.16em', color: COLORS.muted }}>{l}</div>
-          <div className="mono" style={{ fontSize: 16, fontWeight: 700, marginTop: 4, color: c }}>{n}</div>
+      {cells.map(([l, n, c], i) => (
+        <div key={l} style={{
+          display: 'flex', flexDirection: 'column', gap: 6, padding: '10px 12px', minWidth: 0,
+          borderLeft: i ? '3px dashed #5c5046' : 'none',
+        }}>
+          <span style={{ fontSize: 10, color: '#c9bca6' }}>{l}</span>
+          <span style={{ fontSize: 16, color: c, overflow: 'hidden', textOverflow: 'ellipsis' }}>{n}</span>
         </div>
       ))}
     </div>
@@ -404,71 +444,63 @@ function StatsRow({ stats }) {
 
 function ActiveTripPanel({ trip, activePin, pins, onOpenTrip, onSelectPin, onClearTrip }) {
   return (
-    <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 14, flex: 1 }}>
+    <div style={{ padding: 18, display: 'flex', flexDirection: 'column', gap: 18, flex: 1 }}>
       <div>
-        <div className="mono" style={{ fontSize: 10, letterSpacing: '0.22em', color: COLORS.gold }}>
-          ACTIVE TRIP
-        </div>
-        <div style={{ fontSize: 17, fontWeight: 700, marginTop: 4 }}>{trip.title}</div>
-        <div className="mono" style={{ fontSize: 11, color: COLORS.muted, marginTop: 4 }}>
+        <Label as="p" style={{ margin: 0, fontSize: 10 }}>ACTIVE TRIP</Label>
+        <p className="pf" style={{ margin: '6px 0 0', fontSize: 22, lineHeight: 1.1 }}>{trip.title}</p>
+        <p style={{ margin: '6px 0 0', fontSize: 12, color: COLORS.muted }}>
           {trip.country || '—'} · {trip.startDate || '—'} → {trip.endDate || '—'}
-        </div>
+        </p>
       </div>
 
       {activePin && (
-        <div style={{
-          padding: 12, borderRadius: 8,
-          background: 'rgba(245,237,224,0.04)',
-          border: '1px solid ' + COLORS.line,
-        }}>
-          <div className="mono" style={{ fontSize: 10, letterSpacing: '0.18em', color: COLORS.gold }}>
-            ● {(activePin.type || 'OTHER').toUpperCase()}
-          </div>
-          <div style={{ fontSize: 15, fontWeight: 700, marginTop: 4 }}>{activePin.name}</div>
-          <div className="mono" style={{ fontSize: 11, color: COLORS.muted, marginTop: 4 }}>
+        <div className="pxs" style={{ padding: 12, background: COLORS.field, display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <span><Tag fill={PIN_COLORS[activePin.type] || PIN_COLORS.other}>{(activePin.type || 'OTHER').toUpperCase()}</Tag></span>
+          <span style={{ fontSize: 15, fontWeight: 700 }}>{activePin.name}</span>
+          <span style={{ fontSize: 11, color: COLORS.muted }}>
             {activePin.lat.toFixed(4)}° · {activePin.lng.toFixed(4)}°
             {activePin.dayIndex != null && ` · D${activePin.dayIndex + 1}`}
             {activePin.estCost ? ` · ${activePin.currency || ''}${activePin.estCost}` : ''}
-          </div>
+          </span>
           {activePin.notes && (
-            <div style={{ marginTop: 8, fontSize: 12, color: COLORS.text }}>{activePin.notes}</div>
+            <span style={{ fontSize: 12, color: COLORS.text, lineHeight: 1.5 }}>{activePin.notes}</span>
           )}
         </div>
       )}
 
       <div>
-        <div className="mono" style={{
-          fontSize: 10, letterSpacing: '0.22em', color: COLORS.muted, marginBottom: 6,
-        }}>PLACES · {pins.length}</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <Label as="p" style={{ margin: '0 0 8px', fontSize: 10 }}>PLACES · {pins.length}</Label>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
           {pins.length === 0 ? (
             <span style={{ color: COLORS.muted, fontSize: 12 }}>no pins yet</span>
-          ) : pins.slice().sort((a, b) => (a.dayIndex || 0) - (b.dayIndex || 0)).map((p) => (
-            <button
-              key={p._id}
-              onClick={() => onSelectPin(p)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 8,
-                padding: '7px 10px', borderRadius: 6,
-                background: activePin?._id === p._id ? 'rgba(212,168,88,0.10)' : 'transparent',
-                border: '1px solid ' + (activePin?._id === p._id ? COLORS.gold + '55' : 'transparent'),
-                color: COLORS.text, cursor: 'pointer',
-                fontSize: 12, textAlign: 'left',
-              }}
-            >
-              <span style={{ width: 7, height: 7, borderRadius: 999, background: PIN_COLORS[p.type] || PIN_COLORS.other }} />
-              <span style={{ flex: 1 }}>{p.name}</span>
-              <span className="mono" style={{ fontSize: 10, color: COLORS.muted }}>
-                D{(p.dayIndex ?? 0) + 1}
-              </span>
-            </button>
-          ))}
+          ) : pins.slice().sort((a, b) => (a.dayIndex || 0) - (b.dayIndex || 0)).map((p) => {
+            const on = activePin?._id === p._id;
+            return (
+              <button
+                key={p._id}
+                type="button"
+                onClick={() => onSelectPin(p)}
+                aria-pressed={on}
+                className={'tv-row' + (on ? ' tv-on' : '')}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px',
+                  background: on ? COLORS.panel2 : 'transparent', border: 0,
+                  borderBottom: '3px dashed var(--rule)', color: COLORS.text,
+                  fontSize: 13, textAlign: 'left',
+                }}
+              >
+                <Swatch fill={PIN_COLORS[p.type] || PIN_COLORS.other} dashed={p.type === 'wishlist'} />
+                <span style={{ flex: 1, minWidth: 0 }}>{p.name}</span>
+                <span className="sk" style={{ fontSize: 10, color: COLORS.muted }}>D{(p.dayIndex ?? 0) + 1}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      <div style={{ marginTop: 'auto', display: 'flex', gap: 6 }}>
-        <Btn onClick={onClearTrip}>Clear</Btn>
-        <Btn onClick={onOpenTrip} variant="tinted" color={COLORS.gold}>Open trip folder →</Btn>
+      <div style={{ marginTop: 'auto', display: 'flex', flexWrap: 'wrap', gap: 16, padding: '0 8px 8px 0' }}>
+        <PxButton onClick={onClearTrip} style={{ height: 40 }}>CLEAR</PxButton>
+        <PxButton onClick={onOpenTrip} fill={GOLD} style={{ height: 40 }}>OPEN TRIP FOLDER →</PxButton>
       </div>
     </div>
   );
@@ -476,32 +508,27 @@ function ActiveTripPanel({ trip, activePin, pins, onOpenTrip, onSelectPin, onCle
 
 function AllTripsPanel({ trips, pins, onFocus }) {
   return (
-    <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
-      <div className="mono" style={{
-        fontSize: 10, letterSpacing: '0.22em', color: COLORS.muted, marginBottom: 6,
-      }}>ALL TRIPS · {trips.length}</div>
+    <div style={{ padding: 18, display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
+      <Label as="p" style={{ margin: '0 0 4px', fontSize: 10 }}>ALL TRIPS · {trips.length}</Label>
       {trips.length === 0 ? (
-        <span style={{ color: COLORS.muted, fontSize: 12 }}>No trips yet — create one in LIST</span>
+        <Empty title="NO SAVE DATA" hint="No trips yet — create one in LIST" style={{ padding: '18px 8px' }} />
       ) : trips.map((t) => {
         const count = pins.filter((p) => p.tripId === t._id).length;
         return (
           <button
             key={t._id}
+            type="button"
             onClick={() => onFocus(t)}
+            className="tv-row"
             style={{
-              display: 'flex', alignItems: 'center', gap: 8,
-              padding: '8px 10px', borderRadius: 8,
-              background: 'rgba(245,237,224,0.04)',
-              border: '1px solid ' + COLORS.line, cursor: 'pointer',
-              color: COLORS.text, textAlign: 'left', fontSize: 12,
+              display: 'flex', alignItems: 'center', gap: 12, padding: '10px 8px',
+              background: 'transparent', border: 0, borderBottom: '3px dashed var(--rule)',
+              color: COLORS.text, textAlign: 'left', fontSize: 13,
             }}
           >
-            <span style={{
-              width: 8, height: 8, borderRadius: 999,
-              background: t.status === 'visited' ? COLORS.green : t.status === 'ongoing' ? COLORS.gold : COLORS.red,
-            }} />
-            <span style={{ flex: 1 }}>{t.title}</span>
-            <span className="mono" style={{ fontSize: 10, color: COLORS.muted }}>{count} pins</span>
+            <PixelFlag size={16} fill={statusFill(t.status)} />
+            <span style={{ flex: 1, minWidth: 0, fontWeight: 700 }}>{t.title}</span>
+            <span className="sk" style={{ fontSize: 10, color: COLORS.muted, whiteSpace: 'nowrap' }}>{count} PINS</span>
           </button>
         );
       })}
@@ -513,31 +540,27 @@ function AllTripsPanel({ trips, pins, onFocus }) {
 function LayerToggle({ on, onClick, label }) {
   return (
     <button
+      type="button"
       onClick={onClick}
-      className="mono"
-      style={{
-        padding: '5px 10px', borderRadius: 6,
-        background: on ? COLORS.gold + '24' : COLORS.panel,
-        border: '1px solid ' + (on ? COLORS.gold + '80' : COLORS.line),
-        color: on ? COLORS.gold : COLORS.muted,
-        fontSize: 9, letterSpacing: '0.18em', cursor: 'pointer',
-      }}
+      aria-pressed={on}
+      className="chip-px sk"
+      style={{ minHeight: 30, padding: '0 10px', fontSize: 10 }}
     >{label}</button>
   );
 }
 
-function CtxItem({ label, onClick }) {
+function CtxItem({ label, onClick, muted }) {
   return (
     <button
+      type="button"
+      role="menuitem"
       onClick={onClick}
+      className="tv-mi"
       style={{
         display: 'block', width: '100%', textAlign: 'left',
-        padding: '7px 10px', borderRadius: 6,
-        background: 'transparent', border: 'none', color: COLORS.text,
-        cursor: 'pointer', fontSize: 12,
+        padding: '9px 14px', background: 'transparent', border: 'none',
+        color: muted ? COLORS.muted : COLORS.text, fontSize: 13,
       }}
-      onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(245,237,224,0.05)'}
-      onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
     >{label}</button>
   );
 }
@@ -552,97 +575,97 @@ function CommandPalette({ query, onQuery, trips, pins, onClose, onSelectTrip, on
   const matchTags = [...tagSet].filter((tg) => !q || tg.toLowerCase().includes(q));
 
   return (
-    <div
-      role="dialog"
-      onClick={onClose}
-      style={{
-        position: 'fixed', inset: 0, zIndex: 2000,
-        background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)',
-        display: 'flex', justifyContent: 'center', alignItems: 'flex-start', paddingTop: 80,
-      }}
-    >
+    <Overlay>
       <div
-        onClick={(e) => e.stopPropagation()}
+        onClick={onClose}
         style={{
-          width: 520, maxWidth: '92%',
-          background: COLORS.panel, border: '1px solid ' + COLORS.line,
-          borderRadius: 14, overflow: 'hidden',
-          color: COLORS.text,
+          position: 'fixed', inset: 0, zIndex: 2000, background: 'var(--tv-backdrop)',
+          display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: '80px 16px 16px',
         }}
       >
-        <input
-          autoFocus
-          value={query}
-          onChange={(e) => onQuery(e.target.value)}
-          placeholder="search trips, places, tags…"
-          style={{
-            width: '100%',
-            padding: '14px 18px',
-            background: 'transparent', border: 'none', outline: 'none',
-            color: COLORS.text, fontSize: 15,
-            borderBottom: '1px solid ' + COLORS.line,
-          }}
-        />
-        <div style={{ maxHeight: 420, overflowY: 'auto' }}>
-          {matchTrips.length > 0 && (
-            <PaletteGroup title="TRIPS">
-              {matchTrips.slice(0, 8).map((t) => (
-                <PaletteRow key={t._id} onClick={() => onSelectTrip(t)} primary={t.title} secondary={t.country || '—'} />
-              ))}
-            </PaletteGroup>
-          )}
-          {matchPins.length > 0 && (
-            <PaletteGroup title="PLACES">
-              {matchPins.slice(0, 12).map((p) => (
-                <PaletteRow key={p._id} onClick={() => onSelectPin(p)} primary={p.name} secondary={`${p._tripTitle || ''} · ${p.lat.toFixed(2)}°,${p.lng.toFixed(2)}°`} />
-              ))}
-            </PaletteGroup>
-          )}
-          {matchTags.length > 0 && (
-            <PaletteGroup title="TAGS">
-              {matchTags.slice(0, 6).map((tg) => (
-                <PaletteRow key={tg} primary={`#${tg}`} secondary="" />
-              ))}
-            </PaletteGroup>
-          )}
-          {!matchTrips.length && !matchPins.length && !matchTags.length && (
-            <div style={{ padding: 22, color: COLORS.muted, fontSize: 13 }} className="mono">
-              ◇ no matches
-            </div>
-          )}
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Search trips, places, tags"
+          onClick={(e) => e.stopPropagation()}
+          className="px"
+          style={{ width: 560, maxWidth: 'calc(100% - 20px)', background: COLORS.paper, color: COLORS.text }}
+        >
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 12, padding: '16px 18px',
+            borderBottom: '3px dashed var(--rule)',
+          }}>
+            <IconSearch size={18} />
+            <input
+              autoFocus
+              value={query}
+              onChange={(e) => onQuery(e.target.value)}
+              placeholder="search trips, places, tags…"
+              aria-label="Search trips, places, tags"
+              className="mono field"
+              style={{ flex: 1, minWidth: 0, height: 44, padding: '0 12px', fontSize: 15 }}
+            />
+            <span className="sk tv-hide-sm" style={{ fontSize: 10, color: COLORS.muted }}>ESC</span>
+          </div>
+          <div style={{ maxHeight: 420, overflowY: 'auto', padding: '4px 0 10px' }}>
+            {matchTrips.length > 0 && (
+              <PaletteGroup title="TRIPS">
+                {matchTrips.slice(0, 8).map((t) => (
+                  <PaletteRow key={t._id} onClick={() => onSelectTrip(t)} primary={t.title} secondary={t.country || '—'}
+                    icon={<PixelFlag size={14} fill={statusFill(t.status)} />} />
+                ))}
+              </PaletteGroup>
+            )}
+            {matchPins.length > 0 && (
+              <PaletteGroup title="PLACES">
+                {matchPins.slice(0, 12).map((p) => (
+                  <PaletteRow key={p._id} onClick={() => onSelectPin(p)} primary={p.name} secondary={`${p._tripTitle || ''} · ${p.lat.toFixed(2)}°,${p.lng.toFixed(2)}°`}
+                    icon={<Swatch fill={PIN_COLORS[p.type] || PIN_COLORS.other} dashed={p.type === 'wishlist'} />} />
+                ))}
+              </PaletteGroup>
+            )}
+            {matchTags.length > 0 && (
+              <PaletteGroup title="TAGS">
+                {matchTags.slice(0, 6).map((tg) => (
+                  <PaletteRow key={tg} primary={`#${tg}`} secondary="" />
+                ))}
+              </PaletteGroup>
+            )}
+            {!matchTrips.length && !matchPins.length && !matchTags.length && (
+              <Empty title="NO MATCHES" hint="Nothing found for that search." style={{ padding: '22px 16px' }} />
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </Overlay>
   );
 }
 
 function PaletteGroup({ title, children }) {
   return (
     <div>
-      <div className="mono" style={{
-        fontSize: 9, letterSpacing: '0.22em', color: COLORS.muted,
-        padding: '10px 18px 4px',
-      }}>{title}</div>
+      <Label as="p" style={{ margin: 0, padding: '12px 18px 6px', fontSize: 10 }}>{title}</Label>
       <div>{children}</div>
     </div>
   );
 }
 
-function PaletteRow({ onClick, primary, secondary }) {
+function PaletteRow({ onClick, primary, secondary, icon }) {
   return (
     <button
+      type="button"
       onClick={onClick}
+      className={onClick ? 'tv-mi' : undefined}
       style={{
         display: 'flex', alignItems: 'center', gap: 12,
         width: '100%', padding: '10px 18px',
         background: 'transparent', border: 'none', cursor: onClick ? 'pointer' : 'default',
         color: COLORS.text, textAlign: 'left',
       }}
-      onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(245,237,224,0.04)'}
-      onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
     >
-      <span style={{ flex: 1, fontSize: 13 }}>{primary}</span>
-      <span className="mono" style={{ fontSize: 10, color: COLORS.muted }}>{secondary}</span>
+      {icon}
+      <span style={{ flex: 1, minWidth: 0, fontSize: 13 }}>{primary}</span>
+      <span style={{ fontSize: 11, color: COLORS.muted }}>{secondary}</span>
     </button>
   );
 }
@@ -669,7 +692,7 @@ function toggleRoutes(map, pins, activeTripId, on, layerId) {
   map.addSource(layerId, { type: 'geojson', data: { type: 'FeatureCollection', features } });
   map.addLayer({
     id: layerId, source: layerId, type: 'line',
-    paint: { 'line-color': COLORS.gold, 'line-width': 1.5, 'line-opacity': 0.7, 'line-dasharray': [2, 2] },
+    paint: { 'line-color': GOLD, 'line-width': 1.5, 'line-opacity': 0.7, 'line-dasharray': [2, 2] },
   });
 }
 
@@ -722,59 +745,36 @@ function NewPinModal({ initial, tripId, onClose, onCreated }) {
   };
 
   return (
-    <div role="dialog" onClick={onClose} style={{
-      position: 'fixed', inset: 0, zIndex: 2000,
-      background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
-    }}>
-      <form onClick={(e) => e.stopPropagation()} onSubmit={onSubmit} style={{
-        background: COLORS.panel, border: '1px solid ' + COLORS.line,
-        borderRadius: 14, padding: 24, width: 420, color: COLORS.text,
-        display: 'flex', flexDirection: 'column', gap: 12,
-      }}>
-        <div>
-          <div className="mono" style={{ fontSize: 10, letterSpacing: '0.22em', color: COLORS.gold }}>NEW PIN</div>
-          <div style={{ fontSize: 17, fontWeight: 700, marginTop: 4 }}>Drop a place</div>
-          <div className="mono" style={{ fontSize: 10, color: COLORS.muted, marginTop: 4 }}>
-            {initial.lat.toFixed(4)}°, {initial.lng.toFixed(4)}°
-          </div>
-        </div>
-        <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <span className="mono" style={{ fontSize: 9, letterSpacing: '0.2em', color: COLORS.muted, textTransform: 'uppercase' }}>Name</span>
-          <Field value={name} onChange={setName} placeholder="Ichiran Shibuya" autoFocus mono={false} />
-        </label>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-          <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <span className="mono" style={{ fontSize: 9, letterSpacing: '0.2em', color: COLORS.muted, textTransform: 'uppercase' }}>Type</span>
-            <select value={type} onChange={(e) => setType(e.target.value)} className="mono" style={{
-              background: COLORS.bg, border: '1px solid ' + COLORS.line,
-              borderRadius: 10, padding: '11px 14px', color: COLORS.text, fontSize: 13,
-            }}>
-              {['see', 'eat', 'move', 'stay', 'other', 'wishlist'].map((t) => <option key={t} value={t}>{t}</option>)}
-            </select>
-          </label>
-          <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <span className="mono" style={{ fontSize: 9, letterSpacing: '0.2em', color: COLORS.muted, textTransform: 'uppercase' }}>Day</span>
-            <Field type="number" value={dayIndex} onChange={setDayIndex} placeholder="0" />
-          </label>
-        </div>
-        {error && (
-          <div style={{
-            padding: 10, borderRadius: 8,
-            background: COLORS.red + '12', border: `1px solid ${COLORS.red}44`,
-            color: COLORS.red, fontSize: 12,
-          }}>{error}</div>
-        )}
-        <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
-          <Btn onClick={onClose} type="button">Cancel</Btn>
-          <div style={{ marginLeft: 'auto' }}>
-            <Btn type="submit" variant="solid" color={COLORS.gold} disabled={submitting}>
-              {submitting ? '…' : 'Drop pin'}
-            </Btn>
-          </div>
-        </div>
-      </form>
-    </div>
+    <PxDialog
+      as="form"
+      onSubmit={onSubmit}
+      onClose={onClose}
+      zIndex={2000}
+      width={440}
+      kicker="NEW PIN"
+      title="Drop a place"
+      sub={`${initial.lat.toFixed(4)}°, ${initial.lng.toFixed(4)}°`}
+      footer={<>
+        <PxButton type="button" onClick={onClose} style={{ height: 44 }}>CANCEL</PxButton>
+        <PxButton type="submit" fill={GOLD} disabled={submitting} style={{ height: 44 }}>
+          {submitting ? '…' : 'DROP PIN'}
+        </PxButton>
+      </>}
+    >
+      <FormRow label="Name">
+        <Field value={name} onChange={setName} placeholder="Ichiran Shibuya" autoFocus mono={false} style={fieldStyle} />
+      </FormRow>
+      <div className="tv-g2" style={{ gap: 18 }}>
+        <FormRow label="Type">
+          <PxSelect value={type} onChange={setType}
+            options={['see', 'eat', 'move', 'stay', 'other', 'wishlist'].map((t) => ({ v: t, l: t }))} />
+        </FormRow>
+        <FormRow label="Day">
+          <Field type="number" value={dayIndex} onChange={setDayIndex} placeholder="0" style={fieldStyle} />
+        </FormRow>
+      </div>
+      {error && <ErrorNote>{error}</ErrorNote>}
+    </PxDialog>
   );
 }
 
@@ -814,92 +814,58 @@ function NewTripFromMapModal({ initial, onClose, onCreated }) {
   };
 
   return (
-    <div role="dialog" onClick={onClose} style={{
-      position: 'fixed', inset: 0, zIndex: 2000,
-      background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
-    }}>
-      <form onClick={(e) => e.stopPropagation()} onSubmit={onSubmit} style={{
-        background: COLORS.panel, border: '1px solid ' + COLORS.line,
-        borderRadius: 14, padding: 24, width: 460, maxWidth: '100%',
-        color: COLORS.text, display: 'flex', flexDirection: 'column', gap: 12,
-      }}>
-        <div>
-          <div className="mono" style={{ fontSize: 10, letterSpacing: '0.22em', color: COLORS.gold }}>
-            PLAN A TRIP HERE
-          </div>
-          <div style={{ fontSize: 17, fontWeight: 700, marginTop: 4 }}>New trip</div>
-          <div className="mono" style={{ fontSize: 10, color: COLORS.muted, marginTop: 4 }}>
-            home base · {initial.lat.toFixed(4)}°, {initial.lng.toFixed(4)}°
-          </div>
-        </div>
+    <PxDialog
+      as="form"
+      onSubmit={onSubmit}
+      onClose={onClose}
+      zIndex={2000}
+      width={520}
+      kicker="PLAN A TRIP HERE"
+      title="New trip"
+      sub={`home base · ${initial.lat.toFixed(4)}°, ${initial.lng.toFixed(4)}°`}
+      footer={<>
+        <PxButton type="button" onClick={onClose} style={{ height: 44 }}>CANCEL</PxButton>
+        <PxButton type="submit" fill={GOLD} disabled={submitting} style={{ height: 44 }}>
+          {submitting ? '…' : 'CREATE TRIP'}
+        </PxButton>
+      </>}
+    >
+      <FormRow label="Title">
+        <Field value={title} onChange={setTitle} placeholder="Tokyo · Akiba nights" autoFocus mono={false} style={fieldStyle} />
+      </FormRow>
 
-        <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <span className="mono" style={{ fontSize: 9, letterSpacing: '0.2em', color: COLORS.muted, textTransform: 'uppercase' }}>Title</span>
-          <Field value={title} onChange={setTitle} placeholder="Tokyo · Akiba nights" autoFocus mono={false} />
-        </label>
+      <div className="tv-g2" style={{ gap: 18 }}>
+        <FormRow label="Status">
+          <PxSelect value={status} onChange={setStatus}
+            options={['planned', 'ongoing', 'visited'].map((s) => ({ v: s, l: s }))} />
+        </FormRow>
+        <FormRow label="Region">
+          <PxSelect value={region} onChange={setRegion}
+            options={['SEA', 'NEA', 'EU', 'NA', 'OCEANIA', 'SA', 'AF', 'ME', 'OTHER'].map((r) => ({ v: r, l: r }))} />
+        </FormRow>
+      </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-          <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <span className="mono" style={{ fontSize: 9, letterSpacing: '0.2em', color: COLORS.muted, textTransform: 'uppercase' }}>Status</span>
-            <select value={status} onChange={(e) => setStatus(e.target.value)} className="mono" style={selectStyle}>
-              {['planned', 'ongoing', 'visited'].map((s) => <option key={s} value={s}>{s}</option>)}
-            </select>
-          </label>
-          <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <span className="mono" style={{ fontSize: 9, letterSpacing: '0.2em', color: COLORS.muted, textTransform: 'uppercase' }}>Region</span>
-            <select value={region} onChange={(e) => setRegion(e.target.value)} className="mono" style={selectStyle}>
-              {['SEA', 'NEA', 'EU', 'NA', 'OCEANIA', 'SA', 'AF', 'ME', 'OTHER'].map((r) => <option key={r} value={r}>{r}</option>)}
-            </select>
-          </label>
-        </div>
+      <FormRow label="Country">
+        <Field value={country} onChange={setCountry} placeholder="JP" style={fieldStyle} />
+      </FormRow>
 
-        <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <span className="mono" style={{ fontSize: 9, letterSpacing: '0.2em', color: COLORS.muted, textTransform: 'uppercase' }}>Country</span>
-          <Field value={country} onChange={setCountry} placeholder="JP" />
-        </label>
+      <div className="tv-g2" style={{ gap: 18 }}>
+        <FormRow label="Start">
+          <Field type="date" value={startDate} onChange={setStartDate} style={fieldStyle} />
+        </FormRow>
+        <FormRow label="End">
+          <Field type="date" value={endDate} onChange={setEndDate} style={fieldStyle} />
+        </FormRow>
+      </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-          <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <span className="mono" style={{ fontSize: 9, letterSpacing: '0.2em', color: COLORS.muted, textTransform: 'uppercase' }}>Start</span>
-            <Field type="date" value={startDate} onChange={setStartDate} />
-          </label>
-          <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <span className="mono" style={{ fontSize: 9, letterSpacing: '0.2em', color: COLORS.muted, textTransform: 'uppercase' }}>End</span>
-            <Field type="date" value={endDate} onChange={setEndDate} />
-          </label>
-        </div>
+      <FormRow label="Trip currency">
+        <Field value={tripCurrency} onChange={setTripCurrency} placeholder="JPY" style={fieldStyle} />
+      </FormRow>
 
-        <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <span className="mono" style={{ fontSize: 9, letterSpacing: '0.2em', color: COLORS.muted, textTransform: 'uppercase' }}>Trip currency</span>
-          <Field value={tripCurrency} onChange={setTripCurrency} placeholder="JPY" />
-        </label>
-
-        {error && (
-          <div style={{
-            padding: 10, borderRadius: 8,
-            background: COLORS.red + '12', border: `1px solid ${COLORS.red}44`,
-            color: COLORS.red, fontSize: 12,
-          }}>{error}</div>
-        )}
-
-        <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
-          <Btn onClick={onClose} type="button">Cancel</Btn>
-          <div style={{ marginLeft: 'auto' }}>
-            <Btn type="submit" variant="solid" color={COLORS.gold} disabled={submitting}>
-              {submitting ? '…' : 'Create trip'}
-            </Btn>
-          </div>
-        </div>
-      </form>
-    </div>
+      {error && <ErrorNote>{error}</ErrorNote>}
+    </PxDialog>
   );
 }
-
-const selectStyle = {
-  background: COLORS.bg, border: '1px solid ' + COLORS.line,
-  borderRadius: 10, padding: '11px 14px', color: COLORS.text, fontSize: 13,
-};
 
 // ─── Helpers ────────────────────────────────────────────────────
 function tripDays(trip) {

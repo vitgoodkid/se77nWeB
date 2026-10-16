@@ -1,8 +1,10 @@
-// Settings modal — per-user travel preferences. Persists to /api/tv4 (singleton 'settings').
+// Settings dialog — per-user travel preferences. Persists to /api/tv4 (singleton 'settings').
 // Map-picker UI is deferred to task #10 (MapLibre); v1 uses lat/lng + name inputs.
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { COLORS, Btn, Field } from '../lib.jsx';
+import { COLORS, Field } from '../lib.jsx';
+import { PxButton } from '../ui/arcade.jsx';
 import { tv4 } from './api.js';
+import { GOLD, ErrorNote, FormRow, Label, Loading, PxDialog, PxSelect, Seg, XBtn, fieldStyle } from './kit.jsx';
 
 const COMMON_CURRENCIES = ['USD', 'EUR', 'GBP', 'JPY', 'KRW', 'TWD', 'VND', 'CNY', 'THB', 'SGD', 'AUD', 'CAD'];
 const COLLECTIONS = ['trips', 'pins', 'plan-items', 'checklist', 'reservations', 'transactions', 'notes', 'templates', 'settings'];
@@ -107,297 +109,215 @@ export default function TvSettings({ onClose }) {
   }, [newTripmate, settings, patch]);
 
   return (
-    <div
-      role="dialog"
-      onClick={onClose}
-      style={{
-        position: 'fixed', inset: 0, zIndex: 1000,
-        background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: 24,
-      }}
+    <PxDialog
+      onClose={onClose}
+      width={940}
+      kicker="SETTINGS"
+      title="Travel preferences"
+      footer={<>
+        <PxButton onClick={onClose} style={{ height: 44 }}>CANCEL</PxButton>
+        <PxButton kind="big" onClick={onSave} fill={GOLD} disabled={saving || loading} style={{ minHeight: 44, fontSize: 13 }}>
+          {saving ? '…' : 'SAVE'}
+        </PxButton>
+      </>}
     >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          background: COLORS.panel, border: '1px solid ' + COLORS.line,
-          borderRadius: 14, width: 600, maxWidth: '100%', maxHeight: '90vh',
-          overflow: 'auto', color: COLORS.text,
-          display: 'flex', flexDirection: 'column',
-        }}
-      >
-        <header style={{
-          padding: '18px 22px', borderBottom: '1px solid ' + COLORS.line,
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        }}>
-          <div>
-            <div className="mono" style={{ fontSize: 10, letterSpacing: '0.22em', color: COLORS.gold }}>
-              SETTINGS
-            </div>
-            <div style={{ fontSize: 18, fontWeight: 700, marginTop: 2 }}>Travel preferences</div>
-          </div>
-          <button
-            onClick={onClose}
-            style={{
-              background: 'transparent', border: 'none', cursor: 'pointer',
-              color: COLORS.muted, fontSize: 22, lineHeight: 1, padding: 4,
-            }}
-          >×</button>
-        </header>
+      {loading && <Loading label="loading settings" />}
 
-        <div style={{ padding: 22, display: 'flex', flexDirection: 'column', gap: 22 }}>
-          {loading && <div style={{ color: COLORS.muted, fontSize: 12 }} className="mono">◇ loading…</div>}
-
-          {settings && !loading && (
-            <>
-              <Section title="HOME BASE">
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                  <Row label="Name">
-                    <Field
-                      value={settings.homeBase?.name || ''}
-                      onChange={(v) => patch({ homeBase: { ...(settings.homeBase || {}), name: v } })}
-                      placeholder="Taipei"
-                      mono={false}
-                    />
-                  </Row>
-                  <div />
-                  <Row label="Lat">
-                    <Field
-                      value={settings.homeBase?.lat ?? ''}
-                      onChange={(v) => patch({ homeBase: { ...(settings.homeBase || {}), lat: v === '' ? null : Number(v) } })}
-                      placeholder="25.04"
-                      type="number"
-                    />
-                  </Row>
-                  <Row label="Lng">
-                    <Field
-                      value={settings.homeBase?.lng ?? ''}
-                      onChange={(v) => patch({ homeBase: { ...(settings.homeBase || {}), lng: v === '' ? null : Number(v) } })}
-                      placeholder="121.56"
-                      type="number"
-                    />
-                  </Row>
-                </div>
-                <div className="mono" style={{ fontSize: 10, color: COLORS.muted, marginTop: 6, letterSpacing: '0.12em' }}>
-                  ◇ Map picker arriving with MapLibre (task #10)
-                </div>
-              </Section>
-
-              <Section title="CURRENCY + UNITS">
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                  <Row label="Base currency">
-                    <select
-                      value={settings.baseCurrency || 'USD'}
-                      onChange={(e) => patch({ baseCurrency: e.target.value })}
-                      className="mono"
-                      style={selectStyle}
-                    >
-                      {COMMON_CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                    </select>
-                  </Row>
-                  <Row label="Distance unit">
-                    <div style={{ display: 'inline-flex', border: '1px solid ' + COLORS.line, borderRadius: 8, overflow: 'hidden' }}>
-                      {['km', 'mi'].map((u) => {
-                        const on = settings.distanceUnit === u;
-                        return (
-                          <button
-                            key={u}
-                            onClick={() => patch({ distanceUnit: u })}
-                            className="mono"
-                            style={{
-                              padding: '10px 18px', cursor: 'pointer',
-                              background: on ? COLORS.gold + '1f' : 'transparent',
-                              color: on ? COLORS.gold : COLORS.muted,
-                              border: 'none', fontSize: 11, letterSpacing: '0.18em',
-                            }}
-                          >{u.toUpperCase()}</button>
-                        );
-                      })}
-                    </div>
-                  </Row>
-                </div>
-                <Toggle
-                  checked={!!settings.fxAutoRefresh}
-                  onChange={(v) => patch({ fxAutoRefresh: v })}
-                  label="Auto-refresh FX rates daily"
-                  hint="Pulls latest rates from exchangerate.host every 24h"
+      {settings && !loading && (
+        <div className="tv-g3" style={{ gap: 32 }}>
+          <Section title="HOME BASE">
+            <Row label="Name">
+              <Field
+                value={settings.homeBase?.name || ''}
+                onChange={(v) => patch({ homeBase: { ...(settings.homeBase || {}), name: v } })}
+                placeholder="Taipei"
+                mono={false}
+                style={fieldStyle}
+              />
+            </Row>
+            <div className="tv-g2" style={{ gap: 14 }}>
+              <Row label="Lat">
+                <Field
+                  value={settings.homeBase?.lat ?? ''}
+                  onChange={(v) => patch({ homeBase: { ...(settings.homeBase || {}), lat: v === '' ? null : Number(v) } })}
+                  placeholder="25.04"
+                  type="number"
+                  style={fieldStyle}
                 />
-              </Section>
+              </Row>
+              <Row label="Lng">
+                <Field
+                  value={settings.homeBase?.lng ?? ''}
+                  onChange={(v) => patch({ homeBase: { ...(settings.homeBase || {}), lng: v === '' ? null : Number(v) } })}
+                  placeholder="121.56"
+                  type="number"
+                  style={fieldStyle}
+                />
+              </Row>
+            </div>
+            <Label as="p" style={{ margin: 0, fontSize: 10, lineHeight: 1.6 }}>
+              Map picker arriving with MapLibre (task #10)
+            </Label>
+          </Section>
 
-              <Section title="CUSTOM CATEGORIES">
-                <div className="mono" style={{ fontSize: 10, color: COLORS.muted, letterSpacing: '0.12em', marginBottom: 8 }}>
-                  ◇ Extra expense categories beyond food / stay / transport / shopping / other
-                </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
-                  {(settings.customCategories || []).map((c) => (
-                    <RemovableChip
-                      key={c}
-                      label={c}
-                      onRemove={() => patch({ customCategories: settings.customCategories.filter((x) => x !== c) })}
-                    />
-                  ))}
-                  {(settings.customCategories || []).length === 0 && (
-                    <span style={{ color: COLORS.muted, fontSize: 12 }}>none yet</span>
-                  )}
-                </div>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <div style={{ flex: 1 }}>
-                    <Field
-                      value={newCategory}
-                      onChange={setNewCategory}
-                      placeholder="Souvenir"
-                      mono={false}
-                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); onAddCategory(); } }}
-                    />
-                  </div>
-                  <Btn onClick={onAddCategory} variant="tinted" color={COLORS.gold}>Add</Btn>
-                </div>
-              </Section>
+          <Section title="CURRENCY + UNITS">
+            <Row label="Base currency">
+              <PxSelect
+                value={settings.baseCurrency || 'USD'}
+                onChange={(v) => patch({ baseCurrency: v })}
+                options={COMMON_CURRENCIES.map((c) => ({ v: c, l: c }))}
+              />
+            </Row>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <Label>Distance unit</Label>
+              <Seg
+                ariaLabel="Distance unit"
+                options={['km', 'mi'].map((u) => ({ id: u, label: u.toUpperCase() }))}
+                value={settings.distanceUnit}
+                onChange={(u) => patch({ distanceUnit: u })}
+                style={{ alignSelf: 'flex-start', marginLeft: 3 }}
+              />
+            </div>
+            <Toggle
+              checked={!!settings.fxAutoRefresh}
+              onChange={(v) => patch({ fxAutoRefresh: v })}
+              label="Auto-refresh FX rates daily"
+              hint="Pulls latest rates from exchangerate.host every 24h"
+            />
+          </Section>
 
-              <Section title="TRIPMATES">
-                <div className="mono" style={{ fontSize: 10, color: COLORS.muted, letterSpacing: '0.12em', marginBottom: 8 }}>
-                  ◇ Names only for v0.4 — used in expense PAID BY + settle flow
-                </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
-                  {(settings.tripmates || []).map((m) => (
-                    <RemovableChip
-                      key={m.id}
-                      label={m.name}
-                      onRemove={() => patch({ tripmates: settings.tripmates.filter((x) => x.id !== m.id) })}
-                    />
-                  ))}
-                  {(settings.tripmates || []).length === 0 && (
-                    <span style={{ color: COLORS.muted, fontSize: 12 }}>solo (none added)</span>
-                  )}
-                </div>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <div style={{ flex: 1 }}>
-                    <Field
-                      value={newTripmate}
-                      onChange={setNewTripmate}
-                      placeholder="Alex"
-                      mono={false}
-                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); onAddTripmate(); } }}
-                    />
-                  </div>
-                  <Btn onClick={onAddTripmate} variant="tinted" color={COLORS.gold}>Add</Btn>
-                </div>
-              </Section>
+          <Section title="CUSTOM CATEGORIES">
+            <p style={{ margin: 0, fontSize: 12, lineHeight: 1.5, color: COLORS.muted }}>
+              Extra expense categories beyond food / stay / transport / shopping / other
+            </p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, padding: 3 }}>
+              {(settings.customCategories || []).map((c) => (
+                <RemovableChip
+                  key={c}
+                  label={c}
+                  onRemove={() => patch({ customCategories: settings.customCategories.filter((x) => x !== c) })}
+                />
+              ))}
+              {(settings.customCategories || []).length === 0 && (
+                <span style={{ color: COLORS.muted, fontSize: 13 }}>none yet</span>
+              )}
+            </div>
+            <div style={{ display: 'flex', gap: 16, alignItems: 'center', padding: '3px 8px 8px 3px' }}>
+              <label style={{ flex: 1, minWidth: 0 }}>
+                <span className="sr">New category</span>
+                <Field
+                  value={newCategory}
+                  onChange={setNewCategory}
+                  placeholder="Souvenir"
+                  mono={false}
+                  style={fieldStyle}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); onAddCategory(); } }}
+                />
+              </label>
+              <PxButton onClick={onAddCategory} fill={GOLD} style={{ height: 44 }}>ADD</PxButton>
+            </div>
+          </Section>
 
-              <Section title="DATA">
-                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                  <Btn onClick={onExportAll}>↓ Export all (JSON)</Btn>
-                </div>
-              </Section>
-            </>
-          )}
+          <Section title="TRIPMATES">
+            <p style={{ margin: 0, fontSize: 12, lineHeight: 1.5, color: COLORS.muted }}>
+              Names only for v0.4 — used in expense PAID BY + settle flow
+            </p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, padding: 3 }}>
+              {(settings.tripmates || []).map((m) => (
+                <RemovableChip
+                  key={m.id}
+                  label={m.name}
+                  onRemove={() => patch({ tripmates: settings.tripmates.filter((x) => x.id !== m.id) })}
+                />
+              ))}
+              {(settings.tripmates || []).length === 0 && (
+                <span style={{ color: COLORS.muted, fontSize: 13 }}>solo (none added)</span>
+              )}
+            </div>
+            <div style={{ display: 'flex', gap: 16, alignItems: 'center', padding: '3px 8px 8px 3px' }}>
+              <label style={{ flex: 1, minWidth: 0 }}>
+                <span className="sr">Tripmate name</span>
+                <Field
+                  value={newTripmate}
+                  onChange={setNewTripmate}
+                  placeholder="Alex"
+                  mono={false}
+                  style={fieldStyle}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); onAddTripmate(); } }}
+                />
+              </label>
+              <PxButton onClick={onAddTripmate} fill={GOLD} style={{ height: 44 }}>ADD</PxButton>
+            </div>
+          </Section>
 
-          {error && (
-            <div style={{
-              padding: 10, borderRadius: 8,
-              background: COLORS.red + '12', border: `1px solid ${COLORS.red}44`,
-              color: COLORS.red, fontSize: 12,
-            }}>{error}</div>
-          )}
+          <Section title="DATA">
+            <p style={{ margin: 0, fontSize: 12, lineHeight: 1.5, color: COLORS.muted }}>
+              Trips, pins, plan items, checklist, reservations, transactions, notes, templates and settings.
+            </p>
+            <div style={{ padding: '0 8px 8px 0' }}>
+              <PxButton onClick={onExportAll} style={{ height: 44 }}>↓ EXPORT ALL (JSON)</PxButton>
+            </div>
+          </Section>
         </div>
+      )}
 
-        <footer style={{
-          padding: '14px 22px', borderTop: '1px solid ' + COLORS.line,
-          display: 'flex', gap: 8, justifyContent: 'flex-end',
-        }}>
-          <Btn onClick={onClose}>Cancel</Btn>
-          <Btn onClick={onSave} variant="solid" color={COLORS.gold} disabled={saving || loading}>
-            {saving ? '…' : 'Save'}
-          </Btn>
-        </footer>
-      </div>
-    </div>
+      {error && <ErrorNote>{error}</ErrorNote>}
+    </PxDialog>
   );
 }
 
 function Section({ title, children }) {
   return (
-    <section>
-      <div className="mono" style={{
-        fontSize: 10, letterSpacing: '0.22em', color: COLORS.gold,
-        marginBottom: 12,
-      }}>{title}</div>
+    <fieldset style={{ display: 'flex', flexDirection: 'column', gap: 14, margin: 0, padding: 0, border: 0, minWidth: 0 }}>
+      <legend className="sk" style={{ padding: 0, marginBottom: 14, fontSize: 12, color: COLORS.text }}>
+        <span aria-hidden="true" style={{ display: 'inline-block', width: 8, height: 8, marginRight: 8, background: GOLD, boxShadow: '0 0 0 2px var(--ink)', verticalAlign: 'middle' }} />
+        {title}
+      </legend>
       {children}
-    </section>
+    </fieldset>
   );
 }
 
 function Row({ label, children }) {
-  return (
-    <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <span className="mono" style={{ fontSize: 9, letterSpacing: '0.2em', color: COLORS.muted, textTransform: 'uppercase' }}>{label}</span>
-      {children}
-    </label>
-  );
+  return <FormRow label={label}>{children}</FormRow>;
 }
 
+// Pixel toggle switch (button) + label text.
 function Toggle({ checked, onChange, label, hint }) {
   return (
-    <label style={{
-      display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer',
-      marginTop: 14,
-    }}>
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginTop: 4 }}>
       <button
         type="button"
         onClick={() => onChange(!checked)}
-        style={{
-          width: 36, height: 20, borderRadius: 999, position: 'relative',
-          background: checked ? COLORS.gold : 'rgba(245,237,224,0.1)',
-          border: '1px solid ' + COLORS.line,
-          cursor: 'pointer', flexShrink: 0,
-        }}
+        aria-pressed={checked}
+        aria-label={label}
+        className="tv-switch"
       >
-        <span style={{
-          position: 'absolute', top: 2, left: checked ? 18 : 2,
-          width: 14, height: 14, borderRadius: 999, background: COLORS.bg,
-          transition: 'left 120ms ease',
-        }} />
+        <span />
       </button>
-      <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <span style={{ display: 'flex', flexDirection: 'column', gap: 3, cursor: 'pointer' }} onClick={() => onChange(!checked)}>
         <span style={{ fontSize: 13, color: COLORS.text }}>{label}</span>
-        {hint && <span className="mono" style={{ fontSize: 10, color: COLORS.muted }}>{hint}</span>}
+        {hint && <span style={{ fontSize: 11, color: COLORS.muted, lineHeight: 1.45 }}>{hint}</span>}
       </span>
-    </label>
+    </div>
   );
 }
 
 function RemovableChip({ label, onRemove }) {
   return (
     <span
-      className="mono"
+      className="sk pxs"
       style={{
-        display: 'inline-flex', alignItems: 'center', gap: 6,
-        padding: '4px 10px', borderRadius: 999,
-        background: 'rgba(245,237,224,0.05)',
-        border: '1px solid ' + COLORS.line,
-        color: COLORS.text, fontSize: 11, letterSpacing: '0.12em',
-        textTransform: 'uppercase',
+        display: 'inline-flex', alignItems: 'center', gap: 4,
+        padding: '0 2px 0 10px', minHeight: 32, background: COLORS.panel2,
+        color: COLORS.text, fontSize: 11, textTransform: 'uppercase',
       }}
     >
       {label}
-      <button
-        onClick={onRemove}
-        style={{
-          background: 'transparent', border: 'none', cursor: 'pointer',
-          color: COLORS.muted, fontSize: 14, padding: 0, lineHeight: 1,
-        }}
-        aria-label="Remove"
-      >×</button>
+      <XBtn onClick={onRemove} label={`Remove ${label}`} style={{ width: 26, height: 26 }} />
     </span>
   );
 }
-
-const selectStyle = {
-  width: '100%', background: COLORS.bg,
-  border: '1px solid ' + COLORS.line, borderRadius: 10,
-  padding: '11px 14px', color: COLORS.text,
-  fontSize: 13,
-};
 
 function cryptoId() {
   // Short random id for tripmate references (browser-safe).

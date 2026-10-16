@@ -1,20 +1,20 @@
 // 05 EXPENSES · per-trip transactions table + add modal + FX panel + settle flow.
 // No photo/OCR scan flows (spec strips those). PAID BY column drives tripmate netting.
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { COLORS, Btn, Field, useMediaQuery } from '../lib.jsx';
+import { COLORS, Field } from '../lib.jsx';
+import { PixelCoin, PxButton } from '../ui/arcade.jsx';
 import { tv4 } from './api.js';
 import { txnsToCSV, downloadBlob } from './exports.js';
+import {
+  GOLD, ON, CAT_FILL,
+  CardTitle, Empty as EmptyState, ErrorNote, FormRow, IconRefresh, IconWarn, Label, Loading,
+  PxDialog, PxSelect, Seg, Swatch, Tag, XBtn, fieldStyle,
+} from './kit.jsx';
 
 const BUILTIN_CATEGORIES = ['food', 'stay', 'transport', 'shopping', 'other'];
 const METHODS = ['cash', 'card', 'ic', 'transfer'];
 
-const CAT_COLORS = {
-  food:      COLORS.gold,
-  stay:      COLORS.green,
-  transport: COLORS.red,
-  shopping:  '#9bb4ff',
-  other:     'rgba(245,237,224,0.4)',
-};
+const CAT_COLORS = CAT_FILL;
 
 // Quick-add keyword → category mapping. Lowercased substring match.
 const QUICK_KEYWORDS = {
@@ -42,7 +42,6 @@ function quickParse(text, fallbackCurrency) {
 function todayISO() { return new Date().toISOString().slice(0, 10); }
 
 export default function TvExpenses({ trip }) {
-  const isMobile = useMediaQuery('(max-width: 768px)');
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -140,77 +139,67 @@ export default function TvExpenses({ trip }) {
   if (!trip) return <Empty />;
 
   return (
-    <div style={{ height: '100%', overflow: 'auto', position: 'relative' }}>
-      <div style={{
-        padding: isMobile ? 12 : 18,
-        display: 'grid',
-        gridTemplateColumns: isMobile ? 'minmax(0,1fr)' : 'minmax(0, 1fr) 320px',
-        gap: 18,
-      }}>
-        <main style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
-          {overBudget && (
-            <BudgetBanner
-              budgetPct={budgetPct}
-              wayOver={wayOver}
-              spent={spentToday}
-              budget={dailyBudget}
-              currency={tripCurrency}
+    <div style={{ position: 'relative', padding: '6px 6px 12px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 30 }}>
+        {overBudget && (
+          <BudgetBanner
+            budgetPct={budgetPct}
+            wayOver={wayOver}
+            spent={spentToday}
+            budget={dailyBudget}
+            currency={tripCurrency}
+          />
+        )}
+
+        <KpiRow
+          totals={totals}
+          tripCurrency={tripCurrency}
+          txnCount={transactions.length}
+        />
+
+        {error && <ErrorRow error={error} onRetry={refresh} />}
+
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', gap: 32 }}>
+          <main style={{ flex: '999 1 560px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 26 }}>
+            <FloatingAddButton onClick={() => setShowAdd(true)} />
+
+            <TxnTable
+              transactions={transactions}
+              tripCurrency={tripCurrency}
+              convertToTrip={convertToTrip}
+              onEdit={setEditingTx}
+              onDelete={onDelete}
+              loading={loading}
+              total={totals.spend}
             />
-          )}
 
-          <KpiRow
-            totals={totals}
-            tripCurrency={tripCurrency}
-            txnCount={transactions.length}
-          />
+            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 16, padding: '0 8px 8px 4px' }}>
+              <PxButton
+                onClick={() => {
+                  const csv = txnsToCSV(transactions, tripCurrency);
+                  downloadBlob(csv, `${trip.slug || 'trip'}-transactions.csv`, 'text/csv');
+                }}
+                style={{ height: 40, fontSize: 11 }}
+              >↓ EXPORT CSV</PxButton>
+              <a
+                href="#/tv4/list"
+                style={{ fontSize: 13, color: COLORS.text }}
+              >See spending patterns across all trips →</a>
+            </div>
+          </main>
 
-          {error && <ErrorRow error={error} onRetry={refresh} />}
-
-          <TxnTable
-            transactions={transactions}
-            tripCurrency={tripCurrency}
-            convertToTrip={convertToTrip}
-            onEdit={setEditingTx}
-            onDelete={onDelete}
-            loading={loading}
-          />
-
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 }}>
-            <button
-              onClick={() => {
-                const csv = txnsToCSV(transactions, tripCurrency);
-                downloadBlob(csv, `${trip.slug || 'trip'}-transactions.csv`, 'text/csv');
-              }}
-              className="mono"
-              style={{
-                background: 'transparent', border: '1px solid ' + COLORS.line,
-                borderRadius: 8, padding: '6px 12px',
-                color: COLORS.muted, cursor: 'pointer',
-                fontSize: 10, letterSpacing: '0.16em',
-              }}
-            >↓ EXPORT CSV</button>
-            <a
-              href="#/tv4/list"
-              style={{
-                fontSize: 12, color: COLORS.muted,
-                textDecoration: 'none',
-              }}
-              className="mono"
-            >See spending patterns across all trips →</a>
-          </div>
-        </main>
-
-        <aside style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <CategoryBreakdown byCat={totals.byCat} currency={tripCurrency} />
-          <CashVsCard byMethod={totals.byMethod} currency={tripCurrency} />
-          <FxCard fx={fx} baseCurrency={baseCurrency} tripCurrency={tripCurrency} onRefresh={refresh} />
-          {settings?.tripmates?.length > 0 && (
-            <Btn onClick={() => setShowSettle(true)}>SETTLE WITH TRIPMATE</Btn>
-          )}
-        </aside>
+          <aside style={{ flex: '1 1 300px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 32 }}>
+            <CategoryBreakdown byCat={totals.byCat} currency={tripCurrency} />
+            <CashVsCard byMethod={totals.byMethod} currency={tripCurrency} />
+            <FxCard fx={fx} baseCurrency={baseCurrency} tripCurrency={tripCurrency} onRefresh={refresh} />
+            {settings?.tripmates?.length > 0 && (
+              <div style={{ padding: '0 8px 8px 0' }}>
+                <PxButton onClick={() => setShowSettle(true)} style={{ height: 44 }}>SETTLE WITH TRIPMATE</PxButton>
+              </div>
+            )}
+          </aside>
+        </div>
       </div>
-
-      <FloatingAddButton onClick={() => setShowAdd(true)} />
 
       {showAdd && (
         <AddTxnModal
@@ -248,23 +237,22 @@ export default function TvExpenses({ trip }) {
 
 function Empty() {
   return (
-    <div style={{ padding: 24, color: COLORS.muted, fontSize: 12 }} className="mono">
-      ◇ no trip selected
+    <div className="px" style={{ background: COLORS.paper, margin: 6 }}>
+      <EmptyState title="NO TRIP SELECTED" hint="no trip selected — pick one from LIST" />
     </div>
   );
 }
 
 function BudgetBanner({ budgetPct, wayOver, spent, budget, currency }) {
-  const c = wayOver ? COLORS.red : COLORS.gold;
+  const c = wayOver ? '#ff7a7a' : GOLD;
   return (
-    <div style={{
-      padding: 12, borderRadius: 10,
-      background: c + '12', border: `1px solid ${c}55`,
-      color: c, fontSize: 12, display: 'flex', justifyContent: 'space-between',
-      alignItems: 'center', gap: 12,
+    <div className="pxs" role="status" style={{
+      display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', margin: '0 3px',
+      fontSize: 13, lineHeight: 1.5, color: ON, background: c,
     }}>
+      <IconWarn size={18} fill={c} />
       <span>
-        ⚠ Today's spend is at <strong>{Math.round(budgetPct)}%</strong> of daily budget
+        Today's spend is at <strong>{Math.round(budgetPct)}%</strong> of daily budget
         ({formatMoney(spent, currency)} / {formatMoney(budget, currency)})
       </span>
     </div>
@@ -273,74 +261,69 @@ function BudgetBanner({ budgetPct, wayOver, spent, budget, currency }) {
 
 function ErrorRow({ error, onRetry }) {
   return (
-    <div style={{
-      padding: 12, borderRadius: 10,
-      background: COLORS.red + '12', border: `1px solid ${COLORS.red}44`,
-      color: COLORS.red, fontSize: 12,
-    }}>
-      ◇ load error: {error} ·{' '}
-      <button onClick={onRetry} style={{
-        background: 'transparent', border: 'none', color: COLORS.red,
-        cursor: 'pointer', textDecoration: 'underline',
-      }}>retry</button>
-    </div>
+    <ErrorNote style={{ margin: '0 3px' }}>
+      load error: {error} ·{' '}
+      <button type="button" onClick={onRetry} className="sk" style={{
+        marginLeft: 4, padding: '4px 8px', fontSize: 11, color: '#fffaf0', background: '#1b1410',
+        border: 0, cursor: 'pointer',
+      }}>RETRY</button>
+    </ErrorNote>
   );
 }
 
 function KpiRow({ totals, tripCurrency, txnCount }) {
-  const isMobile = useMediaQuery('(max-width: 768px)');
   const tiles = [
-    { k: 'SPEND',  v: formatMoney(totals.spend, tripCurrency) },
+    { k: 'SPEND',  v: formatMoney(totals.spend, tripCurrency), coin: true },
     { k: 'TXNS',   v: txnCount },
     { k: 'AVG/DAY', v: formatMoney(totals.spend / Math.max(Object.keys(totals.byDay).length, 1), tripCurrency) },
     { k: 'CASH',   v: formatMoney(totals.byMethod.cash || 0, tripCurrency) },
   ];
   return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(4, minmax(0, 1fr))',
-      gap: 8,
-    }}>
+    <div className="tv-kpi" style={{ gap: 28, padding: '0 3px' }}>
       {tiles.map((t) => (
-        <div key={t.k} style={{
-          background: COLORS.panel, border: '1px solid ' + COLORS.line,
-          borderRadius: 10, padding: 12, minWidth: 0,
+        <div key={t.k} className="pxs" style={{
+          display: 'flex', flexDirection: 'column', gap: 8, padding: '16px 18px', minWidth: 0,
+          background: COLORS.paper,
         }}>
-          <div className="mono" style={{ fontSize: 9, letterSpacing: '0.18em', color: COLORS.muted }}>{t.k}</div>
-          <div className="mono" style={{
-            fontSize: 18, fontWeight: 700, marginTop: 4,
+          <span className="sk" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: COLORS.muted }}>
+            {t.coin && <PixelCoin size={16} spin />}{t.k}
+          </span>
+          <span className="pf tv-kpi-v" style={{
+            fontSize: 28, lineHeight: 1,
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-          }}>{t.v}</div>
+          }}>{t.v}</span>
         </div>
       ))}
     </div>
   );
 }
 
-function TxnTable({ transactions, tripCurrency, convertToTrip, onEdit, onDelete, loading }) {
+function TxnTable({ transactions, tripCurrency, convertToTrip, onEdit, onDelete, loading, total }) {
   if (loading && !transactions.length) {
-    return <div style={{ padding: 24, color: COLORS.muted, fontSize: 12 }} className="mono">◇ loading…</div>;
+    return <Loading label="loading transactions" />;
   }
   if (!transactions.length) {
     return (
-      <div style={{
-        padding: 32, textAlign: 'center', color: COLORS.muted, fontSize: 13,
-        border: '1px dashed ' + COLORS.line, borderRadius: 12,
-      }}>
-        No transactions yet — tap the + button to add one
+      <div className="px" style={{ background: COLORS.paper, margin: '0 8px 8px 0' }}>
+        <EmptyState
+          icon={<PixelCoin size={36} />}
+          title="NO SAVE DATA"
+          hint="No transactions yet — tap the + button to add one"
+        />
       </div>
     );
   }
   const sorted = transactions.slice().sort((a, b) => (b.date || '').localeCompare(a.date || ''));
   return (
-    <div style={{
-      background: COLORS.panel, border: '1px solid ' + COLORS.line, borderRadius: 12,
-      overflowX: 'auto', WebkitOverflowScrolling: 'touch',
+    <div className="px" style={{
+      background: COLORS.paper, overflowX: 'auto', WebkitOverflowScrolling: 'touch', margin: '0 8px 8px 0',
     }}>
-      <table style={{ width: '100%', minWidth: 560, borderCollapse: 'collapse', fontSize: 12 }}>
+      <table style={{ width: '100%', minWidth: 680, borderCollapse: 'collapse', fontSize: 13 }}>
+        <caption className="sr">Transactions for this trip</caption>
         <thead>
-          <tr style={{ borderBottom: '1px solid ' + COLORS.line }}>
-            <Th>DATE</Th><Th>CAT</Th><Th>NAME</Th><Th right>AMOUNT</Th><Th>METHOD</Th><Th>PAID BY</Th><Th />
+          <tr>
+            <Th first>DATE</Th><Th>CAT</Th><Th>NAME</Th><Th right>AMOUNT</Th><Th>METHOD</Th><Th>PAID BY</Th>
+            <Th last><span className="sr">Actions</span></Th>
           </tr>
         </thead>
         <tbody>
@@ -348,69 +331,81 @@ function TxnTable({ transactions, tripCurrency, convertToTrip, onEdit, onDelete,
             <tr
               key={t._id}
               onClick={() => onEdit(t)}
-              style={{ borderBottom: '1px solid ' + COLORS.line, cursor: 'pointer' }}
+              onKeyDown={(e) => { if (e.key === 'Enter') onEdit(t); }}
+              tabIndex={0}
+              className="tv-row"
             >
-              <Td>{t.date || '—'}</Td>
+              <Td first muted><span style={{ whiteSpace: 'nowrap' }}>{t.date || '—'}</span></Td>
               <Td>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{
-                    width: 8, height: 8, borderRadius: 999,
-                    background: CAT_COLORS[t.category] || CAT_COLORS.other,
-                  }} />
-                  {t.customCategory || t.category || 'other'}
-                </span>
+                <Tag fill={CAT_COLORS[t.category] || '#b9a2ff'}>{t.customCategory || t.category || 'other'}</Tag>
               </Td>
               <Td>{t.name || '—'}</Td>
               <Td right>
-                <span className="mono">
+                <strong>
                   {formatMoney(t.amount, t.currency || tripCurrency)}
-                </span>
+                </strong>
                 {t.currency && t.currency.toUpperCase() !== tripCurrency.toUpperCase() && (
-                  <span className="mono" style={{ display: 'block', fontSize: 10, color: COLORS.muted }}>
+                  <span style={{ display: 'block', fontSize: 11, color: COLORS.muted }}>
                     ≈ {formatMoney(convertToTrip(t.amount, t.currency), tripCurrency)}
                   </span>
                 )}
               </Td>
-              <Td>{t.method || '—'}</Td>
+              <Td><span className="sk" style={{ fontSize: 11, textTransform: 'uppercase' }}>{t.method || '—'}</span></Td>
               <Td>{t.paidBy || 'me'}</Td>
-              <Td>
-                <button
-                  onClick={(e) => { e.stopPropagation(); onDelete(t._id); }}
-                  style={{
-                    background: 'transparent', border: 'none', cursor: 'pointer',
-                    color: COLORS.muted, fontSize: 14,
-                  }}
-                >×</button>
+              <Td last>
+                <XBtn onClick={() => onDelete(t._id)} label="Delete transaction" />
               </Td>
             </tr>
           ))}
         </tbody>
+        <tfoot>
+          <tr className="sk" style={{ fontSize: 12, color: '#fffaf0', background: 'var(--strip)' }}>
+            <td colSpan={3} style={{ padding: '12px 12px 12px 18px' }}>TOTAL SPEND</td>
+            <td style={{ padding: 12, textAlign: 'right', color: GOLD, whiteSpace: 'nowrap' }}>{formatMoney(total, tripCurrency)}</td>
+            <td colSpan={3} style={{ padding: '12px 18px 12px 12px', color: '#c9bca6' }}>{transactions.length} TXNS</td>
+          </tr>
+        </tfoot>
       </table>
     </div>
   );
 }
 
-function Th({ children, right }) {
+function Th({ children, right, first, last }) {
   return (
     <th
-      className="mono"
+      className="sk"
+      scope="col"
       style={{
         textAlign: right ? 'right' : 'left',
-        padding: '10px 12px',
-        fontSize: 9, letterSpacing: '0.2em',
-        color: COLORS.muted, fontWeight: 600,
-        textTransform: 'uppercase',
+        padding: `14px ${last ? 18 : 12}px 12px ${first ? 18 : 12}px`,
+        fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap',
+        color: COLORS.muted, borderBottom: '3px dashed var(--rule)',
       }}
     >{children}</th>
   );
 }
 
-function Td({ children, right }) {
+function Td({ children, right, first, last, muted }) {
   return (
     <td style={{
-      padding: '10px 12px', textAlign: right ? 'right' : 'left',
-      color: COLORS.text, verticalAlign: 'top',
+      padding: `11px ${last ? 14 : 12}px 11px ${first ? 18 : 12}px`, textAlign: right ? 'right' : 'left',
+      color: muted ? COLORS.muted : COLORS.text, verticalAlign: 'middle',
+      borderBottom: '3px dashed var(--rule)',
     }}>{children}</td>
+  );
+}
+
+function SideCard({ title, labelId, right, children }) {
+  return (
+    <section className="px" aria-labelledby={labelId} style={{
+      background: COLORS.paper, padding: 18, display: 'flex', flexDirection: 'column', gap: 12,
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, minHeight: 28 }}>
+        <CardTitle id={labelId}>{title}</CardTitle>
+        {right}
+      </div>
+      {children}
+    </section>
   );
 }
 
@@ -418,35 +413,31 @@ function CategoryBreakdown({ byCat, currency }) {
   const entries = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
   const total = entries.reduce((s, [, v]) => s + v, 0);
   return (
-    <div style={{ background: COLORS.panel, border: '1px solid ' + COLORS.line, borderRadius: 14, padding: 16 }}>
-      <div className="mono" style={{ fontSize: 10, letterSpacing: '0.22em', color: COLORS.muted, marginBottom: 10 }}>
-        BY CATEGORY
-      </div>
-      <div style={{
-        display: 'flex', height: 8, borderRadius: 999, overflow: 'hidden',
-        background: 'rgba(245,237,224,0.06)', marginBottom: 12,
+    <SideCard title="BY CATEGORY" labelId="tv-cat-h">
+      <div aria-hidden="true" style={{
+        display: 'flex', height: 18, background: COLORS.paper, border: '3px solid var(--ink)', overflow: 'hidden',
       }}>
         {entries.length === 0 ? <div style={{ flex: 1 }} /> : entries.map(([c, v]) => (
           <div key={c} style={{
             flex: v / Math.max(total, 1),
-            background: CAT_COLORS[c] || CAT_COLORS.other,
+            background: `repeating-linear-gradient(90deg, ${CAT_COLORS[c] || '#b9a2ff'} 0 10px, transparent 10px 12px)`,
           }} />
         ))}
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {entries.length === 0 ? (
-          <div style={{ color: COLORS.muted, fontSize: 12 }}>nothing yet</div>
+          <div style={{ color: COLORS.muted, fontSize: 13 }}>nothing yet</div>
         ) : entries.map(([c, v]) => (
-          <div key={c} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11 }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 6, color: COLORS.muted }}>
-              <span style={{ width: 8, height: 8, borderRadius: 999, background: CAT_COLORS[c] || CAT_COLORS.other }} />
+          <div key={c} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, fontSize: 12 }}>
+            <span className="sk" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 10, textTransform: 'uppercase' }}>
+              <Swatch fill={CAT_COLORS[c] || '#b9a2ff'} />
               {c}
             </span>
-            <span className="mono" style={{ color: COLORS.text }}>{formatMoney(v, currency)}</span>
+            <span style={{ color: COLORS.text, fontWeight: 700 }}>{formatMoney(v, currency)}</span>
           </div>
         ))}
       </div>
-    </div>
+    </SideCard>
   );
 }
 
@@ -455,38 +446,26 @@ function CashVsCard({ byMethod, currency }) {
   const card = (byMethod.card || 0) + (byMethod.ic || 0) + (byMethod.transfer || 0);
   const total = cash + card;
   const cashPct = total ? (cash / total) * 100 : 0;
-  // Tiny SVG donut.
-  const r = 26, c = 2 * Math.PI * r;
   return (
-    <div style={{ background: COLORS.panel, border: '1px solid ' + COLORS.line, borderRadius: 14, padding: 16 }}>
-      <div className="mono" style={{ fontSize: 10, letterSpacing: '0.22em', color: COLORS.muted, marginBottom: 10 }}>
-        CASH · CARD
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-        <svg viewBox="0 0 70 70" width="70" height="70">
-          <circle cx="35" cy="35" r={r} stroke="rgba(245,237,224,0.08)" strokeWidth="8" fill="none" />
-          <circle
-            cx="35" cy="35" r={r}
-            stroke={COLORS.gold} strokeWidth="8" fill="none"
-            strokeDasharray={`${(cashPct / 100) * c} ${c}`}
-            strokeDashoffset={c / 4}
-            transform="rotate(-90 35 35)"
-          />
-        </svg>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 5, fontSize: 11 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ width: 8, height: 8, borderRadius: 999, background: COLORS.gold }} />
-            <span style={{ color: COLORS.muted }}>cash</span>
-            <span className="mono" style={{ marginLeft: 'auto', color: COLORS.text }}>{formatMoney(cash, currency)}</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ width: 8, height: 8, borderRadius: 999, background: 'rgba(245,237,224,0.3)' }} />
-            <span style={{ color: COLORS.muted }}>card+</span>
-            <span className="mono" style={{ marginLeft: 'auto', color: COLORS.text }}>{formatMoney(card, currency)}</span>
-          </div>
+    <SideCard title="CASH · CARD" labelId="tv-cash-h" right={<Label style={{ fontSize: 10 }}>CASH {Math.round(cashPct)}%</Label>}>
+      {/* Pixel split bar: cash (gold) vs card+ (hatched paper). */}
+      <span aria-hidden="true" style={{ display: 'flex', height: 18, background: COLORS.paper, border: '3px solid var(--ink)', overflow: 'hidden' }}>
+        <span style={{ width: `${cashPct}%`, background: `repeating-linear-gradient(90deg, ${GOLD} 0 10px, transparent 10px 12px)` }} />
+        <span style={{ flex: 1, background: 'repeating-linear-gradient(90deg, var(--rule) 0 10px, transparent 10px 12px)' }} />
+      </span>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Swatch fill={GOLD} />
+          <span style={{ color: COLORS.muted }}>cash</span>
+          <span style={{ marginLeft: 'auto', color: COLORS.text, fontWeight: 700 }}>{formatMoney(cash, currency)}</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Swatch fill="var(--rule)" />
+          <span style={{ color: COLORS.muted }}>card+</span>
+          <span style={{ marginLeft: 'auto', color: COLORS.text, fontWeight: 700 }}>{formatMoney(card, currency)}</span>
         </div>
       </div>
-    </div>
+    </SideCard>
   );
 }
 
@@ -495,52 +474,44 @@ function FxCard({ fx, baseCurrency, tripCurrency, onRefresh }) {
   const rates = fx?.rates || {};
   const tripRate = rates[tripCurrency?.toUpperCase()];
   return (
-    <div style={{ background: COLORS.panel, border: '1px solid ' + COLORS.line, borderRadius: 14, padding: 16 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-        <div className="mono" style={{ fontSize: 10, letterSpacing: '0.22em', color: COLORS.muted }}>
-          FX · {baseCurrency} BASE
-        </div>
-        <button
-          onClick={onRefresh}
-          style={{
-            background: 'transparent', border: 'none', color: COLORS.muted,
-            cursor: 'pointer', fontSize: 11, fontFamily: 'JetBrains Mono, monospace',
-          }}
-        >↻</button>
-      </div>
-      <div style={{ fontSize: 12, color: COLORS.text }}>
+    <SideCard
+      title={`FX · ${baseCurrency} BASE`}
+      labelId="tv-fx-h"
+      right={<button type="button" onClick={onRefresh} className="tv-x" aria-label="Refresh rates" title="Refresh rates"><IconRefresh size={16} /></button>}
+    >
+      <div style={{ fontSize: 13, color: COLORS.text }}>
         {tripRate ? (
-          <>
-            1 {baseCurrency} = <strong>{tripRate.toFixed(tripRate < 1 ? 4 : 2)}</strong> {tripCurrency}
-          </>
+          <span className="pf" style={{ fontSize: 22 }}>
+            1 {baseCurrency} = {tripRate.toFixed(tripRate < 1 ? 4 : 2)} {tripCurrency}
+          </span>
         ) : (
           <span style={{ color: COLORS.muted }}>
             {tripCurrency} not in snapshot
           </span>
         )}
       </div>
-      <div className="mono" style={{ marginTop: 6, fontSize: 10, color: COLORS.muted, letterSpacing: '0.12em' }}>
+      <Label style={{ fontSize: 10 }}>
         snapshot {date} · {fx?.source ? 'live' : '—'}
-      </div>
-    </div>
+      </Label>
+    </SideCard>
   );
 }
 
+// Add-transaction call to action (was a floating + button).
 function FloatingAddButton({ onClick }) {
   return (
-    <button
-      onClick={onClick}
-      title="Add transaction"
-      style={{
-        position: 'fixed', bottom: 24, right: 24,
-        width: 56, height: 56, borderRadius: 999,
-        background: COLORS.gold, color: COLORS.bg,
-        border: 'none', cursor: 'pointer',
-        fontSize: 28, lineHeight: 1, fontWeight: 700,
-        boxShadow: '0 6px 18px rgba(0,0,0,0.4)',
-        zIndex: 60,
-      }}
-    >+</button>
+    <div className="px" style={{
+      display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '14px 22px',
+      padding: '16px 22px 20px 18px', background: COLORS.paper,
+    }}>
+      <div style={{ flex: '1 1 260px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <Label style={{ fontSize: 11 }}>QUICK ADD · TRY 'RAMEN 1280' OR 'TAXI 18 USD'</Label>
+        <span style={{ fontSize: 13, color: COLORS.muted }}>Log a spend in one line, or switch to manual for every field.</span>
+      </div>
+      <PxButton kind="big" fill="#ff7a7a" onClick={onClick} title="Add transaction" style={{ minHeight: 46, fontSize: 13 }}>
+        + ADD TRANSACTION
+      </PxButton>
+    </div>
   );
 }
 
@@ -662,131 +633,105 @@ function TxnModal({ title, initial, tripId, tripCurrency, editingId, allCategori
   }, [tx, tripId, tripCurrency, editingId, onSaved]);
 
   return (
-    <div role="dialog" onClick={onClose} style={modalBackdrop}>
-      <form onClick={(e) => e.stopPropagation()} onSubmit={onSubmit} style={modalCard}>
-        <header style={modalHeader}>
-          <div>
-            <div className="mono" style={{ fontSize: 10, letterSpacing: '0.22em', color: COLORS.gold }}>
-              {editingId ? 'EDIT' : 'NEW'}
-            </div>
-            <div style={{ fontSize: 18, fontWeight: 700, marginTop: 2 }}>{title}</div>
-          </div>
-          <button onClick={onClose} type="button" style={modalClose}>×</button>
-        </header>
+    <PxDialog
+      as="form"
+      onSubmit={onSubmit}
+      onClose={onClose}
+      kicker={editingId ? 'EDIT' : 'NEW'}
+      title={title}
+      footer={<>
+        <PxButton type="button" onClick={onClose} style={{ height: 44 }}>CANCEL</PxButton>
+        <PxButton type="submit" fill={GOLD} disabled={submitting} style={{ height: 44 }}>
+          {submitting ? '…' : editingId ? 'SAVE' : 'ADD'}
+        </PxButton>
+      </>}
+    >
+      {!editingId && (
+        <Seg
+          ariaLabel="Entry mode"
+          options={[{ id: 'quick', label: 'QUICK' }, { id: 'manual', label: 'MANUAL' }]}
+          value={mode}
+          onChange={setMode}
+          style={{ alignSelf: 'flex-start', marginLeft: 3 }}
+        />
+      )}
 
-        {!editingId && (
-          <div style={{ display: 'flex', gap: 6, padding: '14px 22px 0' }}>
-            {['quick', 'manual'].map((m) => {
-              const on = mode === m;
-              return (
-                <button
-                  key={m}
-                  type="button"
-                  onClick={() => setMode(m)}
-                  className="mono"
-                  style={{
-                    padding: '5px 12px', borderRadius: 999,
-                    border: '1px solid ' + (on ? COLORS.gold + '80' : COLORS.line),
-                    background: on ? COLORS.gold + '14' : 'transparent',
-                    color: on ? COLORS.gold : COLORS.muted,
-                    fontSize: 10, letterSpacing: '0.18em', cursor: 'pointer',
-                  }}
-                >{m.toUpperCase()}</button>
-              );
-            })}
+      {mode === 'quick' && !editingId && (
+        <Row label="Try: 'ramen 1280' or 'taxi 18 USD'">
+          <Field
+            value={quick}
+            onChange={setQuick}
+            placeholder="ramen 1280"
+            autoFocus
+            style={fieldStyle}
+            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); onQuickParse(); } }}
+          />
+          <div style={{ marginTop: 8, display: 'flex', gap: 8, padding: '0 8px 8px 0' }}>
+            <PxButton type="button" onClick={onQuickParse} fill={GOLD} style={{ height: 40 }}>PARSE →</PxButton>
           </div>
-        )}
+        </Row>
+      )}
 
-        <div style={{ padding: 22, display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {mode === 'quick' && !editingId && (
-            <Row label="Try: 'ramen 1280' or 'taxi 18 USD'">
-              <Field
-                value={quick}
-                onChange={setQuick}
-                placeholder="ramen 1280"
-                autoFocus
-                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); onQuickParse(); } }}
+      {mode === 'manual' && (
+        <>
+          <div className="tv-g2" style={{ gap: 18 }}>
+            <Row label="Date">
+              <Field type="date" value={tx.date} onChange={(v) => setTx((t) => ({ ...t, date: v }))} style={fieldStyle} />
+            </Row>
+            <Row label="Category">
+              <Select
+                value={tx.category}
+                onChange={(v) => setTx((t) => ({ ...t, category: v }))}
+                options={allCategories.map((c) => ({ v: c, l: c }))}
               />
-              <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
-                <Btn type="button" onClick={onQuickParse} variant="tinted" color={COLORS.gold}>Parse →</Btn>
-              </div>
+            </Row>
+          </div>
+          <Row label="Name / description">
+            <Field value={tx.name} onChange={(v) => setTx((t) => ({ ...t, name: v }))} placeholder="Ichiran Shibuya" mono={false} style={fieldStyle} />
+          </Row>
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr)', gap: 18 }}>
+            <Row label="Amount">
+              <Field type="number" value={tx.amount} onChange={(v) => setTx((t) => ({ ...t, amount: v }))} placeholder="1280" style={fieldStyle} />
+            </Row>
+            <Row label="Currency">
+              <Field value={tx.currency} onChange={(v) => setTx((t) => ({ ...t, currency: v.toUpperCase() }))} placeholder="JPY" style={fieldStyle} />
+            </Row>
+          </div>
+          <div className="tv-g2" style={{ gap: 18 }}>
+            <Row label="Method">
+              <Select
+                value={tx.method}
+                onChange={(v) => setTx((t) => ({ ...t, method: v }))}
+                options={METHODS.map((m) => ({ v: m, l: m }))}
+              />
+            </Row>
+            <Row label="Paid by">
+              <Select
+                value={tx.paidBy}
+                onChange={(v) => setTx((t) => ({ ...t, paidBy: v }))}
+                options={[{ v: 'me', l: 'me' }, ...tripmates.map((m) => ({ v: m.id, l: m.name }))]}
+              />
+            </Row>
+          </div>
+          <Row label="Notes">
+            <Field value={tx.notes} onChange={(v) => setTx((t) => ({ ...t, notes: v }))} placeholder="optional" mono={false} style={fieldStyle} />
+          </Row>
+          {!editingId && (
+            <Row label="Repeat for N days (optional)">
+              <Field
+                type="number"
+                value={tx.recurringCount || ''}
+                onChange={(v) => setTx((t) => ({ ...t, recurringCount: v }))}
+                placeholder="e.g. 7 for a weekly metro pass"
+                style={fieldStyle}
+              />
             </Row>
           )}
+        </>
+      )}
 
-          {mode === 'manual' && (
-            <>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                <Row label="Date">
-                  <Field type="date" value={tx.date} onChange={(v) => setTx((t) => ({ ...t, date: v }))} />
-                </Row>
-                <Row label="Category">
-                  <Select
-                    value={tx.category}
-                    onChange={(v) => setTx((t) => ({ ...t, category: v }))}
-                    options={allCategories.map((c) => ({ v: c, l: c }))}
-                  />
-                </Row>
-              </div>
-              <Row label="Name / description">
-                <Field value={tx.name} onChange={(v) => setTx((t) => ({ ...t, name: v }))} placeholder="Ichiran Shibuya" mono={false} />
-              </Row>
-              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 10 }}>
-                <Row label="Amount">
-                  <Field type="number" value={tx.amount} onChange={(v) => setTx((t) => ({ ...t, amount: v }))} placeholder="1280" />
-                </Row>
-                <Row label="Currency">
-                  <Field value={tx.currency} onChange={(v) => setTx((t) => ({ ...t, currency: v.toUpperCase() }))} placeholder="JPY" />
-                </Row>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                <Row label="Method">
-                  <Select
-                    value={tx.method}
-                    onChange={(v) => setTx((t) => ({ ...t, method: v }))}
-                    options={METHODS.map((m) => ({ v: m, l: m }))}
-                  />
-                </Row>
-                <Row label="Paid by">
-                  <Select
-                    value={tx.paidBy}
-                    onChange={(v) => setTx((t) => ({ ...t, paidBy: v }))}
-                    options={[{ v: 'me', l: 'me' }, ...tripmates.map((m) => ({ v: m.id, l: m.name }))]}
-                  />
-                </Row>
-              </div>
-              <Row label="Notes">
-                <Field value={tx.notes} onChange={(v) => setTx((t) => ({ ...t, notes: v }))} placeholder="optional" mono={false} />
-              </Row>
-              {!editingId && (
-                <Row label="Repeat for N days (optional)">
-                  <Field
-                    type="number"
-                    value={tx.recurringCount || ''}
-                    onChange={(v) => setTx((t) => ({ ...t, recurringCount: v }))}
-                    placeholder="e.g. 7 for a weekly metro pass"
-                  />
-                </Row>
-              )}
-            </>
-          )}
-
-          {error && (
-            <div style={{
-              padding: 10, borderRadius: 8,
-              background: COLORS.red + '12', border: `1px solid ${COLORS.red}44`,
-              color: COLORS.red, fontSize: 12,
-            }}>{error}</div>
-          )}
-        </div>
-
-        <footer style={modalFooter}>
-          <Btn onClick={onClose} type="button">Cancel</Btn>
-          <Btn type="submit" variant="solid" color={COLORS.gold} disabled={submitting}>
-            {submitting ? '…' : editingId ? 'Save' : 'Add'}
-          </Btn>
-        </footer>
-      </form>
-    </div>
+      {error && <ErrorNote>{error}</ErrorNote>}
+    </PxDialog>
   );
 }
 
@@ -811,71 +756,45 @@ function SettleModal({ tripmates, transactions, convertToTrip, tripCurrency, onC
   }, [tripmates, transactions, convertToTrip]);
 
   return (
-    <div role="dialog" onClick={onClose} style={modalBackdrop}>
-      <div onClick={(e) => e.stopPropagation()} style={modalCard}>
-        <header style={modalHeader}>
-          <div>
-            <div className="mono" style={{ fontSize: 10, letterSpacing: '0.22em', color: COLORS.gold }}>SETTLE</div>
-            <div style={{ fontSize: 18, fontWeight: 700, marginTop: 2 }}>Who owes whom</div>
-          </div>
-          <button onClick={onClose} type="button" style={modalClose}>×</button>
-        </header>
-        <div style={{ padding: 22, display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {breakdown.map((b) => (
-            <div key={b.id} style={{
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              padding: '8px 12px', borderRadius: 8,
-              background: 'rgba(245,237,224,0.04)', border: '1px solid ' + COLORS.line,
+    <PxDialog
+      onClose={onClose}
+      kicker="SETTLE"
+      title="Who owes whom"
+      footer={<PxButton type="button" onClick={onClose} style={{ height: 44 }}>CLOSE</PxButton>}
+    >
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {breakdown.map((b) => (
+          <div key={b.id} style={{
+            display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '6px 14px',
+            padding: '10px 12px', background: COLORS.field, border: '3px solid var(--ink)',
+          }}>
+            <span style={{ fontSize: 14, fontWeight: 700 }}>{b.name}</span>
+            <span style={{ fontSize: 12, color: COLORS.muted }}>
+              paid {formatMoney(b.paid, tripCurrency)}
+            </span>
+            <span className="sk" style={{
+              fontSize: 12,
+              color: b.owes > 0 ? 'var(--tv-red-ink)' : 'var(--green-ink)',
             }}>
-              <span style={{ fontSize: 13 }}>{b.name}</span>
-              <span className="mono" style={{ fontSize: 12, color: COLORS.muted }}>
-                paid {formatMoney(b.paid, tripCurrency)}
-              </span>
-              <span className="mono" style={{
-                fontSize: 13, fontWeight: 700,
-                color: b.owes > 0 ? COLORS.red : COLORS.green,
-              }}>
-                {b.owes > 0 ? `owes ${formatMoney(b.owes, tripCurrency)}` : `+${formatMoney(-b.owes, tripCurrency)}`}
-              </span>
-            </div>
-          ))}
-          <div className="mono" style={{ fontSize: 10, color: COLORS.muted, marginTop: 4, letterSpacing: '0.12em' }}>
-            ◇ V0.4 = aggregate paid-by netting · no per-tx split
+              {b.owes > 0 ? `owes ${formatMoney(b.owes, tripCurrency)}` : `+${formatMoney(-b.owes, tripCurrency)}`}
+            </span>
           </div>
-        </div>
-        <footer style={modalFooter}>
-          <Btn onClick={onClose} type="button">Close</Btn>
-        </footer>
+        ))}
       </div>
-    </div>
+      <Label as="p" style={{ margin: 0, fontSize: 10 }}>
+        V0.4 = aggregate paid-by netting · no per-tx split
+      </Label>
+    </PxDialog>
   );
 }
 
 // ─── Shared form helpers ────────────────────────────────────────
 function Row({ label, children }) {
-  return (
-    <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <span className="mono" style={{ fontSize: 9, letterSpacing: '0.2em', color: COLORS.muted, textTransform: 'uppercase' }}>{label}</span>
-      {children}
-    </label>
-  );
+  return <FormRow label={label}>{children}</FormRow>;
 }
 
 function Select({ value, onChange, options }) {
-  return (
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="mono"
-      style={{
-        background: COLORS.bg, border: '1px solid ' + COLORS.line,
-        borderRadius: 10, padding: '11px 14px',
-        color: COLORS.text, fontSize: 13,
-      }}
-    >
-      {options.map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}
-    </select>
-  );
+  return <PxSelect value={value} onChange={onChange} options={options} />;
 }
 
 function formatMoney(amount, currency) {
@@ -890,29 +809,3 @@ function formatMoney(amount, currency) {
     return `${code} ${Math.round(amount).toLocaleString()}`;
   }
 }
-
-// ─── Modal styling primitives ──────────────────────────────────
-const modalBackdrop = {
-  position: 'fixed', inset: 0, zIndex: 1000,
-  background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)',
-  display: 'flex', alignItems: 'center', justifyContent: 'center',
-  padding: 24,
-};
-const modalCard = {
-  background: COLORS.panel, border: '1px solid ' + COLORS.line,
-  borderRadius: 14, width: 560, maxWidth: '100%', maxHeight: '90vh',
-  overflow: 'auto', color: COLORS.text,
-  display: 'flex', flexDirection: 'column',
-};
-const modalHeader = {
-  padding: '18px 22px', borderBottom: '1px solid ' + COLORS.line,
-  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-};
-const modalClose = {
-  background: 'transparent', border: 'none', cursor: 'pointer',
-  color: COLORS.muted, fontSize: 22, lineHeight: 1, padding: 4,
-};
-const modalFooter = {
-  padding: '14px 22px', borderTop: '1px solid ' + COLORS.line,
-  display: 'flex', gap: 8, justifyContent: 'flex-end',
-};

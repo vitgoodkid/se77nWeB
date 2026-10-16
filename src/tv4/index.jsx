@@ -4,6 +4,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { COLORS, useAuth } from '../lib.jsx';
+import { DialogBox, PixelCoin } from '../ui/arcade.jsx';
 import { tv4 } from './api.js';
 import TvMap from './TvMap.jsx';
 import TvList from './TvList.jsx';
@@ -11,6 +12,8 @@ import TvFolder from './TvFolder.jsx';
 import TvPlan from './TvPlan.jsx';
 import TvExpenses from './TvExpenses.jsx';
 import TvSettings from './TvSettings.jsx';
+import { IconGear, Loading, PixelFlag, Swatch, statusFill } from './kit.jsx';
+import './tv4.arcade.css';
 
 const TABS = [
   { id: 'map',      label: 'MAP',      num: '01' },
@@ -108,11 +111,11 @@ export function TravelV4() {
     return <SignedOutPanel />;
   }
   if (!authReady) {
-    return <LoadingPanel label="◇ checking session…" />;
+    return <LoadingPanel label="checking session" />;
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', position: 'relative' }}>
+    <div className="tv4" style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, position: 'relative' }}>
       <TabBar
         view={view}
         activeTrip={activeTrip}
@@ -120,7 +123,8 @@ export function TravelV4() {
         onOpenSettings={() => setShowSettings(true)}
       />
 
-      <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
+      {/* One scroll area for every tab; padding keeps pixel rings + drops unclipped. */}
+      <div className="tv-scroll" style={{ flex: 1, minHeight: 0, overflow: 'auto', position: 'relative' }}>
         {view === 'map' && (
           <TvMap trips={trips} onOpenTrip={(t) => nav('folder', t.slug)} onRefreshTrips={refreshTrips} />
         )}
@@ -163,92 +167,91 @@ export function TravelV4() {
   );
 }
 
+// Pixel segmented tabs (01 MAP … 05 EXPENSES) + active trip chip + settings.
 function TabBar({ view, activeTrip, onSelect, onOpenSettings }) {
   return (
     <div style={{
-      display: 'flex', alignItems: 'center', gap: 4,
-      padding: '10px 16px',
-      borderBottom: '1px solid ' + COLORS.line, flexShrink: 0,
+      display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '12px 20px',
+      padding: '4px 4px 18px', marginBottom: 14, borderBottom: '3px dashed var(--rule)', flexShrink: 0,
     }}>
-      {TABS.map(({ id, label, num, needsTrip }) => {
-        const on = view === id;
-        const disabled = needsTrip && !activeTrip;
-        return (
-          <button
-            key={id}
-            onClick={() => !disabled && onSelect(id)}
-            disabled={disabled}
-            className="mono"
-            title={disabled ? 'Select a trip first' : ''}
-            style={{
-              padding: '6px 13px', borderRadius: 999,
-              cursor: disabled ? 'not-allowed' : 'pointer',
-              fontSize: 10, letterSpacing: '0.18em',
-              background: on ? COLORS.gold + '1f' : 'transparent',
-              border: `1px solid ${on ? COLORS.gold + '80' : COLORS.line}`,
-              color: on ? COLORS.gold : disabled ? COLORS.dim || 'rgba(245,237,224,0.28)' : COLORS.muted,
-              display: 'flex', alignItems: 'center', gap: 7,
-              opacity: disabled ? 0.4 : 1,
-            }}
-          >
-            <span style={{ opacity: 0.55 }}>{num}</span>{label}
-          </button>
-        );
-      })}
-
-      {activeTrip && (
-        <div style={{
-          marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8,
-          fontSize: 11, color: COLORS.muted, fontFamily: 'JetBrains Mono, monospace',
-        }}>
-          <span style={{
-            width: 7, height: 7, borderRadius: 999,
-            background: statusColor(activeTrip.status), flexShrink: 0,
-          }} />
-          {activeTrip.title} · {activeTrip.country || '—'}
+      <nav aria-label="Travel views" style={{ flex: '1 1 auto', minWidth: 0, overflowX: 'auto' }}>
+        <div style={{ display: 'flex', gap: 14, padding: '4px 4px 6px', width: 'max-content' }}>
+          {TABS.map(({ id, label, num, needsTrip }) => {
+            const on = view === id;
+            const disabled = needsTrip && !activeTrip;
+            return (
+              <button
+                key={id}
+                type="button"
+                onClick={() => !disabled && onSelect(id)}
+                disabled={disabled}
+                aria-pressed={on}
+                aria-current={on ? 'page' : undefined}
+                className="chip-px sk"
+                title={disabled ? 'Select a trip first' : ''}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 8, height: 44, padding: '0 14px', fontSize: 12 }}
+              >
+                <span className="tv-tn">{num}</span>{label}
+              </button>
+            );
+          })}
         </div>
-      )}
+      </nav>
 
-      <button
-        onClick={onOpenSettings}
-        title="Settings"
-        style={{
-          marginLeft: activeTrip ? 12 : 'auto',
-          width: 28, height: 28, borderRadius: 999,
-          background: 'transparent', border: '1px solid ' + COLORS.line,
-          color: COLORS.muted, cursor: 'pointer',
-          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 14,
-        }}
-      >
-        ⚙
-      </button>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginLeft: 'auto', padding: '0 8px 6px 4px', minWidth: 0 }}>
+        {activeTrip && (
+          <span title="Active trip" style={{
+            display: 'flex', alignItems: 'center', gap: 8, minWidth: 0,
+            fontSize: 12, color: COLORS.muted,
+          }}>
+            <Swatch fill={statusFill(activeTrip.status)} size={12} />
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 260 }}>
+              <span style={{ color: COLORS.text, fontWeight: 700 }}>{activeTrip.title}</span> · {activeTrip.country || '—'}
+            </span>
+          </span>
+        )}
+
+        <button
+          type="button"
+          onClick={onOpenSettings}
+          title="Settings"
+          className="sk sbtn"
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 10, flexShrink: 0,
+            height: 44, padding: '0 14px', fontSize: 12, color: COLORS.text, background: COLORS.paper,
+          }}
+        >
+          <IconGear size={18} />SETTINGS
+        </button>
+      </div>
     </div>
   );
 }
 
-function statusColor(status) {
-  if (status === 'visited') return COLORS.green;
-  if (status === 'ongoing') return COLORS.gold;
-  if (status === 'planned') return COLORS.red;
-  return COLORS.muted;
-}
-
 function SignedOutPanel() {
   return (
-    <div style={{
-      padding: 64, display: 'flex', flexDirection: 'column', alignItems: 'center',
-      gap: 16, color: COLORS.muted,
-    }}>
-      <div className="mono" style={{
-        fontSize: 11, letterSpacing: '0.22em', color: COLORS.gold,
-      }}>SE77N · TRAVEL</div>
-      <div style={{ fontSize: 18, color: COLORS.text, fontWeight: 700 }}>
-        Sign in to use Travel
-      </div>
-      <div style={{ fontSize: 13, maxWidth: 360, textAlign: 'center', lineHeight: 1.5 }}>
-        Your trips, plans, and expenses sync to MongoDB.
-        Sign in from the top-right of the app.
+    <div className="tv4" style={{ display: 'flex', justifyContent: 'center', padding: '36px 12px 48px' }}>
+      <div style={{ width: '100%', maxWidth: 560 }}>
+        <DialogBox speaker="SE77N · TRAVEL">
+          <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+            <span className="pxs" style={{
+              display: 'grid', placeItems: 'center', flexShrink: 0, width: 64, height: 64, background: '#9fd8ff',
+            }}>
+              <PixelFlag size={30} fill="#ffd25e" />
+            </span>
+            <div style={{ flex: '1 1 260px', minWidth: 0 }}>
+              <p className="sk" style={{ margin: '0 0 8px', fontSize: 11, color: COLORS.muted }}>PLAYER 1 · PRESS START</p>
+              <h2 className="pf" style={{ margin: 0, fontSize: 26, lineHeight: 1.1 }}>Sign in to use Travel</h2>
+              <p style={{ margin: '12px 0 0', fontSize: 13, lineHeight: 1.6, color: COLORS.muted }}>
+                Your trips, plans, and expenses sync to MongoDB.
+                Sign in from the top-right of the app.
+              </p>
+              <p className="sk" style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '16px 0 0', fontSize: 11 }}>
+                <PixelCoin size={16} spin /> INSERT COIN TO CONTINUE
+              </p>
+            </div>
+          </div>
+        </DialogBox>
       </div>
     </div>
   );
@@ -256,8 +259,8 @@ function SignedOutPanel() {
 
 function LoadingPanel({ label }) {
   return (
-    <div className="mono" style={{ padding: 40, color: COLORS.muted, fontSize: 12 }}>
-      {label}
+    <div className="tv4" style={{ padding: '28px 12px' }}>
+      <Loading label={label} />
     </div>
   );
 }

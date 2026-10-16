@@ -1,16 +1,22 @@
-// 04 PLAN · per-trip kanban day-by-day + checklist + reservations + budget.
+// 04 PLAN · per-trip day-by-day stage path + checklist + reservations + budget.
 // Drag-reorder and Google Places "suggest" punted to v0.5; v1 has inline add + modal edit.
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { COLORS, Btn, Field, useMediaQuery } from '../lib.jsx';
+import { COLORS, Field } from '../lib.jsx';
+import { PxButton } from '../ui/arcade.jsx';
 import { tv4 } from './api.js';
 import { tripToICS, downloadBlob, createShareLink } from './exports.js';
+import {
+  GOLD, ON, PIN_FILL,
+  CardTitle, Chk, Empty as EmptyState, ErrorNote, FormRow, GoalFlag, IconCheck, IconCopy, IconHourglass, Label, Loading,
+  PxDialog, PxSelect, Seg, Tag, XBtn, fieldStyle,
+} from './kit.jsx';
 
 const TYPES = [
-  { id: 'see',   label: 'SEE',   color: COLORS.green },
-  { id: 'eat',   label: 'EAT',   color: COLORS.gold },
-  { id: 'move',  label: 'MOVE',  color: COLORS.red },
-  { id: 'stay',  label: 'STAY',  color: '#9bb4ff' },
-  { id: 'other', label: 'OTHER', color: COLORS.muted },
+  { id: 'see',   label: 'SEE',   color: PIN_FILL.see },
+  { id: 'eat',   label: 'EAT',   color: PIN_FILL.eat },
+  { id: 'move',  label: 'MOVE',  color: PIN_FILL.move },
+  { id: 'stay',  label: 'STAY',  color: PIN_FILL.stay },
+  { id: 'other', label: 'OTHER', color: PIN_FILL.other },
 ];
 const STATUS = ['planned', 'done', 'skipped'];
 const RES_TYPES = ['flight', 'hotel', 'restaurant', 'other'];
@@ -43,7 +49,6 @@ function daysToTrip(trip) {
 }
 
 export default function TvPlan({ trip, onTripUpdate }) {
-  const isMobile = useMediaQuery('(max-width: 768px)');
   const [items, setItems] = useState([]);
   const [checklist, setChecklist] = useState([]);
   const [reservations, setReservations] = useState([]);
@@ -200,10 +205,10 @@ export default function TvPlan({ trip, onTripUpdate }) {
   if (!trip) return <Empty />;
 
   return (
-    <div style={{ height: '100%', overflow: 'auto' }}>
-      <div style={{ padding: 18, display: 'flex', flexDirection: 'column', gap: 14 }}>
+    <div style={{ padding: '6px 6px 12px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 30 }}>
         {daysLeft !== null && daysLeft > 0 && daysLeft <= 30 && (
-          <CountdownBanner daysLeft={daysLeft} checklist={checklist} />
+          <CountdownBanner daysLeft={daysLeft} checklist={checklist} items={items} />
         )}
 
         <Toolbar
@@ -213,40 +218,38 @@ export default function TvPlan({ trip, onTripUpdate }) {
           onShare={onShare}
         />
 
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'minmax(0,1fr)' : 'minmax(0, 1fr) 320px', gap: 18 }}>
-          <main style={{ minWidth: 0 }}>
-            {loading && !items.length ? (
-              <div style={{ padding: 24, color: COLORS.muted, fontSize: 12 }} className="mono">◇ loading…</div>
-            ) : viewMode === 'kanban' ? (
-              <Kanban
-                trip={trip} days={days} itemsByDay={itemsByDay}
-                onAddItem={onAddItem} onEditItem={setEditingItem}
-                onDeleteItem={onDeleteItem} onToggleStatus={onToggleStatus}
-              />
-            ) : viewMode === 'timeline' ? (
-              <Timeline trip={trip} days={days} itemsByDay={itemsByDay} onEditItem={setEditingItem} />
-            ) : (
-              <FlatList trip={trip} days={days} itemsByDay={itemsByDay} onEditItem={setEditingItem} />
-            )}
-          </main>
+        <main style={{ minWidth: 0 }}>
+          {loading && !items.length ? (
+            <Loading label="loading plan" />
+          ) : viewMode === 'kanban' ? (
+            <Kanban
+              trip={trip} days={days} itemsByDay={itemsByDay}
+              onAddItem={onAddItem} onEditItem={setEditingItem}
+              onDeleteItem={onDeleteItem} onToggleStatus={onToggleStatus}
+            />
+          ) : viewMode === 'timeline' ? (
+            <Timeline trip={trip} days={days} itemsByDay={itemsByDay} onEditItem={setEditingItem} />
+          ) : (
+            <FlatList trip={trip} days={days} itemsByDay={itemsByDay} onEditItem={setEditingItem} />
+          )}
+        </main>
 
-          <aside style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <ChecklistCard
-              checklist={checklist}
-              onToggle={onToggleCheck}
-              onRemove={onRemoveCheck}
-              onAdd={onAddCheck}
-            />
-            <ReservationsCard
-              reservations={reservations}
-              onAdd={() => { setEditingReservation(null); setShowReservationModal(true); }}
-              onEdit={(r) => { setEditingReservation(r); setShowReservationModal(true); }}
-              onRemove={onRemoveReservation}
-            />
-            <BudgetCard trip={trip} totalEst={totalEst} />
-            <TemplateCard trip={trip} items={items} checklist={checklist} />
-          </aside>
-        </div>
+        <aside className="tv-g4" style={{ gap: '32px 28px', alignItems: 'stretch' }}>
+          <ChecklistCard
+            checklist={checklist}
+            onToggle={onToggleCheck}
+            onRemove={onRemoveCheck}
+            onAdd={onAddCheck}
+          />
+          <ReservationsCard
+            reservations={reservations}
+            onAdd={() => { setEditingReservation(null); setShowReservationModal(true); }}
+            onEdit={(r) => { setEditingReservation(r); setShowReservationModal(true); }}
+            onRemove={onRemoveReservation}
+          />
+          <BudgetCard trip={trip} totalEst={totalEst} />
+          <TemplateCard trip={trip} items={items} checklist={checklist} />
+        </aside>
       </div>
 
       {editingItem && (
@@ -276,175 +279,178 @@ export default function TvPlan({ trip, onTripUpdate }) {
 
 function ShareModal({ state, onClose }) {
   return (
-    <div role="dialog" onClick={onClose} style={modalBackdrop}>
-      <div onClick={(e) => e.stopPropagation()} style={{ ...modalCard, width: 480 }}>
-        <header style={modalHeader}>
-          <div>
-            <div className="mono" style={{ fontSize: 10, letterSpacing: '0.22em', color: COLORS.gold }}>SHARE</div>
-            <div style={{ fontSize: 17, fontWeight: 700, marginTop: 4 }}>Read-only link</div>
+    <PxDialog
+      onClose={onClose}
+      width={500}
+      kicker="SHARE · READ-ONLY LINK"
+      title="Read-only link"
+      footer={<PxButton onClick={onClose} style={{ height: 44 }}>DONE</PxButton>}
+    >
+      {state.loading && <Loading label="creating snapshot" />}
+      {state.error && <ErrorNote>{state.error}</ErrorNote>}
+      {state.url && (
+        <>
+          <p style={{ fontSize: 14, lineHeight: 1.6, color: COLORS.muted, margin: 0 }}>
+            Anyone with this URL can view a read-only snapshot. Expires in 30 days.
+          </p>
+          <label className="sr" htmlFor="tv-share-url-plan">Share link</label>
+          <input
+            id="tv-share-url-plan"
+            readOnly
+            value={state.url}
+            onFocus={(e) => e.target.select()}
+            className="mono field"
+            style={{ ...fieldStyle, fontSize: 13 }}
+          />
+          <div style={{ padding: '0 8px 8px 0' }}>
+            <PxButton onClick={() => navigator.clipboard?.writeText(state.url)} fill={GOLD} style={{ height: 44 }}>
+              COPY LINK
+            </PxButton>
           </div>
-          <button onClick={onClose} style={modalClose}>×</button>
-        </header>
-        <div style={{ padding: 22, display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {state.loading && <div className="mono" style={{ color: COLORS.muted, fontSize: 12 }}>◇ creating snapshot…</div>}
-          {state.error && (
-            <div style={{
-              padding: 10, borderRadius: 8,
-              background: COLORS.red + '12', border: `1px solid ${COLORS.red}44`,
-              color: COLORS.red, fontSize: 12,
-            }}>{state.error}</div>
-          )}
-          {state.url && (
-            <>
-              <p style={{ fontSize: 13, color: COLORS.muted, margin: 0 }}>
-                Anyone with this URL can view a read-only snapshot. Expires in 30 days.
-              </p>
-              <input
-                readOnly
-                value={state.url}
-                onFocus={(e) => e.target.select()}
-                style={{
-                  background: COLORS.bg, border: '1px solid ' + COLORS.line,
-                  borderRadius: 8, padding: '10px 12px',
-                  color: COLORS.text, fontSize: 12, fontFamily: 'JetBrains Mono, monospace',
-                }}
-              />
-              <Btn onClick={() => navigator.clipboard?.writeText(state.url)} variant="tinted" color={COLORS.gold}>
-                Copy link
-              </Btn>
-            </>
-          )}
-        </div>
-        <footer style={modalFooter}>
-          <Btn onClick={onClose}>Done</Btn>
-        </footer>
-      </div>
-    </div>
+        </>
+      )}
+    </PxDialog>
   );
 }
 
 function Empty() {
   return (
-    <div style={{ padding: 24, color: COLORS.muted, fontSize: 12 }} className="mono">◇ no trip selected</div>
+    <div className="px" style={{ background: COLORS.paper, margin: 6 }}>
+      <EmptyBox title="NO TRIP SELECTED" hint="no trip selected — pick one from LIST" />
+    </div>
   );
 }
 
-function CountdownBanner({ daysLeft, checklist }) {
+// Gold countdown strip with the stage-clear progress bar.
+function CountdownBanner({ daysLeft, checklist, items }) {
   const todo = checklist.filter((c) => !c.done).length;
+  const doneStops = items.filter((it) => it.status === 'done').length;
+  const pct = items.length ? (doneStops / items.length) * 100 : 0;
   return (
-    <div style={{
-      padding: 12, borderRadius: 10,
-      background: COLORS.gold + '12', border: `1px solid ${COLORS.gold}55`,
-      color: COLORS.gold, fontSize: 12,
-      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+    <div className="pxs" role="status" style={{
+      display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '12px 28px',
+      padding: '14px 18px', margin: '0 3px', color: ON, background: GOLD,
     }}>
-      <span><strong>{daysLeft}</strong> days to go {todo > 0 && `· ${todo} checklist items left`}</span>
+      <span className="sk" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, fontSize: 13 }}>
+        <IconHourglass size={16} />
+        <span><strong>{daysLeft}</strong> days to go {todo > 0 && `· ${todo} checklist items left`}</span>
+      </span>
+      {items.length > 0 && (
+        <span style={{ display: 'flex', alignItems: 'center', gap: 12, marginLeft: 'auto' }}>
+          <span className="sk" style={{ fontSize: 11 }}>STAGES CLEAR {doneStops}/{items.length}</span>
+          <span aria-hidden="true" style={{ display: 'block', width: 160, height: 16, background: '#fffaf0', border: '3px solid #1b1410' }}>
+            <span style={{ display: 'block', height: '100%', width: pct + '%', background: 'repeating-linear-gradient(90deg, #2f7a3d 0 10px, transparent 10px 12px)' }} />
+          </span>
+        </span>
+      )}
     </div>
   );
 }
 
 function Toolbar({ viewMode, onViewChange, onPromote, onExportICS, onShare }) {
+  const btn = { height: 40, fontSize: 12 };
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-      <div style={{ display: 'inline-flex', border: '1px solid ' + COLORS.line, borderRadius: 8, overflow: 'hidden' }}>
-        {VIEW_MODES.map((v) => {
-          const on = viewMode === v.id;
-          return (
-            <button
-              key={v.id}
-              onClick={() => onViewChange(v.id)}
-              className="mono"
-              style={{
-                padding: '6px 12px', cursor: 'pointer',
-                background: on ? COLORS.gold + '1f' : 'transparent',
-                border: 'none', fontSize: 10, letterSpacing: '0.18em',
-                color: on ? COLORS.gold : COLORS.muted,
-              }}
-            >{v.label}</button>
-          );
-        })}
-      </div>
-      <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        <Btn onClick={onExportICS}>↓ ICAL</Btn>
-        <Btn onClick={() => window.print()}>↓ PDF</Btn>
-        <Btn onClick={onShare}>↗ SHARE</Btn>
-        <Btn onClick={onPromote} variant="tinted" color={COLORS.gold}>PROMOTE →</Btn>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap', padding: '0 3px' }}>
+      <Seg options={VIEW_MODES} value={viewMode} onChange={onViewChange} ariaLabel="Plan view" />
+      <div style={{ marginLeft: 'auto', display: 'flex', gap: 18, flexWrap: 'wrap', padding: '0 8px 8px 0' }}>
+        <PxButton onClick={onExportICS} style={btn}>↓ ICAL</PxButton>
+        <PxButton onClick={() => window.print()} style={btn}>↓ PDF</PxButton>
+        <PxButton onClick={onShare} style={btn}>↗ SHARE</PxButton>
+        <PxButton onClick={onPromote} fill={GOLD} style={btn}>PROMOTE →</PxButton>
       </div>
     </div>
   );
 }
 
-// ─── Kanban ─────────────────────────────────────────────────────
+// ─── Stage path (kanban) ────────────────────────────────────────
+function dayNode(dayItems) {
+  const done = dayItems.filter((it) => it.status === 'done').length;
+  if (dayItems.length && done === dayItems.length) return { bg: '#7fd18b', color: ON, done };
+  if (dayItems.length) return { bg: GOLD, color: ON, done };
+  return { bg: COLORS.paper, color: COLORS.text, done };
+}
+
 function Kanban({ trip, days, itemsByDay, onAddItem, onEditItem, onDeleteItem, onToggleStatus }) {
-  const isMobile = useMediaQuery('(max-width: 768px)');
   return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: isMobile
-        ? 'minmax(0, 1fr)'
-        : `repeat(${Math.min(days, 4)}, minmax(220px, 1fr))`,
-      gap: 12,
-      overflowX: isMobile ? 'visible' : 'auto',
-    }}>
-      {Array.from({ length: days }, (_, i) => {
-        const lbl = dayLabel(trip, i);
-        const dayItems = itemsByDay[i] || [];
-        return (
-          <div key={i} style={{
-            background: COLORS.panel, border: '1px solid ' + COLORS.line,
-            borderRadius: 12, padding: 12,
-            display: 'flex', flexDirection: 'column', gap: 8,
-            minHeight: 240,
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-              <div className="mono" style={{ fontSize: 10, letterSpacing: '0.18em', color: COLORS.muted }}>
-                {typeof lbl === 'string' ? lbl : lbl.d1}
+    <div style={{ overflowX: 'auto', padding: '6px 12px 16px 4px' }}>
+      <ol className="tv-days" aria-label="Day-by-day plan" style={{ margin: 0, padding: 0, listStyle: 'none' }}>
+        {Array.from({ length: days }, (_, i) => {
+          const lbl = dayLabel(trip, i);
+          const dayItems = itemsByDay[i] || [];
+          const node = dayNode(dayItems);
+          const last = i === days - 1;
+          return (
+            <li key={i} style={{ display: 'flex', flexDirection: 'column', gap: 18, minWidth: 0 }}>
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 12, minHeight: 44 }}>
+                {!last && (
+                  <span className="tv-link" aria-hidden="true" style={{
+                    position: 'absolute', left: 50, right: -24, top: 20, borderTop: '4px dashed var(--tv-link)',
+                  }} />
+                )}
+                <span className="pf pxs" style={{
+                  position: 'relative', display: 'grid', placeItems: 'center', flexShrink: 0,
+                  width: 44, height: 44, fontSize: 20, color: node.color, background: node.bg,
+                }}>{i + 1}</span>
+                <span style={{
+                  position: 'relative', display: 'flex', flexDirection: 'column', gap: 3,
+                  padding: '2px 8px', background: COLORS.bg, minWidth: 0,
+                }}>
+                  <span className="sk" style={{ fontSize: 12 }}>{typeof lbl === 'string' ? lbl : lbl.d1}</span>
+                  <span style={{ fontSize: 12, color: COLORS.muted }}>
+                    {typeof lbl !== 'string' && `${lbl.date} · `}
+                    {dayItems.length ? `${node.done}/${dayItems.length} clear` : 'free'}
+                  </span>
+                </span>
+                {last && <span style={{ position: 'relative', marginLeft: 'auto' }}><GoalFlag size={24} /></span>}
               </div>
-              {typeof lbl !== 'string' && (
-                <div className="mono" style={{ fontSize: 10, color: COLORS.muted }}>{lbl.date}</div>
-              )}
-            </div>
-            {dayItems.length === 0 ? (
-              <button
-                onClick={() => onAddItem(i)}
-                style={{
-                  flex: 1, minHeight: 120,
-                  background: 'rgba(245,237,224,0.03)',
-                  border: '1px dashed ' + COLORS.line, borderRadius: 8,
-                  color: COLORS.muted, cursor: 'pointer',
-                  display: 'flex', flexDirection: 'column',
-                  alignItems: 'center', justifyContent: 'center', gap: 4,
-                  fontSize: 12,
-                }}
-              >
-                <span>{tripDays(trip) ? '8h free' : 'EMPTY DAY'}</span>
-                <span style={{ fontSize: 10 }} className="mono">+ ADD STOP</span>
-              </button>
-            ) : (
-              <>
-                {dayItems.map((it) => (
-                  <PlanItem
-                    key={it._id}
-                    item={it}
-                    onEdit={() => onEditItem(it)}
-                    onDelete={() => onDeleteItem(it._id)}
-                    onToggle={() => onToggleStatus(it)}
-                  />
-                ))}
-                <button
-                  onClick={() => onAddItem(i)}
-                  className="mono"
-                  style={{
-                    background: 'transparent', border: '1px dashed ' + COLORS.line,
-                    borderRadius: 8, padding: '6px 10px', color: COLORS.muted,
-                    cursor: 'pointer', fontSize: 10, letterSpacing: '0.18em',
-                  }}
-                >+ ADD STOP</button>
-              </>
-            )}
-          </div>
-        );
-      })}
+
+              <div className="pxs tv-daybody" style={{
+                display: 'flex', flexDirection: 'column', gap: 12, flex: 1,
+                padding: 12, background: COLORS.paper,
+              }}>
+                {dayItems.length === 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => onAddItem(i)}
+                    className="tv-add"
+                    style={{
+                      flex: 1, minHeight: 140,
+                      display: 'flex', flexDirection: 'column',
+                      alignItems: 'center', justifyContent: 'center', gap: 6,
+                      fontSize: 13, color: COLORS.muted, background: COLORS.field,
+                      border: '3px dashed var(--rule)',
+                    }}
+                  >
+                    <span>{tripDays(trip) ? '8h free' : 'EMPTY DAY'}</span>
+                    <span className="sk" style={{ fontSize: 11, color: COLORS.text }}>+ ADD STOP</span>
+                  </button>
+                ) : (
+                  <>
+                    {dayItems.map((it) => (
+                      <PlanItem
+                        key={it._id}
+                        item={it}
+                        onEdit={() => onEditItem(it)}
+                        onDelete={() => onDeleteItem(it._id)}
+                        onToggle={() => onToggleStatus(it)}
+                      />
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => onAddItem(i)}
+                      className="sk tv-add"
+                      style={{
+                        height: 36, marginTop: 'auto', fontSize: 11, color: COLORS.text,
+                        background: COLORS.paper, border: '3px dashed var(--rule)',
+                      }}
+                    >+ ADD STOP</button>
+                  </>
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ol>
     </div>
   );
 }
@@ -453,55 +459,38 @@ function PlanItem({ item, onEdit, onDelete, onToggle }) {
   const t = TYPES.find((x) => x.id === item.type) || TYPES[4];
   const done = item.status === 'done';
   const skipped = item.status === 'skipped';
+  const meta = [
+    item.timeStart,
+    item.estCost > 0 ? `${(item.currency || '').slice(0, 1)}${item.estCost}` : null,
+    item.status || 'planned',
+  ].filter(Boolean).join(' · ');
   return (
-    <div style={{
-      borderRadius: 8, padding: 10,
-      background: 'rgba(245,237,224,0.04)',
-      border: '1px solid ' + COLORS.line,
-      opacity: skipped ? 0.45 : 1,
-      textDecoration: skipped ? 'line-through' : 'none',
-      cursor: 'pointer', position: 'relative',
-    }}
+    <div
+      role="button"
+      tabIndex={0}
+      aria-label={`Edit stop: ${item.title}`}
       onClick={onEdit}
+      onKeyDown={(e) => { if (e.key === 'Enter') onEdit(); }}
+      className="tv-row"
+      style={{
+        display: 'flex', flexDirection: 'column', gap: 6, padding: '8px 6px 8px 10px',
+        background: COLORS.field, border: '3px solid var(--ink)',
+        opacity: skipped ? 0.6 : 1,
+      }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-        <span className="mono" style={{
-          fontSize: 9, padding: '2px 6px', borderRadius: 4,
-          background: t.color + '22', color: t.color, letterSpacing: '0.16em',
-        }}>{t.label}</span>
-        <span style={{ display: 'flex', gap: 4 }}>
-          {item.timeStart && (
-            <span className="mono" style={{ fontSize: 10, color: COLORS.muted }}>{item.timeStart}</span>
-          )}
-          {item.estCost > 0 && (
-            <span className="mono" style={{ fontSize: 10, color: COLORS.muted }}>
-              {(item.currency || '').slice(0,1)}{item.estCost}
-            </span>
-          )}
-        </span>
-      </div>
-      <div style={{ fontSize: 13, color: done ? COLORS.green : COLORS.text, fontWeight: 600 }}>
+      <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <Chk on={done} onClick={onToggle} label={done ? 'Mark planned' : 'Mark done'} />
+        <Tag fill={t.color}>{t.label}</Tag>
+        <XBtn onClick={onDelete} label={`Remove stop: ${item.title}`} style={{ marginLeft: 'auto' }} />
+      </span>
+      <span style={{
+        fontSize: 13, fontWeight: 700, lineHeight: 1.35,
+        color: done ? 'var(--green-ink)' : skipped ? COLORS.muted : COLORS.text,
+        textDecoration: skipped ? 'line-through' : 'none',
+      }}>
         {item.title}
-      </div>
-      <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
-        <button
-          onClick={(e) => { e.stopPropagation(); onToggle(); }}
-          title={done ? 'Mark planned' : 'Mark done'}
-          style={{
-            background: 'transparent', border: '1px solid ' + COLORS.line, cursor: 'pointer',
-            borderRadius: 4, color: done ? COLORS.green : COLORS.muted,
-            fontSize: 11, padding: '2px 6px',
-          }}
-        >{done ? '✓' : '○'}</button>
-        <button
-          onClick={(e) => { e.stopPropagation(); onDelete(); }}
-          style={{
-            marginLeft: 'auto',
-            background: 'transparent', border: 'none', cursor: 'pointer',
-            color: COLORS.muted, fontSize: 14, padding: 0, lineHeight: 1,
-          }}
-        >×</button>
-      </div>
+      </span>
+      <span style={{ fontSize: 11, color: COLORS.muted }}>{meta}</span>
     </div>
   );
 }
@@ -509,200 +498,218 @@ function PlanItem({ item, onEdit, onDelete, onToggle }) {
 // ─── Timeline / List ────────────────────────────────────────────
 function Timeline({ trip, days, itemsByDay, onEditItem }) {
   return (
-    <div style={{
-      background: COLORS.panel, border: '1px solid ' + COLORS.line,
-      borderRadius: 12, padding: 16,
-      display: 'flex', flexDirection: 'column', gap: 8,
+    <ol className="px" style={{
+      display: 'flex', flexDirection: 'column', margin: '0 8px 8px 4px', padding: '6px 22px',
+      listStyle: 'none', background: COLORS.paper,
     }}>
       {Array.from({ length: days }, (_, i) => {
         const lbl = dayLabel(trip, i);
         const items = itemsByDay[i] || [];
+        const node = dayNode(items);
         return (
-          <div key={i} style={{
-            display: 'grid', gridTemplateColumns: '80px 1fr', gap: 14,
-            padding: '8px 0',
-            borderTop: i === 0 ? 'none' : '1px dashed ' + COLORS.line,
+          <li key={i} style={{
+            display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '12px 24px',
+            padding: '14px 0', borderBottom: i < days - 1 ? '3px dashed var(--rule)' : 0,
           }}>
-            <div className="mono" style={{ fontSize: 11, color: COLORS.muted }}>
-              {typeof lbl === 'string' ? lbl : `${lbl.date}`}
-            </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 12, width: 190, flexShrink: 0 }}>
+              <span className="pf pxs" style={{
+                display: 'grid', placeItems: 'center', width: 36, height: 36, fontSize: 16,
+                color: node.color, background: node.bg,
+              }}>{i + 1}</span>
+              <span style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                <span className="sk" style={{ fontSize: 11 }}>{typeof lbl === 'string' ? lbl : lbl.d1}</span>
+                {typeof lbl !== 'string' && <span style={{ fontSize: 11, color: COLORS.muted }}>{lbl.date}</span>}
+              </span>
+            </span>
+            <span style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 14, flex: 1, minWidth: 0, padding: 3 }}>
               {items.length === 0 ? (
-                <span style={{ color: COLORS.muted, fontSize: 12, fontStyle: 'italic' }}>nothing planned</span>
-              ) : items.map((it) => (
-                <button
-                  key={it._id}
-                  onClick={() => onEditItem(it)}
-                  style={{
-                    background: 'rgba(245,237,224,0.04)',
-                    border: '1px solid ' + COLORS.line, borderRadius: 6,
-                    padding: '4px 8px', cursor: 'pointer', color: COLORS.text,
-                    fontSize: 11,
-                  }}
-                >
-                  {it.timeStart && <span className="mono" style={{ color: COLORS.muted, marginRight: 6 }}>{it.timeStart}</span>}
-                  {it.title}
-                </button>
-              ))}
-            </div>
-          </div>
+                <span style={{ color: COLORS.muted, fontSize: 13, fontStyle: 'italic' }}>nothing planned</span>
+              ) : items.map((it) => {
+                const t = TYPES.find((x) => x.id === it.type) || TYPES[4];
+                return (
+                  <button
+                    key={it._id}
+                    type="button"
+                    onClick={() => onEditItem(it)}
+                    className="pxs tv-row"
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 10px',
+                      background: COLORS.paper, border: 0, color: COLORS.text, fontSize: 13,
+                      textDecoration: it.status === 'skipped' ? 'line-through' : 'none',
+                    }}
+                  >
+                    <Tag fill={t.color} style={{ fontSize: 9 }}>{t.label}</Tag>
+                    {it.timeStart && <span style={{ color: COLORS.muted, fontSize: 12 }}>{it.timeStart}</span>}
+                    <span style={{ color: it.status === 'done' ? 'var(--green-ink)' : COLORS.text }}>{it.title}</span>
+                  </button>
+                );
+              })}
+            </span>
+          </li>
         );
       })}
-    </div>
+    </ol>
   );
 }
 
 function FlatList({ trip, days, itemsByDay, onEditItem }) {
+  const rows = Array.from({ length: days }, (_, i) => itemsByDay[i] || []).flat();
   return (
-    <div style={{
-      background: COLORS.panel, border: '1px solid ' + COLORS.line,
-      borderRadius: 12, overflowX: 'auto', WebkitOverflowScrolling: 'touch',
+    <div className="px" style={{
+      background: COLORS.paper, overflowX: 'auto', WebkitOverflowScrolling: 'touch', margin: '0 8px 8px 4px',
     }}>
-      <table style={{ width: '100%', minWidth: 560, borderCollapse: 'collapse', fontSize: 12 }}>
+      <table style={{ width: '100%', minWidth: 620, borderCollapse: 'collapse', fontSize: 13 }}>
+        <caption className="sr">Plan items</caption>
         <thead>
-          <tr style={{ borderBottom: '1px solid ' + COLORS.line }}>
-            <Th>DAY</Th><Th>TIME</Th><Th>TYPE</Th><Th>TITLE</Th><Th right>COST</Th><Th>STATUS</Th>
+          <tr>
+            <Th first>DAY</Th><Th>TIME</Th><Th>TYPE</Th><Th>TITLE</Th><Th right>COST</Th><Th last>STATUS</Th>
           </tr>
         </thead>
         <tbody>
-          {Array.from({ length: days }, (_, i) => itemsByDay[i] || []).flatMap((arr, i) =>
-            arr.map((it) => (
+          {rows.map((it, idx) => {
+            const t = TYPES.find((x) => x.id === it.type);
+            const end = idx === rows.length - 1;
+            return (
               <tr
                 key={it._id}
                 onClick={() => onEditItem(it)}
-                style={{ borderBottom: '1px solid ' + COLORS.line, cursor: 'pointer' }}
+                onKeyDown={(e) => { if (e.key === 'Enter') onEditItem(it); }}
+                tabIndex={0}
+                className="tv-row"
               >
-                <Td>D{(it.dayIndex ?? 0) + 1}</Td>
-                <Td>{it.timeStart || '—'}</Td>
-                <Td>{(it.type || '—').toUpperCase()}</Td>
-                <Td>{it.title}</Td>
-                <Td right>{it.estCost ? `${it.currency || ''} ${it.estCost}` : '—'}</Td>
-                <Td>{it.status || 'planned'}</Td>
+                <Td end={end} first><span className="sk" style={{ fontSize: 11 }}>D{(it.dayIndex ?? 0) + 1}</span></Td>
+                <Td end={end} muted>{it.timeStart || '—'}</Td>
+                <Td end={end}>{t ? <Tag fill={t.color}>{t.label}</Tag> : (it.type || '—').toUpperCase()}</Td>
+                <Td end={end}>
+                  <span style={{
+                    color: it.status === 'done' ? 'var(--green-ink)' : COLORS.text,
+                    textDecoration: it.status === 'skipped' ? 'line-through' : 'none',
+                  }}>{it.title}</span>
+                </Td>
+                <Td end={end} right><strong>{it.estCost ? `${it.currency || ''} ${it.estCost}` : '—'}</strong></Td>
+                <Td end={end} last muted><span className="sk" style={{ fontSize: 11, textTransform: 'uppercase' }}>{it.status || 'planned'}</span></Td>
               </tr>
-            ))
-          )}
+            );
+          })}
         </tbody>
       </table>
+      {rows.length === 0 && <EmptyBox title="NO STOPS YET" hint="Switch to KANBAN to add stops day by day." />}
     </div>
   );
 }
 
-function Th({ children, right }) {
-  return <th className="mono" style={{
+function Th({ children, right, first, last }) {
+  return <th className="sk" scope="col" style={{
     textAlign: right ? 'right' : 'left',
-    padding: '10px 12px', fontSize: 9, letterSpacing: '0.2em',
-    color: COLORS.muted, fontWeight: 600, textTransform: 'uppercase',
+    padding: `14px ${last ? 18 : 12}px 12px ${first ? 18 : 12}px`, fontSize: 11, fontWeight: 700,
+    color: COLORS.muted, borderBottom: '3px dashed var(--rule)', whiteSpace: 'nowrap',
   }}>{children}</th>;
 }
-function Td({ children, right }) {
-  return <td style={{ padding: '10px 12px', textAlign: right ? 'right' : 'left', color: COLORS.text }}>{children}</td>;
+function Td({ children, right, first, last, end, muted }) {
+  return <td style={{
+    padding: `11px ${last ? 18 : 12}px 11px ${first ? 18 : 12}px`, textAlign: right ? 'right' : 'left',
+    color: muted ? COLORS.muted : COLORS.text, borderBottom: end ? 0 : '3px dashed var(--rule)', verticalAlign: 'middle',
+  }}>{children}</td>;
+}
+
+function EmptyBox(props) {
+  return <EmptyState {...props} />;
 }
 
 // ─── Checklist + reservations + budget ──────────────────────────
+function RailCard({ title, right, children, labelId }) {
+  return (
+    <section className="px" aria-labelledby={labelId} style={{
+      background: COLORS.paper, padding: 18, display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0,
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, minHeight: 30 }}>
+        <CardTitle id={labelId}>{title}</CardTitle>
+        {right}
+      </div>
+      {children}
+    </section>
+  );
+}
+
 function ChecklistCard({ checklist, onToggle, onRemove, onAdd }) {
   const [text, setText] = useState('');
   const done = checklist.filter((c) => c.done).length;
   return (
-    <div style={{ background: COLORS.panel, border: '1px solid ' + COLORS.line, borderRadius: 14, padding: 16 }}>
-      <div className="mono" style={{ fontSize: 10, letterSpacing: '0.22em', color: COLORS.muted, marginBottom: 10 }}>
-        PRE-TRIP · {done}/{checklist.length}
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 220, overflowY: 'auto' }}>
+    <RailCard title={`PRE-TRIP · ${done}/${checklist.length}`} labelId="tv-check-h">
+      <ul style={{ display: 'flex', flexDirection: 'column', gap: 8, margin: 0, padding: 0, listStyle: 'none', maxHeight: 240, overflowY: 'auto' }}>
         {checklist.map((c) => (
-          <div key={c._id} style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            padding: '6px 4px', borderRadius: 6,
-          }}>
-            <button
-              onClick={() => onToggle(c._id, c.done)}
-              style={{
-                width: 16, height: 16, borderRadius: 4, flexShrink: 0,
-                background: c.done ? COLORS.green : 'transparent',
-                border: '1px solid ' + (c.done ? COLORS.green : COLORS.line),
-                cursor: 'pointer', padding: 0, color: COLORS.bg, fontSize: 10,
-                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              }}
-            >{c.done ? '✓' : ''}</button>
+          <li key={c._id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <Chk on={c.done} onClick={() => onToggle(c._id, c.done)} label={c.text} />
             <span style={{
-              flex: 1, fontSize: 12, color: c.done ? COLORS.muted : COLORS.text,
+              flex: 1, minWidth: 0, fontSize: 13, lineHeight: 1.35,
+              color: c.done ? COLORS.muted : COLORS.text,
               textDecoration: c.done ? 'line-through' : 'none',
             }}>{c.text}</span>
-            <button
-              onClick={() => onRemove(c._id)}
-              style={{
-                background: 'transparent', border: 'none', cursor: 'pointer',
-                color: COLORS.muted, fontSize: 13, padding: 0,
-              }}
-            >×</button>
-          </div>
+            <XBtn onClick={() => onRemove(c._id)} label="Remove item" />
+          </li>
         ))}
         {checklist.length === 0 && (
-          <span style={{ color: COLORS.muted, fontSize: 12 }}>nothing yet</span>
+          <li style={{ color: COLORS.muted, fontSize: 13 }}>nothing yet</li>
         )}
-      </div>
-      <div style={{ marginTop: 10, display: 'flex', gap: 6 }}>
+      </ul>
+      <label style={{ marginTop: 'auto', padding: 3 }}>
+        <span className="sr">Add checklist item</span>
         <Field value={text} onChange={setText} placeholder="add item…" mono={false}
+          style={{ ...fieldStyle, height: 40, fontSize: 13 }}
           onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); onAdd(text); setText(''); } }}
         />
-      </div>
-    </div>
+      </label>
+    </RailCard>
   );
 }
 
 function ReservationsCard({ reservations, onAdd, onEdit, onRemove }) {
   return (
-    <div style={{ background: COLORS.panel, border: '1px solid ' + COLORS.line, borderRadius: 14, padding: 16 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-        <div className="mono" style={{ fontSize: 10, letterSpacing: '0.22em', color: COLORS.muted }}>
-          RESERVATIONS · {reservations.length}
-        </div>
-        <button onClick={onAdd} className="mono" style={{
-          background: 'transparent', border: 'none', color: COLORS.gold,
-          cursor: 'pointer', fontSize: 10, letterSpacing: '0.18em',
-        }}>+ ADD</button>
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+    <RailCard
+      title={`RESERVATIONS · ${reservations.length}`}
+      labelId="tv-res-h"
+      right={<button type="button" onClick={onAdd} className="chip-px sk" style={{ minHeight: 30, padding: '0 8px', fontSize: 11 }}>+ ADD</button>}
+    >
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {reservations.map((r) => (
-          <div key={r._id} style={{
-            padding: 8, borderRadius: 8, background: 'rgba(245,237,224,0.04)',
-            border: '1px solid ' + COLORS.line, cursor: 'pointer',
-            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          }} onClick={() => onEdit(r)}>
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 12, color: COLORS.text, fontWeight: 600 }}>
+          <div
+            key={r._id}
+            role="button"
+            tabIndex={0}
+            aria-label={`Edit reservation ${r.name || r.type || ''}`}
+            onClick={() => onEdit(r)}
+            onKeyDown={(e) => { if (e.key === 'Enter') onEdit(r); }}
+            className="tv-row"
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6, padding: '8px 6px 8px 10px',
+              background: COLORS.field, border: '3px solid var(--ink)',
+            }}
+          >
+            <span style={{ display: 'flex', flexDirection: 'column', gap: 3, flex: 1, minWidth: 0 }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: COLORS.text }}>
                 {r.name || (r.type || '').toUpperCase()}
-              </div>
-              <div className="mono" style={{ fontSize: 10, color: COLORS.muted, marginTop: 2 }}>
-                {(r.type || '').toUpperCase()} · {r.code || '—'} {r.datetime ? `· ${r.datetime.slice(0,16).replace('T',' ')}` : ''}
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: 4 }}>
-              {r.code && (
-                <button
-                  onClick={(e) => { e.stopPropagation(); navigator.clipboard?.writeText(r.code); }}
-                  title="Copy code"
-                  style={{
-                    background: 'transparent', border: '1px solid ' + COLORS.line,
-                    borderRadius: 4, padding: '2px 6px', cursor: 'pointer',
-                    color: COLORS.muted, fontSize: 11,
-                  }}
-                >⎘</button>
-              )}
+              </span>
+              <span className="sk" style={{ fontSize: 10, color: COLORS.muted, textTransform: 'uppercase' }}>
+                {(r.type || '')} · {r.code || '—'} {r.datetime ? `· ${r.datetime.slice(0, 16).replace('T', ' ')}` : ''}
+              </span>
+            </span>
+            {r.code && (
               <button
-                onClick={(e) => { e.stopPropagation(); onRemove(r._id); }}
-                style={{
-                  background: 'transparent', border: 'none', cursor: 'pointer',
-                  color: COLORS.muted, fontSize: 13,
-                }}
-              >×</button>
-            </div>
+                type="button"
+                onClick={(e) => { e.stopPropagation(); navigator.clipboard?.writeText(r.code); }}
+                title="Copy code"
+                aria-label="Copy code"
+                className="tv-x"
+              ><IconCopy size={15} /></button>
+            )}
+            <XBtn onClick={() => onRemove(r._id)} label="Remove reservation" />
           </div>
         ))}
         {reservations.length === 0 && (
-          <span style={{ color: COLORS.muted, fontSize: 12 }}>none yet</span>
+          <span style={{ color: COLORS.muted, fontSize: 13 }}>none yet</span>
         )}
       </div>
-    </div>
+    </RailCard>
   );
 }
 
@@ -734,20 +741,21 @@ function TemplateCard({ trip, items, checklist }) {
   };
 
   return (
-    <div style={{ background: COLORS.panel, border: '1px solid ' + COLORS.line, borderRadius: 14, padding: 16 }}>
-      <div className="mono" style={{ fontSize: 10, letterSpacing: '0.22em', color: COLORS.muted, marginBottom: 10 }}>
-        TEMPLATE
-      </div>
-      <p style={{ fontSize: 12, color: COLORS.muted, margin: '0 0 10px', lineHeight: 1.5 }}>
+    <RailCard title="TEMPLATE" labelId="tv-tpl-h">
+      <p style={{ fontSize: 13, color: COLORS.muted, margin: 0, lineHeight: 1.5 }}>
         Save this trip's structure (pins + plan + checklist) to reuse on a future trip.
       </p>
-      <Btn onClick={onSave} disabled={saving}>{saving ? '…' : '↓ SAVE AS TEMPLATE'}</Btn>
+      <div style={{ marginTop: 'auto', padding: '0 8px 8px 0' }}>
+        <PxButton onClick={onSave} disabled={saving} style={{ height: 40, fontSize: 11 }}>
+          {saving ? '…' : '↓ SAVE AS TEMPLATE'}
+        </PxButton>
+      </div>
       {savedName && (
-        <div className="mono" style={{ marginTop: 8, fontSize: 10, color: COLORS.green, letterSpacing: '0.14em' }}>
-          ✓ saved as "{savedName}"
+        <div className="sk" role="status" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, color: 'var(--green-ink)' }}>
+          <IconCheck size={12} /> saved as "{savedName}"
         </div>
       )}
-    </div>
+    </RailCard>
   );
 }
 
@@ -756,30 +764,27 @@ function BudgetCard({ trip, totalEst }) {
   const daily = trip.budget?.daily || 0;
   const pct = total ? Math.min(100, (totalEst / total) * 100) : 0;
   return (
-    <div style={{ background: COLORS.panel, border: '1px solid ' + COLORS.line, borderRadius: 14, padding: 16 }}>
-      <div className="mono" style={{ fontSize: 10, letterSpacing: '0.22em', color: COLORS.muted, marginBottom: 10 }}>
-        BUDGET
+    <RailCard title="BUDGET" labelId="tv-budget-h">
+      <Row label={`Daily${trip.tripCurrency ? ' · ' + trip.tripCurrency : ''}`}>
+        <Field
+          value={daily}
+          onChange={() => {}}
+          placeholder="0"
+          mono
+          style={{ ...fieldStyle, height: 40, fontSize: 13 }}
+        />
+      </Row>
+      <Label style={{ fontSize: 10 }}>PLAN VS BUDGET · {total ? Math.round(pct) + '%' : '—'}</Label>
+      <span aria-hidden="true" style={{ display: 'block', height: 18, background: COLORS.paper, border: '3px solid var(--ink)' }}>
+        <span style={{
+          display: 'block', height: '100%', width: `${pct}%`,
+          background: `repeating-linear-gradient(90deg, ${pct > 100 ? '#ff7a7a' : GOLD} 0 10px, transparent 10px 12px)`,
+        }} />
+      </span>
+      <div style={{ fontSize: 12, color: COLORS.muted }}>
+        est. plan: {(trip.tripCurrency || '')} {totalEst.toFixed(0)} / {total || '—'}
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <Row label="Daily">
-          <Field
-            value={daily}
-            onChange={() => {}}
-            placeholder="0"
-            mono
-          />
-        </Row>
-        <div style={{
-          display: 'flex', height: 6, borderRadius: 999, overflow: 'hidden',
-          background: 'rgba(245,237,224,0.06)',
-        }}>
-          <div style={{ width: `${pct}%`, background: pct > 100 ? COLORS.red : COLORS.gold }} />
-        </div>
-        <div className="mono" style={{ fontSize: 11, color: COLORS.muted }}>
-          est. plan: {(trip.tripCurrency || '')} {totalEst.toFixed(0)} / {total || '—'}
-        </div>
-      </div>
-    </div>
+    </RailCard>
   );
 }
 
@@ -811,85 +816,76 @@ function PlanItemModal({ initial, tripCurrency, days, onClose, onSave }) {
   };
 
   return (
-    <div role="dialog" onClick={onClose} style={modalBackdrop}>
-      <form onClick={(e) => e.stopPropagation()} onSubmit={onSubmit} style={modalCard}>
-        <header style={modalHeader}>
-          <div>
-            <div className="mono" style={{ fontSize: 10, letterSpacing: '0.22em', color: COLORS.gold }}>
-              {initial._id ? 'EDIT' : 'NEW STOP'}
-            </div>
-            <div style={{ fontSize: 18, fontWeight: 700, marginTop: 2 }}>Plan a stop</div>
-          </div>
-          <button onClick={onClose} type="button" style={modalClose}>×</button>
-        </header>
+    <PxDialog
+      as="form"
+      onSubmit={onSubmit}
+      onClose={onClose}
+      kicker={initial._id ? 'EDIT' : 'NEW STOP'}
+      title="Plan a stop"
+      footer={<>
+        <PxButton type="button" onClick={onClose} style={{ height: 44 }}>CANCEL</PxButton>
+        <PxButton type="submit" fill={GOLD} style={{ height: 44 }}>SAVE</PxButton>
+      </>}
+    >
+      <Row label="Title">
+        <Field value={draft.title} onChange={(v) => setDraft((d) => ({ ...d, title: v }))} placeholder="Dishoom Shoreditch" mono={false} autoFocus style={fieldStyle} />
+      </Row>
 
-        <div style={{ padding: 22, display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <Row label="Title">
-            <Field value={draft.title} onChange={(v) => setDraft((d) => ({ ...d, title: v }))} placeholder="Dishoom Shoreditch" mono={false} autoFocus />
-          </Row>
+      <div className="tv-g3" style={{ gap: 18 }}>
+        <Row label="Day">
+          <PxSelect
+            value={draft.dayIndex ?? 0}
+            onChange={(v) => setDraft((d) => ({ ...d, dayIndex: Number(v) }))}
+            options={Array.from({ length: days }, (_, i) => ({ v: i, l: `Day ${i + 1}` }))}
+          />
+        </Row>
+        <Row label="Start">
+          <Field type="time" value={draft.timeStart || ''} onChange={(v) => setDraft((d) => ({ ...d, timeStart: v }))} style={fieldStyle} />
+        </Row>
+        <Row label="End">
+          <Field type="time" value={draft.timeEnd || ''} onChange={(v) => setDraft((d) => ({ ...d, timeEnd: v }))} style={fieldStyle} />
+        </Row>
+      </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
-            <Row label="Day">
-              <Select
-                value={draft.dayIndex ?? 0}
-                onChange={(v) => setDraft((d) => ({ ...d, dayIndex: Number(v) }))}
-                options={Array.from({ length: days }, (_, i) => ({ v: i, l: `Day ${i + 1}` }))}
-              />
-            </Row>
-            <Row label="Start">
-              <Field type="time" value={draft.timeStart || ''} onChange={(v) => setDraft((d) => ({ ...d, timeStart: v }))} />
-            </Row>
-            <Row label="End">
-              <Field type="time" value={draft.timeEnd || ''} onChange={(v) => setDraft((d) => ({ ...d, timeEnd: v }))} />
-            </Row>
-          </div>
+      <div className="tv-g2" style={{ gap: 18 }}>
+        <Row label="Type">
+          <PxSelect
+            value={draft.type}
+            onChange={(v) => setDraft((d) => ({ ...d, type: v }))}
+            options={TYPES.map((t) => ({ v: t.id, l: t.label }))}
+          />
+        </Row>
+        <Row label="Status">
+          <PxSelect
+            value={draft.status}
+            onChange={(v) => setDraft((d) => ({ ...d, status: v }))}
+            options={STATUS.map((s) => ({ v: s, l: s }))}
+          />
+        </Row>
+      </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <Row label="Type">
-              <Select
-                value={draft.type}
-                onChange={(v) => setDraft((d) => ({ ...d, type: v }))}
-                options={TYPES.map((t) => ({ v: t.id, l: t.label }))}
-              />
-            </Row>
-            <Row label="Status">
-              <Select
-                value={draft.status}
-                onChange={(v) => setDraft((d) => ({ ...d, status: v }))}
-                options={STATUS.map((s) => ({ v: s, l: s }))}
-              />
-            </Row>
-          </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr)', gap: 18 }}>
+        <Row label="Estimated cost">
+          <Field type="number" value={draft.estCost} onChange={(v) => setDraft((d) => ({ ...d, estCost: v }))} placeholder="24" style={fieldStyle} />
+        </Row>
+        <Row label="Currency">
+          <Field value={draft.currency} onChange={(v) => setDraft((d) => ({ ...d, currency: v.toUpperCase() }))} placeholder="GBP" style={fieldStyle} />
+        </Row>
+      </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 10 }}>
-            <Row label="Estimated cost">
-              <Field type="number" value={draft.estCost} onChange={(v) => setDraft((d) => ({ ...d, estCost: v }))} placeholder="24" />
-            </Row>
-            <Row label="Currency">
-              <Field value={draft.currency} onChange={(v) => setDraft((d) => ({ ...d, currency: v.toUpperCase() }))} placeholder="GBP" />
-            </Row>
-          </div>
+      <div className="tv-g2" style={{ gap: 18 }}>
+        <Row label="Booking ref">
+          <Field value={draft.bookingRef} onChange={(v) => setDraft((d) => ({ ...d, bookingRef: v }))} placeholder="optional" style={fieldStyle} />
+        </Row>
+        <Row label="URL">
+          <Field value={draft.url} onChange={(v) => setDraft((d) => ({ ...d, url: v }))} placeholder="https://…" mono={false} style={fieldStyle} />
+        </Row>
+      </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <Row label="Booking ref">
-              <Field value={draft.bookingRef} onChange={(v) => setDraft((d) => ({ ...d, bookingRef: v }))} placeholder="optional" />
-            </Row>
-            <Row label="URL">
-              <Field value={draft.url} onChange={(v) => setDraft((d) => ({ ...d, url: v }))} placeholder="https://…" mono={false} />
-            </Row>
-          </div>
-
-          <Row label="Notes">
-            <Field value={draft.notes} onChange={(v) => setDraft((d) => ({ ...d, notes: v }))} placeholder="optional" mono={false} />
-          </Row>
-        </div>
-
-        <footer style={modalFooter}>
-          <Btn onClick={onClose} type="button">Cancel</Btn>
-          <Btn type="submit" variant="solid" color={COLORS.gold}>Save</Btn>
-        </footer>
-      </form>
-    </div>
+      <Row label="Notes">
+        <Field value={draft.notes} onChange={(v) => setDraft((d) => ({ ...d, notes: v }))} placeholder="optional" mono={false} style={fieldStyle} />
+      </Row>
+    </PxDialog>
   );
 }
 
@@ -900,105 +896,51 @@ function ReservationModal({ initial, onClose, onSave }) {
   });
   const onSubmit = (e) => { e?.preventDefault(); onSave(draft); };
   return (
-    <div role="dialog" onClick={onClose} style={modalBackdrop}>
-      <form onClick={(e) => e.stopPropagation()} onSubmit={onSubmit} style={modalCard}>
-        <header style={modalHeader}>
-          <div>
-            <div className="mono" style={{ fontSize: 10, letterSpacing: '0.22em', color: COLORS.gold }}>RESERVATION</div>
-            <div style={{ fontSize: 18, fontWeight: 700, marginTop: 2 }}>{initial._id ? 'Edit' : 'Add'} booking</div>
-          </div>
-          <button onClick={onClose} type="button" style={modalClose}>×</button>
-        </header>
-
-        <div style={{ padding: 22, display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <Row label="Type">
-              <Select
-                value={draft.type}
-                onChange={(v) => setDraft((d) => ({ ...d, type: v }))}
-                options={RES_TYPES.map((t) => ({ v: t, l: t }))}
-              />
-            </Row>
-            <Row label="Confirmation code">
-              <Field value={draft.code} onChange={(v) => setDraft((d) => ({ ...d, code: v }))} placeholder="ABC123" />
-            </Row>
-          </div>
-          <Row label="Name">
-            <Field value={draft.name} onChange={(v) => setDraft((d) => ({ ...d, name: v }))} placeholder="BA 0286 LHR→JFK" mono={false} />
-          </Row>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <Row label="Start">
-              <Field type="datetime-local" value={draft.datetime} onChange={(v) => setDraft((d) => ({ ...d, datetime: v }))} />
-            </Row>
-            <Row label="End">
-              <Field type="datetime-local" value={draft.endDatetime} onChange={(v) => setDraft((d) => ({ ...d, endDatetime: v }))} />
-            </Row>
-          </div>
-          <Row label="URL">
-            <Field value={draft.url} onChange={(v) => setDraft((d) => ({ ...d, url: v }))} placeholder="https://…" mono={false} />
-          </Row>
-          <Row label="Notes">
-            <Field value={draft.notes} onChange={(v) => setDraft((d) => ({ ...d, notes: v }))} placeholder="optional" mono={false} />
-          </Row>
-        </div>
-
-        <footer style={modalFooter}>
-          <Btn onClick={onClose} type="button">Cancel</Btn>
-          <Btn type="submit" variant="solid" color={COLORS.gold}>Save</Btn>
-        </footer>
-      </form>
-    </div>
+    <PxDialog
+      as="form"
+      onSubmit={onSubmit}
+      onClose={onClose}
+      kicker="RESERVATION"
+      title={`${initial._id ? 'Edit' : 'Add'} booking`}
+      footer={<>
+        <PxButton type="button" onClick={onClose} style={{ height: 44 }}>CANCEL</PxButton>
+        <PxButton type="submit" fill={GOLD} style={{ height: 44 }}>SAVE</PxButton>
+      </>}
+    >
+      <div className="tv-g2" style={{ gap: 18 }}>
+        <Row label="Type">
+          <PxSelect
+            value={draft.type}
+            onChange={(v) => setDraft((d) => ({ ...d, type: v }))}
+            options={RES_TYPES.map((t) => ({ v: t, l: t }))}
+          />
+        </Row>
+        <Row label="Confirmation code">
+          <Field value={draft.code} onChange={(v) => setDraft((d) => ({ ...d, code: v }))} placeholder="ABC123" style={fieldStyle} />
+        </Row>
+      </div>
+      <Row label="Name">
+        <Field value={draft.name} onChange={(v) => setDraft((d) => ({ ...d, name: v }))} placeholder="BA 0286 LHR→JFK" mono={false} style={fieldStyle} />
+      </Row>
+      <div className="tv-g2" style={{ gap: 18 }}>
+        <Row label="Start">
+          <Field type="datetime-local" value={draft.datetime} onChange={(v) => setDraft((d) => ({ ...d, datetime: v }))} style={fieldStyle} />
+        </Row>
+        <Row label="End">
+          <Field type="datetime-local" value={draft.endDatetime} onChange={(v) => setDraft((d) => ({ ...d, endDatetime: v }))} style={fieldStyle} />
+        </Row>
+      </div>
+      <Row label="URL">
+        <Field value={draft.url} onChange={(v) => setDraft((d) => ({ ...d, url: v }))} placeholder="https://…" mono={false} style={fieldStyle} />
+      </Row>
+      <Row label="Notes">
+        <Field value={draft.notes} onChange={(v) => setDraft((d) => ({ ...d, notes: v }))} placeholder="optional" mono={false} style={fieldStyle} />
+      </Row>
+    </PxDialog>
   );
 }
 
 // ─── Helpers ────────────────────────────────────────────────────
 function Row({ label, children }) {
-  return (
-    <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <span className="mono" style={{ fontSize: 9, letterSpacing: '0.2em', color: COLORS.muted, textTransform: 'uppercase' }}>{label}</span>
-      {children}
-    </label>
-  );
+  return <FormRow label={label}>{children}</FormRow>;
 }
-
-function Select({ value, onChange, options }) {
-  return (
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="mono"
-      style={{
-        background: COLORS.bg, border: '1px solid ' + COLORS.line,
-        borderRadius: 10, padding: '11px 14px',
-        color: COLORS.text, fontSize: 13,
-      }}
-    >
-      {options.map((o) => <option key={o.v} value={o.v}>{o.l}</option>)}
-    </select>
-  );
-}
-
-const modalBackdrop = {
-  position: 'fixed', inset: 0, zIndex: 1000,
-  background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)',
-  display: 'flex', alignItems: 'center', justifyContent: 'center',
-  padding: 24,
-};
-const modalCard = {
-  background: COLORS.panel, border: '1px solid ' + COLORS.line,
-  borderRadius: 14, width: 560, maxWidth: '100%', maxHeight: '90vh',
-  overflow: 'auto', color: COLORS.text,
-  display: 'flex', flexDirection: 'column',
-};
-const modalHeader = {
-  padding: '18px 22px', borderBottom: '1px solid ' + COLORS.line,
-  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-};
-const modalClose = {
-  background: 'transparent', border: 'none', cursor: 'pointer',
-  color: COLORS.muted, fontSize: 22, lineHeight: 1, padding: 4,
-};
-const modalFooter = {
-  padding: '14px 22px', borderTop: '1px solid ' + COLORS.line,
-  display: 'flex', gap: 8, justifyContent: 'flex-end',
-};

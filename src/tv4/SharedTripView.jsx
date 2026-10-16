@@ -1,7 +1,11 @@
 // Read-only trip viewer reached via ?share=<hash>. No auth required.
-// Renders a stripped-down version of TvFolder Overview for unauthenticated viewers.
+// Renders a stripped-down version of TvFolder Overview for unauthenticated viewers,
+// inside a minimal B header/footer (the page has no app shell).
 import { useState, useEffect, useMemo } from 'react';
 import { COLORS } from '../lib.jsx';
+import { Bricks, DialogBox, PixelCoin } from '../ui/arcade.jsx';
+import { GOLD, ON, statusFill, CartHead, Fact, IconWarn, PixelFlag, Tag } from './kit.jsx';
+import './tv4.arcade.css';
 
 export default function SharedTripView({ token }) {
   const [snapshot, setSnapshot] = useState(null);
@@ -50,68 +54,52 @@ export default function SharedTripView({ token }) {
   }, [snapshot]);
 
   if (loading) {
-    return <CenterMessage>◇ loading shared trip…</CenterMessage>;
+    return <ShareShell><CenterMessage>loading shared trip…</CenterMessage></ShareShell>;
   }
   if (error) {
-    return <CenterMessage error>◇ {error}</CenterMessage>;
+    return <ShareShell><CenterMessage error>{error}</CenterMessage></ShareShell>;
   }
   if (!snapshot) return null;
 
   const trip = snapshot.trip;
   return (
-    <div style={{
-      minHeight: '100vh', background: COLORS.bg, color: COLORS.text,
-      padding: '40px 24px',
-    }}>
-      <div style={{ maxWidth: 880, margin: '0 auto' }}>
-        <header style={{ marginBottom: 24 }}>
-          <div className="mono" style={{ fontSize: 11, letterSpacing: '0.22em', color: COLORS.gold }}>
-            SE77N · TRAVEL · SHARED
-          </div>
-          <h1 style={{ marginTop: 8, fontSize: 28, fontWeight: 700, letterSpacing: '-0.01em' }}>
-            {trip.title}
-          </h1>
-          <div className="mono" style={{ fontSize: 12, color: COLORS.muted, marginTop: 6 }}>
-            {trip.status} · {trip.country || '—'} · {trip.startDate || '—'} → {trip.endDate || '—'}
-          </div>
-          {(trip.tags || []).length > 0 && (
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 10 }}>
-              {trip.tags.map((t) => (
-                <span key={t} className="mono" style={{
-                  padding: '3px 9px', borderRadius: 999,
-                  background: 'rgba(245,237,224,0.05)',
-                  border: '1px solid ' + COLORS.line,
-                  fontSize: 10, color: COLORS.muted, letterSpacing: '0.14em',
-                  textTransform: 'uppercase',
-                }}>{t}</span>
-              ))}
+    <ShareShell expiresAt={expiresAt}>
+      <header style={{ marginBottom: 36 }}>
+        <p className="sk" style={{ margin: '0 0 10px', fontSize: 12, color: COLORS.muted }}>
+          SE77N · TRAVEL · SHARED
+        </p>
+        <h1 className="pf" style={{ margin: 0, fontSize: 40, lineHeight: 1.05 }}>
+          {trip.title}
+        </h1>
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 18, paddingLeft: 3 }}>
+          <Tag fill={statusFill(trip.status)} style={{ fontSize: 11, padding: '4px 8px' }}>{trip.status || '—'}</Tag>
+          <Fact>{trip.country || '—'}</Fact>
+          <Fact>{trip.startDate || '—'} → {trip.endDate || '—'}</Fact>
+          {(trip.tags || []).map((t) => <Fact key={t}>{t}</Fact>)}
+        </div>
+      </header>
+
+      {totals && (
+        <div className="tv-kpi" style={{ gap: 28, marginBottom: 40, padding: '0 3px' }}>
+          {[
+            { k: 'PLACES', v: totals.places },
+            { k: 'DAYS',   v: totals.days },
+            { k: 'SPEND',  v: totals.spend > 0 ? formatMoney(totals.spend, trip.tripCurrency || 'USD') : '—', coin: true },
+            { k: 'NOTES',  v: totals.notes },
+          ].map((t) => (
+            <div key={t.k} className="pxs" style={{
+              display: 'flex', flexDirection: 'column', gap: 8, padding: '16px 18px', minWidth: 0, background: COLORS.paper,
+            }}>
+              <span className="sk" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: COLORS.muted }}>
+                {t.coin && <PixelCoin size={14} />}{t.k}
+              </span>
+              <span className="pf" style={{ fontSize: 28, lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.v}</span>
             </div>
-          )}
-        </header>
+          ))}
+        </div>
+      )}
 
-        {totals && (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-            gap: 10, marginBottom: 24,
-          }}>
-            {[
-              { k: 'PLACES', v: totals.places },
-              { k: 'DAYS',   v: totals.days },
-              { k: 'SPEND',  v: totals.spend > 0 ? formatMoney(totals.spend, trip.tripCurrency || 'USD') : '—' },
-              { k: 'NOTES',  v: totals.notes },
-            ].map((t) => (
-              <div key={t.k} style={{
-                padding: 14, borderRadius: 10,
-                background: COLORS.panel, border: '1px solid ' + COLORS.line,
-              }}>
-                <div className="mono" style={{ fontSize: 9, letterSpacing: '0.18em', color: COLORS.muted }}>{t.k}</div>
-                <div className="mono" style={{ fontSize: 22, fontWeight: 700, marginTop: 4 }}>{t.v}</div>
-              </div>
-            ))}
-          </div>
-        )}
-
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 36 }}>
         {trip.bestOf?.length > 0 && (
           <Card title="BEST OF">
             {trip.bestOf.filter((b) => b.value).map((b, i) => (
@@ -147,35 +135,75 @@ export default function SharedTripView({ token }) {
         {snapshot.notes?.length > 0 && (
           <Card title={`NOTES · ${snapshot.notes.length}`}>
             {snapshot.notes.slice(0, 20).map((n) => (
-              <div key={n._id} style={{ padding: '8px 0', borderBottom: '1px dashed ' + COLORS.line }}>
-                <div className="mono" style={{ fontSize: 10, color: COLORS.muted }}>
+              <div key={n._id} style={{ padding: '10px 0', borderBottom: '3px dashed var(--rule)' }}>
+                <div className="sk" style={{ fontSize: 10, color: COLORS.muted }}>
                   D{(n.dayIndex ?? 0) + 1} · {n.date || ''}
                 </div>
-                <div style={{ marginTop: 4, fontSize: 13, whiteSpace: 'pre-wrap' }}>{n.content}</div>
+                <div style={{ marginTop: 6, fontSize: 14, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{n.content}</div>
               </div>
             ))}
           </Card>
         )}
-
-        <footer style={{ marginTop: 30, color: COLORS.muted, fontSize: 11 }} className="mono">
-          {expiresAt && <span>Expires {new Date(expiresAt).toISOString().slice(0, 10)} · </span>}
-          se77n · read-only view
-        </footer>
       </div>
+    </ShareShell>
+  );
+}
+
+// Minimal B shell for the public page: paper header with the se77n mark,
+// gold accent strip, content column, brick footer.
+function ShareShell({ children, expiresAt }) {
+  return (
+    <div className="tv4" style={{
+      minHeight: '100vh', display: 'flex', flexDirection: 'column', color: COLORS.text,
+    }}>
+      <header style={{ background: COLORS.paper, borderBottom: '4px solid var(--ink)' }}>
+        <div style={{
+          maxWidth: 1040, margin: '0 auto', padding: '14px 20px', minHeight: 80,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap',
+        }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+            <span className="pf" style={{ fontSize: 32, lineHeight: 1 }}>
+              se<span style={{ color: '#e04545', textShadow: '3px 3px 0 var(--ink)' }}>77</span>n
+            </span>
+            <span className="sk" style={{ fontSize: 10, color: COLORS.muted }}>WORLD 007 · TRAVEL PLAN</span>
+          </div>
+          <span className="sk pxs" style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8, padding: '7px 10px', fontSize: 11,
+            color: ON, background: GOLD,
+          }}>
+            <PixelFlag size={12} fill="#fffaf0" />
+            SHARED TRIP · READ-ONLY
+          </span>
+        </div>
+      </header>
+      <div aria-hidden="true" style={{ height: 8, background: GOLD, borderBottom: '4px solid var(--ink)' }} />
+
+      <main style={{ flex: 1, width: '100%', maxWidth: 1000, margin: '0 auto', padding: '40px 20px 64px' }}>
+        {children}
+      </main>
+
+      <footer>
+        <div className="sk" style={{
+          maxWidth: 1000, margin: '0 auto', padding: '16px 20px', display: 'flex', flexWrap: 'wrap',
+          justifyContent: 'space-between', gap: 12, fontSize: 11, color: COLORS.muted,
+        }}>
+          <span>
+            {expiresAt && <span>Expires {new Date(expiresAt).toISOString().slice(0, 10)} · </span>}
+            se77n · read-only view
+          </span>
+          <span style={{ color: COLORS.text }}>SE77N · WORLD 007</span>
+        </div>
+        <Bricks height={40} />
+      </footer>
     </div>
   );
 }
 
 function Card({ title, children }) {
   return (
-    <section style={{
-      background: COLORS.panel, border: '1px solid ' + COLORS.line,
-      borderRadius: 14, padding: 16, marginBottom: 14,
-    }}>
-      <div className="mono" style={{ fontSize: 10, letterSpacing: '0.22em', color: COLORS.gold, marginBottom: 10 }}>
-        {title}
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>{children}</div>
+    <section className="px" style={{ background: COLORS.paper }}>
+      <CartHead title={title} />
+      <div style={{ display: 'flex', flexDirection: 'column', padding: '6px 18px 12px' }}>{children}</div>
     </section>
   );
 }
@@ -183,11 +211,11 @@ function Card({ title, children }) {
 function Row({ k, v }) {
   return (
     <div style={{
-      display: 'flex', justifyContent: 'space-between',
-      padding: '6px 0', fontSize: 12, gap: 12,
-      borderBottom: '1px dashed ' + COLORS.line,
+      display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',
+      padding: '10px 0', fontSize: 13, gap: 16,
+      borderBottom: '3px dashed var(--rule)',
     }}>
-      <span className="mono" style={{ color: COLORS.muted, whiteSpace: 'nowrap' }}>{k}</span>
+      <span className="sk" style={{ fontSize: 11, color: COLORS.muted, whiteSpace: 'nowrap' }}>{k}</span>
       <span style={{ color: COLORS.text, textAlign: 'right' }}>{v}</span>
     </div>
   );
@@ -195,12 +223,41 @@ function Row({ k, v }) {
 
 function CenterMessage({ children, error }) {
   return (
-    <div style={{
-      minHeight: '100vh', background: COLORS.bg,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      color: error ? COLORS.red : COLORS.muted, fontFamily: 'JetBrains Mono, monospace',
-      fontSize: 13, padding: 24, textAlign: 'center',
-    }}>{children}</div>
+    <div style={{ display: 'flex', justifyContent: 'center', padding: '24px 0 40px' }}>
+      <div style={{ width: '100%', maxWidth: 580 }}>
+        <DialogBox speaker={error ? 'SE77N SAYS:' : 'NOW LOADING'}>
+          <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+            <span className="pxs" style={{
+              display: 'grid', placeItems: 'center', flexShrink: 0, width: 60, height: 60,
+              background: error ? '#ff7a7a' : '#9fd8ff',
+            }}>
+              {error ? <IconWarn size={30} fill="#ff7a7a" /> : <PixelFlag size={28} fill={GOLD} />}
+            </span>
+            <div style={{ flex: '1 1 260px', minWidth: 0 }}>
+              <p className="sk" style={{ margin: '0 0 8px', fontSize: 11, color: COLORS.muted }}>
+                {error ? 'GAME OVER · CONTINUE?' : 'SHARED TRIP'}
+              </p>
+              {error ? (
+                <>
+                  <h1 className="pf" style={{ margin: 0, fontSize: 26, lineHeight: 1.1 }}>This trip can't be shown</h1>
+                  <p role="alert" className="mono" style={{
+                    margin: '12px 0 0', fontSize: 13, lineHeight: 1.55, color: 'var(--tv-red-ink)', overflowWrap: 'anywhere',
+                  }}>{children}</p>
+                  <p style={{ margin: '10px 0 0', fontSize: 13, lineHeight: 1.55, color: COLORS.muted }}>
+                    Ask whoever sent it for a fresh read-only link.
+                  </p>
+                </>
+              ) : (
+                <div role="status" className="sk" style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 13 }}>
+                  <span className="dots-step" aria-hidden="true" style={{ display: 'inline-flex', color: GOLD }}><i /><i /><i /></span>
+                  {children}
+                </div>
+              )}
+            </div>
+          </div>
+        </DialogBox>
+      </div>
+    </div>
   );
 }
 
