@@ -277,7 +277,9 @@ function AppDesktop() {
           key={route}
           className={isHome ? undefined : 'sh-route'}
           style={{
-            height: '100%', overflowY: 'auto', overflowX: 'hidden',
+            // Opaque background lets the browser composite scrolling instead of
+            // repainting the page behind a transparent scroller every frame.
+            height: '100%', overflowY: 'auto', overflowX: 'hidden', background: COLORS.bg,
             animation: transitioning
               ? `sh-out ${ROUTE_OUT_MS}ms steps(3) forwards`
               : 'sh-in 240ms steps(4)',

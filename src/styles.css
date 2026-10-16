@@ -71,9 +71,9 @@ body {
   margin: 0;
   padding: 0;
   min-height: 100%;
+  /* Plain ground on purpose: a tiled dot pattern behind the scroll areas made
+     Chrome re-raster the page on every scroll frame (the main cause of lag). */
   background-color: var(--bg);
-  background-image: radial-gradient(var(--dot) 1.2px, transparent 1.6px);
-  background-size: 16px 16px;
   font-family: 'JetBrains Mono', ui-monospace, monospace;
   color: var(--text);
   -webkit-font-smoothing: antialiased;

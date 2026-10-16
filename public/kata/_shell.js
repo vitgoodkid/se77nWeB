@@ -298,7 +298,7 @@
 
     // ── page ground ──
     R.push('html{background-color:var(--cream)!important}');
-    R.push('body{background-color:var(--cream)!important;background-image:radial-gradient(var(--dot) 1.2px,transparent 1.6px)!important;background-size:16px 16px!important;color:var(--text)!important;font-family:' + MONO + '!important;-webkit-font-smoothing:antialiased}');
+    R.push('body{background-color:var(--cream)!important;background-image:none!important;color:var(--text)!important;font-family:' + MONO + '!important;-webkit-font-smoothing:antialiased}');
     R.push('*:not(.k-round),*::before,*::after{border-radius:0!important}');
     R.push('.k-round{border-radius:999px!important}');
     R.push('.hidden{display:none!important}');

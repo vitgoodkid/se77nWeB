@@ -111,13 +111,11 @@ const pad2 = (n) => String(n).padStart(2, '0');
 const MOBILE_CSS = `
 .ms-root {
   --ms-red-ink: #b42828;
-  background-image: radial-gradient(var(--dot) 1.2px, transparent 1.6px);
-  background-size: 14px 14px;
+  background-color: var(--bg);
 }
 [data-theme="dark"] .ms-root { --ms-red-ink: #ff8f8f; }
 .ms-dots {
-  background-image: radial-gradient(var(--dot) 1.2px, transparent 1.6px);
-  background-size: 14px 14px;
+  background-color: var(--bg);
 }
 .ms-row {
   box-shadow: 0 -3px 0 0 var(--ink), 0 3px 0 0 var(--ink), -3px 0 0 0 var(--ink), 3px 0 0 0 var(--ink),
